@@ -15,8 +15,8 @@ import (
 const (
 	baseAccountsEndpoint         = "/accounts"
 	accountByUserAddressEndpoint = "/:userAddress"
-	accountProfileEndpoint       = "/images/profile/:userAddress"
-	accountCoverEndpoint         = "/images/cover/:userAddress"
+	accountProfileEndpoint       = "/:userAddress/profile"
+	accountCoverEndpoint         = "/:userAddress/cover"
 )
 
 type accountsHandler struct {

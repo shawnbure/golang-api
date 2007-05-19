@@ -17,10 +17,10 @@ const (
 	collectionByNameEndpoint     = "/:collectionName"
 	collectionListEndpoint       = "/list/:offset/:limit"
 	collectionCreateEndpoint     = "/create"
-	collectionStatisticsEndpoint = "/statistics/:collectionName"
-	collectionAssetsEndpoint     = "/assets/:collectionName/:offset/:limit"
-	collectionProfileEndpoint    = "/image/profile/:collectionName"
-	collectionCoverEndpoint      = "/image/cover/:collectionName"
+	collectionStatisticsEndpoint = "/:collectionName/statistics"
+	collectionAssetsEndpoint     = "/:collectionName/assets/:offset/:limit"
+	collectionProfileEndpoint    = "/:collectionName/profile/"
+	collectionCoverEndpoint      = "/:collectionName/cover"
 )
 
 type collectionsHandler struct {
