@@ -2,12 +2,13 @@ package cache
 
 import (
 	"context"
-	"github.com/uptrace/uptrace-go/uptrace"
 	"os"
 	"os/signal"
 	"syscall"
 	"testing"
 	"time"
+
+	"github.com/uptrace/uptrace-go/uptrace"
 )
 
 func GetSet(c *BaseCacher){
