@@ -2,9 +2,9 @@ package tg
 
 import (
 	"fmt"
-	"github.com/erdsea/erdsea-api/config"
 	"time"
 
+	"github.com/erdsea/erdsea-api/config"
 	tb "gopkg.in/tucnak/telebot.v2"
 )
 

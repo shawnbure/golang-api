@@ -2,10 +2,10 @@ package proxy
 
 import (
 	"context"
-	"github.com/erdsea/erdsea-api/alerts/tg"
 	"net/http"
 	"strings"
 
+	"github.com/erdsea/erdsea-api/alerts/tg"
 	"github.com/erdsea/erdsea-api/cache"
 	"github.com/erdsea/erdsea-api/config"
 	_ "github.com/erdsea/erdsea-api/docs"

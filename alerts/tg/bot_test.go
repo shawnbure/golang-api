@@ -1,9 +1,9 @@
 package tg
 
 import (
-	"github.com/erdsea/erdsea-api/config"
 	"testing"
 
+	"github.com/erdsea/erdsea-api/config"
 	"github.com/stretchr/testify/require"
 )
 
