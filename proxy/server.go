@@ -62,15 +62,14 @@ func NewWebServer(cfg *config.GeneralConfig) (*webServer, error) {
 		return nil, err
 	}
 
-	//TODO: think about handlers params - maybe single param
 	handlers.NewAuthHandler(groupHandler, *authService)
 	handlers.NewTokensHandler(groupHandler)
 	handlers.NewCollectionsHandler(groupHandler, cfg.Auth, cfg.Blockchain)
 	handlers.NewTransactionsHandler(groupHandler)
 	handlers.NewTxTemplateHandler(groupHandler, cfg.Auth, cfg.Blockchain)
-	handlers.NewPriceHandler(groupHandler, cfg.Auth)
+	handlers.NewPriceHandler(groupHandler)
 	handlers.NewAccountsHandler(groupHandler, cfg.Auth)
-	handlers.NewSearchHandler(groupHandler, cfg.Auth)
+	handlers.NewSearchHandler(groupHandler)
 	handlers.NewSwaggerHandler(groupHandler, cfg.Swagger)
 
 	groupHandler.RegisterEndpoints(router)

@@ -3,7 +3,6 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/erdsea/erdsea-api/config"
 	"github.com/erdsea/erdsea-api/data/dtos"
 	"github.com/erdsea/erdsea-api/data/entities"
 	"github.com/erdsea/erdsea-api/services"
@@ -27,7 +26,7 @@ type GeneralSearchResponse struct {
 type searchHandler struct {
 }
 
-func NewSearchHandler(groupHandler *groupHandler, authCfg config.AuthConfig) {
+func NewSearchHandler(groupHandler *groupHandler) {
 	handler := &searchHandler{}
 
 	endpoints := []EndpointHandler{

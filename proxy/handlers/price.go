@@ -3,9 +3,7 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/erdsea/erdsea-api/config"
 	"github.com/erdsea/erdsea-api/data/dtos"
-	"github.com/erdsea/erdsea-api/proxy/middleware"
 	"github.com/erdsea/erdsea-api/services"
 	"github.com/gin-gonic/gin"
 )
@@ -17,7 +15,7 @@ const (
 type eEGLDPriceHandler struct {
 }
 
-func NewPriceHandler(groupHandler *groupHandler, authCfg config.AuthConfig) {
+func NewPriceHandler(groupHandler *groupHandler) {
 	handler := &eEGLDPriceHandler{}
 
 	endpoints := []EndpointHandler{
@@ -26,7 +24,7 @@ func NewPriceHandler(groupHandler *groupHandler, authCfg config.AuthConfig) {
 
 	endpointGroupHandler := EndpointGroupHandler{
 		Root:             baseEGLDPriceEndpoint,
-		Middlewares:      []gin.HandlerFunc{middleware.Authorization(authCfg.JwtSecret)},
+		Middlewares:      []gin.HandlerFunc{},
 		EndpointHandlers: endpoints,
 	}
 

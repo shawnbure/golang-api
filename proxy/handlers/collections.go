@@ -41,7 +41,6 @@ func NewCollectionsHandler(groupHandler *groupHandler, authCfg config.AuthConfig
 		{Method: http.MethodPost, Path: collectionCreateEndpoint, HandlerFunc: handler.create},
 		{Method: http.MethodPost, Path: collectionProfileEndpoint, HandlerFunc: handler.setCollectionProfile},
 		{Method: http.MethodPost, Path: collectionCoverEndpoint, HandlerFunc: handler.setCollectionCover},
-		{Method: http.MethodGet, Path: collectionRankingEndpoint, HandlerFunc: handler.getCollectionRankings},
 	}
 	endpointGroupHandler := EndpointGroupHandler{
 		Root:             baseCollectionsEndpoint,
