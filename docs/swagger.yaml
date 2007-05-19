@@ -1316,6 +1316,51 @@ paths:
       summary: Gets transaction for an token.
       tags:
       - transactions
+  /tx-template/accept-offer/{userAddress}/{tokenId}/{nonce}/{offerorAddress}/{amount}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves tx-template for accept offer transaction.
+      parameters:
+      - description: user address
+        in: path
+        name: userAddress
+        required: true
+        type: integer
+      - description: token id
+        in: path
+        name: tokenId
+        required: true
+        type: integer
+      - description: nonce
+        in: path
+        name: nonce
+        required: true
+        type: integer
+      - description: offerorAddress
+        in: path
+        name: offerorAddress
+        required: true
+        type: string
+      - description: amount
+        in: path
+        name: amount
+        required: true
+        type: number
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/formatter.Transaction'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: Accepts offer for an NFT - tx template.
+      tags:
+      - tx-template
   /tx-template/buy-nft/{userAddress}/{tokenId}/{nonce}/{price}:
     get:
       consumes:
@@ -1355,6 +1400,107 @@ paths:
           schema:
             $ref: '#/definitions/dtos.ApiResponse'
       summary: Gets tx-template for NFT buy.
+      tags:
+      - tx-template
+  /tx-template/cancel-offer/{userAddress}/{tokenId}/{nonce}/{amount}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves tx-template for cancel offer transaction.
+      parameters:
+      - description: user address
+        in: path
+        name: userAddress
+        required: true
+        type: integer
+      - description: token id
+        in: path
+        name: tokenId
+        required: true
+        type: integer
+      - description: nonce
+        in: path
+        name: nonce
+        required: true
+        type: integer
+      - description: amount
+        in: path
+        name: amount
+        required: true
+        type: number
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/formatter.Transaction'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: Cancels offer for an NFT - tx template.
+      tags:
+      - tx-template
+  /tx-template/deposit/{userAddress}/{amount}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves tx-template for deposit transaction.
+      parameters:
+      - description: user address
+        in: path
+        name: userAddress
+        required: true
+        type: integer
+      - description: amount
+        in: path
+        name: amount
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/formatter.Transaction'
+      summary: Deposit EGLD template.
+      tags:
+      - tx-template
+  /tx-template/end-auction/{userAddress}/{tokenId}/{nonce}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves tx-template for end auction transaction.
+      parameters:
+      - description: user address
+        in: path
+        name: userAddress
+        required: true
+        type: integer
+      - description: token id
+        in: path
+        name: tokenId
+        required: true
+        type: integer
+      - description: nonce
+        in: path
+        name: nonce
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/formatter.Transaction'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: End auction for an NFT - tx template.
       tags:
       - tx-template
   /tx-template/list-nft/{userAddress}/{tokenId}/{nonce}/{price}:
@@ -1398,6 +1544,51 @@ paths:
       summary: Gets tx-template for NFT list.
       tags:
       - tx-template
+  /tx-template/make-offer/{userAddress}/{tokenId}/{nonce}/{amount}/{expire}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves tx-template for make offer transaction.
+      parameters:
+      - description: user address
+        in: path
+        name: userAddress
+        required: true
+        type: integer
+      - description: token id
+        in: path
+        name: tokenId
+        required: true
+        type: integer
+      - description: nonce
+        in: path
+        name: nonce
+        required: true
+        type: integer
+      - description: amount
+        in: path
+        name: amount
+        required: true
+        type: number
+      - description: nonce
+        in: path
+        name: expire
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/formatter.Transaction'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: Make offer for an NFT - tx template.
+      tags:
+      - tx-template
   /tx-template/mint-tokens/{userAddress}/{collectionId}/{numberOfTokens}:
     get:
       consumes:
@@ -1438,6 +1629,122 @@ paths:
       summary: Gets tx-template for mint tokens.
       tags:
       - tx-template
+  /tx-template/place-bid/{userAddress}/{tokenId}/{nonce}/{payment}/{bidAmount}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves tx-template for place bid transaction.
+      parameters:
+      - description: user address
+        in: path
+        name: userAddress
+        required: true
+        type: integer
+      - description: token id
+        in: path
+        name: tokenId
+        required: true
+        type: integer
+      - description: nonce
+        in: path
+        name: nonce
+        required: true
+        type: integer
+      - description: payment
+        in: path
+        name: payment
+        required: true
+        type: number
+      - description: bidAmount
+        in: path
+        name: bidAmount
+        required: true
+        type: number
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/formatter.Transaction'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: Start auction for an NFT - tx template.
+      tags:
+      - tx-template
+  /tx-template/start-auction/{userAddress}/{tokenId}/{nonce}/{minBid}/{startTime}/{deadline}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves tx-template for start auction transaction.
+      parameters:
+      - description: user address
+        in: path
+        name: userAddress
+        required: true
+        type: integer
+      - description: token id
+        in: path
+        name: tokenId
+        required: true
+        type: integer
+      - description: nonce
+        in: path
+        name: nonce
+        required: true
+        type: integer
+      - description: minBid
+        in: path
+        name: minBid
+        required: true
+        type: number
+      - description: nonce
+        in: path
+        name: startTime
+        required: true
+        type: integer
+      - description: nonce
+        in: path
+        name: deadline
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/formatter.Transaction'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: Start auction for an NFT - tx template.
+      tags:
+      - tx-template
+  /tx-template/withdraw-creator-royalties/{userAddress}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves tx-template for withdraw creator royalties transaction.
+      parameters:
+      - description: user address
+        in: path
+        name: userAddress
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/formatter.Transaction'
+      summary: Withdraw Creator Royalties EGLD template.
+      tags:
+      - tx-template
   /tx-template/withdraw-nft/{userAddress}/{tokenId}/{nonce}:
     get:
       consumes:
@@ -1472,6 +1779,27 @@ paths:
           schema:
             $ref: '#/definitions/dtos.ApiResponse'
       summary: Gets tx-template for NFT withdraw.
+      tags:
+      - tx-template
+  /tx-template/withdraw/{userAddress}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves tx-template for withdraw transaction.
+      parameters:
+      - description: user address
+        in: path
+        name: userAddress
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/formatter.Transaction'
+      summary: Withdraw EGLD template.
       tags:
       - tx-template
 swagger: "2.0"
