@@ -1,10 +1,11 @@
 package data
 
 type Transaction struct {
-	ID    uint64 `gorm:"primaryKey"`
-	Hash  string
-	Type  string
-	Price string
+	ID        uint64 `gorm:"primaryKey"`
+	Hash      string
+	Type      string
+	Price     string
+	Timestamp uint64
 
 	SellerID uint64
 	BuyerID  uint64

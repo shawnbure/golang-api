@@ -8,13 +8,14 @@ import (
 )
 
 type ListAssetArgs struct {
-	OwnerAddress   string
-	TokenId        string
-	Nonce          uint64
-	Uri            string
-	CollectionName string
-	Price          string
-	TxHash         string
+	OwnerAddress     string
+	TokenId          string
+	Nonce            uint64
+	Uri              string
+	Price            string
+	RoyaltiesPercent uint64
+	Timestamp        uint64
+	TxHash           string
 }
 
 var log = logger.GetOrCreate("services")
@@ -25,27 +26,29 @@ func (args *ListAssetArgs) ToString() string {
 		"TokenId = %s\n"+
 		"Nonce = %d\n"+
 		"Uri = %s\n"+
-		"CollectionName = %s\n"+
 		"Price = %s\n"+
+		"RoyaltiesPercent = %d\n"+
+		"Timestamp = %d\n"+
 		"TxHash = %s\n",
 		args.OwnerAddress,
 		args.TokenId,
 		args.Nonce,
 		args.Uri,
-		args.CollectionName,
 		args.Price,
+		args.RoyaltiesPercent,
+		args.Timestamp,
 		args.TxHash)
 }
 
 type BuyAssetArgs struct {
-	OwnerAddress   string
-	BuyerAddress   string
-	TokenId        string
-	Nonce          uint64
-	Uri            string
-	CollectionName string
-	Price          string
-	TxHash         string
+	OwnerAddress string
+	BuyerAddress string
+	TokenId      string
+	Nonce        uint64
+	Uri          string
+	Price        string
+	Timestamp    uint64
+	TxHash       string
 }
 
 func (args *BuyAssetArgs) ToString() string {
@@ -55,27 +58,27 @@ func (args *BuyAssetArgs) ToString() string {
 		"TokenId = %s\n"+
 		"Nonce = %d\n"+
 		"Uri = %s\n"+
-		"CollectionName = %s\n"+
 		"Price = %s\n"+
+		"Timestamp = %d\n"+
 		"TxHash = %s\n",
 		args.OwnerAddress,
 		args.BuyerAddress,
 		args.TokenId,
 		args.Nonce,
 		args.Uri,
-		args.CollectionName,
 		args.Price,
+		args.Timestamp,
 		args.TxHash)
 }
 
 type WithdrawAssetArgs struct {
-	OwnerAddress   string
-	TokenId        string
-	Nonce          uint64
-	Uri            string
-	CollectionName string
-	Price          string
-	TxHash         string
+	OwnerAddress string
+	TokenId      string
+	Nonce        uint64
+	Uri          string
+	Price        string
+	Timestamp    uint64
+	TxHash       string
 }
 
 func (args *WithdrawAssetArgs) ToString() string {
@@ -84,15 +87,15 @@ func (args *WithdrawAssetArgs) ToString() string {
 		"TokenId = %s\n"+
 		"Nonce = %d\n"+
 		"Uri = %s\n"+
-		"CollectionName = %s\n"+
 		"Price = %s\n"+
+		"Timestamp = %d\n"+
 		"TxHash = %s\n",
 		args.OwnerAddress,
 		args.TokenId,
 		args.Nonce,
 		args.Uri,
-		args.CollectionName,
 		args.Price,
+		args.Timestamp,
 		args.TxHash)
 }
 
@@ -103,20 +106,22 @@ func ListAsset(args ListAssetArgs) {
 		return
 	}
 
-	collection, err := storage.GetCollectionByName(args.CollectionName)
+	collection, err := storage.GetCollectionByTokenId(args.TokenId)
 	if err != nil {
 		log.Debug("Unexpected error: ", err)
 		return
 	}
 
 	asset := data.Asset{
-		TokenID:      args.TokenId,
-		Nonce:        args.Nonce,
-		Price:        args.Price,
-		Link:         args.Uri,
-		Listed:       true,
-		OwnerId:      ownerAccount.ID,
-		CollectionID: collection.ID,
+		TokenID:          args.TokenId,
+		Nonce:            args.Nonce,
+		Price:            args.Price,
+		RoyaltiesPercent: args.RoyaltiesPercent,
+		Link:             args.Uri,
+		CreatedAt:        args.Timestamp,
+		Listed:           true,
+		OwnerId:          ownerAccount.ID,
+		CollectionID:     collection.ID,
 	}
 
 	existingAsset, err := storage.GetAssetByTokenIdAndNonce(args.TokenId, args.Nonce)
@@ -132,12 +137,13 @@ func ListAsset(args ListAssetArgs) {
 	}
 
 	transaction := data.Transaction{
-		Hash:     args.TxHash,
-		Type:     "List",
-		Price:    args.Price,
-		SellerID: ownerAccount.ID,
-		BuyerID:  0,
-		AssetID:  asset.ID,
+		Hash:      args.TxHash,
+		Type:      "List",
+		Price:     args.Price,
+		Timestamp: args.Timestamp,
+		SellerID:  ownerAccount.ID,
+		BuyerID:   0,
+		AssetID:   asset.ID,
 	}
 
 	err = storage.AddNewTransaction(&transaction)
@@ -175,12 +181,13 @@ func BuyAsset(args BuyAssetArgs) {
 	}
 
 	transaction := data.Transaction{
-		Hash:     args.TxHash,
-		Type:     "Buy",
-		Price:    args.Price,
-		SellerID: ownerAccount.ID,
-		BuyerID:  buyerAccount.ID,
-		AssetID:  asset.ID,
+		Hash:      args.TxHash,
+		Type:      "Buy",
+		Price:     args.Price,
+		Timestamp: args.Timestamp,
+		SellerID:  ownerAccount.ID,
+		BuyerID:   buyerAccount.ID,
+		AssetID:   asset.ID,
 	}
 
 	err = storage.AddNewTransaction(&transaction)
@@ -212,12 +219,13 @@ func WithdrawAsset(args WithdrawAssetArgs) {
 	}
 
 	transaction := data.Transaction{
-		Hash:     args.TxHash,
-		Type:     "Withdraw",
-		Price:    args.Price,
-		SellerID: 0,
-		BuyerID:  ownerAccount.ID,
-		AssetID:  asset.ID,
+		Hash:      args.TxHash,
+		Type:      "Withdraw",
+		Price:     args.Price,
+		Timestamp: args.Timestamp,
+		SellerID:  0,
+		BuyerID:   ownerAccount.ID,
+		AssetID:   asset.ID,
 	}
 
 	err = storage.AddNewTransaction(&transaction)
