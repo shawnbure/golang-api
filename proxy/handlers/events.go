@@ -13,8 +13,9 @@ import (
 )
 
 const (
-	baseEventsEndpoint = "/events"
-	pushEventsEndpoint = "/push"
+	baseEventsEndpoint    = "/events"
+	pushEventsEndpoint    = "/push"
+	pushFinalizedEndpoint = "/finalized"
 )
 
 type eventsHandler struct {
@@ -34,6 +35,7 @@ func NewEventsHandler(
 
 	endpoints := []EndpointHandler{
 		{Method: http.MethodPost, Path: pushEventsEndpoint, HandlerFunc: h.pushEvents},
+		{Method: http.MethodPost, Path: pushFinalizedEndpoint, HandlerFunc: h.pushFinalizedEvents},
 	}
 
 	endpointGroupHandler := EndpointGroupHandler{
