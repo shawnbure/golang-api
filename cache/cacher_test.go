@@ -2,15 +2,22 @@ package cache
 
 import (
 	"bytes"
+	"context"
 	"crypto/rand"
 	"math/big"
+	"os"
+	"os/signal"
 	"strconv"
 	"testing"
 	"time"
 
 	"github.com/erdsea/erdsea-api/config"
+	"github.com/go-redis/redis/v8"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/atomic"
 )
+
+var ctx = context.Background()
 
 var cfg = config.CacheConfig{
 	Url: "redis://localhost:6379",
@@ -86,4 +93,67 @@ func TestBaseCacher_MaxEntry(t *testing.T) {
 
 	println(cacher.stats.Misses.Load())
 	println(cacher.stats.Hits.Load())
+}
+
+func TestRedisClient_ReconnectOnHiccup(t *testing.T) {
+	t.Parallel()
+
+	url := "redis://localhost:6379"
+
+	opt, err := redis.ParseURL(url)
+	if err != nil {
+		t.Log(err)
+	}
+
+	client := redis.NewClient(opt)
+
+	cancellableCtx, cancel := context.WithCancel(context.Background())
+
+	counter := atomic.NewInt64(0)
+
+	exitCh := make(chan struct{})
+	go func(ctx context.Context) {
+		for {
+			t.Log("looping...")
+			time.Sleep(1 * time.Second)
+
+			pong, pingErr := ping(client)
+			if pingErr != nil {
+				t.Log(pingErr)
+			} else {
+				t.Log(pong)
+				counter.Add(1)
+			}
+			t.Logf("pong counter: %d", counter.Load())
+
+			select {
+			case <-ctx.Done():
+				t.Log("will exit soon")
+				time.Sleep(100 * time.Millisecond)
+				exitCh <- struct{}{}
+				return
+			default:
+			}
+		}
+	}(cancellableCtx)
+
+	signalCh := make(chan os.Signal, 1)
+	signal.Notify(signalCh, os.Interrupt)
+	go func() {
+		select {
+		case <-signalCh:
+			cancel()
+			return
+		}
+	}()
+	<-exitCh
+}
+
+func ping(client *redis.Client) (string, error) {
+	pong, err := client.Ping(ctx).Result()
+	if err != nil {
+		return "", err
+	}
+
+	return pong, nil
 }

@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"testing"
 
+	erdgoData "github.com/ElrondNetwork/elrond-sdk-erdgo/data"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -69,4 +70,30 @@ func TestNewEdKey_KeySignatureWillBeVerified(t *testing.T) {
 
 	verifyErr := VerifySignature(pk, msg, sig)
 	require.Nil(t, verifyErr)
+}
+
+func Test_VerifyDevnetWalletGeneratedSignature(t *testing.T) {
+	address, err := erdgoData.NewAddressFromBech32String("erd17s2pz8qrds6ake3qwheezgy48wzf7dr5nhdpuu2h4rr4mt5rt9ussj7xzh")
+	require.Nil(t, err)
+
+	message := []byte("cevaceva")
+	sig, err := hex.DecodeString("8722fc7a40c84ab784d7cca3c94a334bd2da82fd55c827e242fe4bc3a7062342d7f61ac037bee380dac1237ea369bc390882059abb965ab98855139dc7745e0c")
+	require.Nil(t, err)
+
+	erdMsg := ComputeElrondSignableMessage(message)
+	err = VerifySignature(address.AddressBytes(), erdMsg, sig)
+	require.Nil(t, err)
+}
+
+func Test_ElrondGoCopyPasted(t *testing.T) {
+	address, err := erdgoData.NewAddressFromBech32String("erd19pht2w242wcj0x9gq3us86dtjrrfe3wk8ffh5nhdemf0mce6hsmsupxzlq")
+	require.Nil(t, err)
+
+	message := []byte("test message")
+	sig, err := hex.DecodeString("ec7a27cb4b23641ae62e3ea96d5858c8142e20d79a6e1710037d1c27b0d138d7452a98da93c036b2b47ee587d4cb4af6ae24c358f3f5f74f85580f45e072280b")
+	require.Nil(t, err)
+
+	erdMsg := ComputeElrondSignableMessage(message)
+	err = VerifySignature(address.AddressBytes(), erdMsg, sig)
+	require.Nil(t, err)
 }
