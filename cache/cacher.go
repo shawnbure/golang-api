@@ -2,6 +2,7 @@ package cache
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/erdsea/erdsea-api/config"
@@ -15,31 +16,38 @@ type Stats struct {
 	Misses atomic.Int64
 }
 
-type BaseCacher struct {
+type Cacher struct {
 	cache *cache.Cache
 	stats Stats
 	ctx   context.Context
 }
 
-func NewBaseCacher(cfg config.CacheConfig) *BaseCacher {
-	opt, err := redis.ParseURL(cfg.Url)
-	if err != nil {
-		panic(err)
-	}
+var (
+	once   sync.Once
+	cacher *Cacher
+)
 
-	cacher := cache.New(&cache.Options{
-		Redis:      redis.NewClient(opt),
-		LocalCache: cache.NewTinyLFU(1000, time.Second),
+func InitCacher(cfg config.CacheConfig) {
+	once.Do(func() {
+		opt, err := redis.ParseURL(cfg.Url)
+		if err != nil {
+			panic(err)
+		}
+
+		newCache := cache.New(&cache.Options{
+			Redis:      redis.NewClient(opt),
+			LocalCache: cache.NewTinyLFU(1000, time.Second),
+		})
+
+		cacher = &Cacher{
+			cache: newCache,
+			stats: Stats{},
+			ctx:   context.Background(),
+		}
 	})
-
-	return &BaseCacher{
-		cache: cacher,
-		stats: Stats{},
-		ctx:   context.Background(),
-	}
 }
 
-func (c *BaseCacher) Set(k string, v interface{}, ttl time.Duration) error {
+func (c *Cacher) Set(k string, v interface{}, ttl time.Duration) error {
 	return c.cache.Set(&cache.Item{
 		Ctx:   c.ctx,
 		Key:   k,
@@ -48,7 +56,7 @@ func (c *BaseCacher) Set(k string, v interface{}, ttl time.Duration) error {
 	})
 }
 
-func (c *BaseCacher) Get(k string, v interface{}) error {
+func (c *Cacher) Get(k string, v interface{}) error {
 	err := c.cache.Get(c.ctx, k, v)
 
 	if err == nil {
@@ -58,4 +66,12 @@ func (c *BaseCacher) Get(k string, v interface{}) error {
 	}
 
 	return err
+}
+
+func (c *Cacher) GetStats() Stats {
+	return cacher.stats
+}
+
+func GetCacher() *Cacher {
+	return cacher
 }
