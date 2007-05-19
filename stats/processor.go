@@ -87,4 +87,3 @@ func ComputeCollectionMetadata(collectionId uint64) (*CollectionMetadata, error)
 	}
 	return &result, nil
 }
-
