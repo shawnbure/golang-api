@@ -13,11 +13,17 @@ import (
 var log = logger.GetOrCreate("eventProcessor")
 
 const (
-	putNFTForSaleIdentifier = "putNftForSale"
-	buyNFTIdentifier        = "buyNft"
-	withdrawNFTIdentifier   = "withdrawNft"
+	putNFTForSaleEventName = "put_nft_for_sale"
+	buyNFTEventName        = "buy_nft"
+	withdrawNFTEventName   = "withdraw_nft"
+	makeOfferEventName     = "make_offer"
+	acceptOfferEventName   = "accept_offer"
+	startAuctionEventName  = "start_auction"
+	placeBidEventName      = "place_bid"
+	endAuctionEventName    = "end_bid"
+	updateDepositEventName = "update_deposit"
 
-	saveEventsTTL        = 5 * time.Minute
+	saveEventsTTL = 5 * time.Minute
 )
 
 type EventProcessor struct {
@@ -60,13 +66,29 @@ func NewEventProcessor(
 func (e *EventProcessor) PoolWorker() {
 	for eventArray := range e.eventsPool {
 		for _, event := range eventArray {
-			switch event.Identifier {
-			case putNFTForSaleIdentifier:
+			if len(event.Topics) == 0 {
+				continue
+			}
+
+			switch getEventName(&event) {
+			case putNFTForSaleEventName:
 				e.onEventPutNftForSale(event)
-			case buyNFTIdentifier:
+			case buyNFTEventName:
 				e.onEventBuyNft(event)
-			case withdrawNFTIdentifier:
+			case withdrawNFTEventName:
 				e.onEventWithdrawNft(event)
+			case makeOfferEventName:
+				e.onEventMakeOffer(event)
+			case acceptOfferEventName:
+				e.onEventAcceptOffer(event)
+			case startAuctionEventName:
+				e.onEventStartAuction(event)
+			case placeBidEventName:
+				e.onEventPlaceBid(event)
+			case endAuctionEventName:
+				e.onEventEndAuction(event)
+			case updateDepositEventName:
+				e.onEventUpdateDeposit(event)
 			}
 		}
 	}
@@ -205,4 +227,145 @@ func (e *EventProcessor) onEventWithdrawNft(event entities.Event) {
 	}
 
 	services.WithdrawToken(args)
+}
+
+func (e *EventProcessor) onEventMakeOffer(event entities.Event) {
+	if len(event.Topics) != 7 {
+		log.Error("received corrupted makeOffer event", "err", "incorrect topics length")
+		return
+	}
+
+	args := services.MakeOfferArgs{
+		OfferorAddress: decodeAddressFromTopic(event.Topics[1]),
+		TokenId:        decodeStringFromTopic(event.Topics[2]),
+		Nonce:          decodeU64FromTopic(event.Topics[3]),
+		Amount:         decodeBigUintFromTopic(event.Topics[4]),
+		Timestamp:      decodeU64FromTopic(event.Topics[5]),
+		TxHash:         decodeTxHashFromTopic(event.Topics[6]),
+	}
+
+	eventJson, err := json.Marshal(args)
+	if err == nil {
+		log.Debug("onEventMakeOffer", string(eventJson))
+	}
+
+	services.MakeOffer(args)
+}
+
+func (e *EventProcessor) onEventAcceptOffer(event entities.Event) {
+	if len(event.Topics) != 8 {
+		log.Error("received corrupted acceptOffer event", "err", "incorrect topics length")
+		return
+	}
+
+	args := services.AcceptOfferArgs{
+		OwnerAddress:   decodeAddressFromTopic(event.Topics[1]),
+		TokenId:        decodeStringFromTopic(event.Topics[2]),
+		Nonce:          decodeU64FromTopic(event.Topics[3]),
+		OfferorAddress: decodeAddressFromTopic(event.Topics[4]),
+		Amount:         decodeBigUintFromTopic(event.Topics[5]),
+		Timestamp:      decodeU64FromTopic(event.Topics[6]),
+		TxHash:         decodeTxHashFromTopic(event.Topics[7]),
+	}
+
+	eventJson, err := json.Marshal(args)
+	if err == nil {
+		log.Debug("onEventAcceptOffer", string(eventJson))
+	}
+
+	services.AcceptOffer(args)
+}
+
+func (e *EventProcessor) onEventStartAuction(event entities.Event) {
+	if len(event.Topics) != 9 {
+		log.Error("received corrupted startAuction event", "err", "incorrect topics length")
+		return
+	}
+
+	args := services.StartAuctionArgs{
+		OwnerAddress: decodeAddressFromTopic(event.Topics[1]),
+		TokenId:      decodeStringFromTopic(event.Topics[2]),
+		Nonce:        decodeU64FromTopic(event.Topics[3]),
+		MinBid:       decodeBigUintFromTopic(event.Topics[4]),
+		StartTime:    decodeU64FromTopic(event.Topics[5]),
+		Deadline:     decodeU64FromTopic(event.Topics[6]),
+		Timestamp:    decodeU64FromTopic(event.Topics[7]),
+		TxHash:       decodeTxHashFromTopic(event.Topics[8]),
+	}
+
+	eventJson, err := json.Marshal(args)
+	if err == nil {
+		log.Debug("onEventAcceptOffer", string(eventJson))
+	}
+
+	services.StartAuction(args)
+}
+
+func (e *EventProcessor) onEventPlaceBid(event entities.Event) {
+	if len(event.Topics) != 7 {
+		log.Error("received corrupted placeBid event", "err", "incorrect topics length")
+		return
+	}
+
+	args := services.PlaceBidArgs{
+		Offeror:   decodeAddressFromTopic(event.Topics[1]),
+		TokenId:   decodeStringFromTopic(event.Topics[2]),
+		Nonce:     decodeU64FromTopic(event.Topics[3]),
+		Amount:    decodeBigUintFromTopic(event.Topics[4]),
+		Timestamp: decodeU64FromTopic(event.Topics[5]),
+		TxHash:    decodeTxHashFromTopic(event.Topics[6]),
+	}
+
+	eventJson, err := json.Marshal(args)
+	if err == nil {
+		log.Debug("onEventPlaceBid", string(eventJson))
+	}
+
+	services.PlaceBid(args)
+}
+
+func (e *EventProcessor) onEventEndAuction(event entities.Event) {
+	if len(event.Topics) != 8 {
+		log.Error("received corrupted makeOffer event", "err", "incorrect topics length")
+		return
+	}
+
+	args := services.EndAuctionArgs{
+		TokenId:   decodeStringFromTopic(event.Topics[2]),
+		Nonce:     decodeU64FromTopic(event.Topics[3]),
+		Winner:    decodeAddressFromTopic(event.Topics[4]),
+		Amount:    decodeBigUintFromTopic(event.Topics[5]),
+		Timestamp: decodeU64FromTopic(event.Topics[6]),
+		TxHash:    decodeTxHashFromTopic(event.Topics[7]),
+	}
+
+	eventJson, err := json.Marshal(args)
+	if err == nil {
+		log.Debug("onEventPlaceBid", string(eventJson))
+	}
+
+	services.EndAuction(args)
+}
+
+func (e *EventProcessor) onEventUpdateDeposit(event entities.Event) {
+	if len(event.Topics) != 3 {
+		log.Error("received corrupted makeOffer event", "err", "incorrect topics length")
+		return
+	}
+
+	args := services.DepositUpdateArgs{
+		Owner:  decodeAddressFromTopic(event.Topics[1]),
+		Amount: decodeBigUintFromTopic(event.Topics[2]),
+	}
+
+	eventJson, err := json.Marshal(args)
+	if err == nil {
+		log.Debug("onEventUpdateDeposit", string(eventJson))
+	}
+
+	services.UpdateDeposit(args)
+}
+
+func getEventName(event *entities.Event) string {
+	return string(event.Topics[0])
 }

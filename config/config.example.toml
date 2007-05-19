@@ -9,6 +9,11 @@
         "putNftForSale",
         "buyNft",
         "withdrawNft",
+        "makeOffer",
+        "acceptOffer",
+        "startAuction",
+        "placeBid",
+        "endAuction",
     ]
 
 [Blockchain]
