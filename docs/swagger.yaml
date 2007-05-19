@@ -167,6 +167,21 @@ definitions:
           $ref: '#/definitions/entities.Collection'
         type: array
     type: object
+  handlers.RankingEntry:
+    properties:
+      CollectionId:
+        type: string
+      CollectionName:
+        type: string
+      floorPrice:
+        type: number
+      itemsTotal:
+        type: integer
+      ownersTotal:
+        type: integer
+      volumeTraded:
+        type: number
+    type: object
   handlers.createTokenRequest:
     properties:
       address:
@@ -909,6 +924,40 @@ paths:
           schema:
             $ref: '#/definitions/dtos.ApiResponse'
       summary: Gets collections.
+      tags:
+      - collections
+  /collections/rankings/{offset}/{limit}:
+    get:
+      consumes:
+      - application/json
+      description: Acts as a leaderboard. Optionally provide ?sort[criteria]=volumeTraded&sort[mode]=asc
+      parameters:
+      - description: offset
+        in: path
+        name: offset
+        required: true
+        type: integer
+      - description: limit
+        in: path
+        name: limit
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.RankingEntry'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: Get collection rankings
       tags:
       - collections
   /egld_price:
