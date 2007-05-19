@@ -86,7 +86,7 @@ func Test_GetAssetsOwnedBy(t *testing.T) {
 	}
 }
 
-func Test_GetAssetsByNewEdKeyId(t *testing.T) {
+func Test_GetAssetsByCollectionId(t *testing.T) {
 	connectToTestDb()
 	collectionId := uint64(1)
 
