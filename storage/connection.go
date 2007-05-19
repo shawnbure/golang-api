@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"errors"
 	"sync"
 
 	"database/sql"
@@ -10,6 +11,8 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
+
+var NoDBError = errors.New("no DB Connection")
 
 var (
 	once sync.Once
@@ -68,4 +71,13 @@ func TryMigrate() error {
 
 func GetDB() *gorm.DB {
 	return db
+}
+
+func GetDBOrError() (*gorm.DB, error) {
+	database := GetDB()
+	if database == nil {
+		return nil, NoDBError
+	}
+
+	return database, nil
 }
