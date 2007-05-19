@@ -14,13 +14,13 @@ import (
 )
 
 const (
-	baseCollectionsEndpoint      = "/collections"
-	collectionByNameEndpoint     = "/:collectionId"
-	collectionListEndpoint       = "/list/:offset/:limit"
-	collectionCreateEndpoint     = "/create"
-	collectionTokensEndpoint     = "/:collectionId/tokens/:offset/:limit"
-	collectionProfileEndpoint    = "/:collectionId/profile/"
-	collectionCoverEndpoint      = "/:collectionId/cover"
+	baseCollectionsEndpoint   = "/collections"
+	collectionByNameEndpoint  = "/:collectionId"
+	collectionListEndpoint    = "/list/:offset/:limit"
+	collectionCreateEndpoint  = "/create"
+	collectionTokensEndpoint  = "/:collectionId/tokens/:offset/:limit"
+	collectionProfileEndpoint = "/:collectionId/profile/"
+	collectionCoverEndpoint   = "/:collectionId/cover"
 )
 
 type collectionsHandler struct {
@@ -96,9 +96,10 @@ func (handler *collectionsHandler) getList(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param collectionId path string true "collection id"
-// @Success 200 {object} entities.Collection
+// @Success 200 {object} dtos.ExtendedCollectionDto
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 404 {object} dtos.ApiResponse
+// @Failure 500 {object} dtos.ApiResponse
 // @Router /collections/{collectionId} [get]
 func (handler *collectionsHandler) get(c *gin.Context) {
 	tokenId := c.Param("collectionId")
@@ -115,7 +116,18 @@ func (handler *collectionsHandler) get(c *gin.Context) {
 		return
 	}
 
-	dtos.JsonResponse(c, http.StatusOK, collection, "")
+	collectionStats, err := collstats.GetStatisticsForTokenId(tokenId)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		return
+	}
+
+	extendedDto := dtos.ExtendedCollectionDto{
+		Collection: *collection,
+		Statistics: *collectionStats,
+	}
+
+	dtos.JsonResponse(c, http.StatusOK, extendedDto, "")
 }
 
 // @Summary Set collection info.
