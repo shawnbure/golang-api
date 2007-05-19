@@ -45,25 +45,3 @@ func (cu *cloudyUploader) UploadBase64(ctx context.Context, b64Img, imgID string
 func (cu *cloudyUploader) GetImage(fileName string) ([]byte, string, error) {
 	return nil, "", nil
 }
-
-func UploadToCloudy(ctx context.Context, base64Img, imgID string) (*uploader.UploadResult, error) {
-	buf, err := Base64ToReader(base64Img)
-	if err != nil {
-		return nil, err
-	}
-
-	cld, err := GetCloudyCDNOrErr()
-	if err != nil {
-		return nil, err
-	}
-
-	res, err := cld.Upload.Upload(ctx, buf, uploader.UploadParams{
-		PublicID:  imgID,
-		Overwrite: true,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return res, nil
-}

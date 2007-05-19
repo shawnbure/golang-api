@@ -138,7 +138,7 @@ func establishConnections(cfg *config.GeneralConfig) {
 	interaction.InitBlockchainInteractor(cfg.Blockchain)
 	cache.InitCacher(cfg.Cache)
 	storage.Connect(cfg.Database)
-	cdn.MakeCloudyCDN(cfg.CDN)
+	cdn.InitUploader(cfg.CDN)
 }
 
 func initLogger(ctx *cli.Context) (logging.FileLogger, error) {

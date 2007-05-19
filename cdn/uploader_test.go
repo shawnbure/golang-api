@@ -16,15 +16,18 @@ var imgStr = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34
 func TestUploader_Upload(t *testing.T) {
 	t.Parallel()
 
-	MakeCloudyCDN(config.CDNConfig{
+	InitUploader(config.CDNConfig{
 		Name:      "deaezbrer",
 		ApiKey:    "823855837497929",
 		ApiSecret: "9UXeyr23mESzGtVEX_1ZML54fXk",
 	})
 
-	res, err := UploadToCloudy(ctx, imgStr, "penis")
+	upl, err := GetImageUploaderOrErr()
 	require.Nil(t, err)
-	require.True(t, res.SecureURL != "" && strings.Contains(res.SecureURL, "penis.png"))
+	
+	res, err := upl.UploadBase64(ctx, imgStr, "penis")
+	require.Nil(t, err)
+	require.True(t, res != "" && strings.Contains(res, "penis.png"))
 
-	t.Log("penis img url:", res.SecureURL)
+	t.Log("penis img url:", res)
 }

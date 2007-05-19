@@ -5,13 +5,11 @@ import (
 	logger "github.com/ElrondNetwork/elrond-go-logger"
 	"sync"
 
-	"github.com/cloudinary/cloudinary-go"
 	"github.com/erdsea/erdsea-api/config"
 )
 
 var (
 	once        sync.Once
-	cloudy      *cloudinary.Cloudinary
 	imgUploader ImageUploader
 
 	log = logger.GetOrCreate("cdn")
@@ -22,27 +20,23 @@ const (
 	cloudyCDN = "cloudy"
 )
 
-func MakeCloudyCDN(cfg config.CDNConfig) {
+func InitUploader(cfg config.CDNConfig) {
 	once.Do(func() {
-		newCloudy, err := cloudinary.NewFromParams(
-			cfg.Name,
-			cfg.ApiKey,
-			cfg.ApiSecret,
-		)
+		upl, err := makeUploader(cfg)
 		if err != nil {
 			panic(err)
 		}
 
-		cloudy = newCloudy
+		imgUploader = upl
 	})
 }
 
-func GetCloudyCDNOrErr() (*cloudinary.Cloudinary, error) {
-	if cloudy == nil {
-		return nil, errors.New("cloudy cdn is not initialized")
+func GetImageUploaderOrErr() (ImageUploader, error) {
+	if imgUploader == nil {
+		return nil, errors.New("no uploader initialized")
 	}
 
-	return cloudy, nil
+	return imgUploader, nil
 }
 
 func makeUploader(cfg config.CDNConfig) (ImageUploader, error) {

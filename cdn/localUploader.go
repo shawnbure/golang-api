@@ -43,7 +43,7 @@ func (lu *localUploader) UploadBase64(_ context.Context, b64Img, imgID string) (
 		return "", err
 	}
 
-	return fmt.Sprintf("%s/%s", lu.baseUrl, imgID), nil
+	return fmt.Sprintf("%s%s", lu.baseUrl, imgID), nil
 }
 
 func (lu *localUploader) GetImage(fileName string) ([]byte, string, error) {
