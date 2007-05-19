@@ -124,11 +124,6 @@ func (e *EventProcessor) OnFinalizedEvent(fb entities.FinalizedBlock) {
 	if err != nil {
 		log.Error("could not delete block events", "err", err.Error())
 	}
-
-	err = e.localCacher.SetWithTTLSync(fb.Hash, true, saveFinalizedHashTTL)
-	if err != nil {
-		log.Error("could not set finalized block flag", "err", err.Error())
-	}
 }
 
 func (e *EventProcessor) isEventAccepted(ev entities.Event) bool {
