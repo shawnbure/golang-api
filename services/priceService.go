@@ -90,7 +90,7 @@ func HttpGet(url string, castTarget interface{}) error {
 	defer func() {
 		bodyCloseErr := resp.Body.Close()
 		if bodyCloseErr != nil {
-			log.Warn("HttpGet - error while trying to close response body", "err", err.Error())
+			log.Warn("HttpGet - error while trying to close response body", "err", bodyCloseErr.Error())
 		}
 	}()
 	respBytes, err := ioutil.ReadAll(resp.Body)
@@ -113,7 +113,7 @@ func HttpGetRaw(url string) (string, error) {
 	defer func() {
 		bodyCloseErr := resp.Body.Close()
 		if bodyCloseErr != nil {
-			log.Warn("HttpGetRaw - error while trying to close response body", "err", err.Error())
+			log.Warn("HttpGetRaw - error while trying to close response body", "err", bodyCloseErr.Error())
 		}
 	}()
 	respBytes, err := ioutil.ReadAll(resp.Body)
