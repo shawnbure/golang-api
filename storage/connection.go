@@ -44,6 +44,8 @@ func Connect(cfg config.DatabaseConfig) {
 		if err != nil {
 			panic(err)
 		}
+
+		InsertOrUpdateEntities()
 	})
 }
 
@@ -89,6 +91,26 @@ func TryMigrate() error {
 	}
 
 	return nil
+}
+
+func InsertOrUpdateEntities() {
+	collection := &entities.Collection{ID: 0}
+	txCreate := db.Create(collection)
+	if txCreate.Error != nil {
+		txUpdate := db.Save(collection)
+		if txUpdate.Error != nil {
+			panic(txUpdate.Error)
+		}
+	}
+
+	account := &entities.Account{ID: 0}
+	txCreate = db.Create(account)
+	if txCreate.Error != nil {
+		txUpdate := db.Save(account)
+		if txUpdate.Error != nil {
+			panic(txUpdate.Error)
+		}
+	}
 }
 
 func GetDB() *gorm.DB {
