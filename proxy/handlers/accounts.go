@@ -305,7 +305,7 @@ func (handler *accountsHandler) getAccountCollections(c *gin.Context) {
 		return
 	}
 
-	collections, err := storage.GetCollectionsByOwnerIdWithOffsetLimit(cacheInfo.AccountId, int(offset), int(limit))
+	collections, err := storage.GetCollectionsByCreatorIdWithOffsetLimit(cacheInfo.AccountId, int(offset), int(limit))
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return

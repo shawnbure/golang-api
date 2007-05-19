@@ -202,7 +202,7 @@ func GetCollectionsWithNameAlikeWithLimit(name string, limit int) ([]entities.Co
 	return collections, nil
 }
 
-func GetCollectionsByOwnerIdWithOffsetLimit(ownerId uint64, offset int, limit int) ([]entities.Collection, error) {
+func GetCollectionsByCreatorIdWithOffsetLimit(creatorId uint64, offset int, limit int) ([]entities.Collection, error) {
 	var collections []entities.Collection
 
 	database, err := GetDBOrError()
@@ -210,7 +210,7 @@ func GetCollectionsByOwnerIdWithOffsetLimit(ownerId uint64, offset int, limit in
 		return nil, err
 	}
 
-	txRead := database.Offset(offset).Limit(limit).Find(&collections, "owner_id = ?", ownerId)
+	txRead := database.Offset(offset).Limit(limit).Find(&collections, "creator_id = ?", creatorId)
 	if txRead.Error != nil {
 		return nil, txRead.Error
 	}
