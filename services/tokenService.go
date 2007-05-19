@@ -3,11 +3,14 @@ package services
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"gorm.io/datatypes"
 	"math/big"
 	"strconv"
 
 	logger "github.com/ElrondNetwork/elrond-go-logger"
+	"github.com/boltdb/bolt"
+	"github.com/erdsea/erdsea-api/cache"
 	"github.com/erdsea/erdsea-api/data/dtos"
 	"github.com/erdsea/erdsea-api/data/entities"
 	"github.com/erdsea/erdsea-api/stats/collstats"
@@ -25,7 +28,9 @@ type Attribute struct {
 	TraitType string `json:"trait_type"`
 }
 
-var log = logger.GetOrCreate("services")
+type TokenCacheInfo struct {
+	TokenDbId   uint64
+}
 
 const (
 	minPriceUnit            = 1000
@@ -36,7 +41,13 @@ const (
 	maxTokenLinkResponseSize = 1024
 )
 
-var baseExp = big.NewInt(10)
+var (
+	TokenIdToDbIdCacheInfo = []byte("tokenToId")
+
+	baseExp = big.NewInt(10)
+
+	log = logger.GetOrCreate("services")
+)
 
 func ListToken(args ListTokenArgs) {
 	priceNominal, err := GetPriceNominal(args.Price)
@@ -69,6 +80,11 @@ func ListToken(args ListTokenArgs) {
 		token.OwnerId = ownerAccount.ID
 		token.CollectionID = collectionId
 		innerErr = storage.AddToken(token)
+
+		_, cacheErr := AddTokenToCache(token.TokenID, token.Nonce, token.ID)
+		if cacheErr != nil {
+			log.Error("could not add token to cache")
+		}
 	} else {
 		token.Listed = true
 		token.PriceString = args.Price
@@ -333,4 +349,73 @@ func AddTransaction(tx *entities.Transaction) {
 		log.Debug("could not create new transaction", "err", err)
 		return
 	}
+}
+
+func AddTokenToCache(tokenId string, nonce uint64, tokenDbId uint64) (*TokenCacheInfo, error) {
+	db := cache.GetBolt()
+	cacheInfo := TokenCacheInfo{
+		TokenDbId:   tokenDbId,
+	}
+
+	entryBytes, err := json.Marshal(&cacheInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	err = db.Update(func(tx *bolt.Tx) error {
+		bucket, innerErr := tx.CreateBucketIfNotExists(TokenIdToDbIdCacheInfo)
+		if innerErr != nil {
+			return innerErr
+		}
+
+		key := fmt.Sprintf("%s-%d", tokenId, nonce)
+		innerErr = bucket.Put([]byte(key), entryBytes)
+		return innerErr
+	})
+
+	return &cacheInfo, nil
+}
+
+func GetTokenCacheInfo(tokenId string, nonce uint64) (*TokenCacheInfo, error) {
+	db := cache.GetBolt()
+
+	var bytes []byte
+	err := db.View(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket(TokenIdToDbIdCacheInfo)
+		if bucket == nil {
+			return errors.New("no bucket for token cache")
+		}
+
+		key := fmt.Sprintf("%s-%d", tokenId, nonce)
+		bytes = bucket.Get([]byte(key))
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	var cacheInfo TokenCacheInfo
+	err = json.Unmarshal(bytes, &cacheInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	return &cacheInfo, nil
+}
+
+func GetOrAddTokenCacheInfo(tokenId string, nonce uint64) (*TokenCacheInfo, error) {
+	cacheInfo, err := GetTokenCacheInfo(tokenId, nonce)
+	if err != nil {
+		token, innerErr := storage.GetTokenByTokenIdAndNonce(tokenId, nonce)
+		if innerErr != nil {
+			return nil, innerErr
+		}
+
+		cacheInfo, innerErr = AddTokenToCache(tokenId, nonce, token.ID)
+		if innerErr != nil {
+			return nil, innerErr
+		}
+	}
+
+	return cacheInfo, nil
 }
