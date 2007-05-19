@@ -1,6 +1,7 @@
 package process
 
 import (
+	"fmt"
 	"github.com/erdsea/erdsea-api/data"
 )
 
@@ -8,8 +9,6 @@ type EventProcessor struct {
 	addressSet     map[string]bool
 	identifiersSet map[string]bool
 	eventsPool     chan []data.Event
-
-	collected []data.Event
 }
 
 func NewEventProcessor(addresses []string, identifiers []string) *EventProcessor {
@@ -28,7 +27,6 @@ func NewEventProcessor(addresses []string, identifiers []string) *EventProcessor
 		addressSet:     addrSet,
 		identifiersSet: idSet,
 		eventsPool:     make(chan []data.Event),
-		collected:      []data.Event{},
 	}
 
 	go processor.PoolWorker()
@@ -37,8 +35,20 @@ func NewEventProcessor(addresses []string, identifiers []string) *EventProcessor
 }
 
 func (e *EventProcessor) PoolWorker() {
-	events := <-e.eventsPool
-	e.collected = append(e.collected, events...)
+	for eventArray := range e.eventsPool {
+		for _, event := range eventArray {
+			switch event.Identifier {
+			case "collection_register":
+				e.onEventCollectionRegister(event)
+			case "put_nft_for_sale":
+				e.onEventPutNftForSale(event)
+			case "buy_nft":
+				e.onEventBuyNft(event)
+			case "withdraw_nft":
+				e.onEventWithdrawNft(event)
+			}
+		}
+	}
 }
 
 func (e *EventProcessor) OnEvents(events []data.Event) {
@@ -50,11 +60,34 @@ func (e *EventProcessor) OnEvents(events []data.Event) {
 		}
 	}
 
-	e.eventsPool <- filterableEvents
+	if len(filterableEvents) > 0 {
+		e.eventsPool <- filterableEvents
+	}
 
 	return
 }
 
 func (e *EventProcessor) isEventAccepted(ev data.Event) bool {
 	return e.addressSet[ev.Address] && e.identifiersSet[ev.Identifier]
+}
+
+func (e* EventProcessor) onEventCollectionRegister(event data.Event) {
+	creatorAddress := decodeAddressFromTopic(event.Topics[0])
+	tokenId := decodeStringFromTopic(event.Topics[1])
+	collectionName := decodeStringFromTopic(event.Topics[2])
+	timestamp := decodeU64FromTopic(event.Topics[3])
+
+	fmt.Println(creatorAddress, tokenId, collectionName, timestamp)
+}
+
+func (e* EventProcessor) onEventPutNftForSale(event data.Event) {
+
+}
+
+func (e* EventProcessor) onEventBuyNft(event data.Event) {
+
+}
+
+func (e* EventProcessor) onEventWithdrawNft(event data.Event) {
+
 }

@@ -23,7 +23,7 @@ func NewWebServer(generalConfig *config.GeneralConfig) (*webServer, error) {
 
 	groupHandler := handlers.NewGroupHandler()
 
-	processor := process.NewEventProcessor(nil, nil)
+	processor := process.NewEventProcessor(generalConfig.ConnectorApi.Addresses, generalConfig.ConnectorApi.Identifiers)
 	err := handlers.NewEventsHandler(groupHandler, processor, generalConfig.ConnectorApi)
 	if err != nil {
 		return nil, err

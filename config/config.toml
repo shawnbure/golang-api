@@ -5,15 +5,15 @@
 
     Password = ""
 
-    Addressess = [
-        "erd111",
-        "erd222",
-        "erd333"
+    Addresses = [
+        "erd1qqqqqqqqqqqqqpgqxrtj3jrrztan0c5ckhd3crs9w997s6ynt9usacn2n0",
     ]
 
     Identifiers = [
-        "Func1",
-        "Func2"
+        "collection_register",
+        "put_nft_for_sale",
+        "buy_nft",
+        "withdraw_nft",
     ]
 
 [Blockchain]
@@ -28,7 +28,7 @@
     Port = 5432
     DbName = "erdsea_db"
     User = "postgres"
-    Password = "boop"
+    Password = "root"
     SslMode = "disable"
     MaxOpenConns = 50
     MaxIdleConns = 10

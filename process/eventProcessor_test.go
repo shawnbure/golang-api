@@ -1,7 +1,6 @@
 package process
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/erdsea/erdsea-api/data"
@@ -30,6 +29,4 @@ func TestEventProcessor_OnEvents(t *testing.T) {
 
 	proc := NewEventProcessor(addresses, identifiers)
 	proc.OnEvents(events)
-
-	fmt.Println(proc.collected)
 }
