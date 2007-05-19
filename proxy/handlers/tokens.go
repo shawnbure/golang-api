@@ -305,12 +305,12 @@ func (handler *tokensHandler) refreshMetadata(c *gin.Context) {
 		return
 	}
 
-	if jwtUser.AccountId != token.OwnerId {
+	if token.OwnerId != 0 && token.OwnerId != jwtUser.AccountId {
 		dtos.JsonResponse(c, http.StatusUnauthorized, nil, "")
 		return
 	}
 
-	metadata, err := services.RefreshMetadata(handler.blockchainConfig.ProxyUrl, token, jwtAddress)
+	metadata, err := services.RefreshMetadata(handler.blockchainConfig.ProxyUrl, token, jwtAddress, handler.blockchainConfig.MarketplaceAddress)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, "")
 		return

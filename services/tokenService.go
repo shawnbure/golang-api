@@ -720,7 +720,7 @@ func TryGetResponseCached(url string) (string, error) {
 	return metadataBytes, nil
 }
 
-func RefreshMetadata(blockchainProxy string, token *entities.Token, ownerAddress string) (datatypes.JSON, error) {
+func RefreshMetadata(blockchainProxy string, token *entities.Token, ownerAddress string, marketplaceAddress string) (datatypes.JSON, error) {
 	redisClient := cache.GetRedis()
 	redisContext := cache.GetContext()
 
@@ -739,18 +739,29 @@ func RefreshMetadata(blockchainProxy string, token *entities.Token, ownerAddress
 	if len(token.MetadataLink) == 0 {
 		link, innerErr := TryGetMetadataLink(blockchainProxy, ownerAddress, token.TokenID, token.Nonce)
 		if innerErr != nil {
-			log.Debug("could not get metadata link")
+			log.Debug("could not get metadata link from ownerAddress")
+			log.Debug("trying to get from marketplaceAddress")
+			link, innerErr = TryGetMetadataLink(blockchainProxy, marketplaceAddress, token.TokenID, token.Nonce)
+			if innerErr != nil {
+				log.Debug("could not get metadata link from marketplaceAddress")
+			} else {
+				refreshedMetadataLink = true
+				token.MetadataLink = link
+			}
 		} else {
 			refreshedMetadataLink = true
 			token.MetadataLink = link
 		}
 	}
 
+	attrs := datatypes.JSON("")
 	refreshedAttributes := false
-	attrs := GetAttributesFromMetadata(token.MetadataLink)
-	if len(attrs) != 0 {
-		refreshedAttributes = string(attrs) != string(token.Attributes)
-		token.Attributes = attrs
+	if len(token.MetadataLink) > 0 {
+		attrs = GetAttributesFromMetadata(token.MetadataLink)
+		if len(attrs) != 0 {
+			refreshedAttributes = string(attrs) != string(token.Attributes)
+			token.Attributes = attrs
+		}
 	}
 
 	if refreshedMetadataLink || refreshedAttributes {

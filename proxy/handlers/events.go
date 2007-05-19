@@ -14,6 +14,7 @@ const (
 	baseEventsEndpoint    = "/events"
 	pushEventsEndpoint    = "/push"
 	pushFinalizedEndpoint = "/finalized"
+	pushRevertEndpoint    = "/revert"
 )
 
 type eventsHandler struct {
@@ -33,7 +34,8 @@ func NewEventsHandler(
 
 	endpoints := []EndpointHandler{
 		{Method: http.MethodPost, Path: pushEventsEndpoint, HandlerFunc: h.pushEvents},
-		//{Method: http.MethodPost, Path: pushFinalizedEndpoint, HandlerFunc: h.pushFinalizedEvents},
+		{Method: http.MethodPost, Path: pushFinalizedEndpoint, HandlerFunc: h.returnOk},
+		{Method: http.MethodPost, Path: pushRevertEndpoint, HandlerFunc: h.returnOk},
 	}
 
 	endpointGroupHandler := EndpointGroupHandler{
@@ -74,6 +76,10 @@ func (h *eventsHandler) pushFinalizedEvents(c *gin.Context) {
 
 	h.processor.OnFinalizedEvent(finalizedBlock)
 
+	dtos.JsonResponse(c, http.StatusOK, nil, "")
+}
+
+func (h *eventsHandler) returnOk(c *gin.Context) {
 	dtos.JsonResponse(c, http.StatusOK, nil, "")
 }
 
