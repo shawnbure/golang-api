@@ -6,7 +6,7 @@ PSQL_USER=user
 PSQL_PSW=password
 
 PSQL_ADDR_REPLACE="#listen_addresses = 'localhost'"
-PSQL_ADDR_WITH="listen_addresses = '$MACHINE_IP'"
+PSQL_ADDR_WITH="listen_addresses = *"
 PSQL_CLIENT_CONNECT_OPT="host        all         all             0.0.0.0/0               md5"
 
 REDIS_PSW=some_pass
@@ -15,7 +15,11 @@ postgres_install() {
   if ! [ -x "$(command psql -V)" ]; then
     echo "postgresql is not installed on your system. installing"
 
-    sudo apt update && sudo apt postgresql postgresql-client
+    wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+
+    echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
+
+    sudo apt update && sudo apt -y install postgresql-12 postgresql-client-12
 
     sudo systemctl start postgresql.service && sudo systemctl enable postgresql.service
 
@@ -28,9 +32,9 @@ postgres_install() {
 }
 
 postgres_setup() {
-  echo "creating database with user: '$PSQL_USER' and password: '$PSQL_PSW'"
+  echo "creating database with user: $PSQL_USER and password: $PSQL_PSW"
 
-  sudo -u postgres bash -c "psql -c \"create user '$PSQL_USER' with password '$PSQL_PSW';\""
+  sudo -u postgres bash -c "psql -c \"create user $PSQL_USER with password '$PSQL_PSW';\""
   sudo -u postgres createdb -O $PSQL_USER $PSQL_DB
 
   sudo sed -i -e "s|$PSQL_ADDR_REPLACE|$PSQL_ADDR_WITH|g" /etc/postgresql/12/main/postgresql.conf
