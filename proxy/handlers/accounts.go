@@ -13,12 +13,13 @@ import (
 )
 
 const (
-	baseAccountsEndpoint   = "/accounts"
-	createAccountEndpoint  = "/create"
-	accountByIdEndpoint    = "/:walletAddress"
-	accountTokensEndpoint  = "/:walletAddress/tokens/:offset/:limit"
-	accountProfileEndpoint = "/:walletAddress/profile"
-	accountCoverEndpoint   = "/:walletAddress/cover"
+	baseAccountsEndpoint       = "/accounts"
+	createAccountEndpoint      = "/create"
+	accountByIdEndpoint        = "/:walletAddress"
+	accountTokensEndpoint      = "/:walletAddress/tokens/:offset/:limit"
+	accountCollectionsEndpoint = "/:walletAddress/collections/:offset/:limit"
+	accountProfileEndpoint     = "/:walletAddress/profile"
+	accountCoverEndpoint       = "/:walletAddress/cover"
 )
 
 type accountsHandler struct {
@@ -45,6 +46,7 @@ func NewAccountsHandler(groupHandler *groupHandler, authCfg config.AuthConfig) {
 		{Method: http.MethodGet, Path: accountProfileEndpoint, HandlerFunc: handler.getAccountProfile},
 		{Method: http.MethodGet, Path: accountCoverEndpoint, HandlerFunc: handler.getAccountCover},
 		{Method: http.MethodGet, Path: accountTokensEndpoint, HandlerFunc: handler.getAccountTokens},
+		{Method: http.MethodGet, Path: accountCollectionsEndpoint, HandlerFunc: handler.getAccountCollections},
 	}
 	publicEndpointGroupHandler := EndpointGroupHandler{
 		Root:             baseAccountsEndpoint,
@@ -356,4 +358,48 @@ func (handler *accountsHandler) getAccountTokens(c *gin.Context) {
 	}
 
 	dtos.JsonResponse(c, http.StatusOK, tokens, "")
+}
+
+// @Summary Gets collections for an account.
+// @Description Retrieves a list of collections. Unsorted.
+// @Tags accounts
+// @Accept json
+// @Produce json
+// @Param walletAddress path string true "wallet address"
+// @Param offset path int true "offset"
+// @Param limit path int true "limit"
+// @Success 200 {object} []entities.Collection
+// @Failure 400 {object} dtos.ApiResponse
+// @Failure 404 {object} dtos.ApiResponse
+// @Router /accounts/{walletAddress}/collections/{offset}/{limit} [get]
+func (handler *accountsHandler) getAccountCollections(c *gin.Context) {
+	offsetStr := c.Param("offset")
+	limitStr := c.Param("limit")
+	walletAddress := c.Param("walletAddress")
+
+	cacheInfo, err := services.GetOrAddAccountCacheInfo(walletAddress)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	offset, err := strconv.Atoi(offsetStr)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	collections, err := storage.GetCollectionsByOwnerIdWithOffsetLimit(cacheInfo.AccountId, offset, limit)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	dtos.JsonResponse(c, http.StatusOK, collections, "")
 }

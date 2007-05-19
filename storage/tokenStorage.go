@@ -152,7 +152,7 @@ func GetListedTokensByCollectionIdWithOffsetLimit(collectionId uint64, offset in
 		return nil, err
 	}
 
-	txRead := database.Offset(offset).Limit(limit).Find(&tokens, "listed = true AND collection_id = ?", collectionId)
+	txRead := database.Offset(offset).Limit(limit).Find(&tokens, "collection_id = ?", collectionId)
 	if txRead.Error != nil {
 		return nil, txRead.Error
 	}

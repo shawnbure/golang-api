@@ -352,6 +352,47 @@ paths:
       summary: Set account information
       tags:
       - accounts
+  /accounts/{walletAddress}/collections/{offset}/{limit}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a list of collections. Unsorted.
+      parameters:
+      - description: wallet address
+        in: path
+        name: walletAddress
+        required: true
+        type: string
+      - description: offset
+        in: path
+        name: offset
+        required: true
+        type: integer
+      - description: limit
+        in: path
+        name: limit
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entities.Collection'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: Gets collections for an account.
+      tags:
+      - accounts
   /accounts/{walletAddress}/cover:
     get:
       consumes:
