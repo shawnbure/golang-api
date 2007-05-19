@@ -4,13 +4,13 @@ type Transaction struct {
 	ID           uint64  `gorm:"primaryKey" json:"id"`
 	Hash         string  `json:"hash"`
 	Type         TxType  `json:"type"`
-	PriceNominal float64 `json:"price_nominal"`
+	PriceNominal float64 `json:"priceNominal"`
 	Timestamp    uint64  `json:"timestamp"`
 
-	SellerID     uint64 `json:"seller_id"`
-	BuyerID      uint64 `json:"buyer_id"`
-	TokenID      uint64 `json:"token_id"`
-	CollectionID uint64 `json:"collection_id"`
+	SellerID     uint64 `json:"sellerId"`
+	BuyerID      uint64 `json:"buyerId"`
+	TokenID      uint64 `json:"tokenId"`
+	CollectionID uint64 `json:"collectionId"`
 }
 
 type TxType string

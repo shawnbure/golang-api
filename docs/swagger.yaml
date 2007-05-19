@@ -112,21 +112,21 @@ definitions:
     type: object
   entities.Transaction:
     properties:
-      buyer_id:
+      buyerId:
         type: integer
-      collection_id:
+      collectionId:
         type: integer
       hash:
         type: string
       id:
         type: integer
-      price_nominal:
+      priceNominal:
         type: number
-      seller_id:
+      sellerId:
         type: integer
       timestamp:
         type: integer
-      token_id:
+      tokenId:
         type: integer
       type:
         type: string

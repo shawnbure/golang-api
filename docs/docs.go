@@ -1787,10 +1787,10 @@ var doc = `{
         "entities.Transaction": {
             "type": "object",
             "properties": {
-                "buyer_id": {
+                "buyerId": {
                     "type": "integer"
                 },
-                "collection_id": {
+                "collectionId": {
                     "type": "integer"
                 },
                 "hash": {
@@ -1799,16 +1799,16 @@ var doc = `{
                 "id": {
                     "type": "integer"
                 },
-                "price_nominal": {
+                "priceNominal": {
                     "type": "number"
                 },
-                "seller_id": {
+                "sellerId": {
                     "type": "integer"
                 },
                 "timestamp": {
                     "type": "integer"
                 },
-                "token_id": {
+                "tokenId": {
                     "type": "integer"
                 },
                 "type": {
