@@ -4,11 +4,18 @@ import (
 	"encoding/json"
 
 	"github.com/erdsea/erdsea-api/data/entities"
-	"github.com/erdsea/erdsea-api/services"
 )
 
+type CollectionStatistics struct {
+	ItemsCount   uint64                    `json:"itemsCount"`
+	OwnersCount  uint64                    `json:"ownersCount"`
+	FloorPrice   float64                   `json:"floorPrice"`
+	VolumeTraded float64                   `json:"volumeTraded"`
+	AttrStats    map[string]map[string]int `json:"attributes"`
+}
+
 type ExtendedTokenDto struct {
-	entities.Asset
+	entities.Token
 
 	AttributesMap  map[string]string
 	CollectionID   string
@@ -17,19 +24,19 @@ type ExtendedTokenDto struct {
 	OwnerName          string
 	OwnerWalletAddress string
 
-	Stats services.CollectionStatistics
+	Stats CollectionStatistics
 }
 
 func CreateExtendedTokenDto(
-	asset entities.Asset,
+	token entities.Token,
 	collectionID string,
 	collectionName string,
 	ownerName string,
 	ownerWalletAddress string,
-	collStats services.CollectionStatistics,
+	collStats CollectionStatistics,
 ) (*ExtendedTokenDto, error) {
 	e := &ExtendedTokenDto{
-		Asset:              asset,
+		Token:              token,
 		CollectionID:       collectionID,
 		CollectionName:     collectionName,
 		OwnerName:          ownerName,

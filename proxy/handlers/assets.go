@@ -12,22 +12,22 @@ import (
 )
 
 const (
-	baseAssetsEndpoint             = "/assets"
-	assetByTokenIdAndNonceEndpoint = "/:tokenId/:nonce"
+	baseTokensEndpoint             = "/tokens"
+	tokenByTokenIdAndNonceEndpoint = "/:tokenId/:nonce"
 )
 
-type assetsHandler struct {
+type tokensHandler struct {
 }
 
-func NewAssetsHandler(groupHandler *groupHandler, authCfg config.AuthConfig) {
-	handler := &assetsHandler{}
+func NewTokensHandler(groupHandler *groupHandler, authCfg config.AuthConfig) {
+	handler := &tokensHandler{}
 
 	endpoints := []EndpointHandler{
-		{Method: http.MethodGet, Path: assetByTokenIdAndNonceEndpoint, HandlerFunc: handler.getByTokenIdAndNonce},
+		{Method: http.MethodGet, Path: tokenByTokenIdAndNonceEndpoint, HandlerFunc: handler.getByTokenIdAndNonce},
 	}
 
 	endpointGroupHandler := EndpointGroupHandler{
-		Root:             baseAssetsEndpoint,
+		Root:             baseTokensEndpoint,
 		Middlewares:      []gin.HandlerFunc{middleware.Authorization(authCfg.JwtSecret)},
 		EndpointHandlers: endpoints,
 	}
@@ -42,11 +42,11 @@ func NewAssetsHandler(groupHandler *groupHandler, authCfg config.AuthConfig) {
 // @Produce json
 // @Param tokenId path string true "token id"
 // @Param nonce path int true "token nonce"
-// @Success 200 {object} data.Asset
+// @Success 200 {object} data.Token
 // @Failure 400 {object} data.ApiResponse
 // @Failure 404 {object} data.ApiResponse
 // @Router /assets/{tokenId}/{nonce} [get]
-func (handler *assetsHandler) getByTokenIdAndNonce(c *gin.Context) {
+func (handler *tokensHandler) getByTokenIdAndNonce(c *gin.Context) {
 	tokenId := c.Param("tokenId")
 	nonceString := c.Param("nonce")
 

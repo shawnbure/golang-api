@@ -131,7 +131,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 		OwnerId:      1,
 		Attributes:   datatypes.JSON(`{"hair": "red", "background": "dark"}`),
 	}
-	err = storage.AddAsset(&asset1)
+	err = storage.AddToken(&asset1)
 	require.Nil(t, err)
 
 	asset2 := entities.Asset{
@@ -140,7 +140,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 		OwnerId:      1,
 		Attributes:   datatypes.JSON(`{"hair": "green", "background": "dark"}`),
 	}
-	err = storage.AddAsset(&asset2)
+	err = storage.AddToken(&asset2)
 	require.Nil(t, err)
 
 	asset3 := entities.Asset{
@@ -149,7 +149,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 		OwnerId:      1,
 		Attributes:   datatypes.JSON(`{"hair": "blue", "background": "dark"}`),
 	}
-	err = storage.AddAsset(&asset3)
+	err = storage.AddToken(&asset3)
 	require.Nil(t, err)
 
 	asset4 := entities.Asset{
@@ -158,7 +158,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 		OwnerId:      1,
 		Attributes:   datatypes.JSON(`{}`),
 	}
-	err = storage.AddAsset(&asset4)
+	err = storage.AddToken(&asset4)
 	require.Nil(t, err)
 
 	asset5 := entities.Asset{
@@ -167,7 +167,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 		OwnerId:      1,
 		Attributes:   datatypes.JSON(`{"hair": "green"}`),
 	}
-	err = storage.AddAsset(&asset5)
+	err = storage.AddToken(&asset5)
 	require.Nil(t, err)
 
 	asset6 := entities.Asset{
@@ -176,7 +176,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 		OwnerId:      1,
 		Attributes:   datatypes.JSON(`{"background": "dark"}`),
 	}
-	err = storage.AddAsset(&asset6)
+	err = storage.AddToken(&asset6)
 	require.Nil(t, err)
 
 	asset7 := entities.Asset{
@@ -185,7 +185,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 		OwnerId:      1,
 		Attributes:   datatypes.JSON(`{"hair": "yellow", "background": "dark"}`),
 	}
-	err = storage.AddAsset(&asset7)
+	err = storage.AddToken(&asset7)
 	require.Nil(t, err)
 
 	asset8 := entities.Asset{
@@ -194,7 +194,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 		OwnerId:      1,
 		Attributes:   datatypes.JSON(`{"hair": "white", "background": "dark"}`),
 	}
-	err = storage.AddAsset(&asset8)
+	err = storage.AddToken(&asset8)
 	require.Nil(t, err)
 
 	asset9 := entities.Asset{
@@ -203,7 +203,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 		OwnerId:      1,
 		Attributes:   datatypes.JSON(`{"hair": "white", "background": "dark"}`),
 	}
-	err = storage.AddAsset(&asset9)
+	err = storage.AddToken(&asset9)
 	require.Nil(t, err)
 
 	asset10 := entities.Asset{
@@ -212,7 +212,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 		OwnerId:      1,
 		Attributes:   datatypes.JSON(`{"something_else": "yea"}`),
 	}
-	err = storage.AddAsset(&asset10)
+	err = storage.AddToken(&asset10)
 	require.Nil(t, err)
 
 	collStats, err := computeCollectionMetadata(coll.ID)

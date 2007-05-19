@@ -1,149 +1,150 @@
 package storage
 
 import (
-	"gorm.io/datatypes"
 	"strconv"
 	"testing"
 	"time"
+
+	"gorm.io/datatypes"
 
 	"github.com/erdsea/erdsea-api/data/entities"
 	"github.com/stretchr/testify/require"
 )
 
-func Test_AddAsset(t *testing.T) {
+func Test_AddToken(t *testing.T) {
 	connectToTestDb()
 
-	asset := defaultAsset()
-	err := AddAsset(&asset)
+	token := defaultToken()
+	err := AddToken(&token)
 	require.Nil(t, err)
 
-	var assetRead entities.Asset
-	txRead := GetDB().Last(&assetRead)
+	var tokenRead entities.Token
+	txRead := GetDB().Last(&tokenRead)
 
 	require.Nil(t, txRead.Error)
-	require.Equal(t, assetRead, asset)
+	require.Equal(t, tokenRead, token)
 }
 
-func Test_UpdateAsset(t *testing.T) {
+func Test_UpdateToken(t *testing.T) {
 	connectToTestDb()
 
-	asset := defaultAsset()
-	err := AddAsset(&asset)
+	token := defaultToken()
+	err := AddToken(&token)
 	require.Nil(t, err)
 
-	asset.TokenID = "new_token_id"
-	err = UpdateAsset(&asset)
+	token.TokenID = "new_token_id"
+	err = UpdateToken(&token)
 
-	var assetRead entities.Asset
-	txRead := GetDB().Last(&assetRead)
+	var tokenRead entities.Token
+	txRead := GetDB().Last(&tokenRead)
 
 	require.Nil(t, txRead.Error)
-	require.Equal(t, assetRead, asset)
+	require.Equal(t, tokenRead, token)
 }
 
-func Test_GetAssetById(t *testing.T) {
+func Test_GetTokenById(t *testing.T) {
 	connectToTestDb()
 
-	asset := defaultAsset()
-	err := AddAsset(&asset)
+	token := defaultToken()
+	err := AddToken(&token)
 	require.Nil(t, err)
 
-	assetRead, err := GetAssetById(asset.ID)
+	tokenRead, err := GetTokenById(token.ID)
 	require.Nil(t, err)
-	require.Equal(t, assetRead, &asset)
+	require.Equal(t, tokenRead, &token)
 }
 
-func Test_GetAssetByTokenIdAndNonce(t *testing.T) {
+func Test_GetTokenByTokenIdAndNonce(t *testing.T) {
 	connectToTestDb()
 
-	asset := defaultAsset()
-	asset.TokenID = "unique_token_id"
-	asset.Nonce = uint64(100)
+	token := defaultToken()
+	token.TokenID = "unique_token_id"
+	token.Nonce = uint64(100)
 
-	err := AddAsset(&asset)
+	err := AddToken(&token)
 	require.Nil(t, err)
 
-	assetRead, err := GetAssetByTokenIdAndNonce(asset.TokenID, asset.Nonce)
+	tokenRead, err := GetTokenByTokenIdAndNonce(token.TokenID, token.Nonce)
 	require.Nil(t, err)
-	require.Equal(t, assetRead.TokenID, asset.TokenID)
-	require.Equal(t, assetRead.Nonce, asset.Nonce)
+	require.Equal(t, tokenRead.TokenID, token.TokenID)
+	require.Equal(t, tokenRead.Nonce, token.Nonce)
 }
 
-func Test_GetAssetsOwnedBy(t *testing.T) {
+func Test_GetTokensOwnedBy(t *testing.T) {
 	connectToTestDb()
 	ownerId := uint64(1)
 
-	asset := defaultAsset()
-	err := AddAsset(&asset)
+	token := defaultToken()
+	err := AddToken(&token)
 	require.Nil(t, err)
 
-	otherAsset := defaultAsset()
-	err = AddAsset(&otherAsset)
+	otherToken := defaultToken()
+	err = AddToken(&otherToken)
 	require.Nil(t, err)
 
-	assetsRead, err := GetAssetsByOwnerIdWithOffsetLimit(ownerId, 0, 100)
+	tokensRead, err := GetTokensByOwnerIdWithOffsetLimit(ownerId, 0, 100)
 	require.Nil(t, err)
-	require.GreaterOrEqual(t, len(assetsRead), 2)
+	require.GreaterOrEqual(t, len(tokensRead), 2)
 
-	for _, assetRead := range assetsRead {
-		require.Equal(t, assetRead.OwnerId, ownerId)
+	for _, tokenRead := range tokensRead {
+		require.Equal(t, tokenRead.OwnerId, ownerId)
 	}
 }
 
-func Test_GetAssetsByCollectionId(t *testing.T) {
+func Test_GetTokensByCollectionId(t *testing.T) {
 	connectToTestDb()
 	collectionId := uint64(1)
 
-	asset := defaultAsset()
-	err := AddAsset(&asset)
+	token := defaultToken()
+	err := AddToken(&token)
 	require.Nil(t, err)
 
-	otherAsset := defaultAsset()
-	err = AddAsset(&otherAsset)
+	otherToken := defaultToken()
+	err = AddToken(&otherToken)
 	require.Nil(t, err)
 
-	assetsRead, err := GetAssetsByCollectionId(collectionId)
+	tokensRead, err := GetTokensByCollectionId(collectionId)
 	require.Nil(t, err)
-	require.GreaterOrEqual(t, len(assetsRead), 2)
+	require.GreaterOrEqual(t, len(tokensRead), 2)
 
-	for _, assetRead := range assetsRead {
-		require.Equal(t, assetRead.CollectionID, collectionId)
+	for _, tokenRead := range tokensRead {
+		require.Equal(t, tokenRead.CollectionID, collectionId)
 	}
 }
 
-func Test_CountListedAssetsByCollectionId(t *testing.T) {
+func Test_CountListedTokensByCollectionId(t *testing.T) {
 	connectToTestDb()
 
-	asset := defaultAsset()
-	err := AddAsset(&asset)
+	token := defaultToken()
+	err := AddToken(&token)
 	require.Nil(t, err)
 
-	otherAsset := defaultAsset()
-	err = AddAsset(&otherAsset)
+	otherToken := defaultToken()
+	err = AddToken(&otherToken)
 	require.Nil(t, err)
 
-	count, err := CountListedAssetsByCollectionId(1)
+	count, err := CountListedTokensByCollectionId(1)
 	require.Nil(t, err)
 	require.GreaterOrEqual(t, count, uint64(2))
 }
 
-func Test_CountUniqueOwnersWithListedAssetsByCollectionId(t *testing.T) {
+func Test_CountUniqueOwnersWithListedTokensByCollectionId(t *testing.T) {
 	connectToTestDb()
 
-	asset := defaultAsset()
-	err := AddAsset(&asset)
+	token := defaultToken()
+	err := AddToken(&token)
 	require.Nil(t, err)
 
-	otherAsset := defaultAsset()
-	err = AddAsset(&otherAsset)
+	otherToken := defaultToken()
+	err = AddToken(&otherToken)
 	require.Nil(t, err)
 
-	count, err := CountUniqueOwnersWithListedAssetsByCollectionId(1)
+	count, err := CountUniqueOwnersWithListedTokensByCollectionId(1)
 	require.Nil(t, err)
 	require.Equal(t, count, uint64(1))
 }
 
-func Test_GetAssetsByCollectionIdWithOffsetLimit(t *testing.T) {
+func Test_GetTokensByCollectionIdWithOffsetLimit(t *testing.T) {
 	connectToTestDb()
 
 	coll := entities.Collection{
@@ -152,43 +153,42 @@ func Test_GetAssetsByCollectionIdWithOffsetLimit(t *testing.T) {
 	err := AddCollection(&coll)
 	require.Nil(t, err)
 
-	asset1 := entities.Asset{
+	token1 := entities.Token{
 		CollectionID: coll.ID,
 		Listed:       true,
 		OwnerId:      1,
 		Attributes:   datatypes.JSON(`{"hair": "red", "background": "dark"}`),
 	}
-	err = AddAsset(&asset1)
+	err = AddToken(&token1)
 	require.Nil(t, err)
 
-	asset2 := entities.Asset{
+	token2 := entities.Token{
 		CollectionID: coll.ID,
 		Listed:       true,
 		OwnerId:      1,
 		Attributes:   datatypes.JSON(`{"hair": "green", "background": "dark"}`),
 	}
-	err = AddAsset(&asset2)
+	err = AddToken(&token2)
 	require.Nil(t, err)
 
 	attrs := map[string]string{"background": "dark"}
-	assets, err := GetAssetsByCollectionIdWithOffsetLimit(coll.ID, 0, 100, attrs)
+	tokens, err := GetTokensByCollectionIdWithOffsetLimit(coll.ID, 0, 100, attrs)
 	require.Nil(t, err)
-	require.Equal(t, len(assets), 2)
-
+	require.Equal(t, len(tokens), 2)
 
 	attrs2 := map[string]string{"background": "dark", "hair": "green"}
-	assets2, err := GetAssetsByCollectionIdWithOffsetLimit(coll.ID, 0, 100, attrs2)
+	tokens2, err := GetTokensByCollectionIdWithOffsetLimit(coll.ID, 0, 100, attrs2)
 	require.Nil(t, err)
-	require.Equal(t, len(assets2), 1)
+	require.Equal(t, len(tokens2), 1)
 }
 
-func defaultAsset() entities.Asset {
-	return entities.Asset{
+func defaultToken() entities.Token {
+	return entities.Token{
 		TokenID:      "my_token",
 		Nonce:        10,
 		PriceNominal: 1_000_000_000_000_000_000_000,
 		Listed:       true,
-		Link:         "link.com",
+		MetadataLink: "link.com",
 		OwnerId:      1,
 		CollectionID: 1,
 	}

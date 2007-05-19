@@ -198,7 +198,7 @@ func GetMinBuyPriceForTransactionsWithCollectionId(collectionId uint64) (float64
 	}
 
 	txRead := database.Select("MIN(price_nominal)").
-		Where("type = ? AND collection_id = ?", entities.BuyAsset, collectionId).
+		Where("type = ? AND collection_id = ?", entities.BuyToken, collectionId).
 		Table("transactions").
 		Find(&price)
 
@@ -218,7 +218,7 @@ func GetSumBuyPriceForTransactionsWithCollectionId(collectionId uint64) (float64
 	}
 
 	txRead := database.Select("SUM(price_nominal)").
-		Where("type = ? AND collection_id = ?", entities.BuyAsset, collectionId).
+		Where("type = ? AND collection_id = ?", entities.BuyToken, collectionId).
 		Table("transactions").
 		Find(&price)
 

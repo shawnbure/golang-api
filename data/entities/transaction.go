@@ -9,14 +9,14 @@ type Transaction struct {
 
 	SellerID     uint64
 	BuyerID      uint64
-	AssetID      uint64
+	TokenID      uint64
 	CollectionID uint64
 }
 
 type TxType string
 
 const (
-	ListAsset     TxType = "List"
-	BuyAsset             = "Buy"
-	WithdrawAsset        = "Withdraw"
+	ListToken     TxType = "List"
+	BuyToken             = "Buy"
+	WithdrawToken        = "Withdraw"
 )

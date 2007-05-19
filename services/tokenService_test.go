@@ -24,14 +24,14 @@ func Test_ListAsset(t *testing.T) {
 	}
 	_ = storage.AddCollection(&collection)
 
-	args := ListAssetArgs{
+	args := ListTokenArgs{
 		OwnerAddress: "ownerAddress",
 		TokenId:      "tokenId",
 		Nonce:        13,
 		Price:        "3635C9ADC5DEA00000",
 		TxHash:       "txHash",
 	}
-	ListAsset(args)
+	ListToken(args)
 
 	ownerAccount, err := storage.GetAccountByAddress("ownerAddress")
 	require.Nil(t, err)
@@ -41,10 +41,10 @@ func Test_ListAsset(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, transaction.Hash, "txHash")
 
-	asset, err := storage.GetAssetByTokenIdAndNonce("tokenId", 13)
+	asset, err := storage.GetTokenByTokenIdAndNonce("tokenId", 13)
 	require.Nil(t, err)
 
-	expectedAsset := entities.Asset{
+	expectedAsset := entities.Token{
 		ID:           asset.ID,
 		TokenID:      "tokenId",
 		Nonce:        13,
@@ -67,16 +67,16 @@ func Test_SellAsset(t *testing.T) {
 	}
 	_ = storage.AddCollection(&collection)
 
-	listArgs := ListAssetArgs{
+	listArgs := ListTokenArgs{
 		OwnerAddress: "ownerAddress",
 		TokenId:      "tokenId",
 		Nonce:        13,
 		Price:        "3635C9ADC5DEA00000",
 		TxHash:       "txHash",
 	}
-	ListAsset(listArgs)
+	ListToken(listArgs)
 
-	buyArgs := BuyAssetArgs{
+	buyArgs := BuyTokenArgs{
 		OwnerAddress: "ownerAddress",
 		BuyerAddress: "buyerAddress",
 		TokenId:      "tokenId",
@@ -84,7 +84,7 @@ func Test_SellAsset(t *testing.T) {
 		Price:        "3635C9ADC5DEA00000",
 		TxHash:       "txHashBuy",
 	}
-	BuyAsset(buyArgs)
+	BuyToken(buyArgs)
 
 	ownerAccount, err := storage.GetAccountByAddress("ownerAddress")
 	require.Nil(t, err)
@@ -98,10 +98,10 @@ func Test_SellAsset(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, transaction.Hash, "txHashBuy")
 
-	asset, err := storage.GetAssetByTokenIdAndNonce("tokenId", 13)
+	asset, err := storage.GetTokenByTokenIdAndNonce("tokenId", 13)
 	require.Nil(t, err)
 
-	expectedAsset := entities.Asset{
+	expectedAsset := entities.Token{
 		ID:           asset.ID,
 		TokenID:      "tokenId",
 		Nonce:        13,
@@ -124,23 +124,23 @@ func Test_WithdrawAsset(t *testing.T) {
 	}
 	_ = storage.AddCollection(&collection)
 
-	listArgs := ListAssetArgs{
+	listArgs := ListTokenArgs{
 		OwnerAddress: "ownerAddress",
 		TokenId:      "tokenId",
 		Nonce:        13,
 		Price:        "3635C9ADC5DEA00000",
 		TxHash:       "txHash",
 	}
-	ListAsset(listArgs)
+	ListToken(listArgs)
 
-	withdrawArgs := WithdrawAssetArgs{
+	withdrawArgs := WithdrawTokenArgs{
 		OwnerAddress: "ownerAddress",
 		TokenId:      "tokenId",
 		Nonce:        13,
 		Price:        "3635C9ADC5DEA00000",
 		TxHash:       "txHashWithdraw",
 	}
-	WithdrawAsset(withdrawArgs)
+	WithdrawToken(withdrawArgs)
 
 	ownerAccount, err := storage.GetAccountByAddress("ownerAddress")
 	require.Nil(t, err)
@@ -150,10 +150,10 @@ func Test_WithdrawAsset(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, transaction.Hash, "txHashWithdraw")
 
-	asset, err := storage.GetAssetByTokenIdAndNonce("tokenId", 13)
+	asset, err := storage.GetTokenByTokenIdAndNonce("tokenId", 13)
 	require.Nil(t, err)
 
-	expectedAsset := entities.Asset{
+	expectedAsset := entities.Token{
 		ID:           asset.ID,
 		TokenID:      "tokenId",
 		Nonce:        13,
@@ -197,12 +197,12 @@ func Test_GetPriceDenominated(T *testing.T) {
 }
 
 func Test_GetAssetLinkResponse(t *testing.T) {
-	asset := entities.Asset{
+	asset := entities.Token{
 		Nonce:        1,
 		MetadataLink: "https://wow-prod-nftribe.s3.eu-west-2.amazonaws.com/t",
 	}
 
-	osResponse, err := GetOSMetadataForAsset(asset.MetadataLink, asset.Nonce)
+	osResponse, err := GetOSMetadataForToken(asset.MetadataLink, asset.Nonce)
 	require.Nil(t, err)
 
 	attrs, err := ConstructAttributesJsonFromResponse(osResponse)
@@ -215,13 +215,13 @@ func Test_GetAssetLinkResponse(t *testing.T) {
 	require.Equal(t, attrsMap["Earrings"], "Lightning Bolts")
 
 	asset.Attributes = *attrs
-	err = storage.AddAsset(&asset)
+	err = storage.AddToken(&asset)
 	require.Nil(t, err)
 
 	db, err := storage.GetDBOrError()
 	require.Nil(t, err)
 
-	var assetRead entities.Asset
+	var assetRead entities.Token
 	txRead := db.First(&assetRead, datatypes.JSONQuery("attributes").Equals("Lightning Bolts", "Earrings"))
 	require.Nil(t, txRead.Error)
 	require.Equal(t, asset.MetadataLink, "https://wow-prod-nftribe.s3.eu-west-2.amazonaws.com/t")
@@ -231,7 +231,7 @@ func Test_ErdCompatibility(t *testing.T) {
 	connectToDb()
 
 	nonce := uint64(69)
-	listArgs := ListAssetArgs{
+	listArgs := ListTokenArgs{
 		OwnerAddress: "ownerAddress",
 		TokenId:      "tokenId",
 		Nonce:        nonce,
@@ -241,9 +241,9 @@ func Test_ErdCompatibility(t *testing.T) {
 		FirstLink:    "some_link",
 		LastLink:     "https://wow-prod-nftribe.s3.eu-west-2.amazonaws.com/t",
 	}
-	ListAsset(listArgs)
+	ListToken(listArgs)
 
-	asset, err := storage.GetAssetByTokenIdAndNonce("tokenId", nonce)
+	asset, err := storage.GetTokenByTokenIdAndNonce("tokenId", nonce)
 	require.Nil(t, err)
 	require.True(t, strings.Contains(asset.ImageLink, "ipfs://"))
 	require.Equal(t, asset.MetadataLink, "https://wow-prod-nftribe.s3.eu-west-2.amazonaws.com/t")
@@ -251,7 +251,7 @@ func Test_ErdCompatibility(t *testing.T) {
 	require.True(t, strings.Contains(asset.TokenName, "Woman"))
 
 	nonce = nonce + 1
-	listArgs = ListAssetArgs{
+	listArgs = ListTokenArgs{
 		OwnerAddress: "ownerAddress",
 		TokenId:      "tokenId",
 		Nonce:        nonce,
@@ -261,9 +261,9 @@ func Test_ErdCompatibility(t *testing.T) {
 		FirstLink:    "https://wow-prod-nftribe.s3.eu-west-2.amazonaws.com/t",
 		LastLink:     "some_link",
 	}
-	ListAsset(listArgs)
+	ListToken(listArgs)
 
-	asset, err = storage.GetAssetByTokenIdAndNonce("tokenId", nonce)
+	asset, err = storage.GetTokenByTokenIdAndNonce("tokenId", nonce)
 	require.Nil(t, err)
 	require.Equal(t, asset.ImageLink, "https://wow-prod-nftribe.s3.eu-west-2.amazonaws.com/t")
 	require.Equal(t, asset.MetadataLink, "")
