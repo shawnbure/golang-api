@@ -38,15 +38,3 @@ func (g *groupHandler) RegisterEndpoints(r *gin.Engine) {
 func (g *groupHandler) AddEndpointGroupHandler(endpointHandler EndpointGroupHandler) {
 	g.endpointHandlersMap[endpointHandler.Root] = endpointHandler
 }
-
-type ApiResponse struct {
-	Data  interface{} `json:"data"`
-	Error string      `json:"error"`
-}
-
-func JsonResponse(c *gin.Context, status int, data interface{}, error string) {
-	c.JSON(status, ApiResponse{
-		Data:  data,
-		Error: error,
-	})
-}

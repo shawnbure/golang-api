@@ -1,9 +1,13 @@
 package handlers
 
 import (
-	"github.com/erdsea/erdsea-api/storage"
 	"net/http"
 	"strconv"
+
+	"github.com/erdsea/erdsea-api/config"
+	"github.com/erdsea/erdsea-api/data"
+	"github.com/erdsea/erdsea-api/proxy/middleware"
+	"github.com/erdsea/erdsea-api/storage"
 
 	"github.com/gin-gonic/gin"
 )
@@ -17,7 +21,7 @@ const (
 type assetsHandler struct {
 }
 
-func NewAssetsHandler(groupHandler *groupHandler) {
+func NewAssetsHandler(groupHandler *groupHandler, authCfg config.AuthConfig) {
 	handler := &assetsHandler{}
 
 	endpoints := []EndpointHandler{
@@ -27,7 +31,7 @@ func NewAssetsHandler(groupHandler *groupHandler) {
 
 	endpointGroupHandler := EndpointGroupHandler{
 		Root:             baseAssetsEndpoint,
-		Middlewares:      []gin.HandlerFunc{},
+		Middlewares:      []gin.HandlerFunc{middleware.Authorization(authCfg.JwtSecret)},
 		EndpointHandlers: endpoints,
 	}
 
@@ -40,17 +44,17 @@ func (handler *assetsHandler) getByTokenIdAndNonce(c *gin.Context) {
 
 	nonce, err := strconv.ParseUint(nonceString, 10, 64)
 	if err != nil {
-		JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	asset, err := storage.GetAssetByTokenIdAndNonce(tokenId, nonce)
 	if err != nil {
-		JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
-	JsonResponse(c, http.StatusOK, asset, "")
+	data.JsonResponse(c, http.StatusOK, asset, "")
 }
 
 func (handler *assetsHandler) getByCollection(c *gin.Context) {
@@ -60,27 +64,27 @@ func (handler *assetsHandler) getByCollection(c *gin.Context) {
 
 	offset, err := strconv.Atoi(offsetStr)
 	if err != nil {
-		JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	limit, err := strconv.Atoi(limitStr)
 	if err != nil {
-		JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	collection, err := storage.GetCollectionByName(collectionName)
 	if err != nil {
-		JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
 	assets, err := storage.GetAssetsByCollectionIdWithOffsetLimit(collection.ID, offset, limit)
 	if err != nil {
-		JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
-	JsonResponse(c, http.StatusOK, assets, "")
+	data.JsonResponse(c, http.StatusOK, assets, "")
 }

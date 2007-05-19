@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"github.com/erdsea/erdsea-api/data"
 	"github.com/erdsea/erdsea-api/storage"
 	"net/http"
 	"strconv"
@@ -40,23 +41,23 @@ func (handler *collectionsHandler) get(c *gin.Context) {
 
 	offset, err := strconv.Atoi(offsetStr)
 	if err != nil {
-		JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	limit, err := strconv.Atoi(limitStr)
 	if err != nil {
-		JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	collections, err := storage.GetCollectionsWithOffsetLimit(offset, limit)
 	if err != nil {
-		JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
-	JsonResponse(c, http.StatusOK, collections, "")
+	data.JsonResponse(c, http.StatusOK, collections, "")
 }
 
 func (handler *collectionsHandler) getByName(c *gin.Context) {
@@ -64,9 +65,9 @@ func (handler *collectionsHandler) getByName(c *gin.Context) {
 
 	asset, err := storage.GetCollectionByName(collectionName)
 	if err != nil {
-		JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
-	JsonResponse(c, http.StatusOK, asset, "")
+	data.JsonResponse(c, http.StatusOK, asset, "")
 }

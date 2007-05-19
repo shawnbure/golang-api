@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"github.com/erdsea/erdsea-api/data"
 	"github.com/erdsea/erdsea-api/storage"
 	"net/http"
 	"strconv"
@@ -42,23 +43,23 @@ func (handler *transactionsHandler) get(c *gin.Context) {
 
 	offset, err := strconv.Atoi(offsetStr)
 	if err != nil {
-		JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	limit, err := strconv.Atoi(limitStr)
 	if err != nil {
-		JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	transactions, err := storage.GetTransactionsWithOffsetLimit(offset, limit)
 	if err != nil {
-		JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
-	JsonResponse(c, http.StatusOK, transactions, "")
+	data.JsonResponse(c, http.StatusOK, transactions, "")
 }
 
 func (handler *transactionsHandler) getByAsset(c *gin.Context) {
@@ -69,35 +70,35 @@ func (handler *transactionsHandler) getByAsset(c *gin.Context) {
 
 	nonce, err := strconv.ParseUint(nonceString, 10, 64)
 	if err != nil {
-		JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	offset, err := strconv.Atoi(offsetStr)
 	if err != nil {
-		JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	limit, err := strconv.Atoi(limitStr)
 	if err != nil {
-		JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	asset, err := storage.GetAssetByTokenIdAndNonce(tokenId, nonce)
 	if err != nil {
-		JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
 	transactions, err := storage.GetTransactionsByAssetIdWithOffsetLimit(asset.ID, offset, limit)
 	if err != nil {
-		JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
-	JsonResponse(c, http.StatusOK, transactions, "")
+	data.JsonResponse(c, http.StatusOK, transactions, "")
 }
 
 func (handler *transactionsHandler) getByAddress(c *gin.Context) {
@@ -107,27 +108,27 @@ func (handler *transactionsHandler) getByAddress(c *gin.Context) {
 
 	offset, err := strconv.Atoi(offsetStr)
 	if err != nil {
-		JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	limit, err := strconv.Atoi(limitStr)
 	if err != nil {
-		JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	account, err := storage.GetAccountByAddress(address)
 	if err != nil {
-		JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
 	transactions, err := storage.GetTransactionsByBuyerOrSellerIdWithOffsetLimit(account.ID, offset, limit)
 	if err != nil {
-		JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
-	JsonResponse(c, http.StatusOK, transactions, "")
+	data.JsonResponse(c, http.StatusOK, transactions, "")
 }

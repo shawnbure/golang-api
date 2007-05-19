@@ -1,14 +1,10 @@
 [ConnectorApi]
     Port = "5000"
-
     Username = ""
-
     Password = ""
-
     Addresses = [
         "erd1qqqqqqqqqqqqqpgq3k89y42xjk2z05zu5vtjkcgsvhvjhu6nt9usruf2td",
     ]
-
     Identifiers = [
         "collection_register",
         "put_nft_for_sale",
@@ -33,6 +29,12 @@
     MaxOpenConns = 50
     MaxIdleConns = 10
     ShouldMigrate = true
+
+[Auth]
+    JwtSecret = "bitcoin-to-1-milly"
+    JwtIssuer = "localhost:5000"
+    JwtKeySeedHex = "d6592724167553acf9c8cba9a7dbc7f514efc757d7906546cecfdfc5d4c2e8d1"
+    JwtExpiryMins = 15
 
 [Cache]
     Url = "redis://localhost:6379"

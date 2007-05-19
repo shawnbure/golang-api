@@ -2,9 +2,10 @@ package proxy
 
 import (
 	"fmt"
-	"github.com/erdsea/erdsea-api/process"
 	"net/http"
 	"strings"
+
+	"github.com/erdsea/erdsea-api/process"
 
 	"github.com/erdsea/erdsea-api/config"
 	"github.com/erdsea/erdsea-api/proxy/handlers"
@@ -17,19 +18,27 @@ type webServer struct {
 	generalConfig *config.GeneralConfig
 }
 
-func NewWebServer(generalConfig *config.GeneralConfig) (*webServer, error) {
+func NewWebServer(cfg *config.GeneralConfig) (*webServer, error) {
 	router := gin.Default()
 	router.Use(cors.Default())
 
 	groupHandler := handlers.NewGroupHandler()
 
-	processor := process.NewEventProcessor(generalConfig.ConnectorApi.Addresses, generalConfig.ConnectorApi.Identifiers)
-	err := handlers.NewEventsHandler(groupHandler, processor, generalConfig.ConnectorApi)
+	processor := process.NewEventProcessor(
+		cfg.ConnectorApi.Addresses,
+		cfg.ConnectorApi.Identifiers,
+	)
+
+	err := handlers.NewEventsHandler(
+		groupHandler,
+		processor,
+		cfg.ConnectorApi,
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	handlers.NewAssetsHandler(groupHandler)
+	handlers.NewAssetsHandler(groupHandler, cfg.Auth)
 	handlers.NewCollectionsHandler(groupHandler)
 	handlers.NewTransactionsHandler(groupHandler)
 
@@ -37,7 +46,7 @@ func NewWebServer(generalConfig *config.GeneralConfig) (*webServer, error) {
 
 	return &webServer{
 		router:        router,
-		generalConfig: generalConfig,
+		generalConfig: cfg,
 	}, nil
 }
 

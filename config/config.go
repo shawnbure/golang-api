@@ -10,6 +10,7 @@ type GeneralConfig struct {
 	ConnectorApi ConnectorApiConfig
 	Blockchain   BlockchainConfig
 	Database     DatabaseConfig
+	Auth         AuthConfig
 	Cache        CacheConfig
 }
 
@@ -39,6 +40,13 @@ type DatabaseConfig struct {
 	MaxOpenConns  int
 	MaxIdleConns  int
 	ShouldMigrate bool
+}
+
+type AuthConfig struct {
+	JwtSecret     string
+	JwtIssuer     string
+	JwtKeySeedHex string
+	JwtExpiryMins int
 }
 
 type CacheConfig struct {
