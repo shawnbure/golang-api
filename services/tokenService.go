@@ -62,7 +62,7 @@ const (
 	minPercentRoyaltiesUnit = 100
 	minPriceDecimals        = 15
 
-	maxTokenLinkResponseSize = 1024
+	maxTokenLinkResponseSize = 2048
 	maxTokenNumAvailableSize = 25
 
 	ZeroAddress           = "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu"
@@ -454,7 +454,7 @@ func GetAttributesFromMetadata(link string) datatypes.JSON {
 		return emptyResponse
 	}
 
-	attributes := make(map[string]string)
+	attributes := make(map[string]interface{})
 	for _, key := range response.Attributes {
 		attributes[key.TraitType] = key.Value
 	}

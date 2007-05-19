@@ -11,6 +11,7 @@ import (
 
 	"github.com/erdsea/erdsea-api/cache"
 	"github.com/erdsea/erdsea-api/config"
+	"github.com/erdsea/erdsea-api/data/dtos"
 	"github.com/erdsea/erdsea-api/data/entities"
 	"github.com/erdsea/erdsea-api/storage"
 	"github.com/stretchr/testify/require"
@@ -360,4 +361,58 @@ func Test_StartAuctionEndAuction(t *testing.T) {
 	require.Equal(t, uint64(0), tokenAfterEnd.OwnerId)
 	require.Equal(t, 4722.366, tokenAfterEnd.LastBuyPriceNominal)
 	require.Equal(t, entities.TokenStatus(entities.None), tokenAfterEnd.Status)
+}
+
+func Test_GetMetadata(t *testing.T) {
+	link := "https://www.chubbiverse.com/api/meta/1/1"
+	bytes, err := HttpGetRaw(link)
+	require.Nil(t, err)
+	println(bytes)
+	println(len(bytes))
+	var response dtos.MetadataLinkResponse
+	err = json.Unmarshal([]byte(bytes), &response)
+	require.Nil(t, err)
+
+	println("--------------------")
+
+	link = "https://gateway.pinata.cloud/ipfs/QmPxQivTP7tncEkyrB7yLG7XmQXXsj8H9GfZ7vdH69eJ8k/1"
+	bytes, err = HttpGetRaw(link)
+	require.Nil(t, err)
+	println(bytes)
+	println(len(bytes))
+	err = json.Unmarshal([]byte(bytes), &response)
+	require.Nil(t, err)
+
+	println("--------------------")
+
+	link = "https://gateway.pinata.cloud/ipfs/QmZRb9AxuDAe8KfcVGw6XUQa1bH1pRPT2hbTWwWb48tLgb/1"
+	bytes, err = HttpGetRaw(link)
+	require.Nil(t, err)
+	println(bytes)
+	println(len(bytes))
+	err = json.Unmarshal([]byte(bytes), &response)
+	require.Nil(t, err)
+
+	println("--------------------")
+
+	link = "https://nftartisans.mypinata.cloud/ipfs/QmRR919iHG8frctbLhktKzSgWJyCGUp8rktJaczDzyvAke/1"
+	bytes, err = HttpGetRaw(link)
+	require.Nil(t, err)
+	println(bytes)
+	println(len(bytes))
+	err = json.Unmarshal([]byte(bytes), &response)
+	require.Nil(t, err)
+
+	println("--------------------")
+
+	link = "https://galacticapes.mypinata.cloud/ipfs/QmRDdnGJYQhPjq8ebxtsea8cptCUkgZwgBMnq1grW8mWJr/1"
+	bytes, err = HttpGetRaw(link)
+	require.Nil(t, err)
+	println(bytes)
+	println(len(bytes))
+	err = json.Unmarshal([]byte(bytes), &response)
+	require.Nil(t, err)
+
+
+	println("--------------------")
 }

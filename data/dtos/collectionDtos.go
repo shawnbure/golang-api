@@ -15,14 +15,14 @@ type CollectionStatistics struct {
 }
 
 type Attribute struct {
-	TraitType string `json:"trait_type"`
-	Value     string `json:"value"`
+	TraitType string      `json:"trait_type"`
+	Value     interface{} `json:"value"`
 }
 
 type AttributeStat struct {
-	TraitType string `json:"trait_type"`
-	Value     string `json:"value"`
-	Total     uint64 `json:"total"`
+	TraitType string      `json:"trait_type"`
+	Value     interface{} `json:"value"`
+	Total     uint64      `json:"total"`
 }
 
 type MetadataLinkResponse struct {
