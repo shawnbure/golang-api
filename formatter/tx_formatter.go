@@ -102,9 +102,3 @@ func (f *TxFormatter) NewWithdrawNftTxTemplate(senderAddr string, tokenId string
 		Options:   0,
 	}
 }
-
-func Use(vals ...interface{}) {
-	for _, val := range vals {
-		_ = val
-	}
-}
