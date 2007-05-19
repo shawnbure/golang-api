@@ -1644,6 +1644,104 @@ paths:
       summary: Cancels offer for an NFT - tx template.
       tags:
       - tx-template
+  /tx-template/change-owner/{userAddress}/{contractAddress}:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: user address
+        in: path
+        name: userAddress
+        required: true
+        type: string
+      - description: contract address
+        in: path
+        name: contractAddress
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/formatter.Transaction'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: Gets tx-template for change owner of NFT contract.
+      tags:
+      - tx-template
+  /tx-template/deploy-template/{userAddress}/{tokenId}/{royalties}/{tokenNameBase}/{imageExt}/{price}/{maxSupply}/{saleStart}:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: user address
+        in: path
+        name: userAddress
+        required: true
+        type: string
+      - description: token id
+        in: path
+        name: tokenId
+        required: true
+        type: string
+      - description: royalties
+        in: path
+        name: royalties
+        required: true
+        type: number
+      - description: tokenNameBase
+        in: path
+        name: tokenNameBase
+        required: true
+        type: string
+      - description: imageBase
+        in: path
+        name: imageBase
+        required: true
+        type: string
+      - description: imageExt
+        in: path
+        name: imageExt
+        required: true
+        type: string
+      - description: price
+        in: path
+        name: price
+        required: true
+        type: number
+      - description: maxSupply
+        in: path
+        name: maxSupply
+        required: true
+        type: integer
+      - description: saleStart
+        in: path
+        name: saleStart
+        required: true
+        type: integer
+      - description: metadataBase
+        in: path
+        name: metadataBase
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/formatter.Transaction'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: Gets tx-template for deploy NFT template contract.
+      tags:
+      - tx-template
   /tx-template/deposit/{userAddress}/{amount}:
     get:
       consumes:
@@ -1703,6 +1801,36 @@ paths:
           schema:
             $ref: '#/definitions/dtos.ApiResponse'
       summary: End auction for an NFT - tx template.
+      tags:
+      - tx-template
+  /tx-template/issue-nft/{userAddress}/{tokenName}/{tokenTicker}:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: user address
+        in: path
+        name: userAddress
+        required: true
+        type: string
+      - description: token name
+        in: path
+        name: tokenName
+        required: true
+        type: string
+      - description: token ticker
+        in: path
+        name: tokenTicker
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/formatter.Transaction'
+      summary: Gets tx-template for issue NFT tokens.
       tags:
       - tx-template
   /tx-template/list-nft/{userAddress}/{tokenId}/{nonce}/{price}:
@@ -1878,6 +2006,40 @@ paths:
           schema:
             $ref: '#/definitions/dtos.ApiResponse'
       summary: Start auction for an NFT - tx template.
+      tags:
+      - tx-template
+  /tx-template/set-roles/{userAddress}/{tokenId}/{contractAddress}:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: user address
+        in: path
+        name: userAddress
+        required: true
+        type: string
+      - description: token name
+        in: path
+        name: tokenName
+        required: true
+        type: string
+      - description: token ticker
+        in: path
+        name: tokenTicker
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/formatter.Transaction'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: Gets tx-template for change set special roles for NFT contract.
       tags:
       - tx-template
   /tx-template/start-auction/{userAddress}/{tokenId}/{nonce}/{minBid}/{startTime}/{deadline}:

@@ -25,7 +25,13 @@ var (
 	depositEndpointName                  = "deposit"
 	withdrawEndpointName                 = "withdraw"
 	withdrawCreatorRoyaltiesEndpointName = "withdrawCreatorRoyalties"
+	issueNFTEndpointName                 = "issueNonFungible"
+	deployNFTTemplateEndpointName        = "deployNFTTemplateContract"
+	changeOwnerEndpointName              = "changeOwner"
+	setSpecialRoleEndpointName           = "setSpecialRole"
 )
+
+const RoyaltiesBP = 100
 
 type Transaction struct {
 	Nonce     uint64 `json:"nonce"`
@@ -343,4 +349,125 @@ func (f *TxFormatter) NewMintNftsTxTemplate(
 		Version:   1,
 		Options:   0,
 	}
+}
+
+func (f *TxFormatter) NewIssueNFTTxTemplate(
+	walletAddress string,
+	tokenName string,
+	tokenTicker string,
+) Transaction {
+	txData := issueNFTEndpointName +
+		"@" + hex.EncodeToString([]byte(tokenName)) +
+		"@" + hex.EncodeToString([]byte(tokenTicker))
+
+	return Transaction{
+		Nonce:     0,
+		Value:     f.config.IssueTokenEGLDCost,
+		RcvAddr:   f.config.SystemSCAddress,
+		SndAddr:   walletAddress,
+		GasPrice:  f.config.GasPrice,
+		GasLimit:  f.config.IssueNFTGasLimit,
+		Data:      txData,
+		Signature: "",
+		ChainID:   f.config.ChainID,
+		Version:   1,
+		Options:   0,
+	}
+}
+
+func (f *TxFormatter) DeployNFTTemplateTxTemplate(
+	walletAddress string,
+	tokenId string,
+	royalties float64,
+	tokenNameBase string,
+	imageBaseUrl string,
+	imageExtension string,
+	price float64,
+	maxSupply uint64,
+	saleStartTimestamp uint64,
+	metadataBaseUrl string,
+) Transaction {
+	txData := deployNFTTemplateEndpointName +
+		"@" + hex.EncodeToString([]byte(tokenId)) +
+		"@" + hex.EncodeToString(big.NewInt(int64(royalties*RoyaltiesBP)).Bytes()) +
+		"@" + hex.EncodeToString([]byte(tokenNameBase)) +
+		"@" + hex.EncodeToString([]byte(imageBaseUrl)) +
+		"@" + hex.EncodeToString([]byte(imageExtension)) +
+		"@" + hex.EncodeToString(services.GetPriceDenominated(price).Bytes()) +
+		"@" + hex.EncodeToString(big.NewInt(int64(maxSupply)).Bytes()) +
+		"@" + hex.EncodeToString(big.NewInt(int64(saleStartTimestamp)).Bytes())
+
+	if len(metadataBaseUrl) > 1 {
+		txData += "@" + hex.EncodeToString([]byte(metadataBaseUrl))
+	}
+
+	return Transaction{
+		Nonce:     0,
+		Value:     f.config.DeployNFTTemplateEGLDCost,
+		RcvAddr:   f.config.DeployerAddress,
+		SndAddr:   walletAddress,
+		GasPrice:  f.config.GasPrice,
+		GasLimit:  f.config.DeployNFTTemplateGasLimit,
+		Data:      txData,
+		Signature: "",
+		ChainID:   f.config.ChainID,
+		Version:   1,
+		Options:   0,
+	}
+}
+
+func (f *TxFormatter) ChangeOwnerTxTemplate(
+	walletAddress string,
+	contractAddress string,
+) (*Transaction, error) {
+	scAddress, err := data.NewAddressFromBech32String(contractAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	txData := changeOwnerEndpointName + "@" + hex.EncodeToString(scAddress.AddressBytes())
+
+	return &Transaction{
+		Nonce:     0,
+		Value:     "0",
+		RcvAddr:   f.config.DeployerAddress,
+		SndAddr:   walletAddress,
+		GasPrice:  f.config.GasPrice,
+		GasLimit:  f.config.ChangeOwnerGasLimit,
+		Data:      txData,
+		Signature: "",
+		ChainID:   f.config.ChainID,
+		Version:   1,
+		Options:   0,
+	}, nil
+}
+
+func (f *TxFormatter) SetSpecialRolesTxTemplate(
+	walletAddress string,
+	tokenId string,
+	contractAddress string,
+) (*Transaction, error) {
+	scAddress, err := data.NewAddressFromBech32String(contractAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	txData := setSpecialRoleEndpointName +
+		"@" + hex.EncodeToString([]byte(tokenId)) +
+		"@" + hex.EncodeToString(scAddress.AddressBytes()) +
+		"@45534454526f6c654e4654437265617465"
+
+	return &Transaction{
+		Nonce:     0,
+		Value:     "0",
+		RcvAddr:   f.config.SystemSCAddress,
+		SndAddr:   walletAddress,
+		GasPrice:  f.config.GasPrice,
+		GasLimit:  f.config.SetSpecialRolesGasLimit,
+		Data:      txData,
+		Signature: "",
+		ChainID:   f.config.ChainID,
+		Version:   1,
+		Options:   0,
+	}, nil
 }

@@ -27,6 +27,10 @@ const (
 	mintTokensFormatEndpoint               = "/mint-tokens/:userAddress/:tokenId/:numberOfTokens"
 	withdrawFormatEndpoint                 = "/withdraw/:userAddress/:amount"
 	withdrawCreatorRoyaltiesFormatEndpoint = "/withdraw-creator-royalties/:userAddress"
+	issueNFTFormatEndpoint                 = "/issue-nft/:userAddress/:tokenName/:tokenTicker"
+	deployNFTTemplateFormatEndpoint        = "/deploy-template/:userAddress/:tokenId/:royalties/:tokenNameBase/:imageExt/:price/:maxSupply/:saleStart"
+	changeOwnerFormatEndpoint              = "/change-owner/:userAddress/:contractAddress"
+	setSpecialRolesFormatEndpoint          = "/set-roles/:userAddress/:tokenId/:contractAddress"
 )
 
 type txTemplateHandler struct {
@@ -52,6 +56,10 @@ func NewTxTemplateHandler(groupHandler *groupHandler, blockchainConfig config.Bl
 		{Method: http.MethodGet, Path: withdrawFormatEndpoint, HandlerFunc: handler.getWithdrawTemplate},
 		{Method: http.MethodGet, Path: mintTokensFormatEndpoint, HandlerFunc: handler.getMintNftTxTemplate},
 		{Method: http.MethodGet, Path: withdrawCreatorRoyaltiesFormatEndpoint, HandlerFunc: handler.getWithdrawCreatorRoyalties},
+		{Method: http.MethodGet, Path: issueNFTFormatEndpoint, HandlerFunc: handler.getIssueNFT},
+		{Method: http.MethodGet, Path: deployNFTTemplateFormatEndpoint, HandlerFunc: handler.getDeployNFTTemplate},
+		{Method: http.MethodGet, Path: changeOwnerFormatEndpoint, HandlerFunc: handler.getChangeOwner},
+		{Method: http.MethodGet, Path: setSpecialRolesFormatEndpoint, HandlerFunc: handler.getSetSpecialRoles},
 	}
 
 	endpointGroupHandler := EndpointGroupHandler{
@@ -493,5 +501,152 @@ func (handler *txTemplateHandler) getMintNftTxTemplate(c *gin.Context) {
 		collection.MintPricePerTokenNominal,
 		numberOfTokens,
 	)
+	dtos.JsonResponse(c, http.StatusOK, template, "")
+}
+
+// @Summary Gets tx-template for issue NFT tokens.
+// @Description
+// @Tags tx-template
+// @Accept json
+// @Produce json
+// @Param userAddress path string true "user address"
+// @Param tokenName path string true "token name"
+// @Param tokenTicker path string true "token ticker"
+// @Success 200 {object} formatter.Transaction
+// @Router /tx-template/issue-nft/{userAddress}/{tokenName}/{tokenTicker} [get]
+func (handler *txTemplateHandler) getIssueNFT(c *gin.Context) {
+	userAddress := c.Param("userAddress")
+	tokenName := c.Param("tokenName")
+	tokenTicker := c.Param("tokenTicker")
+
+	template := handler.txFormatter.NewIssueNFTTxTemplate(
+		userAddress,
+		tokenName,
+		tokenTicker,
+	)
+	dtos.JsonResponse(c, http.StatusOK, template, "")
+}
+
+// @Summary Gets tx-template for deploy NFT template contract.
+// @Description
+// @Tags tx-template
+// @Accept json
+// @Produce json
+// @Param userAddress path string true "user address"
+// @Param tokenId path string true "token id"
+// @Param royalties path float64 true "royalties"
+// @Param tokenNameBase path string true "tokenNameBase"
+// @Param imageBase path string true "imageBase"
+// @Param imageExt path string true "imageExt"
+// @Param price path float64 true "price"
+// @Param maxSupply path int true "maxSupply"
+// @Param saleStart path int true "saleStart"
+// @Param metadataBase path string true "metadataBase"
+// @Success 200 {object} formatter.Transaction
+// @Failure 400 {object} dtos.ApiResponse
+// @Router /tx-template/deploy-template/{userAddress}/{tokenId}/{royalties}/{tokenNameBase}/{imageExt}/{price}/{maxSupply}/{saleStart} [get]
+func (handler *txTemplateHandler) getDeployNFTTemplate(c *gin.Context) {
+	userAddress := c.Param("userAddress")
+	tokenId := c.Param("tokenId")
+	tokenNameBase := c.Param("tokenNameBase")
+	royaltiesStr := c.Param("royalties")
+	imageExt := c.Param("imageExt")
+	priceStr := c.Param("price")
+	maxSupplyStr := c.Param("maxSupply")
+	saleStartStr := c.Param("saleStart")
+	imageBase := c.Query("imageBaseLink")
+	metadataBase := c.Query("metadataBaseLink")
+
+	maxSupply, err := strconv.ParseUint(maxSupplyStr, 10, 64)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	saleStart, err := strconv.ParseUint(saleStartStr, 10, 16)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	price, err := strconv.ParseFloat(priceStr, 64)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	royalties, err := strconv.ParseFloat(royaltiesStr, 64)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	template := handler.txFormatter.DeployNFTTemplateTxTemplate(
+		userAddress,
+		tokenId,
+		royalties,
+		tokenNameBase,
+		imageBase,
+		imageExt,
+		price,
+		maxSupply,
+		saleStart,
+		metadataBase,
+	)
+	dtos.JsonResponse(c, http.StatusOK, template, "")
+}
+
+// @Summary Gets tx-template for change owner of NFT contract.
+// @Description
+// @Tags tx-template
+// @Accept json
+// @Produce json
+// @Param userAddress path string true "user address"
+// @Param contractAddress path string true "contract address"
+// @Success 200 {object} formatter.Transaction
+// @Failure 400 {object} dtos.ApiResponse
+// @Router /tx-template/change-owner/{userAddress}/{contractAddress} [get]
+func (handler *txTemplateHandler) getChangeOwner(c *gin.Context) {
+	userAddress := c.Param("userAddress")
+	contractAddress := c.Param("contractAddress")
+
+	template, err := handler.txFormatter.ChangeOwnerTxTemplate(
+		userAddress,
+		contractAddress,
+	)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	dtos.JsonResponse(c, http.StatusOK, template, "")
+}
+
+// @Summary Gets tx-template for change set special roles for NFT contract.
+// @Description
+// @Tags tx-template
+// @Accept json
+// @Produce json
+// @Param userAddress path string true "user address"
+// @Param tokenName path string true "token name"
+// @Param tokenTicker path string true "token ticker"
+// @Success 200 {object} formatter.Transaction
+// @Failure 400 {object} dtos.ApiResponse
+// @Router /tx-template/set-roles/{userAddress}/{tokenId}/{contractAddress} [get]
+func (handler *txTemplateHandler) getSetSpecialRoles(c *gin.Context) {
+	userAddress := c.Param("userAddress")
+	tokenId := c.Param("tokenId")
+	contractAddress := c.Param("contractAddress")
+
+	template, err := handler.txFormatter.SetSpecialRolesTxTemplate(
+		userAddress,
+		tokenId,
+		contractAddress,
+	)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
 	dtos.JsonResponse(c, http.StatusOK, template, "")
 }

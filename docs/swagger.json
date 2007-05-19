@@ -1781,6 +1781,150 @@
                 }
             }
         },
+        "/tx-template/change-owner/{userAddress}/{contractAddress}": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tx-template"
+                ],
+                "summary": "Gets tx-template for change owner of NFT contract.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user address",
+                        "name": "userAddress",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "contract address",
+                        "name": "contractAddress",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/formatter.Transaction"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/tx-template/deploy-template/{userAddress}/{tokenId}/{royalties}/{tokenNameBase}/{imageExt}/{price}/{maxSupply}/{saleStart}": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tx-template"
+                ],
+                "summary": "Gets tx-template for deploy NFT template contract.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user address",
+                        "name": "userAddress",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "token id",
+                        "name": "tokenId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "number",
+                        "description": "royalties",
+                        "name": "royalties",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "tokenNameBase",
+                        "name": "tokenNameBase",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "imageBase",
+                        "name": "imageBase",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "imageExt",
+                        "name": "imageExt",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "number",
+                        "description": "price",
+                        "name": "price",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "maxSupply",
+                        "name": "maxSupply",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "saleStart",
+                        "name": "saleStart",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "metadataBase",
+                        "name": "metadataBase",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/formatter.Transaction"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/tx-template/deposit/{userAddress}/{amount}": {
             "get": {
                 "description": "Retrieves tx-template for deposit transaction.",
@@ -1867,6 +2011,51 @@
                         "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/tx-template/issue-nft/{userAddress}/{tokenName}/{tokenTicker}": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tx-template"
+                ],
+                "summary": "Gets tx-template for issue NFT tokens.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user address",
+                        "name": "userAddress",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "token name",
+                        "name": "tokenName",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "token ticker",
+                        "name": "tokenTicker",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/formatter.Transaction"
                         }
                     }
                 }
@@ -2107,6 +2296,57 @@
                         "type": "number",
                         "description": "bidAmount",
                         "name": "bidAmount",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/formatter.Transaction"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/tx-template/set-roles/{userAddress}/{tokenId}/{contractAddress}": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tx-template"
+                ],
+                "summary": "Gets tx-template for change set special roles for NFT contract.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user address",
+                        "name": "userAddress",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "token name",
+                        "name": "tokenName",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "token ticker",
+                        "name": "tokenTicker",
                         "in": "path",
                         "required": true
                     }
