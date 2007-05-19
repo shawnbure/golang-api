@@ -7,13 +7,13 @@ import (
 	"github.com/erdsea/erdsea-api/data"
 )
 
-func AddAsset(asset *data.Asset) error {
+func AddToken(token *data.Token) error {
 	database, err := GetDBOrError()
 	if err != nil {
 		return err
 	}
 
-	txCreate := database.Create(&asset)
+	txCreate := database.Create(&token)
 	if txCreate.Error != nil {
 		return txCreate.Error
 	}
@@ -24,13 +24,13 @@ func AddAsset(asset *data.Asset) error {
 	return nil
 }
 
-func UpdateAsset(asset *data.Asset) error {
+func UpdateToken(token *data.Token) error {
 	database, err := GetDBOrError()
 	if err != nil {
 		return err
 	}
 
-	txCreate := database.Save(&asset)
+	txCreate := database.Save(&token)
 	if txCreate.Error != nil {
 		return txCreate.Error
 	}
@@ -41,15 +41,15 @@ func UpdateAsset(asset *data.Asset) error {
 	return nil
 }
 
-func GetAssetById(id uint64) (*data.Asset, error) {
-	var asset data.Asset
+func GetTokenById(id uint64) (*data.Token, error) {
+	var token data.Token
 
 	database, err := GetDBOrError()
 	if err != nil {
 		return nil, err
 	}
 
-	txRead := database.Find(&asset, id)
+	txRead := database.Find(&token, id)
 	if txRead.Error != nil {
 		return nil, txRead.Error
 	}
@@ -57,18 +57,18 @@ func GetAssetById(id uint64) (*data.Asset, error) {
 		return nil, gorm.ErrRecordNotFound
 	}
 
-	return &asset, nil
+	return &token, nil
 }
 
-func GetAssetByTokenIdAndNonce(tokenId string, nonce uint64) (*data.Asset, error) {
-	var asset data.Asset
+func GetTokenByTokenIdAndNonce(tokenId string, nonce uint64) (*data.Token, error) {
+	var token data.Token
 
 	database, err := GetDBOrError()
 	if err != nil {
 		return nil, err
 	}
 
-	txRead := database.Find(&asset, "token_id = ? AND nonce = ?", tokenId, nonce)
+	txRead := database.Find(&token, "token_id = ? AND nonce = ?", tokenId, nonce)
 	if txRead.Error != nil {
 		return nil, txRead.Error
 	}
@@ -76,43 +76,43 @@ func GetAssetByTokenIdAndNonce(tokenId string, nonce uint64) (*data.Asset, error
 		return nil, gorm.ErrRecordNotFound
 	}
 
-	return &asset, nil
+	return &token, nil
 }
 
-func GetAssetsByOwnerIdWithOffsetLimit(ownerId uint64, offset int, limit int) ([]data.Asset, error) {
-	var assets []data.Asset
+func GetTokensByOwnerIdWithOffsetLimit(ownerId uint64, offset int, limit int) ([]data.Token, error) {
+	var tokens []data.Token
 
 	database, err := GetDBOrError()
 	if err != nil {
 		return nil, err
 	}
 
-	txRead := database.Offset(offset).Limit(limit).Find(&assets, "owner_id = ?", ownerId)
+	txRead := database.Offset(offset).Limit(limit).Find(&tokens, "owner_id = ?", ownerId)
 	if txRead.Error != nil {
 		return nil, txRead.Error
 	}
 
-	return assets, nil
+	return tokens, nil
 }
 
-func GetAssetsByCollectionId(collectionId uint64) ([]data.Asset, error) {
-	var assets []data.Asset
+func GetTokensByCollectionId(collectionId uint64) ([]data.Token, error) {
+	var tokens []data.Token
 
 	database, err := GetDBOrError()
 	if err != nil {
 		return nil, err
 	}
 
-	txRead := database.Find(&assets, "collection_id = ?", collectionId)
+	txRead := database.Find(&tokens, "collection_id = ?", collectionId)
 	if txRead.Error != nil {
 		return nil, txRead.Error
 	}
 
-	return assets, nil
+	return tokens, nil
 }
 
-func GetAssetsByCollectionIdWithOffsetLimit(collectionId uint64, offset int, limit int, attributesFilters map[string]string) ([]data.Asset, error) {
-	var assets []data.Asset
+func GetTokensByCollectionIdWithOffsetLimit(collectionId uint64, offset int, limit int, attributesFilters map[string]string) ([]data.Token, error) {
+	var tokens []data.Token
 
 	database, err := GetDBOrError()
 	if err != nil {
@@ -124,31 +124,31 @@ func GetAssetsByCollectionIdWithOffsetLimit(collectionId uint64, offset int, lim
 		txRead.Where(datatypes.JSONQuery("attributes").Equals(v, k))
 	}
 
-	txRead.Find(&assets, "collection_id = ?", collectionId)
+	txRead.Find(&tokens, "collection_id = ?", collectionId)
 	if txRead.Error != nil {
 		return nil, txRead.Error
 	}
 
-	return assets, nil
+	return tokens, nil
 }
 
-func GetListedAssetsByCollectionIdWithOffsetLimit(collectionId uint64, offset int, limit int) ([]data.Asset, error) {
-	var assets []data.Asset
+func GetListedTokensByCollectionIdWithOffsetLimit(collectionId uint64, offset int, limit int) ([]data.Token, error) {
+	var tokens []data.Token
 
 	database, err := GetDBOrError()
 	if err != nil {
 		return nil, err
 	}
 
-	txRead := database.Offset(offset).Limit(limit).Find(&assets, "listed = true AND collection_id = ?", collectionId)
+	txRead := database.Offset(offset).Limit(limit).Find(&tokens, "listed = true AND collection_id = ?", collectionId)
 	if txRead.Error != nil {
 		return nil, txRead.Error
 	}
 
-	return assets, nil
+	return tokens, nil
 }
 
-func CountListedAssetsByCollectionId(collectionId uint64) (uint64, error) {
+func CountListedTokensByCollectionId(collectionId uint64) (uint64, error) {
 	count := int64(0)
 
 	database, err := GetDBOrError()
@@ -156,7 +156,7 @@ func CountListedAssetsByCollectionId(collectionId uint64) (uint64, error) {
 		return 0, err
 	}
 
-	txRead := database.Model(&data.Asset{}).Where("listed = true AND collection_id = ?", collectionId).Count(&count)
+	txRead := database.Model(&data.Token{}).Where("listed = true AND collection_id = ?", collectionId).Count(&count)
 	if txRead.Error != nil {
 		return 0, txRead.Error
 	}
@@ -164,7 +164,7 @@ func CountListedAssetsByCollectionId(collectionId uint64) (uint64, error) {
 	return uint64(count), nil
 }
 
-func CountUniqueOwnersWithListedAssetsByCollectionId(collectionId uint64) (uint64, error) {
+func CountUniqueOwnersWithListedTokensByCollectionId(collectionId uint64) (uint64, error) {
 	count := int64(0)
 
 	database, err := GetDBOrError()
@@ -172,7 +172,7 @@ func CountUniqueOwnersWithListedAssetsByCollectionId(collectionId uint64) (uint6
 		return 0, err
 	}
 
-	txRead := database.Model(&data.Asset{}).Where("listed = true AND collection_id = ?", collectionId).Distinct("owner_id").Count(&count)
+	txRead := database.Model(&data.Token{}).Where("listed = true AND collection_id = ?", collectionId).Distinct("owner_id").Count(&count)
 	if txRead.Error != nil {
 		return 0, txRead.Error
 	}

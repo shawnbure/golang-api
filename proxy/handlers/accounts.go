@@ -15,7 +15,7 @@ import (
 const (
 	baseAccountsEndpoint   = "/accounts"
 	accountByIdEndpoint    = "/:accountId"
-	accountAssetsEndpoint  = "/:accountId/assets/:offset/:limit"
+	accountTokensEndpoint  = "/:accountId/tokens/:offset/:limit"
 	accountProfileEndpoint = "/:accountId/profile"
 	accountCoverEndpoint   = "/:accountId/cover"
 
@@ -41,7 +41,7 @@ func NewAccountsHandler(groupHandler *groupHandler, authCfg config.AuthConfig) {
 
 		{Method: http.MethodGet, Path: accountByAddressEndpoint, HandlerFunc: handler.getByAddress},
 		{Method: http.MethodPost, Path: createAccountEndpoint, HandlerFunc: handler.create},
-		{Method: http.MethodGet, Path: accountAssetsEndpoint, HandlerFunc: handler.getAccountAssets},
+		{Method: http.MethodGet, Path: accountTokensEndpoint, HandlerFunc: handler.getAccountTokens},
 	}
 
 	endpointGroupHandler := EndpointGroupHandler{
@@ -353,11 +353,11 @@ func (handler *accountsHandler) setAccountCover(c *gin.Context) {
 // @Param accountId path uint64 true "account id"
 // @Param offset path int true "offset"
 // @Param limit path int true "limit"
-// @Success 200 {object} []data.Asset
+// @Success 200 {object} []data.Token
 // @Failure 400 {object} data.ApiResponse
 // @Failure 404 {object} data.ApiResponse
 // @Router /accounts/{accountId}/assets/{offset}/{limit} [get]
-func (handler *accountsHandler) getAccountAssets(c *gin.Context) {
+func (handler *accountsHandler) getAccountTokens(c *gin.Context) {
 	accountIdString := c.Param("accountId")
 	offsetStr := c.Param("offset")
 	limitStr := c.Param("limit")
@@ -380,7 +380,7 @@ func (handler *accountsHandler) getAccountAssets(c *gin.Context) {
 		return
 	}
 
-	assets, err := storage.GetAssetsByOwnerIdWithOffsetLimit(accountId, offset, limit)
+	assets, err := storage.GetTokensByOwnerIdWithOffsetLimit(accountId, offset, limit)
 	if err != nil {
 		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return

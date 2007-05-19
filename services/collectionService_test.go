@@ -125,94 +125,94 @@ func Test_GetCollectionMetadata(t *testing.T) {
 	err := storage.AddCollection(&coll)
 	require.Nil(t, err)
 
-	asset1 := data.Asset{
+	asset1 := data.Token{
 		CollectionID: coll.ID,
 		Listed:       true,
 		OwnerId:      1,
 		Attributes:   datatypes.JSON(`{"hair": "red", "background": "dark"}`),
 	}
-	err = storage.AddAsset(&asset1)
+	err = storage.AddToken(&asset1)
 	require.Nil(t, err)
 
-	asset2 := data.Asset{
+	asset2 := data.Token{
 		CollectionID: coll.ID,
 		Listed:       true,
 		OwnerId:      1,
 		Attributes:   datatypes.JSON(`{"hair": "green", "background": "dark"}`),
 	}
-	err = storage.AddAsset(&asset2)
+	err = storage.AddToken(&asset2)
 	require.Nil(t, err)
 
-	asset3 := data.Asset{
+	asset3 := data.Token{
 		CollectionID: coll.ID,
 		Listed:       true,
 		OwnerId:      1,
 		Attributes:   datatypes.JSON(`{"hair": "blue", "background": "dark"}`),
 	}
-	err = storage.AddAsset(&asset3)
+	err = storage.AddToken(&asset3)
 	require.Nil(t, err)
 
-	asset4 := data.Asset{
+	asset4 := data.Token{
 		CollectionID: coll.ID,
 		Listed:       true,
 		OwnerId:      1,
 		Attributes:   datatypes.JSON(`{}`),
 	}
-	err = storage.AddAsset(&asset4)
+	err = storage.AddToken(&asset4)
 	require.Nil(t, err)
 
-	asset5 := data.Asset{
+	asset5 := data.Token{
 		CollectionID: coll.ID,
 		Listed:       true,
 		OwnerId:      1,
 		Attributes:   datatypes.JSON(`{"hair": "green"}`),
 	}
-	err = storage.AddAsset(&asset5)
+	err = storage.AddToken(&asset5)
 	require.Nil(t, err)
 
-	asset6 := data.Asset{
+	asset6 := data.Token{
 		CollectionID: coll.ID,
 		Listed:       true,
 		OwnerId:      1,
 		Attributes:   datatypes.JSON(`{"background": "dark"}`),
 	}
-	err = storage.AddAsset(&asset6)
+	err = storage.AddToken(&asset6)
 	require.Nil(t, err)
 
-	asset7 := data.Asset{
+	asset7 := data.Token{
 		CollectionID: coll.ID,
 		Listed:       true,
 		OwnerId:      1,
 		Attributes:   datatypes.JSON(`{"hair": "yellow", "background": "dark"}`),
 	}
-	err = storage.AddAsset(&asset7)
+	err = storage.AddToken(&asset7)
 	require.Nil(t, err)
 
-	asset8 := data.Asset{
+	asset8 := data.Token{
 		CollectionID: coll.ID,
 		Listed:       true,
 		OwnerId:      1,
 		Attributes:   datatypes.JSON(`{"hair": "white", "background": "dark"}`),
 	}
-	err = storage.AddAsset(&asset8)
+	err = storage.AddToken(&asset8)
 	require.Nil(t, err)
 
-	asset9 := data.Asset{
+	asset9 := data.Token{
 		CollectionID: coll.ID,
 		Listed:       true,
 		OwnerId:      1,
 		Attributes:   datatypes.JSON(`{"hair": "white", "background": "dark"}`),
 	}
-	err = storage.AddAsset(&asset9)
+	err = storage.AddToken(&asset9)
 	require.Nil(t, err)
 
-	asset10 := data.Asset{
+	asset10 := data.Token{
 		CollectionID: coll.ID,
 		Listed:       true,
 		OwnerId:      1,
 		Attributes:   datatypes.JSON(`{"something_else": "yea"}`),
 	}
-	err = storage.AddAsset(&asset10)
+	err = storage.AddToken(&asset10)
 	require.Nil(t, err)
 
 	collStats, err := computeCollectionMetadata(coll.ID)

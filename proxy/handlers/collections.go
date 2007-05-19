@@ -245,7 +245,7 @@ func (handler *collectionsHandler) create(c *gin.Context) {
 // @Param collectionId path uint64 true "collection id"
 // @Param offset path int true "offset"
 // @Param limit path int true "limit"
-// @Success 200 {object} []data.Asset
+// @Success 200 {object} []data.Token
 // @Failure 400 {object} data.ApiResponse
 // @Failure 404 {object} data.ApiResponse
 // @Router /collections/{collectionId}/assets/{offset}/{limit} [get]
@@ -273,7 +273,7 @@ func (handler *collectionsHandler) getAssets(c *gin.Context) {
 		return
 	}
 
-	assets, err := storage.GetAssetsByCollectionIdWithOffsetLimit(collectionId, offset, limit, filters)
+	assets, err := storage.GetTokensByCollectionIdWithOffsetLimit(collectionId, offset, limit, filters)
 	if err != nil {
 		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return

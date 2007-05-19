@@ -106,12 +106,12 @@ func Test_GetTransactionsByAssetId(t *testing.T) {
 	err = AddTransaction(&otherTransaction)
 	require.Nil(t, err)
 
-	transactionsRead, err := GetTransactionsByAssetId(transaction.AssetID)
+	transactionsRead, err := GetTransactionsByAssetId(transaction.TokenID)
 	require.Nil(t, err)
 	require.GreaterOrEqual(t, len(transactionsRead), 2)
 
 	for _, transactionRead := range transactionsRead {
-		require.Equal(t, transactionRead.AssetID, transaction.AssetID)
+		require.Equal(t, transactionRead.TokenID, transaction.TokenID)
 	}
 }
 
@@ -164,7 +164,7 @@ func defaultTransaction() data.Transaction {
 		PriceNominal: 1_000_000_000_000_000_000_000,
 		SellerID:     1,
 		BuyerID:      2,
-		AssetID:      3,
+		TokenID:      3,
 		CollectionID: 1,
 	}
 }

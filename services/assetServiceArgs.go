@@ -1,6 +1,6 @@
 package services
 
-type ListAssetArgs struct {
+type ListTokenArgs struct {
 	OwnerAddress     string
 	TokenId          string
 	Nonce            uint64
@@ -15,7 +15,7 @@ type ListAssetArgs struct {
 	TxHash           string
 }
 
-type BuyAssetArgs struct {
+type BuyTokenArgs struct {
 	OwnerAddress string
 	BuyerAddress string
 	TokenId      string
@@ -25,7 +25,7 @@ type BuyAssetArgs struct {
 	TxHash       string
 }
 
-type WithdrawAssetArgs struct {
+type WithdrawTokenArgs struct {
 	OwnerAddress string
 	TokenId      string
 	Nonce        uint64

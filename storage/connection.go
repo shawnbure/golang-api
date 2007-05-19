@@ -52,7 +52,7 @@ func TryMigrate() error {
 		return err
 	}
 
-	err = db.AutoMigrate(&data.Asset{})
+	err = db.AutoMigrate(&data.Token{})
 	if err != nil {
 		return err
 	}

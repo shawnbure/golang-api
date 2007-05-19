@@ -74,7 +74,7 @@ func (e *EventProcessor) isEventAccepted(ev data.Event) bool {
 }
 
 func (e *EventProcessor) onEventPutNftForSale(event data.Event) {
-	args := services.ListAssetArgs{
+	args := services.ListTokenArgs{
 		OwnerAddress:     decodeAddressFromTopic(event.Topics[0]),
 		TokenId:          decodeStringFromTopic(event.Topics[1]),
 		Nonce:            decodeU64FromTopic(event.Topics[2]),
@@ -94,11 +94,11 @@ func (e *EventProcessor) onEventPutNftForSale(event data.Event) {
 		log.Debug("onEventPutNftForSale", string(eventJson))
 	}
 
-	services.ListAsset(args)
+	services.ListToken(args)
 }
 
 func (e *EventProcessor) onEventBuyNft(event data.Event) {
-	args := services.BuyAssetArgs{
+	args := services.BuyTokenArgs{
 		OwnerAddress: decodeAddressFromTopic(event.Topics[0]),
 		BuyerAddress: decodeAddressFromTopic(event.Topics[1]),
 		TokenId:      decodeStringFromTopic(event.Topics[2]),
@@ -113,11 +113,11 @@ func (e *EventProcessor) onEventBuyNft(event data.Event) {
 		log.Debug("onEventBuyNft", string(eventJson))
 	}
 
-	services.BuyAsset(args)
+	services.BuyToken(args)
 }
 
 func (e *EventProcessor) onEventWithdrawNft(event data.Event) {
-	args := services.WithdrawAssetArgs{
+	args := services.WithdrawTokenArgs{
 		OwnerAddress: decodeAddressFromTopic(event.Topics[0]),
 		TokenId:      decodeStringFromTopic(event.Topics[1]),
 		Nonce:        decodeU64FromTopic(event.Topics[2]),
@@ -131,5 +131,5 @@ func (e *EventProcessor) onEventWithdrawNft(event data.Event) {
 		log.Debug("onEventWithdrawNft", string(eventJson))
 	}
 
-	services.WithdrawAsset(args)
+	services.WithdrawToken(args)
 }
