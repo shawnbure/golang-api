@@ -128,6 +128,8 @@ func startProxy(ctx *cli.Context) error {
 		}
 	}
 
+	cache.CloseCacher()
+
 	return nil
 }
 

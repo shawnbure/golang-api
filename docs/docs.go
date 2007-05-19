@@ -1721,10 +1721,10 @@ var doc = `{
                 "floorPrice": {
                     "type": "number"
                 },
-                "itemsCount": {
+                "itemsTotal": {
                     "type": "integer"
                 },
-                "ownersCount": {
+                "ownersTotal": {
                     "type": "integer"
                 },
                 "volumeTraded": {

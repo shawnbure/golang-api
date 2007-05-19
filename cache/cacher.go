@@ -2,9 +2,14 @@ package cache
 
 import (
 	"context"
+	"path"
+	"path/filepath"
+	"runtime"
 	"sync"
 	"time"
 
+	logger "github.com/ElrondNetwork/elrond-go-logger"
+	"github.com/boltdb/bolt"
 	"github.com/erdsea/erdsea-api/config"
 	"github.com/go-redis/cache/v8"
 	"github.com/go-redis/redis/v8"
@@ -20,29 +25,58 @@ type Cacher struct {
 	cache *cache.Cache
 	stats Stats
 	ctx   context.Context
+	redis *redis.Client
+	bolt  *bolt.DB
 }
 
 var (
-	once   sync.Once
-	cacher *Cacher
+	initOnce  sync.Once
+	closeOnce sync.Once
+	cacher    *Cacher
+
+	BoltDbPath = RootDir() + "/cache/bolt.db"
+	log        = logger.GetOrCreate("cacheLog")
 )
 
+func RootDir() string {
+	_, b, _, _ := runtime.Caller(0)
+	d := path.Join(path.Dir(b))
+	return filepath.Dir(d)
+}
+
 func InitCacher(cfg config.CacheConfig) {
-	once.Do(func() {
+	initOnce.Do(func() {
 		opt, err := redis.ParseURL(cfg.Url)
 		if err != nil {
 			panic(err)
 		}
 
+		redisClient := redis.NewClient(opt)
 		newCache := cache.New(&cache.Options{
-			Redis:      redis.NewClient(opt),
+			Redis:      redisClient,
 			LocalCache: cache.NewTinyLFU(1000, time.Second),
 		})
+
+		boltDb, err := bolt.Open(BoltDbPath, 0600, nil)
+		if err != nil {
+			panic(err)
+		}
 
 		cacher = &Cacher{
 			cache: newCache,
 			stats: Stats{},
 			ctx:   context.Background(),
+			redis: redisClient,
+			bolt:  boltDb,
+		}
+	})
+}
+
+func CloseCacher() {
+	closeOnce.Do(func() {
+		err := cacher.bolt.Close()
+		if err != nil {
+			log.Error("db close", err)
 		}
 	})
 }
@@ -74,4 +108,16 @@ func (c *Cacher) GetStats() Stats {
 
 func GetCacher() *Cacher {
 	return cacher
+}
+
+func GetRedis() *redis.Client {
+	return cacher.redis
+}
+
+func GetContext() context.Context {
+	return cacher.ctx
+}
+
+func GetBolt() *bolt.DB {
+	return cacher.bolt
 }

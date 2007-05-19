@@ -7,8 +7,8 @@ import (
 )
 
 type CollectionStatistics struct {
-	ItemsCount   uint64                    `json:"itemsCount"`
-	OwnersCount  uint64                    `json:"ownersCount"`
+	ItemsTotal   uint64                    `json:"itemsTotal"`
+	OwnersTotal  uint64                    `json:"ownersTotal"`
 	FloorPrice   float64                   `json:"floorPrice"`
 	VolumeTraded float64                   `json:"volumeTraded"`
 	AttrStats    map[string]map[string]int `json:"attributes"`

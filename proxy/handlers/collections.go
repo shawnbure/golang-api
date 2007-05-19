@@ -9,6 +9,7 @@ import (
 	"github.com/erdsea/erdsea-api/config"
 	"github.com/erdsea/erdsea-api/proxy/middleware"
 	"github.com/erdsea/erdsea-api/services"
+	"github.com/erdsea/erdsea-api/stats/collstats"
 	"github.com/erdsea/erdsea-api/storage"
 	"github.com/gin-gonic/gin"
 )
@@ -194,7 +195,14 @@ func (handler *collectionsHandler) getStatistics(c *gin.Context) {
 		return
 	}
 
-	stats, err := services.GetStatisticsForCollection(collectionId)
+	//Will use token id here
+	collection, err := storage.GetCollectionById(collectionId)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	stats, err := collstats.GetStatisticsForTokenId(collection.TokenID)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return

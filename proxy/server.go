@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/erdsea/erdsea-api/config"
-	_ "github.com/erdsea/erdsea-api/docs"
 	"github.com/erdsea/erdsea-api/process"
 	"github.com/erdsea/erdsea-api/proxy/handlers"
 	"github.com/erdsea/erdsea-api/services"

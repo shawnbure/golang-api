@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/erdsea/erdsea-api/data/dtos"
 	"time"
 
 	"github.com/erdsea/erdsea-api/cache"
 	"github.com/erdsea/erdsea-api/data/entities"
+	"github.com/erdsea/erdsea-api/stats/collstats"
 	"github.com/erdsea/erdsea-api/storage"
 )
 
@@ -19,8 +19,6 @@ const (
 	MaxDescLen                     = 1000
 	RegisteredNFTsBaseFormat       = "%s/address/%s/registered-nfts"
 	HttpResponseExpirePeriod       = 10 * time.Minute
-	StatisticsCacheKeyFormat       = "StatisticsForId:%d"
-	StatisticsExpirePeriod         = 15 * time.Minute
 	CollectionSearchCacheKeyFormat = "CollectionSearch:%s"
 	CollectionSearchExpirePeriod   = 20 * time.Minute
 )
@@ -44,12 +42,6 @@ type UpdateCollectionRequest struct {
 	TwitterLink   string `json:"twitterLink"`
 	InstagramLink string `json:"instagramLink"`
 	TelegramLink  string `json:"telegramLink"`
-}
-
-type CollectionMetadata struct {
-	NumItems  uint64
-	Owners    map[uint64]bool
-	AttrStats map[string]map[string]int
 }
 
 type ProxyRegisteredNFTsResponse struct {
@@ -108,6 +100,11 @@ func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) 
 		return nil, err
 	}
 
+	err = collstats.AddCollection(collection.ID, collection.Name, collection.TokenID)
+	if err != nil {
+		log.Debug("could not add to coll stats")
+	}
+
 	return collection, nil
 }
 
@@ -127,46 +124,6 @@ func UpdateCollection(collection *entities.Collection, request *UpdateCollection
 	}
 
 	return nil
-}
-
-func GetStatisticsForCollection(collectionId uint64) (*dtos.CollectionStatistics, error) {
-	var stats dtos.CollectionStatistics
-	cacheKey := fmt.Sprintf(StatisticsCacheKeyFormat, collectionId)
-
-	err := cache.GetCacher().Get(cacheKey, &stats)
-	if err == nil {
-		return &stats, nil
-	}
-
-	//TODO: refactor this to something smarter. Min price is not good
-	minPrice, err := storage.GetMinBuyPriceForTransactionsWithCollectionId(collectionId)
-	if err != nil {
-		return nil, err
-	}
-
-	sumPrice, err := storage.GetSumBuyPriceForTransactionsWithCollectionId(collectionId)
-	if err != nil {
-		return nil, err
-	}
-
-	collectionMetadata, err := computeCollectionMetadata(collectionId)
-	if err != nil {
-		return nil, err
-	}
-
-	stats = dtos.CollectionStatistics{
-		ItemsCount:   collectionMetadata.NumItems,
-		OwnersCount:  uint64(len(collectionMetadata.Owners)),
-		FloorPrice:   minPrice,
-		VolumeTraded: sumPrice,
-	}
-
-	err = cache.GetCacher().Set(cacheKey, stats, StatisticsExpirePeriod)
-	if err != nil {
-		log.Debug("could not set cache", "err", err)
-	}
-
-	return &stats, nil
 }
 
 func GetCollectionsWithNameAlike(name string, limit int) ([]entities.Collection, error) {
@@ -195,53 +152,6 @@ func GetCollectionsWithNameAlike(name string, limit int) ([]entities.Collection,
 	}
 
 	return collectionArray, nil
-}
-
-func computeCollectionMetadata(collectionId uint64) (*CollectionMetadata, error) {
-	offset := 0
-	limit := 1_000
-	numItems := 0
-	ownersIDs := make(map[uint64]bool)
-	attrStats := make(map[string]map[string]int)
-
-	for {
-		tokens, innerErr := storage.GetListedTokensByCollectionIdWithOffsetLimit(collectionId, offset, limit)
-		if innerErr != nil {
-			return nil, innerErr
-		}
-		if len(tokens) == 0 {
-			break
-		}
-
-		numItems = numItems + len(tokens)
-		for _, token := range tokens {
-			tokenAttrs := make(map[string]string)
-			ownersIDs[token.OwnerId] = true
-
-			innerErr = json.Unmarshal(token.Attributes, &tokenAttrs)
-			if innerErr != nil {
-				continue
-			}
-
-			for attrName, attrValue := range tokenAttrs {
-				if _, ok := attrStats[attrName]; ok {
-					attrStats[attrName][attrValue] += 1
-				} else {
-					attrStats[attrName] = map[string]int{attrValue: 1}
-				}
-			}
-		}
-
-		offset = limit
-		limit = limit + 1_000
-	}
-
-	result := CollectionMetadata{
-		NumItems:  uint64(numItems),
-		Owners:    ownersIDs,
-		AttrStats: attrStats,
-	}
-	return &result, nil
 }
 
 func contains(arr []string, str string) bool {
