@@ -494,7 +494,7 @@ func (handler *txTemplateHandler) getMintNftTxTemplate(c *gin.Context) {
 		return
 	}
 
-	if collection.ContractAddress == "" {
+	if len(collection.ContractAddress) == 0 {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, "no contract address")
 		return
 	}

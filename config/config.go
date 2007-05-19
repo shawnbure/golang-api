@@ -55,6 +55,7 @@ type BlockchainConfig struct {
 	DeployNFTTemplateEGLDCost            string
 	WithdrawFromMinterGasLimit           uint64
 	RequestWithdrawThroughMinterGasLimit uint64
+	NoFeeOnMintContracts                 []string
 }
 
 type DatabaseConfig struct {

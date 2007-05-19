@@ -48,6 +48,9 @@
     DeployNFTTemplateEGLDCost = "0"
     WithdrawFromMinterGasLimit = 10_000_000
     RequestWithdrawThroughMinterGasLimit = 50_000_000
+    NoFeeOnMintContracts = [
+        "erd1qqqqqqqqqqqqqpgqwt37h7vgwkfgql68nhfvx4l7ncpzmyndt3xqru6kf6"
+    ]
 
 [Database]
     Dialect = "postgres"

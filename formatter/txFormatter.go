@@ -15,7 +15,8 @@ var (
 	buyNftEndpointName                       = "buyNft"
 	withdrawNftEndpointName                  = "withdrawNft"
 	ESDTNFTTransferEndpointName              = "ESDTNFTTransfer"
-	mintTokensEndpointName                   = "mintTokensThroughMarketplace"
+	mintTokensThroughMarketplaceEndpointName = "mintTokensThroughMarketplace"
+	mintTokensEndpointName                   = "mintTokens"
 	makeOfferEndpointName                    = "makeOffer"
 	acceptOfferEndpointName                  = "acceptOffer"
 	cancelOfferEndpointName                  = "cancelOffer"
@@ -50,11 +51,19 @@ type Transaction struct {
 }
 
 type TxFormatter struct {
-	config config.BlockchainConfig
+	config               config.BlockchainConfig
+	noFeeOnMintContracts map[string]bool
 }
 
 func NewTxFormatter(cfg config.BlockchainConfig) TxFormatter {
-	return TxFormatter{config: cfg}
+	noFeeOnMintContracts := make(map[string]bool)
+	for _, contract := range cfg.NoFeeOnMintContracts {
+		noFeeOnMintContracts[contract] = true
+	}
+	return TxFormatter{
+		config: cfg,
+		noFeeOnMintContracts: noFeeOnMintContracts,
+	}
 }
 
 func (f *TxFormatter) NewListNftTxTemplate(senderAddr string, tokenId string, nonce uint64, price float64) (*Transaction, error) {
@@ -333,9 +342,14 @@ func (f *TxFormatter) NewMintNftsTxTemplate(
 	mintPricePerToken float64,
 	numberOfTokens uint64,
 ) Transaction {
-	gasLimit := f.config.MintTokenGasLimit * (numberOfTokens / 8 + 1)
+	endpointName := mintTokensThroughMarketplaceEndpointName
+	if f.noFeeOnMintContracts[contractAddress] {
+		endpointName = mintTokensEndpointName
+	}
+
+	gasLimit := f.config.MintTokenGasLimit * (numberOfTokens/8 + 1)
 	totalPrice := fmt.Sprintf("%f", mintPricePerToken*float64(numberOfTokens))
-	txData := mintTokensEndpointName +
+	txData := endpointName +
 		"@" + hex.EncodeToString(big.NewInt(int64(numberOfTokens)).Bytes())
 
 	return Transaction{
