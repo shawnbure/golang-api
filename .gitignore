@@ -29,3 +29,4 @@ config/config.toml
 config.toml
 
 cache/bolt.db
+bolt.db

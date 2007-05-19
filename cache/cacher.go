@@ -34,7 +34,7 @@ var (
 	closeOnce sync.Once
 	cacher    *Cacher
 
-	BoltDbPath = RootDir() + "/cache/bolt.db"
+	BoltDbPath = RootDir() + "/bolt.db"
 	log        = logger.GetOrCreate("cacheLog")
 )
 
