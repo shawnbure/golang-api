@@ -172,12 +172,13 @@ func Test_GetTokensByCollectionIdWithOffsetLimit(t *testing.T) {
 	require.Nil(t, err)
 
 	attrs := map[string]string{"background": "dark"}
-	tokens, err := GetTokensByCollectionIdWithOffsetLimit(coll.ID, 0, 100, attrs)
+	sort := map[string]string{}
+	tokens, err := GetTokensByCollectionIdWithOffsetLimit(coll.ID, 0, 100, attrs, sort)
 	require.Nil(t, err)
 	require.Equal(t, len(tokens), 2)
 
 	attrs2 := map[string]string{"background": "dark", "hair": "green"}
-	tokens2, err := GetTokensByCollectionIdWithOffsetLimit(coll.ID, 0, 100, attrs2)
+	tokens2, err := GetTokensByCollectionIdWithOffsetLimit(coll.ID, 0, 100, attrs2, sort)
 	require.Nil(t, err)
 	require.Equal(t, len(tokens2), 1)
 }

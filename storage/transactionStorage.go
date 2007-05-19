@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"database/sql"
 	"gorm.io/gorm"
 
 	"github.com/erdsea/erdsea-api/data/entities"
@@ -197,13 +198,18 @@ func GetMinBuyPriceForTransactionsWithCollectionId(collectionId uint64) (float64
 		return float64(0), err
 	}
 
+	nullFloat := sql.NullFloat64{}
 	txRead := database.Select("MIN(price_nominal)").
 		Where("type = ? AND collection_id = ?", entities.BuyToken, collectionId).
 		Table("transactions").
-		Find(&price)
+		Find(&nullFloat)
 
 	if txRead.Error != nil {
 		return float64(0), txRead.Error
+	}
+
+	if nullFloat.Valid {
+		price = nullFloat.Float64
 	}
 
 	return price, nil
@@ -217,13 +223,18 @@ func GetSumBuyPriceForTransactionsWithCollectionId(collectionId uint64) (float64
 		return float64(0), err
 	}
 
+	nullFloat := sql.NullFloat64{}
 	txRead := database.Select("SUM(price_nominal)").
 		Where("type = ? AND collection_id = ?", entities.BuyToken, collectionId).
 		Table("transactions").
-		Find(&price)
+		Find(&nullFloat)
 
 	if txRead.Error != nil {
 		return float64(0), txRead.Error
+	}
+
+	if nullFloat.Valid {
+		price = nullFloat.Float64
 	}
 
 	return price, nil
