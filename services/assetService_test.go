@@ -20,12 +20,12 @@ func Test_ListAsset(t *testing.T) {
 	_ = storage.AddNewCollection(&collection)
 
 	args := ListAssetArgs{
-		OwnerAddress:   "ownerAddress",
-		TokenId:        "tokenId",
-		Nonce:          13,
-		Uri:            "uri",
-		Price:          "1000",
-		TxHash:         "txHash",
+		OwnerAddress: "ownerAddress",
+		TokenId:      "tokenId",
+		Nonce:        13,
+		Uri:          "uri",
+		Price:        "1000",
+		TxHash:       "txHash",
 	}
 	ListAsset(args)
 
@@ -65,23 +65,23 @@ func Test_SellAsset(t *testing.T) {
 	_ = storage.AddNewCollection(&collection)
 
 	listArgs := ListAssetArgs{
-		OwnerAddress:   "ownerAddress",
-		TokenId:        "tokenId",
-		Nonce:          13,
-		Uri:            "uri",
-		Price:          "1000",
-		TxHash:         "txHash",
+		OwnerAddress: "ownerAddress",
+		TokenId:      "tokenId",
+		Nonce:        13,
+		Uri:          "uri",
+		Price:        "1000",
+		TxHash:       "txHash",
 	}
 	ListAsset(listArgs)
 
 	buyArgs := BuyAssetArgs{
-		OwnerAddress:   "ownerAddress",
-		BuyerAddress:   "buyerAddress",
-		TokenId:        "tokenId",
-		Nonce:          13,
-		Uri:            "col",
-		Price:          "1000",
-		TxHash:         "txHashBuy",
+		OwnerAddress: "ownerAddress",
+		BuyerAddress: "buyerAddress",
+		TokenId:      "tokenId",
+		Nonce:        13,
+		Uri:          "col",
+		Price:        "1000",
+		TxHash:       "txHashBuy",
 	}
 	BuyAsset(buyArgs)
 
@@ -125,22 +125,22 @@ func Test_WithdrawAsset(t *testing.T) {
 	_ = storage.AddNewCollection(&collection)
 
 	listArgs := ListAssetArgs{
-		OwnerAddress:   "ownerAddress",
-		TokenId:        "tokenId",
-		Nonce:          13,
-		Uri:            "uri",
-		Price:          "1000",
-		TxHash:         "txHash",
+		OwnerAddress: "ownerAddress",
+		TokenId:      "tokenId",
+		Nonce:        13,
+		Uri:          "uri",
+		Price:        "1000",
+		TxHash:       "txHash",
 	}
 	ListAsset(listArgs)
 
 	withdrawArgs := WithdrawAssetArgs{
-		OwnerAddress:   "ownerAddress",
-		TokenId:        "tokenId",
-		Nonce:          13,
-		Uri:            "col",
-		Price:          "1000",
-		TxHash:         "txHashWithdraw",
+		OwnerAddress: "ownerAddress",
+		TokenId:      "tokenId",
+		Nonce:        13,
+		Uri:          "col",
+		Price:        "1000",
+		TxHash:       "txHashWithdraw",
 	}
 	WithdrawAsset(withdrawArgs)
 
