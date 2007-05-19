@@ -97,3 +97,17 @@ func Test_ElrondGoCopyPasted(t *testing.T) {
 	err = VerifySignature(address.AddressBytes(), erdMsg, sig)
 	require.Nil(t, err)
 }
+
+func Test_WebWalletRouteSignature(t *testing.T) {
+	address, err := erdgoData.NewAddressFromBech32String("erd17s2pz8qrds6ake3qwheezgy48wzf7dr5nhdpuu2h4rr4mt5rt9ussj7xzh")
+	require.Nil(t, err)
+
+	message, err := hex.DecodeString("af8ffd30add45b0b7299497e41b3599c5acf81ce2e5989751950f4c25ec94581")
+	require.Nil(t, err)
+
+	sig, err := hex.DecodeString("96cb38a3b85fa0adcf2bba88c2453907323faceb2225869d99a42e1c9f65a8d822cb607723b23e5c62910122601ba0094ba043eec7a0c89ba4045e357fbee107")
+	require.Nil(t, err)
+
+	err = VerifySignature(address.AddressBytes(), message, sig)
+	require.Nil(t, err)
+}
