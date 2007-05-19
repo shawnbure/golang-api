@@ -3,6 +3,7 @@ package services
 import (
 	"encoding/json"
 	"errors"
+	"github.com/erdsea/erdsea-api/data/dtos"
 	"gorm.io/datatypes"
 	"math/big"
 	"strconv"
@@ -183,6 +184,43 @@ func WithdrawAsset(args WithdrawAssetArgs) {
 	}
 
 	AddTransaction(&transaction)
+}
+
+func GetExtendedTokenData(tokenId string, nonce uint64) (*dtos.ExtendedTokenDto, error) {
+	token, err := storage.GetAssetByTokenIdAndNonce(tokenId, nonce)
+	if err != nil {
+		return nil, err
+	}
+
+	var collection *entities.Collection
+	if token.CollectionID > 0 {
+		collection, err = storage.GetCollectionById(token.CollectionID)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	var owner *entities.Account
+	if token.OwnerId > 0 {
+		owner, err = storage.GetAccountById(token.OwnerId)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	collStats, err := GetStatisticsForCollection(collection.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return dtos.CreateExtendedTokenDto(
+		*token,
+		collection.TokenID,
+		collection.Name,
+		owner.Name,
+		owner.Address,
+		*collStats,
+	)
 }
 
 func ConstructNewAssetFromListArgs(args ListAssetArgs) entities.Asset {
