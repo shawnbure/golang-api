@@ -4,7 +4,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"github.com/ElrondNetwork/elrond-sdk-erdgo/data"
-	"github.com/btcsuite/btcutil/bech32"
 	"github.com/erdsea/erdsea-api/config"
 	"math/big"
 	"strconv"
@@ -26,13 +25,10 @@ func NewTxFormatter(cfg config.BlockchainConfig, ) TxFormatter {
 }
 
 func (f *TxFormatter) NewListNftTxTemplate(senderAddr string, tokenId string, nonce uint64, price string) (*data.Transaction, error) {
-	address, err := data.NewAddressFromBech32String(senderAddr)
+	marketPlaceAddress, err := data.NewAddressFromBech32String(f.config.MarketplaceAddress)
 	if err != nil {
 		return nil, err
 	}
-
-	address1, address2, adddress3 := bech32.Decode(senderAddr)
-	Use(address1, address2, adddress3)
 
 	priceBigInt, success := big.NewInt(0).SetString(price, 10)
 	if !success {
@@ -43,10 +39,7 @@ func (f *TxFormatter) NewListNftTxTemplate(senderAddr string, tokenId string, no
 		"@" + hex.EncodeToString([]byte(tokenId)) +
 		"@" + hex.EncodeToString(big.NewInt(int64(nonce)).Bytes()) +
 		"@" + hex.EncodeToString(big.NewInt(int64(1)).Bytes()) +
-		"@" + hex.EncodeToString(address.AddressBytes()) +
-		// How the fuck do I get Decoded Address as fucking hex?
-		// Maybe using bech32.Decode one untrained eye may think.
-		// Haha! You fool, you have to work harder than this.
+		"@" + hex.EncodeToString(marketPlaceAddress.AddressBytes()) +
 		"@" + hex.EncodeToString([]byte(listNftEndpointName)) +
 		"@" + hex.EncodeToString(priceBigInt.Bytes())
 
