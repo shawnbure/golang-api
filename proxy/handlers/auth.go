@@ -50,6 +50,11 @@ func NewAuthHandler(groupHandler *groupHandler, authService services.AuthService
 	groupHandler.AddEndpointGroupHandler(endpointGroupHandler)
 }
 
+// @Summary request a new token bla bla
+// @Description get bla bla bla bla bla
+// @Accept  json
+// @Produce  json
+// @Router /auth/access [post]
 func (h *authHandler) createAccessToken(c *gin.Context) {
 	req := createTokenRequest{}
 

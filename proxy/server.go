@@ -2,16 +2,19 @@ package proxy
 
 import (
 	"fmt"
-	"github.com/erdsea/erdsea-api/services"
 	"net/http"
 	"strings"
 
-	"github.com/erdsea/erdsea-api/process"
-
 	"github.com/erdsea/erdsea-api/config"
+	"github.com/erdsea/erdsea-api/process"
 	"github.com/erdsea/erdsea-api/proxy/handlers"
+	"github.com/erdsea/erdsea-api/services"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
+
+	_ "github.com/erdsea/erdsea-api/docs"
 )
 
 type webServer struct {
@@ -19,6 +22,14 @@ type webServer struct {
 	generalConfig *config.GeneralConfig
 }
 
+// @title erdsea-api
+// @version 1.0
+// @termsOfService http://swagger.io/terms/
+
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host localhost:5000
 func NewWebServer(cfg *config.GeneralConfig) (*webServer, error) {
 	router := gin.Default()
 	router.Use(cors.Default())
@@ -51,6 +62,9 @@ func NewWebServer(cfg *config.GeneralConfig) (*webServer, error) {
 	handlers.NewTransactionsHandler(groupHandler, cfg.Auth)
 	handlers.NewTxTemplateHandler(groupHandler, cfg.Auth, cfg.Blockchain)
 	handlers.NewPriceHandler(groupHandler, cfg.Auth)
+
+	url := ginSwagger.URL("http://localhost:5000/swagger/doc.json")
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
 
 	groupHandler.RegisterEndpoints(router)
 

@@ -1,0 +1,19 @@
+host: localhost:5000
+info:
+  contact: {}
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: erdsea-api
+  version: "1.0"
+paths:
+  /auth/access:
+    post:
+      consumes:
+      - application/json
+      description: get bla bla bla bla bla
+      produces:
+      - application/json
+      summary: request a new token bla bla
+swagger: "2.0"
