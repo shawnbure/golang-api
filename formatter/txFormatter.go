@@ -15,7 +15,7 @@ var (
 	buyNftEndpointName                       = "buyNft"
 	withdrawNftEndpointName                  = "withdrawNft"
 	ESDTNFTTransferEndpointName              = "ESDTNFTTransfer"
-	mintTokensEndpointName                   = "mintTokens"
+	mintTokensEndpointName                   = "mintTokensThroughMarketplace"
 	makeOfferEndpointName                    = "makeOffer"
 	acceptOfferEndpointName                  = "acceptOffer"
 	cancelOfferEndpointName                  = "cancelOffer"
