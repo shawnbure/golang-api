@@ -70,8 +70,8 @@ func (handler *tokensHandler) getByTokenIdAndNonce(c *gin.Context) {
 // @Tags tokens
 // @Accept json
 // @Produce json
-// @Param availableTokensRequest body AvailableTokensRequest true "request"
-// @Success 200 {object} AvailableTokensResponse
+// @Param availableTokensRequest body services.AvailableTokensRequest true "request"
+// @Success 200 {object} services.AvailableTokensResponse
 // @Failure 400 {object} dtos.ApiResponse
 // @Router /tokens/available [get]
 func (handler *tokensHandler) getAvailableTokens(c *gin.Context) {

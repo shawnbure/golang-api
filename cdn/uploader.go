@@ -26,7 +26,8 @@ func UploadToCloudy(ctx context.Context, base64Img, imgID string) (*uploader.Upl
 	}
 
 	res, err := cld.Upload.Upload(ctx, buf, uploader.UploadParams{
-		PublicID: imgID,
+		PublicID:  imgID,
+		Overwrite: true,
 	})
 	if err != nil {
 		return nil, err

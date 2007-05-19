@@ -40,6 +40,38 @@ func UpdateAccount(account *entities.Account) error {
 	return nil
 }
 
+func UpdateAccountProfileWhereId(accountId uint64, url string) error {
+	database, err := GetDBOrError()
+	if err != nil {
+		return err
+	}
+
+	tx := database.Table("accounts").Where("id = ?", accountId).Update("profile_image_url", url)
+	if tx.Error != nil {
+		return tx.Error
+	}
+	if tx.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
+}
+
+func UpdateAccountCoverWhereId(accountId uint64, url string) error {
+	database, err := GetDBOrError()
+	if err != nil {
+		return err
+	}
+
+	tx := database.Table("accounts").Where("id = ?", accountId).Update("cover_image_url", url)
+	if tx.Error != nil {
+		return tx.Error
+	}
+	if tx.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
+}
+
 func GetAccountById(id uint64) (*entities.Account, error) {
 	var account entities.Account
 

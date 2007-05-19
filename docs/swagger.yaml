@@ -5,14 +5,21 @@ definitions:
       error:
         type: string
     type: object
+  dtos.AttributeStat:
+    properties:
+      total:
+        type: integer
+      trait_type:
+        type: string
+      value:
+        type: string
+    type: object
   dtos.CollectionStatistics:
     properties:
       attributes:
-        additionalProperties:
-          additionalProperties:
-            type: integer
-          type: object
-        type: object
+        items:
+          $ref: '#/definitions/dtos.AttributeStat'
+        type: array
       floorPrice:
         type: number
       itemsTotal:
@@ -168,41 +175,6 @@ definitions:
       version:
         type: integer
     type: object
-  handlers.AvailableToken:
-    properties:
-      collection:
-        properties:
-          id:
-            type: string
-          name:
-            type: string
-        type: object
-      token:
-        properties:
-          available:
-            type: boolean
-          id:
-            type: string
-          name:
-            type: string
-          nonce:
-            type: integer
-        type: object
-    type: object
-  handlers.AvailableTokensRequest:
-    properties:
-      tokens:
-        items:
-          type: string
-        type: array
-    type: object
-  handlers.AvailableTokensResponse:
-    properties:
-      tokens:
-        additionalProperties:
-          $ref: '#/definitions/handlers.AvailableToken'
-        type: object
-    type: object
   handlers.GeneralSearchResponse:
     properties:
       accounts:
@@ -244,6 +216,41 @@ definitions:
         type: string
       refreshToken:
         type: string
+    type: object
+  services.AvailableToken:
+    properties:
+      collection:
+        properties:
+          id:
+            type: string
+          name:
+            type: string
+        type: object
+      token:
+        properties:
+          available:
+            type: boolean
+          id:
+            type: string
+          name:
+            type: string
+          nonce:
+            type: integer
+        type: object
+    type: object
+  services.AvailableTokensRequest:
+    properties:
+      tokens:
+        items:
+          type: string
+        type: array
+    type: object
+  services.AvailableTokensResponse:
+    properties:
+      tokens:
+        additionalProperties:
+          $ref: '#/definitions/services.AvailableToken'
+        type: object
     type: object
   services.CreateAccountRequest:
     properties:
@@ -433,40 +440,11 @@ paths:
       tags:
       - accounts
   /accounts/{walletAddress}/cover:
-    get:
-      consumes:
-      - application/json
-      description: Retrieves an account cover image. It will be sent as base64 encoding
-        (sdt, raw) of its byte representation.
-      parameters:
-      - description: wallet address
-        in: path
-        name: walletAddress
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: string
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/dtos.ApiResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/dtos.ApiResponse'
-      summary: Get account cover image
-      tags:
-      - accounts
     post:
       consumes:
       - application/json
-      description: Expects base64 encoding (sdt, raw) of the image representation.
-        Returns empty string. Max size of byte array is 1MB.
+      description: Expects base64 std encoding of the image representation. Returns
+        empty string. Max size of byte array is 1MB.
       parameters:
       - description: wallet address
         in: path
@@ -502,40 +480,11 @@ paths:
       tags:
       - accounts
   /accounts/{walletAddress}/profile:
-    get:
-      consumes:
-      - application/json
-      description: Retrieves an account profile image. It will be sent as base64 encoding
-        (sdt, raw) of its byte representation.
-      parameters:
-      - description: wallet address
-        in: path
-        name: walletAddress
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: string
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/dtos.ApiResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/dtos.ApiResponse'
-      summary: Get account profile image
-      tags:
-      - accounts
     post:
       consumes:
       - application/json
-      description: Expects base64 encoding (sdt, raw) of the image representation.
-        Returns empty string. Max size of byte array is 512KB.
+      description: Expects base64 std encoding of the image representation. Returns
+        empty string. Max size of byte array is 512KB.
       parameters:
       - description: wallet address
         in: path
@@ -777,40 +726,11 @@ paths:
       tags:
       - collections
   /collections/{collectionId}/cover:
-    get:
-      consumes:
-      - application/json
-      description: Retrieves a collection cover image. It will be sent as base64 encoding
-        (sdt, raw) of its byte representation.
-      parameters:
-      - description: collection id
-        in: path
-        name: collectionId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: string
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/dtos.ApiResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/dtos.ApiResponse'
-      summary: Get collection cover image
-      tags:
-      - collections
     post:
       consumes:
       - application/json
-      description: Expects base64 encoding (sdt, raw) of the image representation.
-        Returns empty string. Max size of byte array is 1MB.
+      description: Expects base64 std encoding of the image representation. Returns
+        empty string. Max size of byte array is 1MB.
       parameters:
       - description: collection id
         in: path
@@ -880,40 +800,11 @@ paths:
       tags:
       - collections
   /collections/{collectionId}/profile:
-    get:
-      consumes:
-      - application/json
-      description: Retrieves a collection cover image. It will be sent as base64 encoding
-        (sdt, raw) of its byte representation.
-      parameters:
-      - description: collection id
-        in: path
-        name: collectionId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: string
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/dtos.ApiResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/dtos.ApiResponse'
-      summary: Get collection profile image
-      tags:
-      - collections
     post:
       consumes:
       - application/json
-      description: Expects base64 encoding (sdt, raw) of the image representation.
-        Returns empty string. Max size of byte array is 1MB.
+      description: Expects base64 std encoding of the image representation. Returns
+        empty string. Max size of byte array is 1MB.
       parameters:
       - description: collection id
         in: path
@@ -1235,14 +1126,14 @@ paths:
         name: availableTokensRequest
         required: true
         schema:
-          $ref: '#/definitions/handlers.AvailableTokensRequest'
+          $ref: '#/definitions/services.AvailableTokensRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/handlers.AvailableTokensResponse'
+            $ref: '#/definitions/services.AvailableTokensResponse'
         "400":
           description: Bad Request
           schema:

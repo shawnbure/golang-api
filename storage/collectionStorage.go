@@ -40,6 +40,38 @@ func UpdateCollection(collection *entities.Collection) error {
 	return nil
 }
 
+func UpdateCollectionProfileWhereId(collectionId uint64, url string) error {
+	database, err := GetDBOrError()
+	if err != nil {
+		return err
+	}
+
+	tx := database.Table("collections").Where("id = ?", collectionId).Update("profile_image_url", url)
+	if tx.Error != nil {
+		return tx.Error
+	}
+	if tx.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
+}
+
+func UpdateCollectionCoverWhereId(collectionId uint64, url string) error {
+	database, err := GetDBOrError()
+	if err != nil {
+		return err
+	}
+
+	tx := database.Table("collections").Where("id = ?", collectionId).Update("cover_image_url", url)
+	if tx.Error != nil {
+		return tx.Error
+	}
+	if tx.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
+}
+
 func GetCollectionById(id uint64) (*entities.Collection, error) {
 	var collection entities.Collection
 
