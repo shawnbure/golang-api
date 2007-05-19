@@ -10,7 +10,7 @@ import (
 type CollectionMetadata struct {
 	NumItems  uint64
 	Owners    map[uint64]bool
-	AttrStats map[string]map[string]int
+	AttrStats []dtos.AttributeStat
 }
 
 func ComputeStatisticsForCollection(collectionId uint64) (*dtos.CollectionStatistics, error) {
@@ -48,7 +48,7 @@ func ComputeCollectionMetadata(collectionId uint64) (*CollectionMetadata, error)
 	limit := 1_000
 	numItems := 0
 	ownersIDs := make(map[uint64]bool)
-	attrStats := make(map[string]map[string]int)
+	var globalAttrs []dtos.AttributeStat
 
 	for {
 		tokens, innerErr := storage.GetListedTokensByCollectionIdWithOffsetLimit(collectionId, offset, limit)
@@ -61,7 +61,7 @@ func ComputeCollectionMetadata(collectionId uint64) (*CollectionMetadata, error)
 
 		numItems = numItems + len(tokens)
 		for _, token := range tokens {
-			tokenAttrs := make(map[string]string)
+			var tokenAttrs []dtos.Attribute
 			ownersIDs[token.OwnerId] = true
 
 			innerErr = json.Unmarshal(token.Attributes, &tokenAttrs)
@@ -69,11 +69,21 @@ func ComputeCollectionMetadata(collectionId uint64) (*CollectionMetadata, error)
 				continue
 			}
 
-			for attrName, attrValue := range tokenAttrs {
-				if _, ok := attrStats[attrName]; ok {
-					attrStats[attrName][attrValue] += 1
-				} else {
-					attrStats[attrName] = map[string]int{attrValue: 1}
+			for _, tokenAttr := range tokenAttrs {
+				attributeFound := false
+				for index, globalAttr := range globalAttrs {
+					if globalAttr.TraitType == tokenAttr.TraitType && globalAttr.Value == tokenAttr.Value {
+						attributeFound = true
+						globalAttrs[index].Total++
+					}
+				}
+
+				if !attributeFound {
+					globalAttrs = append(globalAttrs, dtos.AttributeStat{
+						TraitType: tokenAttr.TraitType,
+						Value:     tokenAttr.Value,
+						Total:     1,
+					})
 				}
 			}
 		}
@@ -85,7 +95,7 @@ func ComputeCollectionMetadata(collectionId uint64) (*CollectionMetadata, error)
 	result := CollectionMetadata{
 		NumItems:  uint64(numItems),
 		Owners:    ownersIDs,
-		AttrStats: attrStats,
+		AttrStats: globalAttrs,
 	}
 	return &result, nil
 }

@@ -15,14 +15,9 @@ import (
 )
 
 type TokenLinkResponse struct {
-	Name       string      `json:"name"`
-	Image      string      `json:"image"`
-	Attributes []Attribute `json:"attributes"`
-}
-
-type Attribute struct {
-	Value     string `json:"value"`
-	TraitType string `json:"trait_type"`
+	Name       string           `json:"name"`
+	Image      string           `json:"image"`
+	Attributes []dtos.Attribute `json:"attributes"`
 }
 
 var log = logger.GetOrCreate("services")
@@ -281,12 +276,7 @@ func GetOSMetadataForToken(link string, nonce uint64) (*TokenLinkResponse, error
 }
 
 func ConstructAttributesJsonFromResponse(response *TokenLinkResponse) (*datatypes.JSON, error) {
-	attrsMap := make(map[string]string)
-	for _, element := range response.Attributes {
-		attrsMap[element.TraitType] = element.Value
-	}
-
-	attrsBytes, err := json.Marshal(attrsMap)
+	attrsBytes, err := json.Marshal(response.Attributes)
 	if err != nil {
 		return nil, err
 	}
