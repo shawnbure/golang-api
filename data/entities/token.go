@@ -6,6 +6,7 @@ type Token struct {
 	ID               uint64 `gorm:"primaryKey"`
 	TokenID          string
 	Nonce            uint64
+	PriceString      string `gorm:"price_string"`
 	PriceNominal     float64
 	RoyaltiesPercent float64
 	MetadataLink     string
