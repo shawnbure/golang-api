@@ -2438,6 +2438,51 @@ var doc = `{
                 }
             }
         },
+        "/tx-template/request-withdraw/{userAddress}/{contractAddress}": {
+            "get": {
+                "description": "The destination will be the Minter Address. Minter will request withdrawal from Marketplace.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tx-template"
+                ],
+                "summary": "Gets tx-template for request withdraw through Minter.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user address",
+                        "name": "userAddress",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "contract address",
+                        "name": "contractAddress",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/formatter.Transaction"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/tx-template/set-roles/{userAddress}/{tokenId}/{contractAddress}": {
             "get": {
                 "consumes": [
@@ -2586,6 +2631,44 @@ var doc = `{
                         "type": "integer",
                         "description": "user address",
                         "name": "userAddress",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/formatter.Transaction"
+                        }
+                    }
+                }
+            }
+        },
+        "/tx-template/withdraw-minter/{userAddress}/{contractAddress}": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tx-template"
+                ],
+                "summary": "Gets tx-template for withdraw from Minter SC.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user address",
+                        "name": "userAddress",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "contract address",
+                        "name": "contractAddress",
                         "in": "path",
                         "required": true
                     }

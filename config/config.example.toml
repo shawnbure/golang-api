@@ -46,6 +46,8 @@
     SetSpecialRolesGasLimit = 60_000_000
     IssueTokenEGLDCost = "0.05"
     DeployNFTTemplateEGLDCost = "0"
+    WithdrawFromMinterGasLimit = 10_000_000
+    RequestWithdrawThroughMinterGasLimit = 50_000_000
 
 [Database]
     Dialect = "postgres"

@@ -13,24 +13,26 @@ import (
 )
 
 const (
-	baseFormatEndpoint                     = "/tx-template"
-	listNftFormatEndpoint                  = "/list-nft/:userAddress/:tokenId/:nonce/:price"
-	buyNftFormatEndpoint                   = "/buy-nft/:userAddress/:tokenId/:nonce/:price"
-	withdrawNftFormatEndpoint              = "/withdraw-nft/:userAddress/:tokenId/:nonce"
-	makeOfferFormatEndpoint                = "/make-offer/:userAddress/:tokenId/:nonce/:amount/:expire"
-	acceptOfferFormatEndpoint              = "/accept-offer/:userAddress/:tokenId/:nonce/:offerorAddress/:amount"
-	cancelOfferFormatEndpoint              = "/cancel-offer/:userAddress/:tokenId/:nonce/:amount"
-	startAuctionFormatEndpoint             = "/start-auction/:userAddress/:tokenId/:nonce/:minBid/:startTime/:deadline"
-	placeBidFormatEndpoint                 = "/place-bid/:userAddress/:tokenId/:nonce/:payment/:bidAmount"
-	endAuctionFormatEndpoint               = "/end-auction/:userAddress/:tokenId/:nonce"
-	depositFormatEndpoint                  = "/deposit/:userAddress/:amount"
-	mintTokensFormatEndpoint               = "/mint-tokens/:userAddress/:tokenId/:numberOfTokens"
-	withdrawFormatEndpoint                 = "/withdraw/:userAddress/:amount"
-	withdrawCreatorRoyaltiesFormatEndpoint = "/withdraw-creator-royalties/:userAddress"
-	issueNFTFormatEndpoint                 = "/issue-nft/:userAddress/:tokenName/:tokenTicker"
-	deployNFTTemplateFormatEndpoint        = "/deploy-template/:userAddress/:tokenId/:royalties/:tokenNameBase/:imageExt/:price/:maxSupply/:saleStart"
-	changeOwnerFormatEndpoint              = "/change-owner/:userAddress/:contractAddress"
-	setSpecialRolesFormatEndpoint          = "/set-roles/:userAddress/:tokenId/:contractAddress"
+	baseFormatEndpoint                         = "/tx-template"
+	listNftFormatEndpoint                      = "/list-nft/:userAddress/:tokenId/:nonce/:price"
+	buyNftFormatEndpoint                       = "/buy-nft/:userAddress/:tokenId/:nonce/:price"
+	withdrawNftFormatEndpoint                  = "/withdraw-nft/:userAddress/:tokenId/:nonce"
+	makeOfferFormatEndpoint                    = "/make-offer/:userAddress/:tokenId/:nonce/:amount/:expire"
+	acceptOfferFormatEndpoint                  = "/accept-offer/:userAddress/:tokenId/:nonce/:offerorAddress/:amount"
+	cancelOfferFormatEndpoint                  = "/cancel-offer/:userAddress/:tokenId/:nonce/:amount"
+	startAuctionFormatEndpoint                 = "/start-auction/:userAddress/:tokenId/:nonce/:minBid/:startTime/:deadline"
+	placeBidFormatEndpoint                     = "/place-bid/:userAddress/:tokenId/:nonce/:payment/:bidAmount"
+	endAuctionFormatEndpoint                   = "/end-auction/:userAddress/:tokenId/:nonce"
+	depositFormatEndpoint                      = "/deposit/:userAddress/:amount"
+	mintTokensFormatEndpoint                   = "/mint-tokens/:userAddress/:tokenId/:numberOfTokens"
+	withdrawFormatEndpoint                     = "/withdraw/:userAddress/:amount"
+	withdrawCreatorRoyaltiesFormatEndpoint     = "/withdraw-creator-royalties/:userAddress"
+	issueNFTFormatEndpoint                     = "/issue-nft/:userAddress/:tokenName/:tokenTicker"
+	deployNFTTemplateFormatEndpoint            = "/deploy-template/:userAddress/:tokenId/:royalties/:tokenNameBase/:imageExt/:price/:maxSupply/:saleStart"
+	changeOwnerFormatEndpoint                  = "/change-owner/:userAddress/:contractAddress"
+	setSpecialRolesFormatEndpoint              = "/set-roles/:userAddress/:tokenId/:contractAddress"
+	withdrawFromMinterFormatEndpoint           = "/withdraw-minter/:userAddress/:contractAddress"
+	requestWithdrawThroughMinterFormatEndpoint = "/request-withdraw/:userAddress/:contractAddress"
 )
 
 type txTemplateHandler struct {
@@ -60,6 +62,8 @@ func NewTxTemplateHandler(groupHandler *groupHandler, blockchainConfig config.Bl
 		{Method: http.MethodGet, Path: deployNFTTemplateFormatEndpoint, HandlerFunc: handler.getDeployNFTTemplate},
 		{Method: http.MethodGet, Path: changeOwnerFormatEndpoint, HandlerFunc: handler.getChangeOwner},
 		{Method: http.MethodGet, Path: setSpecialRolesFormatEndpoint, HandlerFunc: handler.getSetSpecialRoles},
+		{Method: http.MethodGet, Path: withdrawFromMinterFormatEndpoint, HandlerFunc: handler.withdrawFromMinter},
+		{Method: http.MethodGet, Path: requestWithdrawThroughMinterFormatEndpoint, HandlerFunc: handler.requestWithdrawThroughMinter},
 	}
 
 	endpointGroupHandler := EndpointGroupHandler{
@@ -643,6 +647,46 @@ func (handler *txTemplateHandler) getSetSpecialRoles(c *gin.Context) {
 		tokenId,
 		contractAddress,
 	)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	dtos.JsonResponse(c, http.StatusOK, template, "")
+}
+
+// @Summary Gets tx-template for withdraw from Minter SC.
+// @Description
+// @Tags tx-template
+// @Accept json
+// @Produce json
+// @Param userAddress path string true "user address"
+// @Param contractAddress path string true "contract address"
+// @Success 200 {object} formatter.Transaction
+// @Router /tx-template/withdraw-minter/{userAddress}/{contractAddress} [get]
+func (handler *txTemplateHandler) withdrawFromMinter(c *gin.Context) {
+	userAddress := c.Param("userAddress")
+	contractAddress := c.Param("contractAddress")
+
+	template := handler.txFormatter.WithdrawFromMinterTxTemplate(userAddress, contractAddress)
+	dtos.JsonResponse(c, http.StatusOK, template, "")
+}
+
+// @Summary Gets tx-template for request withdraw through Minter.
+// @Description The destination will be the Minter Address. Minter will request withdrawal from Marketplace.
+// @Tags tx-template
+// @Accept json
+// @Produce json
+// @Param userAddress path string true "user address"
+// @Param contractAddress path string true "contract address"
+// @Success 200 {object} formatter.Transaction
+// @Failure 400 {object} dtos.ApiResponse
+// @Router /tx-template/request-withdraw/{userAddress}/{contractAddress} [get]
+func (handler *txTemplateHandler) requestWithdrawThroughMinter(c *gin.Context) {
+	userAddress := c.Param("userAddress")
+	contractAddress := c.Param("contractAddress")
+
+	template, err := handler.txFormatter.RequestWithdrawThroughMinterTxTemplate(userAddress, contractAddress)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return

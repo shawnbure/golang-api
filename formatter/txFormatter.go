@@ -11,24 +11,26 @@ import (
 )
 
 var (
-	listNftEndpointName                  = "putNftForSale"
-	buyNftEndpointName                   = "buyNft"
-	withdrawNftEndpointName              = "withdrawNft"
-	ESDTNFTTransferEndpointName          = "ESDTNFTTransfer"
-	mintTokensEndpointName               = "mintTokens"
-	makeOfferEndpointName                = "makeOffer"
-	acceptOfferEndpointName              = "acceptOffer"
-	cancelOfferEndpointName              = "cancelOffer"
-	startAuctionEndpointName             = "startAuction"
-	placeBidEndpointName                 = "placeBid"
-	endAuctionEndpointName               = "endAuction"
-	depositEndpointName                  = "deposit"
-	withdrawEndpointName                 = "withdraw"
-	withdrawCreatorRoyaltiesEndpointName = "withdrawCreatorRoyalties"
-	issueNFTEndpointName                 = "issueNonFungible"
-	deployNFTTemplateEndpointName        = "deployNFTTemplateContract"
-	changeOwnerEndpointName              = "changeOwner"
-	setSpecialRoleEndpointName           = "setSpecialRole"
+	listNftEndpointName                      = "putNftForSale"
+	buyNftEndpointName                       = "buyNft"
+	withdrawNftEndpointName                  = "withdrawNft"
+	ESDTNFTTransferEndpointName              = "ESDTNFTTransfer"
+	mintTokensEndpointName                   = "mintTokens"
+	makeOfferEndpointName                    = "makeOffer"
+	acceptOfferEndpointName                  = "acceptOffer"
+	cancelOfferEndpointName                  = "cancelOffer"
+	startAuctionEndpointName                 = "startAuction"
+	placeBidEndpointName                     = "placeBid"
+	endAuctionEndpointName                   = "endAuction"
+	depositEndpointName                      = "deposit"
+	withdrawEndpointName                     = "withdraw"
+	withdrawCreatorRoyaltiesEndpointName     = "withdrawCreatorRoyalties"
+	issueNFTEndpointName                     = "issueNonFungible"
+	deployNFTTemplateEndpointName            = "deployNFTTemplateContract"
+	changeOwnerEndpointName                  = "changeOwner"
+	setSpecialRoleEndpointName               = "setSpecialRole"
+	withdrawFromMinterEndpointName           = "withdraw"
+	requestWithdrawThroughMinterEndpointName = "requestWithdraw"
 )
 
 const RoyaltiesBP = 100
@@ -464,6 +466,52 @@ func (f *TxFormatter) SetSpecialRolesTxTemplate(
 		SndAddr:   walletAddress,
 		GasPrice:  f.config.GasPrice,
 		GasLimit:  f.config.SetSpecialRolesGasLimit,
+		Data:      txData,
+		Signature: "",
+		ChainID:   f.config.ChainID,
+		Version:   1,
+		Options:   0,
+	}, nil
+}
+
+func (f *TxFormatter) WithdrawFromMinterTxTemplate(
+	walletAddress string,
+	contractAddress string,
+) Transaction {
+	return Transaction{
+		Nonce:     0,
+		Value:     "0",
+		RcvAddr:   contractAddress,
+		SndAddr:   walletAddress,
+		GasPrice:  f.config.GasPrice,
+		GasLimit:  f.config.WithdrawFromMinterGasLimit,
+		Data:      withdrawFromMinterEndpointName,
+		Signature: "",
+		ChainID:   f.config.ChainID,
+		Version:   1,
+		Options:   0,
+	}
+}
+
+func (f *TxFormatter) RequestWithdrawThroughMinterTxTemplate(
+	walletAddress string,
+	contractAddress string,
+) (*Transaction, error) {
+	marketplaceAddress, err := data.NewAddressFromBech32String(f.config.MarketplaceAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	txData := requestWithdrawThroughMinterEndpointName +
+		"@" + hex.EncodeToString(marketplaceAddress.AddressBytes())
+
+	return &Transaction{
+		Nonce:     0,
+		Value:     "0",
+		RcvAddr:   contractAddress,
+		SndAddr:   walletAddress,
+		GasPrice:  f.config.GasPrice,
+		GasLimit:  f.config.RequestWithdrawThroughMinterGasLimit,
 		Data:      txData,
 		Signature: "",
 		ChainID:   f.config.ChainID,

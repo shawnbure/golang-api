@@ -2097,6 +2097,37 @@ paths:
       summary: Start auction for an NFT - tx template.
       tags:
       - tx-template
+  /tx-template/request-withdraw/{userAddress}/{contractAddress}:
+    get:
+      consumes:
+      - application/json
+      description: The destination will be the Minter Address. Minter will request
+        withdrawal from Marketplace.
+      parameters:
+      - description: user address
+        in: path
+        name: userAddress
+        required: true
+        type: string
+      - description: contract address
+        in: path
+        name: contractAddress
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/formatter.Transaction'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: Gets tx-template for request withdraw through Minter.
+      tags:
+      - tx-template
   /tx-template/set-roles/{userAddress}/{tokenId}/{contractAddress}:
     get:
       consumes:
@@ -2204,6 +2235,31 @@ paths:
           schema:
             $ref: '#/definitions/formatter.Transaction'
       summary: Withdraw Creator Royalties EGLD template.
+      tags:
+      - tx-template
+  /tx-template/withdraw-minter/{userAddress}/{contractAddress}:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: user address
+        in: path
+        name: userAddress
+        required: true
+        type: string
+      - description: contract address
+        in: path
+        name: contractAddress
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/formatter.Transaction'
+      summary: Gets tx-template for withdraw from Minter SC.
       tags:
       - tx-template
   /tx-template/withdraw-nft/{userAddress}/{tokenId}/{nonce}:

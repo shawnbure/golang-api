@@ -27,32 +27,34 @@ type ConnectorApiConfig struct {
 }
 
 type BlockchainConfig struct {
-	GasPrice                         uint64
-	ProxyUrl                         string
-	ChainID                          string
-	PemPath                          string
-	MarketplaceAddress               string
-	DeployerAddress                  string
-	SystemSCAddress                  string
-	ListNftGasLimit                  uint64
-	BuyNftGasLimit                   uint64
-	WithdrawNftGasLimit              uint64
-	MintTokenGasLimit                uint64
-	MakeOfferGasLimit                uint64
-	AcceptOfferGasLimit              uint64
-	CancelOfferGasLimit              uint64
-	StartAuctionGasLimit             uint64
-	PlaceBidGasLimit                 uint64
-	EndAuctionGasLimit               uint64
-	DepositGasLimit                  uint64
-	WithdrawGasLimit                 uint64
-	WithdrawCreatorRoyaltiesGasLimit uint64
-	IssueNFTGasLimit                 uint64
-	DeployNFTTemplateGasLimit        uint64
-	ChangeOwnerGasLimit              uint64
-	SetSpecialRolesGasLimit          uint64
-	IssueTokenEGLDCost               string
-	DeployNFTTemplateEGLDCost        string
+	GasPrice                             uint64
+	ProxyUrl                             string
+	ChainID                              string
+	PemPath                              string
+	MarketplaceAddress                   string
+	DeployerAddress                      string
+	SystemSCAddress                      string
+	ListNftGasLimit                      uint64
+	BuyNftGasLimit                       uint64
+	WithdrawNftGasLimit                  uint64
+	MintTokenGasLimit                    uint64
+	MakeOfferGasLimit                    uint64
+	AcceptOfferGasLimit                  uint64
+	CancelOfferGasLimit                  uint64
+	StartAuctionGasLimit                 uint64
+	PlaceBidGasLimit                     uint64
+	EndAuctionGasLimit                   uint64
+	DepositGasLimit                      uint64
+	WithdrawGasLimit                     uint64
+	WithdrawCreatorRoyaltiesGasLimit     uint64
+	IssueNFTGasLimit                     uint64
+	DeployNFTTemplateGasLimit            uint64
+	ChangeOwnerGasLimit                  uint64
+	SetSpecialRolesGasLimit              uint64
+	IssueTokenEGLDCost                   string
+	DeployNFTTemplateEGLDCost            string
+	WithdrawFromMinterGasLimit           uint64
+	RequestWithdrawThroughMinterGasLimit uint64
 }
 
 type DatabaseConfig struct {
