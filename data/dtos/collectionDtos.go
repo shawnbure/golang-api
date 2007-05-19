@@ -21,6 +21,12 @@ type AttributeStat struct {
 	Total     uint64 `json:"total"`
 }
 
+type MetadataLinkResponse struct {
+	Name       string      `json:"name"`
+	Image      string      `json:"image"`
+	Attributes []Attribute `json:"attributes"`
+}
+
 type ExtendedCollectionDto struct {
 	Collection entities.Collection  `json:"collection"`
 	Statistics CollectionStatistics `json:"statistics"`

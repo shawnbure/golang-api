@@ -5,14 +5,21 @@ definitions:
       error:
         type: string
     type: object
+  dtos.AttributeStat:
+    properties:
+      total:
+        type: integer
+      trait_type:
+        type: string
+      value:
+        type: string
+    type: object
   dtos.CollectionStatistics:
     properties:
       attributes:
-        additionalProperties:
-          additionalProperties:
-            type: integer
-          type: object
-        type: object
+        items:
+          $ref: '#/definitions/dtos.AttributeStat'
+        type: array
       floorPrice:
         type: number
       itemsTotal:
@@ -72,6 +79,8 @@ definitions:
         type: integer
       instagramLink:
         type: string
+      mintPricePerTokenNominal:
+        type: number
       mintPricePerTokenString:
         type: string
       name:
@@ -93,6 +102,10 @@ definitions:
         items:
           type: integer
         type: array
+      auctionDeadline:
+        type: integer
+      auctionStartTime:
+        type: integer
       collectionId:
         type: integer
       createdAt:
@@ -103,8 +116,8 @@ definitions:
         type: integer
       imageLink:
         type: string
-      listed:
-        type: boolean
+      lastBuyPriceNominal:
+        type: number
       metadataLink:
         type: string
       nonce:
@@ -117,6 +130,8 @@ definitions:
         type: string
       royaltiesPercent:
         type: number
+      state:
+        type: string
       tokenId:
         type: string
       tokenName:
@@ -168,41 +183,6 @@ definitions:
       version:
         type: integer
     type: object
-  handlers.AvailableToken:
-    properties:
-      collection:
-        properties:
-          id:
-            type: string
-          name:
-            type: string
-        type: object
-      token:
-        properties:
-          available:
-            type: boolean
-          id:
-            type: string
-          name:
-            type: string
-          nonce:
-            type: integer
-        type: object
-    type: object
-  handlers.AvailableTokensRequest:
-    properties:
-      tokens:
-        items:
-          type: string
-        type: array
-    type: object
-  handlers.AvailableTokensResponse:
-    properties:
-      tokens:
-        additionalProperties:
-          $ref: '#/definitions/handlers.AvailableToken'
-        type: object
-    type: object
   handlers.GeneralSearchResponse:
     properties:
       accounts:
@@ -244,6 +224,41 @@ definitions:
         type: string
       refreshToken:
         type: string
+    type: object
+  services.AvailableToken:
+    properties:
+      collection:
+        properties:
+          id:
+            type: string
+          name:
+            type: string
+        type: object
+      token:
+        properties:
+          available:
+            type: boolean
+          id:
+            type: string
+          name:
+            type: string
+          nonce:
+            type: integer
+        type: object
+    type: object
+  services.AvailableTokensRequest:
+    properties:
+      tokens:
+        items:
+          type: string
+        type: array
+    type: object
+  services.AvailableTokensResponse:
+    properties:
+      tokens:
+        additionalProperties:
+          $ref: '#/definitions/services.AvailableToken'
+        type: object
     type: object
   services.CreateAccountRequest:
     properties:
@@ -1235,14 +1250,14 @@ paths:
         name: availableTokensRequest
         required: true
         schema:
-          $ref: '#/definitions/handlers.AvailableTokensRequest'
+          $ref: '#/definitions/services.AvailableTokensRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/handlers.AvailableTokensResponse'
+            $ref: '#/definitions/services.AvailableTokensResponse'
         "400":
           description: Bad Request
           schema:

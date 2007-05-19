@@ -1337,7 +1337,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.AvailableTokensRequest"
+                            "$ref": "#/definitions/services.AvailableTokensRequest"
                         }
                     }
                 ],
@@ -1345,7 +1345,7 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/handlers.AvailableTokensResponse"
+                            "$ref": "#/definitions/services.AvailableTokensResponse"
                         }
                     },
                     "400": {
@@ -1884,16 +1884,27 @@ var doc = `{
                 }
             }
         },
+        "dtos.AttributeStat": {
+            "type": "object",
+            "properties": {
+                "total": {
+                    "type": "integer"
+                },
+                "trait_type": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
         "dtos.CollectionStatistics": {
             "type": "object",
             "properties": {
                 "attributes": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "object",
-                        "additionalProperties": {
-                            "type": "integer"
-                        }
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dtos.AttributeStat"
                     }
                 },
                 "floorPrice": {
@@ -1986,6 +1997,9 @@ var doc = `{
                 "instagramLink": {
                     "type": "string"
                 },
+                "mintPricePerTokenNominal": {
+                    "type": "number"
+                },
                 "mintPricePerTokenString": {
                     "type": "string"
                 },
@@ -2018,6 +2032,12 @@ var doc = `{
                         "type": "integer"
                     }
                 },
+                "auctionDeadline": {
+                    "type": "integer"
+                },
+                "auctionStartTime": {
+                    "type": "integer"
+                },
                 "collectionId": {
                     "type": "integer"
                 },
@@ -2033,8 +2053,8 @@ var doc = `{
                 "imageLink": {
                     "type": "string"
                 },
-                "listed": {
-                    "type": "boolean"
+                "lastBuyPriceNominal": {
+                    "type": "number"
                 },
                 "metadataLink": {
                     "type": "string"
@@ -2053,6 +2073,9 @@ var doc = `{
                 },
                 "royaltiesPercent": {
                     "type": "number"
+                },
+                "state": {
+                    "type": "string"
                 },
                 "tokenId": {
                     "type": "string"
@@ -2132,61 +2155,6 @@ var doc = `{
                 }
             }
         },
-        "handlers.AvailableToken": {
-            "type": "object",
-            "properties": {
-                "collection": {
-                    "type": "object",
-                    "properties": {
-                        "id": {
-                            "type": "string"
-                        },
-                        "name": {
-                            "type": "string"
-                        }
-                    }
-                },
-                "token": {
-                    "type": "object",
-                    "properties": {
-                        "available": {
-                            "type": "boolean"
-                        },
-                        "id": {
-                            "type": "string"
-                        },
-                        "name": {
-                            "type": "string"
-                        },
-                        "nonce": {
-                            "type": "integer"
-                        }
-                    }
-                }
-            }
-        },
-        "handlers.AvailableTokensRequest": {
-            "type": "object",
-            "properties": {
-                "tokens": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "handlers.AvailableTokensResponse": {
-            "type": "object",
-            "properties": {
-                "tokens": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "$ref": "#/definitions/handlers.AvailableToken"
-                    }
-                }
-            }
-        },
         "handlers.GeneralSearchResponse": {
             "type": "object",
             "properties": {
@@ -2249,6 +2217,61 @@ var doc = `{
                 },
                 "refreshToken": {
                     "type": "string"
+                }
+            }
+        },
+        "services.AvailableToken": {
+            "type": "object",
+            "properties": {
+                "collection": {
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "string"
+                        },
+                        "name": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "token": {
+                    "type": "object",
+                    "properties": {
+                        "available": {
+                            "type": "boolean"
+                        },
+                        "id": {
+                            "type": "string"
+                        },
+                        "name": {
+                            "type": "string"
+                        },
+                        "nonce": {
+                            "type": "integer"
+                        }
+                    }
+                }
+            }
+        },
+        "services.AvailableTokensRequest": {
+            "type": "object",
+            "properties": {
+                "tokens": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "services.AvailableTokensResponse": {
+            "type": "object",
+            "properties": {
+                "tokens": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/services.AvailableToken"
+                    }
                 }
             }
         },

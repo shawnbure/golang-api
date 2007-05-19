@@ -70,7 +70,7 @@ var _tokens = []entities.Token{
 		PriceString:      "100000000000000000000",
 		PriceNominal:     100,
 		RoyaltiesPercent: 200,
-		MetadataLink:     "https://galacticapes.mypinata.cloud/ipfs/QmcX6g2xXiFP5j1iAfXREuP9EucRRpuMCAnoYaVYjtrJeK",
+		MetadataLink:     "https://galacticapes.mypinata.cloud/ipfs/QmcX6g2xXiFP5j1iAfXREuP9EucRRpuMCAnoYaVYjtrJeK/1",
 		CreatedAt:        uint64(time.Now().Unix()),
 		Status:           entities.List,
 		Attributes: toJson(map[string]string{
@@ -87,7 +87,7 @@ var _tokens = []entities.Token{
 		PriceString:      "1000000000000000000",
 		PriceNominal:     1,
 		RoyaltiesPercent: 200,
-		MetadataLink:     "https://galacticapes.mypinata.cloud/ipfs/QmcX6g2xXiFP5j1iAfXREuP9EucRRpuMCAnoYaVYjtrJeK",
+		MetadataLink:     "https://galacticapes.mypinata.cloud/ipfs/QmcX6g2xXiFP5j1iAfXREuP9EucRRpuMCAnoYaVYjtrJeK/2",
 		CreatedAt:        uint64(time.Now().Unix()),
 		Status:           entities.List,
 		Attributes: toJson(map[string]string{
@@ -132,7 +132,7 @@ func SeedDatabase(cfg config.DatabaseConfig) {
 }
 
 func addAccounts() error {
-	for index, _ := range _accounts {
+	for index := range _accounts {
 		if err := AddAccount(&_accounts[index]); err != nil {
 			return err
 		}
@@ -142,7 +142,7 @@ func addAccounts() error {
 }
 
 func addCollections() error {
-	for index, _ := range _collections {
+	for index := range _collections {
 		_collections[index].CreatorID = _accounts[rand.Intn(len(_accounts))].ID
 		if err := AddCollection(&_collections[index]); err != nil {
 			return err
@@ -153,7 +153,7 @@ func addCollections() error {
 }
 
 func addTokens() error {
-	for index, _ := range _tokens {
+	for index := range _tokens {
 		_tokens[index].OwnerId = _accounts[rand.Intn(len(_accounts))].ID
 		_tokens[index].CollectionID = _collections[rand.Intn(len(_collections))].ID
 		if err := AddToken(&_tokens[index]); err != nil {
@@ -167,13 +167,13 @@ func addTokens() error {
 func addTxs() error {
 	for i := 1; i < 20; i++ {
 		var txType entities.TxType
-		if i % 3 == 0 {
+		if i%3 == 0 {
 			txType = entities.ListToken
 		}
-		if i % 3 == 1 {
+		if i%3 == 1 {
 			txType = entities.BuyToken
 		}
-		if i % 3 == 2 {
+		if i%3 == 2 {
 			txType = entities.WithdrawToken
 		}
 

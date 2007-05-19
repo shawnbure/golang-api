@@ -39,12 +39,6 @@ type AvailableTokensResponse struct {
 	Tokens map[string]AvailableToken `json:"tokens"`
 }
 
-type TokenLinkResponse struct {
-	Name       string           `json:"name"`
-	Image      string           `json:"image"`
-	Attributes []dtos.Attribute `json:"attributes"`
-}
-
 type TokenCacheInfo struct {
 	TokenDbId uint64
 	TokenName string
@@ -89,37 +83,36 @@ func ListToken(args ListTokenArgs) {
 	}
 
 	token, err := storage.GetTokenByTokenIdAndNonce(args.TokenId, args.Nonce)
+	if err != nil {
+		token = &entities.Token{
+			TokenID:          args.TokenId,
+			Nonce:            args.Nonce,
+			RoyaltiesPercent: GetRoyaltiesPercentNominal(args.RoyaltiesPercent),
+			MetadataLink:     args.SecondLink,
+			CreatedAt:        args.Timestamp,
+			Attributes:       GetAttributesFromMetadata(args.SecondLink),
+			TokenName:        args.TokenName,
+			ImageLink:        args.FirstLink,
+			Hash:             args.Hash,
+		}
+	}
+
+	token.Status = entities.List
+	token.PriceString = args.Price
+	token.PriceNominal = priceNominal
+	token.OwnerId = ownerAccount.ID
+	token.CollectionID = collectionId
 
 	var innerErr error
 	if err != nil {
-		newToken := ConstructNewToken(ConstructTokenArgs{
-			TokenId:          args.TokenId,
-			Nonce:            args.Nonce,
-			TokenName:        args.TokenName,
-			RoyaltiesPercent: args.RoyaltiesPercent,
-			Timestamp:        args.Timestamp,
-			Hash:             args.Hash,
-			LastLink:         args.LastLink,
-			FirstLink:        args.FirstLink,
-		})
-		token = &newToken
-		token.Status = entities.List
-		token.PriceString = args.Price
-		token.PriceNominal = priceNominal
-		token.OwnerId = ownerAccount.ID
-		token.CollectionID = collectionId
 		innerErr = storage.AddToken(token)
-
-		_, cacheErr := AddTokenToCache(token.TokenID, token.Nonce, token.TokenName, token.ID)
-		if cacheErr != nil {
-			log.Error("could not add token to cache")
+		if innerErr == nil {
+			_, cacheErr := AddTokenToCache(token.TokenID, token.Nonce, token.TokenName, token.ID)
+			if cacheErr != nil {
+				log.Error("could not add token to cache")
+			}
 		}
 	} else {
-		token.Status = entities.List
-		token.PriceString = args.Price
-		token.PriceNominal = priceNominal
-		token.OwnerId = ownerAccount.ID
-		token.CollectionID = collectionId
 		innerErr = storage.UpdateToken(token)
 	}
 
@@ -264,41 +257,38 @@ func StartAuction(args StartAuctionArgs) (*entities.Token, error) {
 	}
 
 	token, err := storage.GetTokenByTokenIdAndNonce(args.TokenId, args.Nonce)
+	if err != nil {
+		token = &entities.Token{
+			TokenID:          args.TokenId,
+			Nonce:            args.Nonce,
+			RoyaltiesPercent: GetRoyaltiesPercentNominal(args.RoyaltiesPercent),
+			MetadataLink:     args.SecondLink,
+			CreatedAt:        args.Timestamp,
+			Attributes:       GetAttributesFromMetadata(args.SecondLink),
+			TokenName:        args.TokenName,
+			ImageLink:        args.FirstLink,
+			Hash:             args.Hash,
+		}
+	}
+
+	token.Status = entities.Auction
+	token.PriceString = args.MinBid
+	token.PriceNominal = amountNominal
+	token.OwnerId = accountID
+	token.CollectionID = collectionId
+	token.AuctionStartTime = args.StartTime
+	token.AuctionDeadline = args.Deadline
 
 	var innerErr error
 	if err != nil {
-		newToken := ConstructNewToken(ConstructTokenArgs{
-			TokenId:          args.TokenId,
-			Nonce:            args.Nonce,
-			TokenName:        args.TokenName,
-			RoyaltiesPercent: args.RoyaltiesPercent,
-			Timestamp:        args.Timestamp,
-			Hash:             args.Hash,
-			LastLink:         args.LastLink,
-			FirstLink:        args.FirstLink,
-		})
-		token = &newToken
-		token.Status = entities.Auction
-		token.PriceString = args.MinBid
-		token.PriceNominal = amountNominal
-		token.OwnerId = accountID
-		token.CollectionID = collectionId
-		token.AuctionStartTime = args.StartTime
-		token.AuctionDeadline = args.Deadline
 		innerErr = storage.AddToken(token)
-
-		_, cacheErr := AddTokenToCache(token.TokenID, token.Nonce, token.TokenName, token.ID)
-		if cacheErr != nil {
-			log.Error("could not add token to cache")
+		if innerErr == nil {
+			_, cacheErr := AddTokenToCache(token.TokenID, token.Nonce, token.TokenName, token.ID)
+			if cacheErr != nil {
+				log.Error("could not add token to cache")
+			}
 		}
 	} else {
-		token.Status = entities.Auction
-		token.PriceString = args.MinBid
-		token.PriceNominal = amountNominal
-		token.OwnerId = accountID
-		token.CollectionID = collectionId
-		token.AuctionStartTime = args.StartTime
-		token.AuctionDeadline = args.Deadline
 		innerErr = storage.UpdateToken(token)
 	}
 
@@ -412,78 +402,41 @@ func GetExtendedTokenData(tokenId string, nonce uint64) (*dtos.ExtendedTokenDto,
 	)
 }
 
-type ConstructTokenArgs struct {
-	TokenId          string
-	Nonce            uint64
-	TokenName        string
-	RoyaltiesPercent uint64
-	Timestamp        uint64
-	Hash             string
-	LastLink         string
-	FirstLink        string
-}
-
-func ConstructNewToken(args ConstructTokenArgs) entities.Token {
-	token := entities.Token{
-		TokenID:          args.TokenId,
-		Nonce:            args.Nonce,
-		RoyaltiesPercent: GetRoyaltiesPercentNominal(args.RoyaltiesPercent),
-		MetadataLink:     "",
-		CreatedAt:        args.Timestamp,
-		Attributes:       datatypes.JSON(""),
-		TokenName:        "",
-		ImageLink:        "",
-		Hash:             args.Hash,
+func GetAttributesFromMetadata(link string) datatypes.JSON {
+	emptyResponse := datatypes.JSON("")
+	if len(link) == 0 {
+		return emptyResponse
 	}
 
-	osResponse, err := GetOSMetadataForToken(args.LastLink, args.Nonce)
-	if err == nil {
-		token.MetadataLink = args.LastLink
-		token.TokenName = osResponse.Name
-		token.ImageLink = osResponse.Image
-
-		attributesJson, innerErr := ConstructAttributesJsonFromResponse(osResponse)
-		if innerErr != nil {
-			log.Debug("could not parse os response for attributes", "link", args.LastLink)
-		} else {
-			token.Attributes = *attributesJson
-		}
-	} else {
-		token.TokenName = args.TokenName
-		token.ImageLink = args.FirstLink
-	}
-
-	return token
-}
-
-func GetOSMetadataForToken(link string, nonce uint64) (*TokenLinkResponse, error) {
-	var response TokenLinkResponse
-
-	link = link + "/" + strconv.FormatUint(nonce, 10)
 	responseRaw, err := HttpGetRaw(link)
 	if err != nil {
-		return nil, err
+		log.Debug("could not get metadata response", "link", link, "err", err)
+		return emptyResponse
 	}
 	if len(responseRaw) > maxTokenLinkResponseSize {
-		return nil, errors.New("response too long")
+		log.Debug("response too long for link", "link", link)
+		return emptyResponse
 	}
 
+	var response dtos.MetadataLinkResponse
 	err = json.Unmarshal([]byte(responseRaw), &response)
 	if err != nil {
-		return nil, err
+		log.Debug("could not unmarshal", "link", link, "err", err)
+		return emptyResponse
 	}
 
-	return &response, nil
-}
+	attributes := make(map[string]string)
+	for _, key := range response.Attributes {
+		attributes[key.TraitType] = key.Value
+	}
 
-func ConstructAttributesJsonFromResponse(response *TokenLinkResponse) (*datatypes.JSON, error) {
-	attrsBytes, err := json.Marshal(response.Attributes)
+	bytes, err := json.Marshal(attributes)
 	if err != nil {
-		return nil, err
+		log.Debug("could not marshal", "link", link, "err", err)
+		return emptyResponse
 	}
 
-	attrsJson := datatypes.JSON(attrsBytes)
-	return &attrsJson, err
+	return bytes
 }
 
 func GetPriceNominal(priceHex string) (float64, error) {
