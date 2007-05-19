@@ -1,7 +1,7 @@
 package entities
 
 type Collection struct {
-	ID            uint64 `gorm:"primaryKey"`
+	ID            uint64 `gorm:"primaryKey" json:"id"`
 	Name          string `json:"name"`
 	TokenID       string `json:"tokenId"`
 	Description   string `json:"description"`

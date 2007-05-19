@@ -37,6 +37,7 @@ func ComputeStatisticsForCollection(collectionId uint64) (*dtos.CollectionStatis
 		OwnersTotal:  uint64(len(collectionMetadata.Owners)),
 		FloorPrice:   minPrice,
 		VolumeTraded: sumPrice,
+		AttrStats:    collectionMetadata.AttrStats,
 	}
 
 	return &stats, nil
