@@ -24,3 +24,6 @@
 
 vendor
 cmd/notifier
+
+config/config.toml
+config.toml
