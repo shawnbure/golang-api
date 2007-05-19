@@ -999,74 +999,6 @@
                 }
             }
         },
-        "/proffers/{tokenId}/{nonce}/{offset}/{limit}": {
-            "get": {
-                "description": "Retrieves proffers for a token (identified by tokenId and nonce)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "proffers"
-                ],
-                "summary": "Get proffers (offers and bids) for token",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "token id",
-                        "name": "tokenId",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "token nonce",
-                        "name": "nonce",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "offset",
-                        "name": "offset",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "limit",
-                        "name": "limit",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/entities.Proffer"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/dtos.ApiResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/dtos.ApiResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/royalties/last/{userAddress}": {
             "get": {
                 "description": "Gets last withdrawal epoch for a creator. Next withdraw needs to be calculated as (current_epoch - this_epoch) %30",
@@ -1337,6 +1269,142 @@
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/dtos.ExtendedTokenDto"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/tokens/{tokenId}/{nonce}/bids/{offset}/{limit}": {
+            "get": {
+                "description": "Retrieves bids for a token (identified by tokenId and nonce)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tokens"
+                ],
+                "summary": "Get bids for token",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "token id",
+                        "name": "tokenId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "token nonce",
+                        "name": "nonce",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "offset",
+                        "name": "offset",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "limit",
+                        "name": "limit",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dtos.BidDto"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/tokens/{tokenId}/{nonce}/offers/{offset}/{limit}": {
+            "get": {
+                "description": "Retrieves offers for a token (identified by tokenId and nonce)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tokens"
+                ],
+                "summary": "Get offers for token",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "token id",
+                        "name": "tokenId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "token nonce",
+                        "name": "nonce",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "offset",
+                        "name": "offset",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "limit",
+                        "name": "limit",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dtos.OfferDto"
+                            }
                         }
                     },
                     "400": {
@@ -2587,6 +2655,35 @@
                 }
             }
         },
+        "dtos.BidDto": {
+            "type": "object",
+            "properties": {
+                "bidAmountNominal": {
+                    "type": "number"
+                },
+                "bidAmountString": {
+                    "type": "string"
+                },
+                "bidderAddress": {
+                    "type": "string"
+                },
+                "bidderName": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "timestamp": {
+                    "type": "integer"
+                },
+                "tokenId": {
+                    "type": "integer"
+                },
+                "txHash": {
+                    "type": "string"
+                }
+            }
+        },
         "dtos.CollectionStatistics": {
             "type": "object",
             "properties": {
@@ -2691,6 +2788,38 @@
                     "type": "string"
                 },
                 "tokenName": {
+                    "type": "string"
+                }
+            }
+        },
+        "dtos.OfferDto": {
+            "type": "object",
+            "properties": {
+                "amountNominal": {
+                    "type": "number"
+                },
+                "amountString": {
+                    "type": "string"
+                },
+                "expire": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "offerorAddress": {
+                    "type": "string"
+                },
+                "offerorName": {
+                    "type": "string"
+                },
+                "timestamp": {
+                    "type": "integer"
+                },
+                "tokenId": {
+                    "type": "integer"
+                },
+                "txHash": {
                     "type": "string"
                 }
             }
@@ -2859,38 +2988,6 @@
                     "type": "string"
                 },
                 "website": {
-                    "type": "string"
-                }
-            }
-        },
-        "entities.Proffer": {
-            "type": "object",
-            "properties": {
-                "amountNominal": {
-                    "type": "number"
-                },
-                "amountString": {
-                    "type": "string"
-                },
-                "expire": {
-                    "type": "integer"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "offerorId": {
-                    "type": "integer"
-                },
-                "timestamp": {
-                    "type": "integer"
-                },
-                "tokenId": {
-                    "type": "integer"
-                },
-                "txHash": {
-                    "type": "string"
-                },
-                "type": {
                     "type": "string"
                 }
             }

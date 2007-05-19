@@ -17,7 +17,7 @@ const (
 	listNftFormatEndpoint                  = "/list-nft/:userAddress/:tokenId/:nonce/:price"
 	buyNftFormatEndpoint                   = "/buy-nft/:userAddress/:tokenId/:nonce/:price"
 	withdrawNftFormatEndpoint              = "/withdraw-nft/:userAddress/:tokenId/:nonce"
-	makeOfferFormatEndpoint                = "/make-offer/:userAddress/:tokenId/:nonce/:amount/:expiration"
+	makeOfferFormatEndpoint                = "/make-offer/:userAddress/:tokenId/:nonce/:amount/:expire"
 	acceptOfferFormatEndpoint              = "/accept-offer/:userAddress/:tokenId/:nonce/:offeror/:amount"
 	cancelOfferFormatEndpoint              = "/cancel-offer/:userAddress/:tokenId/:nonce/:amount"
 	startAuctionFormatEndpoint             = "/start-auction/:userAddress/:tokenId/:nonce/:price/:startTime/:deadline"

@@ -195,7 +195,7 @@ func BuyToken(args BuyTokenArgs) {
 		return
 	}
 
-	err = storage.DeleteProffersForTokenId(token.ID)
+	err = storage.DeleteOffersForTokenId(token.ID)
 	if err != nil {
 		log.Debug("could not delete proffers for token", "err", err)
 	}
@@ -243,9 +243,14 @@ func WithdrawToken(args WithdrawTokenArgs) {
 		return
 	}
 
-	err = storage.DeleteProffersForTokenId(token.ID)
+	err = storage.DeleteOffersForTokenId(token.ID)
 	if err != nil {
-		log.Debug("could not delete proffers for token", "err", err)
+		log.Debug("could not delete offers for token", "err", err)
+	}
+
+	err = storage.DeleteBidsForTokenId(token.ID)
+	if err != nil {
+		log.Debug("could not delete bids for token", "err", err)
 	}
 
 	transaction := entities.Transaction{
@@ -388,9 +393,14 @@ func EndAuction(args EndAuctionArgs) {
 		return
 	}
 
-	err = storage.DeleteProffersForTokenId(token.ID)
+	err = storage.DeleteOffersForTokenId(token.ID)
 	if err != nil {
-		log.Debug("could not delete proffers for token", "err", err)
+		log.Debug("could not delete offers for token", "err", err)
+	}
+
+	err = storage.DeleteBidsForTokenId(token.ID)
+	if err != nil {
+		log.Debug("could not delete bids for token", "err", err)
 	}
 
 	transaction := entities.Transaction{
