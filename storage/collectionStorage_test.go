@@ -24,9 +24,13 @@ func Test_AddNewCollection(t *testing.T) {
 func Test_GetCollectionById(t *testing.T) {
 	connectToDb(t)
 
-	collection, err := getCollectionById(1)
+	collection := defaultCollection()
+	error := addNewCollection(&collection)
+	require.Nil(t, error)
+
+	collectionRead, err := getCollectionById(collection.ID)
 	require.Nil(t, err)
-	assert.Equal(t, collection.ID, uint64(1))
+	assert.Equal(t, collectionRead.ID, collection.ID)
 }
 
 func Test_GetCollectionsCreatedById(t *testing.T) {
@@ -40,7 +44,7 @@ func Test_GetCollectionsCreatedById(t *testing.T) {
 	error = addNewCollection(&otherCollection)
 	require.Nil(t, error)
 
-	collections, error := getCollectionsCreatedBy(0)
+	collections, error := getCollectionsCreatedBy(collection.CreatorID)
 	require.Nil(t, error)
 	require.GreaterOrEqual(t, len(collections), 2)
 }
@@ -57,4 +61,12 @@ func Test_GetCollectionByName(t *testing.T) {
 	retrievedCollection, error := getCollectionByName(collectionName)
 	require.Nil(t, error)
 	require.GreaterOrEqual(t, retrievedCollection.Name, collectionName)
+}
+
+func defaultCollection() data.Collection {
+	return data.Collection{
+		Name:      "default",
+		TokenID:   "my_token",
+		CreatorID: 0,
+	}
 }

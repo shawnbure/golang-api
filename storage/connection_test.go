@@ -42,11 +42,3 @@ func connectToDb(t *testing.T) {
 	require.Nil(t, err)
 	Connect(cfg.Database)
 }
-
-func defaultCollection() data.Collection {
-	return data.Collection{
-		Name:      "default",
-		TokenID:   "my_token",
-		CreatorID: 0,
-	}
-}
