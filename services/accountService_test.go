@@ -7,7 +7,7 @@ import (
 )
 
 func Test_GetOrCreateAccount(t *testing.T) {
-	connectToDb(t)
+	connectToDb()
 
 	account, err := GetOrCreateAccount("address")
 	require.Nil(t, err)

@@ -17,7 +17,7 @@ func Test_BasicElrondProxyRequest(T *testing.T) {
 }
 
 func Test_CreateCollection(T *testing.T) {
-	connectToDb(T)
+	connectToDb()
 	cache.InitCacher(config.CacheConfig{Url: "redis://localhost:6379"})
 
 	request := &CreateCollectionRequest{
@@ -32,7 +32,7 @@ func Test_CreateCollection(T *testing.T) {
 		TelegramLink:  "this is a telegram link",
 	}
 
-	elrondProxy := "https://devnet-gateway.elrond.com/"
+	elrondProxy := "https://devnet-gateway.elrond.com"
 
 	err := CreateCollection(request, elrondProxy)
 	require.Nil(T, err)

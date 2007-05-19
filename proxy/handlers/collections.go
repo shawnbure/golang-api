@@ -83,13 +83,23 @@ func (handler *collectionsHandler) create(c *gin.Context) {
 
 	err := c.Bind(&request)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, "")
+		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	jwtAddress, exists := c.Get(middleware.AddressKey)
+	if !exists {
+		data.JsonResponse(c, http.StatusInternalServerError, nil, "could not get address form context")
+		return
+	}
+	if jwtAddress != request.UserAddress {
+		data.JsonResponse(c, http.StatusUnauthorized, nil, "jwt and request addresses differ")
 		return
 	}
 
 	err = services.CreateCollection(&request, handler.blockchainCfg.ProxyUrl)
 	if err != nil {
-		data.JsonResponse(c, http.StatusInternalServerError, nil, "")
+		data.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
 	}
 

@@ -14,7 +14,7 @@ const (
 	MaxNameLen               = 20
 	MaxLinkLen               = 100
 	MaxDescLen               = 1000
-	RegisteredNFTsBaseFormat = "%saddress/%s/registered-nfts"
+	RegisteredNFTsBaseFormat = "%s/address/%s/registered-nfts"
 	HttpResponseExpirePeriod = 10 * time.Minute
 )
 

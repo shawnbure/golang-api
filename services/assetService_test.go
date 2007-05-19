@@ -11,7 +11,7 @@ import (
 const ConfigFilePath = "../config/config.toml"
 
 func Test_ListAsset(t *testing.T) {
-	connectToDb(t)
+	connectToDb()
 
 	collection := data.Collection{
 		Name:        "col",
@@ -26,7 +26,6 @@ func Test_ListAsset(t *testing.T) {
 		TokenId:        "tokenId",
 		Nonce:          13,
 		Uri:            "uri",
-		CollectionName: "col",
 		Price:          "1000",
 		TxHash:         "txHash",
 	}
@@ -57,7 +56,7 @@ func Test_ListAsset(t *testing.T) {
 }
 
 func Test_SellAsset(t *testing.T) {
-	connectToDb(t)
+	connectToDb()
 
 	collection := data.Collection{
 		Name:        "col",
@@ -72,7 +71,6 @@ func Test_SellAsset(t *testing.T) {
 		TokenId:        "tokenId",
 		Nonce:          13,
 		Uri:            "uri",
-		CollectionName: "col",
 		Price:          "1000",
 		TxHash:         "txHash",
 	}
@@ -84,7 +82,6 @@ func Test_SellAsset(t *testing.T) {
 		TokenId:        "tokenId",
 		Nonce:          13,
 		Uri:            "col",
-		CollectionName: "col",
 		Price:          "1000",
 		TxHash:         "txHashBuy",
 	}
@@ -119,7 +116,7 @@ func Test_SellAsset(t *testing.T) {
 }
 
 func Test_WithdrawAsset(t *testing.T) {
-	connectToDb(t)
+	connectToDb()
 
 	collection := data.Collection{
 		Name:        "col",
@@ -134,7 +131,6 @@ func Test_WithdrawAsset(t *testing.T) {
 		TokenId:        "tokenId",
 		Nonce:          13,
 		Uri:            "uri",
-		CollectionName: "col",
 		Price:          "1000",
 		TxHash:         "txHash",
 	}
@@ -145,7 +141,6 @@ func Test_WithdrawAsset(t *testing.T) {
 		TokenId:        "tokenId",
 		Nonce:          13,
 		Uri:            "col",
-		CollectionName: "col",
 		Price:          "1000",
 		TxHash:         "txHashWithdraw",
 	}
@@ -175,8 +170,17 @@ func Test_WithdrawAsset(t *testing.T) {
 	require.Equal(t, expectedAsset, *asset)
 }
 
-func connectToDb(t *testing.T) {
-	cfg, err := config.LoadConfig(ConfigFilePath)
-	require.Nil(t, err)
-	storage.Connect(cfg.Database)
+func connectToDb() {
+	storage.Connect(config.DatabaseConfig{
+		Dialect:       "postgres",
+		Host:          "localhost",
+		Port:          5432,
+		DbName:        "erdsea_db_test",
+		User:          "postgres",
+		Password:      "root",
+		SslMode:       "disable",
+		MaxOpenConns:  50,
+		MaxIdleConns:  10,
+		ShouldMigrate: true,
+	})
 }
