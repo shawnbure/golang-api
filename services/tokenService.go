@@ -40,6 +40,8 @@ type AvailableToken struct {
 
 type NftProxyReponseToken struct {
 	Balance   string   `json:"balance"`
+	Name      string   `json:"name"`
+	Hash      string   `json:"hash"`
 	Royalties string   `json:"royalties"`
 	Uris      []string `json:"uris"`
 }
@@ -132,11 +134,11 @@ func ListToken(args ListTokenArgs, blockchainProxy string, marketplaceAddress st
 			CreatedAt:        args.Timestamp,
 			Attributes:       GetAttributesFromMetadata(metadataLink),
 			ImageLink:        args.FirstLink,
+			Hash:             args.Hash,
+			TokenName:        args.TokenName,
 		}
 	}
 
-	token.Hash = args.Hash
-	token.TokenName = args.TokenName
 	token.Status = entities.List
 	token.PriceString = args.Price
 	token.PriceNominal = priceNominal
@@ -330,11 +332,11 @@ func StartAuction(args StartAuctionArgs, blockchainProxy string, marketplaceAddr
 			CreatedAt:        args.Timestamp,
 			Attributes:       GetAttributesFromMetadata(metadataLink),
 			ImageLink:        args.FirstLink,
+			Hash:             args.Hash,
+			TokenName:        args.TokenName,
 		}
 	}
 
-	token.Hash = args.Hash
-	token.TokenName = args.TokenName
 	token.Status = entities.Auction
 	token.PriceString = args.MinBid
 	token.PriceNominal = amountNominal
@@ -777,7 +779,6 @@ func AddOrRefreshToken(
 			Nonce:        nonce,
 			CreatedAt:    uint64(time.Now().Unix()),
 			Status:       entities.None,
-			CollectionID: collectionId,
 			Attributes:   datatypes.JSON(""),
 		}
 	}
@@ -791,13 +792,22 @@ func AddOrRefreshToken(
 		}
 	}
 
+	if tokenProxyResponse.Balance != "1" {
+		return emptyAttributes, errors.New("balance not 1")
+	}
+
 	if len(tokenProxyResponse.Uris) == 0 {
 		return emptyAttributes, errors.New("no uris")
 	}
 
 	metadataLink := ""
 	if len(tokenProxyResponse.Uris) >= 2 {
-		metadataLink = tokenProxyResponse.Uris[1]
+		link, innerErr := base64.StdEncoding.DecodeString(tokenProxyResponse.Uris[1])
+		if innerErr != nil {
+			return emptyAttributes, innerErr
+		}
+
+		metadataLink = string(link)
 	}
 
 	if len(tokenProxyResponse.Royalties) == 0 {
@@ -814,9 +824,17 @@ func AddOrRefreshToken(
 		return emptyAttributes, nil
 	}
 
+	link, err := base64.StdEncoding.DecodeString(tokenProxyResponse.Uris[0])
+	if err != nil {
+		return emptyAttributes, err
+	}
+
+	token.ImageLink = string(link)
+	token.CollectionID = collectionId
 	token.RoyaltiesPercent = royaltiesNominal
-	token.ImageLink = tokenProxyResponse.Uris[0]
 	token.MetadataLink = metadataLink
+	token.TokenName = tokenProxyResponse.Name
+	token.Hash = tokenProxyResponse.Hash
 
 	newAttributes := GetAttributesFromMetadata(metadataLink)
 	if len(newAttributes) != 0 {
