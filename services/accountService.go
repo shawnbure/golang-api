@@ -30,7 +30,7 @@ func GetOrCreateAccount(address string) (*data.Account, error) {
 			CreatedAt: uint64(time.Now().Unix()),
 		}
 
-		err = storage.AddNewAccount(account)
+		err = storage.AddAccount(account)
 		if err != nil {
 			return nil, err
 		}

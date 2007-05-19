@@ -6,11 +6,11 @@ import (
 	"testing"
 )
 
-func Test_AddNewAsset(t *testing.T) {
+func Test_AddAsset(t *testing.T) {
 	connectToTestDb()
 
 	asset := defaultAsset()
-	err := AddNewAsset(&asset)
+	err := AddAsset(&asset)
 	require.Nil(t, err)
 
 	var assetRead data.Asset
@@ -24,7 +24,7 @@ func Test_UpdateAsset(t *testing.T) {
 	connectToTestDb()
 
 	asset := defaultAsset()
-	err := AddNewAsset(&asset)
+	err := AddAsset(&asset)
 	require.Nil(t, err)
 
 	asset.TokenID = "new_token_id"
@@ -41,7 +41,7 @@ func Test_GetAssetById(t *testing.T) {
 	connectToTestDb()
 
 	asset := defaultAsset()
-	err := AddNewAsset(&asset)
+	err := AddAsset(&asset)
 	require.Nil(t, err)
 
 	assetRead, err := GetAssetById(asset.ID)
@@ -56,7 +56,7 @@ func Test_GetAssetByTokenIdAndNonce(t *testing.T) {
 	asset.TokenID = "unique_token_id"
 	asset.Nonce = uint64(100)
 
-	err := AddNewAsset(&asset)
+	err := AddAsset(&asset)
 	require.Nil(t, err)
 
 	assetRead, err := GetAssetByTokenIdAndNonce(asset.TokenID, asset.Nonce)
@@ -70,11 +70,11 @@ func Test_GetAssetsOwnedBy(t *testing.T) {
 	ownerId := uint64(1)
 
 	asset := defaultAsset()
-	err := AddNewAsset(&asset)
+	err := AddAsset(&asset)
 	require.Nil(t, err)
 
 	otherAsset := defaultAsset()
-	err = AddNewAsset(&otherAsset)
+	err = AddAsset(&otherAsset)
 	require.Nil(t, err)
 
 	assetsRead, err := GetAssetsOwnedBy(ownerId)
@@ -91,11 +91,11 @@ func Test_GetAssetsByCollectionId(t *testing.T) {
 	collectionId := uint64(1)
 
 	asset := defaultAsset()
-	err := AddNewAsset(&asset)
+	err := AddAsset(&asset)
 	require.Nil(t, err)
 
 	otherAsset := defaultAsset()
-	err = AddNewAsset(&otherAsset)
+	err = AddAsset(&otherAsset)
 	require.Nil(t, err)
 
 	assetsRead, err := GetAssetsByCollectionId(collectionId)
@@ -111,11 +111,11 @@ func Test_CountListedAssetsByCollectionId(t *testing.T) {
 	connectToTestDb()
 
 	asset := defaultAsset()
-	err := AddNewAsset(&asset)
+	err := AddAsset(&asset)
 	require.Nil(t, err)
 
 	otherAsset := defaultAsset()
-	err = AddNewAsset(&otherAsset)
+	err = AddAsset(&otherAsset)
 	require.Nil(t, err)
 
 	count, err := CountListedAssetsByCollectionId(1)
@@ -127,11 +127,11 @@ func Test_CountUniqueOwnersWithListedAssetsByCollectionId(t *testing.T) {
 	connectToTestDb()
 
 	asset := defaultAsset()
-	err := AddNewAsset(&asset)
+	err := AddAsset(&asset)
 	require.Nil(t, err)
 
 	otherAsset := defaultAsset()
-	err = AddNewAsset(&otherAsset)
+	err = AddAsset(&otherAsset)
 	require.Nil(t, err)
 
 	count, err := CountUniqueOwnersWithListedAssetsByCollectionId(1)

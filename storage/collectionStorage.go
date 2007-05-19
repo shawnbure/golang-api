@@ -5,7 +5,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func AddNewCollection(collection *data.Collection) error {
+func AddCollection(collection *data.Collection) error {
 	database, err := GetDBOrError()
 	if err != nil {
 		return err

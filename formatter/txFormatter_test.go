@@ -31,8 +31,7 @@ func TestTxFormatter_NewListNftTxTemplate(t *testing.T) {
 	)
 
 	require.Nil(t, err)
-	txData := string(tx.Data)
-	require.True(t, strings.EqualFold(txData, "ESDTNFTTransfer@4C4B4D45582D383565613133@02@01@000000000000000005008D8E525546959427D05CA3172B611065D92BF3535979@7075744E6674466F7253616C65@de0b6b3a7640000000"))
+	require.True(t, strings.EqualFold(tx.Data, "ESDTNFTTransfer@4C4B4D45582D383565613133@02@01@000000000000000005008D8E525546959427D05CA3172B611065D92BF3535979@7075744E6674466F7253616C65@de0b6b3a7640000000"))
 }
 
 func TestTxFormatter_NewBuyNftTxTemplate(t *testing.T) {
@@ -45,7 +44,7 @@ func TestTxFormatter_NewBuyNftTxTemplate(t *testing.T) {
 		float64(4096),
 	)
 
-	require.True(t, strings.EqualFold(string(tx.Data), "buyNft@4C4B4D45582D383565613133@02"))
+	require.True(t, strings.EqualFold(tx.Data, "buyNft@4C4B4D45582D383565613133@02"))
 	require.Equal(t, tx.Value, "4096000000000000000000")
 }
 
@@ -58,7 +57,7 @@ func TestTxFormatter_NewWithdrawNftTxTemplate(t *testing.T) {
 		2,
 	)
 
-	require.True(t, strings.EqualFold(string(tx.Data), "withdrawNft@4C4B4D45582D383565613133@02"))
+	require.True(t, strings.EqualFold(tx.Data, "withdrawNft@4C4B4D45582D383565613133@02"))
 }
 
 func defaultConfig() config.BlockchainConfig {

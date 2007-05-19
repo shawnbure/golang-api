@@ -94,7 +94,7 @@ func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) 
 		CreatedAt:     uint64(time.Now().Unix()),
 	}
 
-	return storage.AddNewCollection(collection)
+	return storage.AddCollection(collection)
 }
 
 func GetStatisticsForCollection(collectionId uint64) (*CollectionStatistics, error) {
