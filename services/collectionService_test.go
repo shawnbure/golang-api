@@ -1,7 +1,10 @@
 package services
 
 import (
+	"gorm.io/datatypes"
+	"strconv"
 	"testing"
+	"time"
 
 	"github.com/erdsea/erdsea-api/cache"
 	"github.com/erdsea/erdsea-api/config"
@@ -111,4 +114,128 @@ func Test_SearchCollection(T *testing.T) {
 
 	hits := cache.GetCacher().GetStats().Hits
 	require.GreaterOrEqual(T, hits.Load(), int64(1))
+}
+
+func Test_GetCollectionMetadata(t *testing.T) {
+	connectToDb()
+
+	coll := data.Collection{
+		Name: strconv.Itoa(int(time.Now().Unix())),
+	}
+	err := storage.AddCollection(&coll)
+	require.Nil(t, err)
+
+	asset1 := data.Asset{
+		CollectionID: coll.ID,
+		Listed:       true,
+		OwnerId:      1,
+		Attributes:   datatypes.JSON(`{"hair": "red", "background": "dark"}`),
+	}
+	err = storage.AddAsset(&asset1)
+	require.Nil(t, err)
+
+	asset2 := data.Asset{
+		CollectionID: coll.ID,
+		Listed:       true,
+		OwnerId:      1,
+		Attributes:   datatypes.JSON(`{"hair": "green", "background": "dark"}`),
+	}
+	err = storage.AddAsset(&asset2)
+	require.Nil(t, err)
+
+	asset3 := data.Asset{
+		CollectionID: coll.ID,
+		Listed:       true,
+		OwnerId:      1,
+		Attributes:   datatypes.JSON(`{"hair": "blue", "background": "dark"}`),
+	}
+	err = storage.AddAsset(&asset3)
+	require.Nil(t, err)
+
+	asset4 := data.Asset{
+		CollectionID: coll.ID,
+		Listed:       true,
+		OwnerId:      1,
+		Attributes:   datatypes.JSON(`{}`),
+	}
+	err = storage.AddAsset(&asset4)
+	require.Nil(t, err)
+
+	asset5 := data.Asset{
+		CollectionID: coll.ID,
+		Listed:       true,
+		OwnerId:      1,
+		Attributes:   datatypes.JSON(`{"hair": "green"}`),
+	}
+	err = storage.AddAsset(&asset5)
+	require.Nil(t, err)
+
+	asset6 := data.Asset{
+		CollectionID: coll.ID,
+		Listed:       true,
+		OwnerId:      1,
+		Attributes:   datatypes.JSON(`{"background": "dark"}`),
+	}
+	err = storage.AddAsset(&asset6)
+	require.Nil(t, err)
+
+	asset7 := data.Asset{
+		CollectionID: coll.ID,
+		Listed:       true,
+		OwnerId:      1,
+		Attributes:   datatypes.JSON(`{"hair": "yellow", "background": "dark"}`),
+	}
+	err = storage.AddAsset(&asset7)
+	require.Nil(t, err)
+
+	asset8 := data.Asset{
+		CollectionID: coll.ID,
+		Listed:       true,
+		OwnerId:      1,
+		Attributes:   datatypes.JSON(`{"hair": "white", "background": "dark"}`),
+	}
+	err = storage.AddAsset(&asset8)
+	require.Nil(t, err)
+
+	asset9 := data.Asset{
+		CollectionID: coll.ID,
+		Listed:       true,
+		OwnerId:      1,
+		Attributes:   datatypes.JSON(`{"hair": "white", "background": "dark"}`),
+	}
+	err = storage.AddAsset(&asset9)
+	require.Nil(t, err)
+
+	asset10 := data.Asset{
+		CollectionID: coll.ID,
+		Listed:       true,
+		OwnerId:      1,
+		Attributes:   datatypes.JSON(`{"something_else": "yea"}`),
+	}
+	err = storage.AddAsset(&asset10)
+	require.Nil(t, err)
+
+	collStats, err := computeCollectionMetadata(coll.ID)
+	require.Nil(t, err)
+
+	expected := CollectionMetadata{
+		NumItems: 10,
+		Owners:   map[uint64]bool{1: true},
+		AttrStats: map[string]map[string]int{
+			"hair": {
+				"white":  2,
+				"red":    1,
+				"green":  2,
+				"blue":   1,
+				"yellow": 1,
+			},
+			"background": {
+				"dark": 7,
+			},
+			"something_else": {
+				"yea": 1,
+			},
+		},
+	}
+	require.Equal(t, expected, *collStats)
 }

@@ -126,6 +126,22 @@ func GetAssetsByCollectionIdWithOffsetLimit(collectionId uint64, offset int, lim
 	return assets, nil
 }
 
+func GetListedAssetsByCollectionIdWithOffsetLimit(collectionId uint64, offset int, limit int) ([]data.Asset, error) {
+	var assets []data.Asset
+
+	database, err := GetDBOrError()
+	if err != nil {
+		return nil, err
+	}
+
+	txRead := database.Offset(offset).Limit(limit).Find(&assets, "listed = true AND collection_id = ?", collectionId)
+	if txRead.Error != nil {
+		return nil, txRead.Error
+	}
+
+	return assets, nil
+}
+
 func CountListedAssetsByCollectionId(collectionId uint64) (uint64, error) {
 	count := int64(0)
 
