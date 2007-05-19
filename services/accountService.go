@@ -18,7 +18,7 @@ func GetOrCreateAccount(address string) (*data.Account, error) {
 	account, err := storage.GetAccountByAddress(address)
 	if err != nil {
 		account = &data.Account{
-			Address: address,
+			Address:   address,
 			CreatedAt: uint64(time.Now().Unix()),
 		}
 
