@@ -5,6 +5,7 @@ type Proffer struct {
 	Type          ProfferType `json:"type"`
 	AmountNominal float64     `json:"amountNominal"`
 	AmountString  string      `json:"amountString"`
+	Expire        uint64      `json:"expire"`
 	Timestamp     uint64      `json:"timestamp"`
 	TxHash        string      `json:"txHash"`
 

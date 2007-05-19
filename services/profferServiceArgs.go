@@ -5,6 +5,7 @@ type MakeOfferArgs struct {
 	TokenId        string
 	Nonce          uint64
 	Amount         string
+	Expire         uint64
 	Timestamp      uint64
 	TxHash         string
 }

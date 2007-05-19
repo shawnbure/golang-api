@@ -240,7 +240,7 @@ func (e *EventProcessor) onEventWithdrawNft(event entities.Event) {
 }
 
 func (e *EventProcessor) onEventMakeOffer(event entities.Event) {
-	if len(event.Topics) != 7 {
+	if len(event.Topics) != 8 {
 		log.Error("received corrupted makeOffer event", "err", "incorrect topics length")
 		return
 	}
@@ -250,8 +250,9 @@ func (e *EventProcessor) onEventMakeOffer(event entities.Event) {
 		TokenId:        decodeStringFromTopic(event.Topics[2]),
 		Nonce:          decodeU64FromTopic(event.Topics[3]),
 		Amount:         decodeBigUintFromTopic(event.Topics[4]),
-		Timestamp:      decodeU64FromTopic(event.Topics[5]),
-		TxHash:         decodeTxHashFromTopic(event.Topics[6]),
+		Expire:         decodeU64FromTopic(event.Topics[5]),
+		Timestamp:      decodeU64FromTopic(event.Topics[6]),
+		TxHash:         decodeTxHashFromTopic(event.Topics[7]),
 	}
 
 	eventJson, err := json.Marshal(args)

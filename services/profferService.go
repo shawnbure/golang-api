@@ -5,7 +5,7 @@ import (
 	"github.com/erdsea/erdsea-api/storage"
 )
 
-func MakeOffer(args MakeOfferArgs) (*entities.Proffer, error){
+func MakeOffer(args MakeOfferArgs) (*entities.Proffer, error) {
 	amountNominal, err := GetPriceNominal(args.Amount)
 	if err != nil {
 		log.Debug("could not parse price", "err", err)
@@ -28,6 +28,7 @@ func MakeOffer(args MakeOfferArgs) (*entities.Proffer, error){
 		Type:          entities.Offer,
 		AmountNominal: amountNominal,
 		AmountString:  args.Amount,
+		Expire:        args.Expire,
 		Timestamp:     args.Timestamp,
 		TxHash:        args.TxHash,
 		TokenID:       tokenCacheInfo.TokenDbId,
