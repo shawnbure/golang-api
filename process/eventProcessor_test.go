@@ -3,10 +3,10 @@ package process
 import (
 	"context"
 	"fmt"
-	"github.com/erdsea/erdsea-api/alerts/tg"
 	"testing"
 	"time"
 
+	"github.com/erdsea/erdsea-api/alerts/tg"
 	"github.com/erdsea/erdsea-api/cache"
 	"github.com/erdsea/erdsea-api/data/entities"
 	"github.com/stretchr/testify/require"

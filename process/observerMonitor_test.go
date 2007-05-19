@@ -3,11 +3,12 @@ package process
 import (
 	"context"
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/erdsea/erdsea-api/alerts/tg"
 	"github.com/erdsea/erdsea-api/config"
 	"github.com/stretchr/testify/require"
-	"testing"
-	"time"
 )
 
 type mockBot struct {
