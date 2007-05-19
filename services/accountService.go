@@ -12,15 +12,6 @@ import (
 	"github.com/erdsea/erdsea-api/storage"
 )
 
-type CreateAccountRequest struct {
-	Address       string `json:"address"`
-	Name          string `json:"name"`
-	Description   string `json:"description"`
-	Website       string `json:"website"`
-	TwitterLink   string `json:"twitterLink"`
-	InstagramLink string `json:"instagramLink"`
-}
-
 type SetAccountRequest struct {
 	Name          string `json:"name"`
 	Description   string `json:"description"`
@@ -62,14 +53,14 @@ func GetOrCreateAccount(address string) (*entities.Account, error) {
 	return account, nil
 }
 
-func CreateAccount(request *CreateAccountRequest) (*entities.Account, error) {
-	err := checkValidCreateAccountRequest(request)
+func CreateAccount(addres string, request *SetAccountRequest) (*entities.Account, error) {
+	err := checkValidSetAccountRequest(request)
 	if err != nil {
 		return nil, err
 	}
 
 	account := entities.Account{
-		Address:       request.Address,
+		Address:       addres,
 		Name:          request.Name,
 		Description:   request.Description,
 		Website:       request.Website,
@@ -102,6 +93,11 @@ func UpdateAccount(account *entities.Account, request *SetAccountRequest) error 
 	account.InstagramLink = request.InstagramLink
 	account.TwitterLink = request.TwitterLink
 	account.Website = request.Website
+
+	_, err = AddAccountToCache(account.Address, account.ID, account.Name)
+	if err != nil {
+		log.Debug("could not add account to cache")
+	}
 
 	return storage.UpdateAccount(account)
 }
@@ -202,7 +198,7 @@ func GetOrAddAccountCacheInfo(walletAddress string) (*AccountCacheInfo, error) {
 	return cacheInfo, nil
 }
 
-func checkValidCreateAccountRequest(request *CreateAccountRequest) error {
+func checkValidSetAccountRequest(request *SetAccountRequest) error {
 	if len(request.Name) == 0 {
 		return errors.New("empty name")
 	}
@@ -211,26 +207,6 @@ func checkValidCreateAccountRequest(request *CreateAccountRequest) error {
 		return errors.New("name too long")
 	}
 
-	if len(request.Description) > MaxDescLen {
-		return errors.New("description too long")
-	}
-
-	if len(request.Website) > MaxLinkLen {
-		return errors.New("website too long")
-	}
-
-	if len(request.TwitterLink) > MaxLinkLen {
-		return errors.New("twitter link too long")
-	}
-
-	if len(request.InstagramLink) > MaxLinkLen {
-		return errors.New("instagram link too long")
-	}
-
-	return nil
-}
-
-func checkValidSetAccountRequest(request *SetAccountRequest) error {
 	if len(request.Description) > MaxDescLen {
 		return errors.New("description too long")
 	}

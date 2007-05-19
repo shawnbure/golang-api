@@ -28,58 +28,6 @@ var doc = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/accounts/create": {
-            "post": {
-                "description": "Creates an account",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "accounts"
-                ],
-                "summary": "Creates an account",
-                "parameters": [
-                    {
-                        "description": "account info",
-                        "name": "createAccountRequest",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/services.CreateAccountRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/entities.Account"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/dtos.ApiResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/dtos.ApiResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/dtos.ApiResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/accounts/{walletAddress}": {
             "get": {
                 "description": "Retrieves an account by walletAddress",
@@ -2907,29 +2855,6 @@ var doc = `{
                 }
             }
         },
-        "services.CreateAccountRequest": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "instagramLink": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "twitterLink": {
-                    "type": "string"
-                },
-                "website": {
-                    "type": "string"
-                }
-            }
-        },
         "services.CreateCollectionRequest": {
             "type": "object",
             "properties": {
@@ -2980,6 +2905,9 @@ var doc = `{
                     "type": "string"
                 },
                 "instagramLink": {
+                    "type": "string"
+                },
+                "name": {
                     "type": "string"
                 },
                 "twitterLink": {

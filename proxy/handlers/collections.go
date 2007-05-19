@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"bytes"
 	"errors"
 	"net/http"
 	"strconv"
@@ -170,7 +171,7 @@ func (handler *collectionsHandler) set(c *gin.Context) {
 	var request services.UpdateCollectionRequest
 	tokenId := c.Param("collectionId")
 
-	err := c.Bind(&request)
+	err := c.BindJSON(&request)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
@@ -223,7 +224,7 @@ func (handler *collectionsHandler) set(c *gin.Context) {
 func (handler *collectionsHandler) create(c *gin.Context) {
 	var request services.CreateCollectionRequest
 
-	err := c.Bind(&request)
+	err := c.BindJSON(&request)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
@@ -315,15 +316,16 @@ func (handler *collectionsHandler) getTokens(c *gin.Context) {
 // @Failure 500 {object} dtos.ApiResponse
 // @Router /collections/{collectionId}/profile [post]
 func (handler *collectionsHandler) setCollectionProfile(c *gin.Context) {
-	var imageBase64 string
 	tokenId := c.Param("collectionId")
 
-	err := c.Bind(&imageBase64)
+	buf := new(bytes.Buffer)
+	_, err := buf.ReadFrom(c.Request.Body)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
+	imageBase64 := buf.String()
 	cacheInfo, err := collstats.GetOrAddCollectionCacheInfo(tokenId)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
@@ -370,15 +372,16 @@ func (handler *collectionsHandler) setCollectionProfile(c *gin.Context) {
 // @Failure 500 {object} dtos.ApiResponse
 // @Router /collections/{collectionId}/cover [post]
 func (handler *collectionsHandler) setCollectionCover(c *gin.Context) {
-	var imageBase64 string
 	tokenId := c.Param("collectionId")
 
-	err := c.Bind(&imageBase64)
+	buf := new(bytes.Buffer)
+	_, err := buf.ReadFrom(c.Request.Body)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
+	imageBase64 := buf.String()
 	cacheInfo, err := collstats.GetOrAddCollectionCacheInfo(tokenId)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
