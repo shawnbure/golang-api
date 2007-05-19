@@ -14,13 +14,13 @@ import (
 
 const (
 	baseCollectionsEndpoint      = "/collections"
-	collectionByNameEndpoint     = "/:collectionName"
+	collectionByNameEndpoint     = "/:collectionId"
 	collectionListEndpoint       = "/list/:offset/:limit"
 	collectionCreateEndpoint     = "/create"
-	collectionStatisticsEndpoint = "/:collectionName/statistics"
-	collectionAssetsEndpoint     = "/:collectionName/assets/:offset/:limit"
-	collectionProfileEndpoint    = "/:collectionName/profile/"
-	collectionCoverEndpoint      = "/:collectionName/cover"
+	collectionStatisticsEndpoint = "/:collectionId/statistics"
+	collectionAssetsEndpoint     = "/:collectionId/assets/:offset/:limit"
+	collectionProfileEndpoint    = "/:collectionId/profile/"
+	collectionCoverEndpoint      = "/:collectionId/cover"
 )
 
 type collectionsHandler struct {
@@ -35,9 +35,9 @@ func NewCollectionsHandler(groupHandler *groupHandler, authCfg config.AuthConfig
 		{Method: http.MethodGet, Path: collectionByNameEndpoint, HandlerFunc: handler.get},
 		{Method: http.MethodPost, Path: collectionByNameEndpoint, HandlerFunc: handler.set},
 
-		{Method: http.MethodGet, Path: collectionStatisticsEndpoint, HandlerFunc: handler.getStatisticsForCollectionWithName},
+		{Method: http.MethodGet, Path: collectionStatisticsEndpoint, HandlerFunc: handler.getStatistics},
 		{Method: http.MethodPost, Path: collectionCreateEndpoint, HandlerFunc: handler.create},
-		{Method: http.MethodGet, Path: collectionAssetsEndpoint, HandlerFunc: handler.getAssetsForCollectionWithName},
+		{Method: http.MethodGet, Path: collectionAssetsEndpoint, HandlerFunc: handler.getAssets},
 
 		{Method: http.MethodGet, Path: collectionProfileEndpoint, HandlerFunc: handler.getCollectionProfile},
 		{Method: http.MethodPost, Path: collectionProfileEndpoint, HandlerFunc: handler.setCollectionProfile},
@@ -96,14 +96,21 @@ func (handler *collectionsHandler) getList(c *gin.Context) {
 // @Tags collections
 // @Accept json
 // @Produce json
-// @Param collectionName path string true "collection name"
+// @Param collectionId path uint64 true "collection id"
 // @Success 200 {object} data.Collection
+// @Failure 400 {object} data.ApiResponse
 // @Failure 404 {object} data.ApiResponse
-// @Router /collections/{collectionName} [get]
+// @Router /collections/{collectionId} [get]
 func (handler *collectionsHandler) get(c *gin.Context) {
-	collectionName := c.Param("collectionName")
+	collectionIdString := c.Param("collectionId")
 
-	collection, err := storage.GetCollectionByName(collectionName)
+	collectionId, err := strconv.ParseUint(collectionIdString, 10, 16)
+	if err != nil {
+		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	collection, err := storage.GetCollectionById(collectionId)
 	if err != nil {
 		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
@@ -117,18 +124,30 @@ func (handler *collectionsHandler) get(c *gin.Context) {
 // @Tags collections
 // @Accept json
 // @Produce json
-// @Param collectionName path string true "collection name"
+// @Param collectionId path uint64 true "collection id"
 // @Param updateCollectionRequest body services.UpdateCollectionRequest true "collection info"
 // @Success 200 {object} data.Collection
 // @Failure 401 {object} data.ApiResponse
 // @Failure 404 {object} data.ApiResponse
 // @Failure 500 {object} data.ApiResponse
-// @Router /collections/{collectionName} [post]
+// @Router /collections/{collectionId} [post]
 func (handler *collectionsHandler) set(c *gin.Context) {
-	collectionName := c.Param("collectionName")
 	var request services.UpdateCollectionRequest
+	collectionIdString := c.Param("collectionId")
 
-	collection, err := storage.GetCollectionByName(collectionName)
+	err := c.Bind(&request)
+	if err != nil {
+		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	collectionId, err := strconv.ParseUint(collectionIdString, 10, 16)
+	if err != nil {
+		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	collection, err := storage.GetCollectionById(collectionId)
 	if err != nil {
 		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
@@ -165,16 +184,16 @@ func (handler *collectionsHandler) set(c *gin.Context) {
 // @Failure 404 {object} data.ApiResponse
 // @Failure 500 {object} data.ApiResponse
 // @Router /collections/{collectionName}/statistics [post]
-func (handler *collectionsHandler) getStatisticsForCollectionWithName(c *gin.Context) {
-	collectionName := c.Param("collectionName")
+func (handler *collectionsHandler) getStatistics(c *gin.Context) {
+	collectionIdString := c.Param("collectionId")
 
-	collection, err := storage.GetCollectionByName(collectionName)
+	collectionId, err := strconv.ParseUint(collectionIdString, 10, 16)
 	if err != nil {
-		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
-	stats, err := services.GetStatisticsForCollection(collection.ID)
+	stats, err := services.GetStatisticsForCollection(collectionId)
 	if err != nil {
 		data.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
@@ -223,18 +242,24 @@ func (handler *collectionsHandler) create(c *gin.Context) {
 // @Tags collections
 // @Accept json
 // @Produce json
-// @Param collectionName path string true "collection name"
+// @Param collectionId path uint64 true "collection id"
 // @Param offset path int true "offset"
 // @Param limit path int true "limit"
 // @Success 200 {object} []data.Asset
 // @Failure 400 {object} data.ApiResponse
 // @Failure 404 {object} data.ApiResponse
-// @Router /collections/{collectionName}/assets/{offset}/{limit} [get]
-func (handler *collectionsHandler) getAssetsForCollectionWithName(c *gin.Context) {
-	collectionName := c.Param("collectionName")
+// @Router /collections/{collectionId}/assets/{offset}/{limit} [get]
+func (handler *collectionsHandler) getAssets(c *gin.Context) {
+	collectionIdString := c.Param("collectionId")
 	offsetStr := c.Param("offset")
 	limitStr := c.Param("limit")
 	filters := c.QueryMap("filters")
+
+	collectionId, err := strconv.ParseUint(collectionIdString, 10, 16)
+	if err != nil {
+		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
 
 	offset, err := strconv.Atoi(offsetStr)
 	if err != nil {
@@ -248,13 +273,7 @@ func (handler *collectionsHandler) getAssetsForCollectionWithName(c *gin.Context
 		return
 	}
 
-	collection, err := storage.GetCollectionByName(collectionName)
-	if err != nil {
-		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
-		return
-	}
-
-	assets, err := storage.GetAssetsByCollectionIdWithOffsetLimit(collection.ID, offset, limit, filters)
+	assets, err := storage.GetAssetsByCollectionIdWithOffsetLimit(collectionId, offset, limit, filters)
 	if err != nil {
 		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
@@ -268,14 +287,21 @@ func (handler *collectionsHandler) getAssetsForCollectionWithName(c *gin.Context
 // @Tags collections
 // @Accept json
 // @Produce json
-// @Param collectionName path string true "collection name"
+// @Param collectionId path uint64 true "collection id"
 // @Success 200 {object} string
+// @Failure 400 {object} data.ApiResponse
 // @Failure 404 {object} data.ApiResponse
-// @Router /collections/{collectionName}/profile [get]
+// @Router /collections/{collectionId}/profile [get]
 func (handler *collectionsHandler) getCollectionProfile(c *gin.Context) {
-	collectionName := c.Param("collectionName")
+	collectionIdString := c.Param("collectionId")
 
-	image, err := services.GetCollectionProfileImage(collectionName)
+	collectionId, err := strconv.ParseUint(collectionIdString, 10, 16)
+	if err != nil {
+		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	image, err := storage.GetCollectionProfileImageByCollectionId(collectionId)
 	if err != nil {
 		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
@@ -289,15 +315,15 @@ func (handler *collectionsHandler) getCollectionProfile(c *gin.Context) {
 // @Tags collections
 // @Accept json
 // @Produce json
-// @Param collectionName path string true "collection name"
+// @Param collectionId path uint64 true "collection id"
 // @Param image body string true "base64 encoded image"
 // @Success 200 {object} string
 // @Failure 400 {object} data.ApiResponse
 // @Failure 500 {object} data.ApiResponse
-// @Router /collections/{collectionName}/profile [post]
+// @Router /collections/{collectionId}/profile [post]
 func (handler *collectionsHandler) setCollectionProfile(c *gin.Context) {
 	var imageBase64 string
-	collectionName := c.Param("collectionName")
+	collectionIdString := c.Param("collectionId")
 
 	err := c.Bind(&imageBase64)
 	if err != nil {
@@ -305,8 +331,31 @@ func (handler *collectionsHandler) setCollectionProfile(c *gin.Context) {
 		return
 	}
 
+	collectionId, err := strconv.ParseUint(collectionIdString, 10, 16)
+	if err != nil {
+		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	collection, err := storage.GetCollectionById(collectionId)
+	if err != nil {
+		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	account, err := storage.GetAccountById(collection.CreatorID)
+	if err != nil {
+		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
 	jwtAddress := c.GetString(middleware.AddressKey)
-	err = services.SetCollectionProfileImage(collectionName, &imageBase64, jwtAddress)
+	if account.Address != jwtAddress {
+		data.JsonResponse(c, http.StatusUnauthorized, nil, "")
+		return
+	}
+
+	err = services.SetCollectionProfileImage(collectionId, &imageBase64)
 	if err != nil {
 		data.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
@@ -320,16 +369,23 @@ func (handler *collectionsHandler) setCollectionProfile(c *gin.Context) {
 // @Tags collections
 // @Accept json
 // @Produce json
-// @Param collectionName path string true "collection name"
+// @Param collectionId path uint64 true "collection id"
 // @Success 200 {object} string
+// @Failure 400 {object} data.ApiResponse
 // @Failure 404 {object} data.ApiResponse
-// @Router /collections/{collectionName}/cover [get]
+// @Router /collections/{collectionId}/cover [get]
 func (handler *collectionsHandler) getCollectionCover(c *gin.Context) {
-	collectionName := c.Param("collectionName")
+	collectionIdString := c.Param("collectionId")
 
-	image, err := services.GetCollectionCoverImage(collectionName)
+	collectionId, err := strconv.ParseUint(collectionIdString, 10, 16)
 	if err != nil {
-		data.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	image, err := storage.GetCollectionCoverImageByCollectionId(collectionId)
+	if err != nil {
+		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
@@ -341,15 +397,16 @@ func (handler *collectionsHandler) getCollectionCover(c *gin.Context) {
 // @Tags collections
 // @Accept json
 // @Produce json
-// @Param collectionName path string true "collection name"
+// @Param collectionId path string true "collection id"
 // @Param image body string true "base64 encoded image"
 // @Success 200 {object} string
 // @Failure 400 {object} data.ApiResponse
+// @Failure 401 {object} data.ApiResponse
 // @Failure 500 {object} data.ApiResponse
-// @Router /collections/{collectionName}/cover [post]
+// @Router /collections/{collectionId}/cover [post]
 func (handler *collectionsHandler) setCollectionCover(c *gin.Context) {
 	var imageBase64 string
-	collectionName := c.Param("collectionName")
+	collectionIdString := c.Param("collectionId")
 
 	err := c.Bind(&imageBase64)
 	if err != nil {
@@ -357,8 +414,31 @@ func (handler *collectionsHandler) setCollectionCover(c *gin.Context) {
 		return
 	}
 
+	collectionId, err := strconv.ParseUint(collectionIdString, 10, 16)
+	if err != nil {
+		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	collection, err := storage.GetCollectionById(collectionId)
+	if err != nil {
+		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	account, err := storage.GetAccountById(collection.CreatorID)
+	if err != nil {
+		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
 	jwtAddress := c.GetString(middleware.AddressKey)
-	err = services.SetCollectionCoverImage(collectionName, &imageBase64, jwtAddress)
+	if account.Address != jwtAddress {
+		data.JsonResponse(c, http.StatusUnauthorized, nil, "")
+		return
+	}
+
+	err = services.SetCollectionCoverImage(collectionId, &imageBase64)
 	if err != nil {
 		data.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return

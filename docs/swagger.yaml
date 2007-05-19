@@ -168,6 +168,21 @@ definitions:
       volumeTraded:
         type: number
     type: object
+  services.CreateAccountRequest:
+    properties:
+      address:
+        type: string
+      description:
+        type: string
+      instagramLink:
+        type: string
+      name:
+        type: string
+      twitterLink:
+        type: string
+      website:
+        type: string
+    type: object
   services.CreateCollectionRequest:
     properties:
       collectionName:
@@ -227,15 +242,15 @@ info:
   title: erdsea-api
   version: "1.0"
 paths:
-  /accounts/{userAddress}:
+  /accounts/{accountId}:
     get:
       consumes:
       - application/json
-      description: Retrieves an account by an elrond user address (erd1...)
+      description: Retrieves an account by id
       parameters:
-      - description: user address
+      - description: account id
         in: path
-        name: userAddress
+        name: accountId
         required: true
         type: string
       produces:
@@ -245,11 +260,15 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/data.Account'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/data.ApiResponse'
         "404":
           description: Not Found
           schema:
             $ref: '#/definitions/data.ApiResponse'
-      summary: Get account by user address
+      summary: Get account by account id
       tags:
       - accounts
     post:
@@ -257,9 +276,9 @@ paths:
       - application/json
       description: Sets an account settable information
       parameters:
-      - description: user address
+      - description: account id
         in: path
-        name: userAddress
+        name: accountId
         required: true
         type: string
       - description: account info
@@ -290,18 +309,18 @@ paths:
       summary: Set account information
       tags:
       - accounts
-  /accounts/{userAddress}/cover:
+  /accounts/{accountId}/cover:
     get:
       consumes:
       - application/json
       description: Retrieves an account cover image. It will be sent as base64 encoding
         (sdt, raw) of its byte representation.
       parameters:
-      - description: user address
+      - description: account id
         in: path
-        name: userAddress
+        name: accountId
         required: true
-        type: string
+        type: integer
       produces:
       - application/json
       responses:
@@ -309,6 +328,10 @@ paths:
           description: OK
           schema:
             type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/data.ApiResponse'
         "404":
           description: Not Found
           schema:
@@ -322,11 +345,11 @@ paths:
       description: Expects base64 encoding (sdt, raw) of the image representation.
         Returns empty string. Max size of byte array is 1MB.
       parameters:
-      - description: user address
+      - description: account id
         in: path
-        name: userAddress
+        name: accountId
         required: true
-        type: string
+        type: integer
       - description: base64 encoded image
         in: body
         name: image
@@ -355,18 +378,18 @@ paths:
       summary: Set account cover image
       tags:
       - accounts
-  /accounts/{userAddress}/profile:
+  /accounts/{accountId}/profile:
     get:
       consumes:
       - application/json
       description: Retrieves an account profile image. It will be sent as base64 encoding
         (sdt, raw) of its byte representation.
       parameters:
-      - description: user address
+      - description: account id
         in: path
-        name: userAddress
+        name: accountId
         required: true
-        type: string
+        type: integer
       produces:
       - application/json
       responses:
@@ -374,6 +397,10 @@ paths:
           description: OK
           schema:
             type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/data.ApiResponse'
         "404":
           description: Not Found
           schema:
@@ -387,11 +414,11 @@ paths:
       description: Expects base64 encoding (sdt, raw) of the image representation.
         Returns empty string. Max size of byte array is 512KB.
       parameters:
-      - description: user address
+      - description: account id
         in: path
-        name: userAddress
+        name: accountId
         required: true
-        type: string
+        type: integer
       - description: base64 encoded image
         in: body
         name: image
@@ -418,6 +445,69 @@ paths:
           schema:
             $ref: '#/definitions/data.ApiResponse'
       summary: Set account profile image
+      tags:
+      - accounts
+  /accounts/{address}:
+    post:
+      consumes:
+      - application/json
+      description: Creates an account
+      parameters:
+      - description: account info
+        in: body
+        name: createAccountRequest
+        required: true
+        schema:
+          $ref: '#/definitions/services.CreateAccountRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/data.Account'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/data.ApiResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/data.ApiResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/data.ApiResponse'
+      summary: Creates an account
+      tags:
+      - accounts
+  /accounts/find/{accountAddress}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves an account by address. Useful for login.
+      parameters:
+      - description: account address
+        in: path
+        name: accountAddress
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/data.Account'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/data.ApiResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/data.ApiResponse'
+      summary: Get account by address
       tags:
       - accounts
   /assets/{tokenId}/{nonce}:
@@ -514,17 +604,17 @@ paths:
       summary: Refresh credentials
       tags:
       - auth
-  /collections/{collectionName}:
+  /collections/{collectionId}:
     get:
       consumes:
       - application/json
       description: Retrieves a collection by its name.
       parameters:
-      - description: collection name
+      - description: collection id
         in: path
-        name: collectionName
+        name: collectionId
         required: true
-        type: string
+        type: integer
       produces:
       - application/json
       responses:
@@ -532,6 +622,10 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/data.Collection'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/data.ApiResponse'
         "404":
           description: Not Found
           schema:
@@ -544,11 +638,11 @@ paths:
       - application/json
       description: Sets info for a collection.
       parameters:
-      - description: collection name
+      - description: collection id
         in: path
-        name: collectionName
+        name: collectionId
         required: true
-        type: string
+        type: integer
       - description: collection info
         in: body
         name: updateCollectionRequest
@@ -577,17 +671,17 @@ paths:
       summary: Set collection info.
       tags:
       - collections
-  /collections/{collectionName}/assets/{offset}/{limit}:
+  /collections/{collectionId}/assets/{offset}/{limit}:
     get:
       consumes:
       - application/json
       description: Retrieves the assets of a collection. Unsorted.
       parameters:
-      - description: collection name
+      - description: collection id
         in: path
-        name: collectionName
+        name: collectionId
         required: true
-        type: string
+        type: integer
       - description: offset
         in: path
         name: offset
@@ -618,18 +712,18 @@ paths:
       summary: Get collection assets.
       tags:
       - collections
-  /collections/{collectionName}/cover:
+  /collections/{collectionId}/cover:
     get:
       consumes:
       - application/json
       description: Retrieves a collection cover image. It will be sent as base64 encoding
         (sdt, raw) of its byte representation.
       parameters:
-      - description: collection name
+      - description: collection id
         in: path
-        name: collectionName
+        name: collectionId
         required: true
-        type: string
+        type: integer
       produces:
       - application/json
       responses:
@@ -637,6 +731,10 @@ paths:
           description: OK
           schema:
             type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/data.ApiResponse'
         "404":
           description: Not Found
           schema:
@@ -650,9 +748,9 @@ paths:
       description: Expects base64 encoding (sdt, raw) of the image representation.
         Returns empty string. Max size of byte array is 1MB.
       parameters:
-      - description: collection name
+      - description: collection id
         in: path
-        name: collectionName
+        name: collectionId
         required: true
         type: string
       - description: base64 encoded image
@@ -672,6 +770,10 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/data.ApiResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/data.ApiResponse'
         "500":
           description: Internal Server Error
           schema:
@@ -679,18 +781,18 @@ paths:
       summary: Set collection cover image
       tags:
       - collections
-  /collections/{collectionName}/profile:
+  /collections/{collectionId}/profile:
     get:
       consumes:
       - application/json
       description: Retrieves a collection cover image. It will be sent as base64 encoding
         (sdt, raw) of its byte representation.
       parameters:
-      - description: collection name
+      - description: collection id
         in: path
-        name: collectionName
+        name: collectionId
         required: true
-        type: string
+        type: integer
       produces:
       - application/json
       responses:
@@ -698,6 +800,10 @@ paths:
           description: OK
           schema:
             type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/data.ApiResponse'
         "404":
           description: Not Found
           schema:
@@ -711,11 +817,11 @@ paths:
       description: Expects base64 encoding (sdt, raw) of the image representation.
         Returns empty string. Max size of byte array is 1MB.
       parameters:
-      - description: collection name
+      - description: collection id
         in: path
-        name: collectionName
+        name: collectionId
         required: true
-        type: string
+        type: integer
       - description: base64 encoded image
         in: body
         name: image
@@ -940,15 +1046,15 @@ paths:
       summary: Search collections by name.
       tags:
       - search
-  /transactions/address/{address}/{offset}/{limit}:
+  /transactions/account/{accountId}/{offset}/{limit}:
     get:
       consumes:
       - application/json
-      description: Retrieves transactions for an address. Unordered.
+      description: Retrieves transactions for an account. Unordered.
       parameters:
-      - description: address
+      - description: account id
         in: path
-        name: address
+        name: accountId
         required: true
         type: integer
       - description: offset
@@ -978,23 +1084,18 @@ paths:
           description: Not Found
           schema:
             $ref: '#/definitions/data.ApiResponse'
-      summary: Gets transaction for an address.
+      summary: Gets transaction for an account.
       tags:
       - transactions
-  /transactions/asset/{tokenId}/{nonce}/{offset}/{limit}:
+  /transactions/asset/{assetId}/{offset}/{limit}:
     get:
       consumes:
       - application/json
       description: Retrieves transactions for an asset. Unordered.
       parameters:
-      - description: token id
+      - description: asset id
         in: path
-        name: tokenId
-        required: true
-        type: string
-      - description: nonce
-        in: path
-        name: nonce
+        name: assetId
         required: true
         type: integer
       - description: offset
@@ -1027,15 +1128,15 @@ paths:
       summary: Gets transaction for an asset.
       tags:
       - transactions
-  /transactions/collection/{collectionName}/{offset}/{limit}:
+  /transactions/collection/{collectionId}/{offset}/{limit}:
     get:
       consumes:
       - application/json
       description: Retrieves transactions for a collection. Unordered.
       parameters:
-      - description: collection name
+      - description: collection id
         in: path
-        name: collectionName
+        name: collectionId
         required: true
         type: integer
       - description: offset

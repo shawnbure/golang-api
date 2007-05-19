@@ -10,6 +10,15 @@ import (
 	"github.com/erdsea/erdsea-api/storage"
 )
 
+type CreateAccountRequest struct {
+	Address       string `json:"address"`
+	Name          string `json:"name"`
+	Description   string `json:"description"`
+	Website       string `json:"website"`
+	TwitterLink   string `json:"twitterLink"`
+	InstagramLink string `json:"instagramLink"`
+}
+
 type SetAccountRequest struct {
 	Name          string `json:"name"`
 	Description   string `json:"description"`
@@ -40,20 +49,28 @@ func GetOrCreateAccount(address string) (*data.Account, error) {
 	return account, nil
 }
 
-func AddOrUpdateAccount(account *data.Account) error {
-	existingAccount, err := storage.GetAccountByAddress(account.Address)
-	if err != nil {
-		err = storage.AddAccount(account)
-	} else {
-		existingAccount.Description = account.Description
-		existingAccount.InstagramLink = account.InstagramLink
-		existingAccount.TwitterLink = account.TwitterLink
-		existingAccount.Website = account.Website
-		existingAccount.Name = account.Name
-		err = storage.UpdateAccount(account)
+func CreateAccount(request *CreateAccountRequest) (*data.Account, error) {
+	account := data.Account{
+		Address:       request.Address,
+		Name:          request.Name,
+		Description:   request.Description,
+		Website:       request.Website,
+		TwitterLink:   request.TwitterLink,
+		InstagramLink: request.InstagramLink,
+		CreatedAt:     uint64(time.Now().Unix()),
 	}
 
-	return err
+	err := storage.AddAccount(&account)
+	return &account, err
+}
+
+func UpdateAccount(account *data.Account, request *SetAccountRequest) error {
+	account.Description = request.Description
+	account.InstagramLink = request.InstagramLink
+	account.TwitterLink = request.TwitterLink
+	account.Website = request.Website
+	account.Name = request.Name
+	return storage.UpdateAccount(account)
 }
 
 func GetAccountsWithNameAlike(name string, limit int) ([]data.Account, error) {

@@ -14,9 +14,9 @@ import (
 const (
 	baseTransactionsEndpoint         = "/transactions"
 	transactionsListEndpoint         = "/list/:offset/:limit"
-	transactionsByAssetEndpoint      = "/asset/:tokenId/:nonce/:offset/:limit"
-	transactionsByAddressEndpoint    = "/address/:address/:offset/:limit"
-	transactionsByCollectionEndpoint = "/collection/:address/:offset/:limit"
+	transactionsByAssetEndpoint      = "/asset/:assetId/:offset/:limit"
+	transactionsByAccountEndpoint    = "/account/:accountId/:offset/:limit"
+	transactionsByCollectionEndpoint = "/collection/:collectionId/:offset/:limit"
 )
 
 type transactionsHandler struct {
@@ -28,7 +28,7 @@ func NewTransactionsHandler(groupHandler *groupHandler, authCfg config.AuthConfi
 	endpoints := []EndpointHandler{
 		{Method: http.MethodGet, Path: transactionsListEndpoint, HandlerFunc: handler.getList},
 		{Method: http.MethodGet, Path: transactionsByAssetEndpoint, HandlerFunc: handler.getByAsset},
-		{Method: http.MethodGet, Path: transactionsByAddressEndpoint, HandlerFunc: handler.getByAddress},
+		{Method: http.MethodGet, Path: transactionsByAccountEndpoint, HandlerFunc: handler.getByAccount},
 		{Method: http.MethodGet, Path: transactionsByCollectionEndpoint, HandlerFunc: handler.getByCollection},
 	}
 
@@ -82,21 +82,19 @@ func (handler *transactionsHandler) getList(c *gin.Context) {
 // @Tags transactions
 // @Accept json
 // @Produce json
-// @Param tokenId path string true "token id"
-// @Param nonce path int true "nonce"
+// @Param assetId path uint64 true "asset id"
 // @Param offset path int true "offset"
 // @Param limit path int true "limit"
 // @Success 200 {object} []data.Transaction
 // @Failure 400 {object} data.ApiResponse
 // @Failure 404 {object} data.ApiResponse
-// @Router /transactions/asset/{tokenId}/{nonce}/{offset}/{limit} [get]
+// @Router /transactions/asset/{assetId}/{offset}/{limit} [get]
 func (handler *transactionsHandler) getByAsset(c *gin.Context) {
-	tokenId := c.Param("tokenId")
-	nonceString := c.Param("nonce")
+	assetIdString := c.Param("assetId")
 	offsetStr := c.Param("offset")
 	limitStr := c.Param("limit")
 
-	nonce, err := strconv.ParseUint(nonceString, 10, 64)
+	assetId, err := strconv.ParseUint(assetIdString, 10, 64)
 	if err != nil {
 		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
@@ -114,13 +112,7 @@ func (handler *transactionsHandler) getByAsset(c *gin.Context) {
 		return
 	}
 
-	asset, err := storage.GetAssetByTokenIdAndNonce(tokenId, nonce)
-	if err != nil {
-		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
-		return
-	}
-
-	transactions, err := storage.GetTransactionsByAssetIdWithOffsetLimit(asset.ID, offset, limit)
+	transactions, err := storage.GetTransactionsByAssetIdWithOffsetLimit(assetId, offset, limit)
 	if err != nil {
 		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
@@ -129,22 +121,28 @@ func (handler *transactionsHandler) getByAsset(c *gin.Context) {
 	data.JsonResponse(c, http.StatusOK, transactions, "")
 }
 
-// @Summary Gets transaction for an address.
-// @Description Retrieves transactions for an address. Unordered.
+// @Summary Gets transaction for an account.
+// @Description Retrieves transactions for an account. Unordered.
 // @Tags transactions
 // @Accept json
 // @Produce json
-// @Param address path int true "address"
+// @Param accountId path uint64 true "account id"
 // @Param offset path int true "offset"
 // @Param limit path int true "limit"
 // @Success 200 {object} []data.Transaction
 // @Failure 400 {object} data.ApiResponse
 // @Failure 404 {object} data.ApiResponse
-// @Router /transactions/address/{address}/{offset}/{limit} [get]
-func (handler *transactionsHandler) getByAddress(c *gin.Context) {
-	address := c.Param("address")
+// @Router /transactions/account/{accountId}/{offset}/{limit} [get]
+func (handler *transactionsHandler) getByAccount(c *gin.Context) {
+	accountIdString := c.Param("accountId")
 	offsetStr := c.Param("offset")
 	limitStr := c.Param("limit")
+
+	accountId, err := strconv.ParseUint(accountIdString, 10, 64)
+	if err != nil {
+		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
 
 	offset, err := strconv.Atoi(offsetStr)
 	if err != nil {
@@ -158,13 +156,7 @@ func (handler *transactionsHandler) getByAddress(c *gin.Context) {
 		return
 	}
 
-	account, err := storage.GetAccountByAddress(address)
-	if err != nil {
-		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
-		return
-	}
-
-	transactions, err := storage.GetTransactionsByBuyerOrSellerIdWithOffsetLimit(account.ID, offset, limit)
+	transactions, err := storage.GetTransactionsByBuyerOrSellerIdWithOffsetLimit(accountId, offset, limit)
 	if err != nil {
 		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
@@ -178,17 +170,23 @@ func (handler *transactionsHandler) getByAddress(c *gin.Context) {
 // @Tags transactions
 // @Accept json
 // @Produce json
-// @Param collectionName path int true "collection name"
+// @Param collectionId path uint64 true "collection id"
 // @Param offset path int true "offset"
 // @Param limit path int true "limit"
 // @Success 200 {object} []data.Transaction
 // @Failure 400 {object} data.ApiResponse
 // @Failure 404 {object} data.ApiResponse
-// @Router /transactions/collection/{collectionName}/{offset}/{limit} [get]
+// @Router /transactions/collection/{collectionId}/{offset}/{limit} [get]
 func (handler *transactionsHandler) getByCollection(c *gin.Context) {
-	collectionName := c.Param("collectionName")
+	collectionIdString := c.Param("collectionId")
 	offsetStr := c.Param("offset")
 	limitStr := c.Param("limit")
+
+	collectionId, err := strconv.ParseUint(collectionIdString, 10, 64)
+	if err != nil {
+		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
 
 	offset, err := strconv.Atoi(offsetStr)
 	if err != nil {
@@ -202,13 +200,7 @@ func (handler *transactionsHandler) getByCollection(c *gin.Context) {
 		return
 	}
 
-	collection, err := storage.GetCollectionByName(collectionName)
-	if err != nil {
-		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
-		return
-	}
-
-	transactions, err := storage.GetTransactionsByCollectionIdWithOffsetLimit(collection.ID, offset, limit)
+	transactions, err := storage.GetTransactionsByCollectionIdWithOffsetLimit(collectionId, offset, limit)
 	if err != nil {
 		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
