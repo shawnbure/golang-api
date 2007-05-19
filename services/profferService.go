@@ -105,5 +105,27 @@ func EndAuction(args EndAuctionArgs) {
 }
 
 func CancelOffer(args CancelOfferArgs) {
+	amountNominal, err := GetPriceNominal(args.Amount)
+	if err != nil {
+		log.Debug("could not parse price", "err", err)
+		return
+	}
 
+	tokenCacheInfo, err := GetOrAddTokenCacheInfo(args.TokenId, args.Nonce)
+	if err != nil {
+		log.Debug("could not get token cache info", err)
+		return
+	}
+
+	accountCacheInfo, err := GetOrAddAccountCacheInfo(args.OfferorAddress)
+	if err != nil {
+		log.Debug("could not get account cache info", err)
+		return
+	}
+
+	err = storage.DeleteOffersByTokenIdAccountIdAndAmount(tokenCacheInfo.TokenDbId, accountCacheInfo.AccountId, amountNominal)
+	if err != nil {
+		log.Debug("could not delete from db", err)
+		return
+	}
 }
