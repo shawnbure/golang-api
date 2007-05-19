@@ -731,7 +731,7 @@ func TryRefreshCollectionId(token *entities.Token) {
 	token.CollectionID = collection.ID
 	err = storage.UpdateToken(token)
 	if err != nil {
-		log.Debug("could not update token", err)
+		log.Debug("could not update token", "err", err.Error())
 	}
 }
 
