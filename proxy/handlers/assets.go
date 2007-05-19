@@ -8,14 +8,12 @@ import (
 	"github.com/erdsea/erdsea-api/data"
 	"github.com/erdsea/erdsea-api/proxy/middleware"
 	"github.com/erdsea/erdsea-api/storage"
-
 	"github.com/gin-gonic/gin"
 )
 
 const (
-	baseAssetsEndpoint                = "/assets"
-	getAssetByTokenIdAndNonceEndpoint = "/token/:tokenId/nonce/:nonce"
-	getAssetsByCollectionEndpoint     = "/by-collection/:collectionName/:offset/:limit"
+	baseAssetsEndpoint             = "/assets"
+	assetByTokenIdAndNonceEndpoint = "/:tokenId/:nonce"
 )
 
 type assetsHandler struct {
@@ -25,8 +23,7 @@ func NewAssetsHandler(groupHandler *groupHandler, authCfg config.AuthConfig) {
 	handler := &assetsHandler{}
 
 	endpoints := []EndpointHandler{
-		{Method: http.MethodGet, Path: getAssetByTokenIdAndNonceEndpoint, HandlerFunc: handler.getByTokenIdAndNonce},
-		{Method: http.MethodGet, Path: getAssetsByCollectionEndpoint, HandlerFunc: handler.getByCollection},
+		{Method: http.MethodGet, Path: assetByTokenIdAndNonceEndpoint, HandlerFunc: handler.getByTokenIdAndNonce},
 	}
 
 	endpointGroupHandler := EndpointGroupHandler{
@@ -66,36 +63,4 @@ func (handler *assetsHandler) getByTokenIdAndNonce(c *gin.Context) {
 	}
 
 	data.JsonResponse(c, http.StatusOK, asset, "")
-}
-
-func (handler *assetsHandler) getByCollection(c *gin.Context) {
-	collectionName := c.Param("collectionName")
-	offsetStr := c.Param("offset")
-	limitStr := c.Param("limit")
-
-	offset, err := strconv.Atoi(offsetStr)
-	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
-		return
-	}
-
-	limit, err := strconv.Atoi(limitStr)
-	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
-		return
-	}
-
-	collection, err := storage.GetCollectionByName(collectionName)
-	if err != nil {
-		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
-		return
-	}
-
-	assets, err := storage.GetAssetsByCollectionIdWithOffsetLimit(collection.ID, offset, limit)
-	if err != nil {
-		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
-		return
-	}
-
-	data.JsonResponse(c, http.StatusOK, assets, "")
 }

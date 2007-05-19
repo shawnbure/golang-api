@@ -3,10 +3,11 @@ package services
 import (
 	"encoding/json"
 	"fmt"
+	"time"
+
 	"github.com/erdsea/erdsea-api/cache"
 	"github.com/erdsea/erdsea-api/data"
 	"github.com/erdsea/erdsea-api/storage"
-	"time"
 )
 
 type SetAccountRequest struct {
@@ -42,7 +43,7 @@ func GetOrCreateAccount(address string) (*data.Account, error) {
 func AddOrUpdateAccount(account *data.Account) error {
 	existingAccount, err := storage.GetAccountByAddress(account.Address)
 	if err != nil {
-		err = storage.AddNewAccount(account)
+		err = storage.AddAccount(account)
 	} else {
 		existingAccount.Description = account.Description
 		existingAccount.InstagramLink = account.InstagramLink

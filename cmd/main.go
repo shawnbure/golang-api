@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/erdsea/erdsea-api/cache"
 	"net/http"
 	"os"
 	"os/signal"
@@ -11,6 +10,7 @@ import (
 
 	"github.com/ElrondNetwork/elrond-go-core/core/check"
 	logger "github.com/ElrondNetwork/elrond-go-logger"
+	"github.com/erdsea/erdsea-api/cache"
 	"github.com/erdsea/erdsea-api/config"
 	"github.com/erdsea/erdsea-api/logging"
 	"github.com/erdsea/erdsea-api/proxy"

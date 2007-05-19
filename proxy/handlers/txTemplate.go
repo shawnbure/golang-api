@@ -1,17 +1,18 @@
 package handlers
 
 import (
+	"net/http"
+	"strconv"
+
 	"github.com/erdsea/erdsea-api/config"
 	"github.com/erdsea/erdsea-api/data"
 	"github.com/erdsea/erdsea-api/formatter"
 	"github.com/erdsea/erdsea-api/proxy/middleware"
 	"github.com/gin-gonic/gin"
-	"net/http"
-	"strconv"
 )
 
 const (
-	baseFormatEndpoint        = "/template"
+	baseFormatEndpoint        = "/tx-template"
 	listNftFormatEndpoint     = "/list-nft/:userAddress/:tokenId/:nonce/:price"
 	buyNftFormatEndpoint      = "/buy-nft/:userAddress/:tokenId/:nonce/:price"
 	withdrawNftFormatEndpoint = "/withdraw-nft/:userAddress/:tokenId/:nonce"

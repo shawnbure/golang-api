@@ -1,11 +1,11 @@
 package services
 
 import (
-	"github.com/erdsea/erdsea-api/data"
 	"testing"
 
 	"github.com/erdsea/erdsea-api/cache"
 	"github.com/erdsea/erdsea-api/config"
+	"github.com/erdsea/erdsea-api/data"
 	"github.com/erdsea/erdsea-api/storage"
 	"github.com/stretchr/testify/require"
 )
@@ -35,7 +35,7 @@ func Test_CreateCollection(T *testing.T) {
 	}
 
 	proxy := "https://devnet-gateway.elrond.com"
-	err := CreateCollection(request, proxy)
+	_, err := CreateCollection(request, proxy)
 	require.Nil(T, err)
 
 	_, err = storage.GetCollectionByName("this name is unique")
@@ -68,27 +68,27 @@ func Test_SearchCollection(T *testing.T) {
 	}
 
 	coll.ID = 0
-	err := storage.AddNewCollection(coll)
+	err := storage.AddCollection(coll)
 	require.Nil(T, err)
 
 	coll.ID = 0
-	err = storage.AddNewCollection(coll)
+	err = storage.AddCollection(coll)
 	require.Nil(T, err)
 
 	coll.ID = 0
-	err = storage.AddNewCollection(coll)
+	err = storage.AddCollection(coll)
 	require.Nil(T, err)
 
 	coll.ID = 0
-	err = storage.AddNewCollection(coll)
+	err = storage.AddCollection(coll)
 	require.Nil(T, err)
 
 	coll.ID = 0
-	err = storage.AddNewCollection(coll)
+	err = storage.AddCollection(coll)
 	require.Nil(T, err)
 
 	coll.ID = 0
-	err = storage.AddNewCollection(coll)
+	err = storage.AddCollection(coll)
 	require.Nil(T, err)
 
 	colls, err := GetCollectionsWithNameAlike("uniquee", 5)

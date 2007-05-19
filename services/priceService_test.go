@@ -1,10 +1,11 @@
 package services
 
 import (
+	"testing"
+
 	"github.com/erdsea/erdsea-api/cache"
 	"github.com/erdsea/erdsea-api/config"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestGetEGLDPrice(t *testing.T) {
