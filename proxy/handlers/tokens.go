@@ -27,7 +27,7 @@ type tokensHandler struct {
 	blockchainConfig config.BlockchainConfig
 }
 
-func NewTokensHandler(groupHandler *groupHandler, authCfg config.AuthConfig, cfg config.BlockchainConfig) {
+func NewTokensHandler(groupHandler *groupHandler, cfg config.BlockchainConfig) {
 	handler := &tokensHandler{
 		blockchainConfig: cfg,
 	}
@@ -38,6 +38,7 @@ func NewTokensHandler(groupHandler *groupHandler, authCfg config.AuthConfig, cfg
 		{Method: http.MethodGet, Path: offersForTokenIdAndNonceEndpoint, HandlerFunc: handler.getOffers},
 		{Method: http.MethodGet, Path: bidsForTokenIdAndNonceEndpoint, HandlerFunc: handler.getBids},
 		{Method: http.MethodGet, Path: tokenMetadataRelayEndpoint, HandlerFunc: handler.relayMetadataResponse},
+		{Method: http.MethodPost, Path: refreshTokenMetadataEndpoint, HandlerFunc: handler.refreshMetadata},
 	}
 
 	endpointGroupHandler := EndpointGroupHandler{
@@ -47,18 +48,6 @@ func NewTokensHandler(groupHandler *groupHandler, authCfg config.AuthConfig, cfg
 	}
 
 	groupHandler.AddEndpointGroupHandler(endpointGroupHandler)
-
-	privateEndpoints := []EndpointHandler{
-		{Method: http.MethodPost, Path: refreshTokenMetadataEndpoint, HandlerFunc: handler.refreshMetadata},
-	}
-
-	privateEndpointGroupHandler := EndpointGroupHandler{
-		Root:             baseTokensEndpoint,
-		Middlewares:      []gin.HandlerFunc{middleware.Authorization(authCfg.JwtSecret)},
-		EndpointHandlers: privateEndpoints,
-	}
-
-	groupHandler.AddEndpointGroupHandler(privateEndpointGroupHandler)
 }
 
 // @Summary Get token by id and nonce
