@@ -252,7 +252,10 @@ func (e *EventProcessor) onEventMakeOffer(event entities.Event) {
 		log.Debug("onEventMakeOffer", string(eventJson))
 	}
 
-	_, _ = services.MakeOffer(args)
+	_, err = services.MakeOffer(args)
+	if err != nil {
+		log.Error("could not make offer", err)
+	}
 }
 
 func (e *EventProcessor) onEventCancelOffer(event entities.Event) {
@@ -330,7 +333,10 @@ func (e *EventProcessor) onEventStartAuction(event entities.Event) {
 		log.Debug("onEventAcceptOffer", string(eventJson))
 	}
 
-	_, _ = services.StartAuction(args)
+	_, err = services.StartAuction(args)
+	if err != nil {
+		log.Error("could not start auction", err)
+	}
 }
 
 func (e *EventProcessor) onEventPlaceBid(event entities.Event) {
@@ -353,7 +359,10 @@ func (e *EventProcessor) onEventPlaceBid(event entities.Event) {
 		log.Debug("onEventPlaceBid", string(eventJson))
 	}
 
-	services.PlaceBid(args)
+	_, err = services.PlaceBid(args)
+	if err != nil {
+		log.Error("could not place bid", err)
+	}
 }
 
 func (e *EventProcessor) onEventEndAuction(event entities.Event) {
@@ -395,7 +404,10 @@ func (e *EventProcessor) onEventUpdateDeposit(event entities.Event) {
 		log.Debug("onEventUpdateDeposit", string(eventJson))
 	}
 
-	_, _ = services.UpdateDeposit(args)
+	_, err = services.UpdateDeposit(args)
+	if err != nil {
+		log.Error("could not upgrade deposit", err)
+	}
 }
 
 func getEventName(event *entities.Event) string {

@@ -35,11 +35,6 @@ func MakeOffer(args MakeOfferArgs) (*entities.Proffer, error){
 	}
 
 	err = storage.AddProffer(&offer)
-	if err != nil {
-		log.Debug("could not add offer to db", err)
-		return nil, err
-	}
-
 	return &offer, nil
 }
 
@@ -122,11 +117,6 @@ func PlaceBid(args PlaceBidArgs) (*entities.Proffer, error) {
 	}
 
 	err = storage.AddProffer(&offer)
-	if err != nil {
-		log.Debug("could not add offer to db", err)
-		return nil, err
-	}
-
 	return &offer, nil
 }
 
