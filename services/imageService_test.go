@@ -3,8 +3,9 @@ package services
 import (
 	"crypto/rand"
 	"encoding/base64"
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func Test_SetAccountCoverImageLarge(t *testing.T) {

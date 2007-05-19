@@ -3,9 +3,10 @@ package storage
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"testing"
+
 	"github.com/erdsea/erdsea-api/data/images"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func Test_AddAccountProfileImage(T *testing.T) {
