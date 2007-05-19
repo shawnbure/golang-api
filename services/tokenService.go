@@ -255,7 +255,6 @@ func ConstructNewTokenFromListArgs(args ListTokenArgs) entities.Token {
 	} else {
 		token.TokenName = args.TokenName
 		token.ImageLink = args.FirstLink
-		token.Attributes = datatypes.JSON(args.Attributes)
 	}
 
 	return token
