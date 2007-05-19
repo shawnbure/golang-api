@@ -15,6 +15,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type RankingEntry = collstats.LeaderboardEntry
+
 const (
 	baseCollectionsEndpoint   = "/collections"
 	collectionByNameEndpoint  = "/:collectionId"
@@ -488,13 +490,13 @@ func (handler *collectionsHandler) getCollectionRankings(c *gin.Context) {
 
 	table := sortParams["criteria"]
 	isRev := strings.ToLower(sortParams["mode"]) == "desc"
-	stats, err := collstats.GetLeaderboardEntries(table, offset, limit, isRev)
+	entries, err := collstats.GetLeaderboardEntries(table, offset, limit, isRev)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
 	}
 
-	dtos.JsonResponse(c, http.StatusOK, stats, "")
+	dtos.JsonResponse(c, http.StatusOK, entries, "")
 }
 
 func testInputSortParams(sortParams map[string]string, acceptedCriteria map[string]bool) error {
