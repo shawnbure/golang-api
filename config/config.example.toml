@@ -46,3 +46,11 @@
 [Swagger]
     LocalDocRoute = "http://localhost:5000/swagger/doc.json"
     Enabled = true
+
+[Bot]
+    Token = "bot_token"
+    RecID = "recipient_id"
+    Enable = false
+
+[Monitor]
+    ObserverMonitorEnable = false

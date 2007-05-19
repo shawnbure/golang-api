@@ -17,7 +17,7 @@ const (
 	buyNFTIdentifier        = "buyNft"
 	withdrawNFTIdentifier   = "withdrawNft"
 
-	saveEventsTTL        = 5 * time.Minute
+	saveEventsTTL = 5 * time.Minute
 )
 
 type EventProcessor struct {
@@ -27,12 +27,14 @@ type EventProcessor struct {
 	eventsPool chan []entities.Event
 
 	localCacher *cache.LocalCacher
+	monitor     *observerMonitor
 }
 
 func NewEventProcessor(
 	addresses []string,
 	identifiers []string,
 	localCacher *cache.LocalCacher,
+	monitor *observerMonitor,
 ) *EventProcessor {
 	addrSet := map[string]bool{}
 	idSet := map[string]bool{}
@@ -50,6 +52,7 @@ func NewEventProcessor(
 		identifiersSet: idSet,
 		eventsPool:     make(chan []entities.Event),
 		localCacher:    localCacher,
+		monitor:        monitor,
 	}
 
 	go processor.PoolWorker()
@@ -96,6 +99,10 @@ func (e *EventProcessor) OnEvents(blockEvents entities.BlockEvents) {
 }
 
 func (e *EventProcessor) OnFinalizedEvent(fb entities.FinalizedBlock) {
+	if e.monitor.IsEnabled() {
+		e.monitor.LivenessChan() <- fb.Hash
+	}
+
 	cachedValue, err := e.localCacher.Get(fb.Hash)
 	if err != nil {
 		log.Warn("could not load events from cache for block",
