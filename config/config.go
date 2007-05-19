@@ -27,15 +27,16 @@ type BlockchainConfig struct {
 }
 
 type DatabaseConfig struct {
-	Dialect      string
-	Host         string
-	Port         uint16
-	DbName       string
-	User         string
-	Password     string
-	SslMode      string
-	MaxOpenConns int
-	MaxIdleConns int
+	Dialect       string
+	Host          string
+	Port          uint16
+	DbName        string
+	User          string
+	Password      string
+	SslMode       string
+	MaxOpenConns  int
+	MaxIdleConns  int
+	ShouldMigrate bool
 }
 
 func (d DatabaseConfig) Url() string {

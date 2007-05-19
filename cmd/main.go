@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/erdsea/erdsea-api/storage"
 	"net/http"
 	"os"
 	"os/signal"
@@ -106,6 +107,8 @@ func startProxy(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
+
+	storage.Connect(cfg.Database)
 
 	api, err := proxy.NewWebServer(cfg)
 	if err != nil {
