@@ -17,7 +17,7 @@ const (
 	buyNFTIdentifier        = "buyNft"
 	withdrawNFTIdentifier   = "withdrawNft"
 
-	saveEventsTTL        = 5 * time.Minute
+	saveEventsTTL = 5 * time.Minute
 )
 
 type EventProcessor struct {
