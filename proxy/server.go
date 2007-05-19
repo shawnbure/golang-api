@@ -52,6 +52,9 @@ func NewWebServer(cfg *config.GeneralConfig) (*webServer, error) {
 		cfg.ConnectorApi.Addresses,
 		cfg.ConnectorApi.Identifiers,
 		localCacher,
+		services.ListToken,
+		services.BuyToken,
+		services.WithdrawToken,
 	)
 
 	err = handlers.NewEventsHandler(

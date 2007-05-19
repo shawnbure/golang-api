@@ -2,15 +2,15 @@ package process
 
 import (
 	"encoding/json"
-	"github.com/erdsea/erdsea-api/cache"
 	"time"
 
 	logger "github.com/ElrondNetwork/elrond-go-logger"
+	"github.com/erdsea/erdsea-api/cache"
 	"github.com/erdsea/erdsea-api/data/entities"
 	"github.com/erdsea/erdsea-api/services"
 )
 
-var log = logger.GetOrCreate("EventProcessor")
+var log = logger.GetOrCreate("eventProcessor")
 
 const (
 	putNFTForSaleIdentifier = "putNftForSale"
@@ -27,12 +27,19 @@ type EventProcessor struct {
 	eventsPool chan []entities.Event
 
 	localCacher *cache.LocalCacher
+
+	putForSaleFunc    func(args services.ListTokenArgs)
+	buyTokenFunc      func(args services.BuyTokenArgs)
+	withdrawTokenFunc func(args services.WithdrawTokenArgs)
 }
 
 func NewEventProcessor(
 	addresses []string,
 	identifiers []string,
 	localCacher *cache.LocalCacher,
+	putForSaleFunc func(args services.ListTokenArgs),
+	buyTokenFunc func(args services.BuyTokenArgs),
+	withdrawTokenFunc func(args services.WithdrawTokenArgs),
 ) *EventProcessor {
 	addrSet := map[string]bool{}
 	idSet := map[string]bool{}
@@ -46,10 +53,13 @@ func NewEventProcessor(
 	}
 
 	processor := &EventProcessor{
-		addressSet:     addrSet,
-		identifiersSet: idSet,
-		eventsPool:     make(chan []entities.Event),
-		localCacher:    localCacher,
+		addressSet:        addrSet,
+		identifiersSet:    idSet,
+		eventsPool:        make(chan []entities.Event),
+		localCacher:       localCacher,
+		putForSaleFunc:    putForSaleFunc,
+		buyTokenFunc:      buyTokenFunc,
+		withdrawTokenFunc: withdrawTokenFunc,
 	}
 
 	go processor.PoolWorker()
@@ -62,11 +72,11 @@ func (e *EventProcessor) PoolWorker() {
 		for _, event := range eventArray {
 			switch event.Identifier {
 			case putNFTForSaleIdentifier:
-				e.onEventPutNftForSale(event)
+				e.onEventPutNftForSale(event, e.putForSaleFunc)
 			case buyNFTIdentifier:
-				e.onEventBuyNft(event)
+				e.onEventBuyNft(event, e.buyTokenFunc)
 			case withdrawNFTIdentifier:
-				e.onEventWithdrawNft(event)
+				e.onEventWithdrawNft(event, e.withdrawTokenFunc)
 			}
 		}
 	}
@@ -92,8 +102,39 @@ func (e *EventProcessor) OnEvents(blockEvents entities.BlockEvents) {
 				"err", err.Error(),
 			)
 		}
+	}
+}
 
-		//e.eventsPool <- filterableEvents
+func (e *EventProcessor) OnFinalizedEvent(fb entities.FinalizedBlock) {
+	cachedValue, err := e.localCacher.Get(fb.Hash)
+	if err != nil {
+		log.Error("could not load events from cache for block",
+			"headerHash", fb.Hash,
+			"err", err.Error(),
+		)
+		return
+	}
+
+	cachedEvents, ok := cachedValue.([]entities.Event)
+	if !ok {
+		log.Error(
+			"could not cast cached value to []entities.Event",
+			"reason", "corrupted cached data",
+		)
+		return
+	}
+
+	if len(cachedEvents) == 0 {
+		log.Warn("loaded empty slice from cache - ignoring")
+		return
+	}
+
+	e.eventsPool <- cachedEvents
+
+	ttl := 30 * time.Minute
+	err = e.localCacher.SetWithTTLSync(fb.Hash, true, ttl)
+	if err != nil {
+		log.Warn("could not set finalized block flag", "err", err.Error())
 	}
 }
 
@@ -101,7 +142,10 @@ func (e *EventProcessor) isEventAccepted(ev entities.Event) bool {
 	return e.addressSet[ev.Address] && e.identifiersSet[ev.Identifier]
 }
 
-func (e *EventProcessor) onEventPutNftForSale(event entities.Event) {
+func (e *EventProcessor) onEventPutNftForSale(
+	event entities.Event,
+	putForSaleFunc func(args services.ListTokenArgs),
+) {
 	args := services.ListTokenArgs{
 		OwnerAddress:     decodeAddressFromTopic(event.Topics[1]),
 		TokenId:          decodeStringFromTopic(event.Topics[2]),
@@ -123,10 +167,13 @@ func (e *EventProcessor) onEventPutNftForSale(event entities.Event) {
 		log.Debug("onEventPutNftForSale", string(eventJson))
 	}
 
-	services.ListToken(args)
+	putForSaleFunc(args)
 }
 
-func (e *EventProcessor) onEventBuyNft(event entities.Event) {
+func (e *EventProcessor) onEventBuyNft(
+	event entities.Event,
+	buyTokenFunc func(args services.BuyTokenArgs),
+) {
 	args := services.BuyTokenArgs{
 		OwnerAddress: decodeAddressFromTopic(event.Topics[1]),
 		BuyerAddress: decodeAddressFromTopic(event.Topics[2]),
@@ -142,10 +189,13 @@ func (e *EventProcessor) onEventBuyNft(event entities.Event) {
 		log.Debug("onEventBuyNft", string(eventJson))
 	}
 
-	services.BuyToken(args)
+	buyTokenFunc(args)
 }
 
-func (e *EventProcessor) onEventWithdrawNft(event entities.Event) {
+func (e *EventProcessor) onEventWithdrawNft(
+	event entities.Event,
+	withdrawTokenFunc func(args services.WithdrawTokenArgs),
+) {
 	args := services.WithdrawTokenArgs{
 		OwnerAddress: decodeAddressFromTopic(event.Topics[1]),
 		TokenId:      decodeStringFromTopic(event.Topics[2]),
@@ -160,5 +210,5 @@ func (e *EventProcessor) onEventWithdrawNft(event entities.Event) {
 		log.Debug("onEventWithdrawNft", string(eventJson))
 	}
 
-	services.WithdrawToken(args)
+	withdrawTokenFunc(args)
 }

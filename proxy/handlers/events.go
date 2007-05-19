@@ -1,15 +1,12 @@
 package handlers
 
 import (
-	"log"
-	"net/http"
-	"time"
-
 	"github.com/erdsea/erdsea-api/config"
 	"github.com/erdsea/erdsea-api/data/dtos"
 	"github.com/erdsea/erdsea-api/data/entities"
 	"github.com/erdsea/erdsea-api/process"
 	"github.com/gin-gonic/gin"
+	"net/http"
 )
 
 const (
@@ -74,8 +71,7 @@ func (h *eventsHandler) pushFinalizedEvents(c *gin.Context) {
 		return
 	}
 
-	log.Println("received finalized events at:", time.Now().Unix())
-	log.Println("finalized hash:", finalizedBlock.Hash)
+	h.processor.OnFinalizedEvent(finalizedBlock)
 
 	dtos.JsonResponse(c, http.StatusOK, nil, "")
 }

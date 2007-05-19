@@ -1,9 +1,9 @@
 package process
 
 import (
-	"github.com/erdsea/erdsea-api/cache"
 	"testing"
 
+	"github.com/erdsea/erdsea-api/cache"
 	"github.com/erdsea/erdsea-api/data/entities"
 )
 
@@ -32,6 +32,6 @@ func TestEventProcessor_OnEvents(t *testing.T) {
 	}
 
 	cacher, _ := cache.NewLocalCacher()
-	proc := NewEventProcessor(addresses, identifiers, cacher)
+	proc := NewEventProcessor(addresses, identifiers, cacher, nil, nil, nil)
 	proc.OnEvents(blockEvents)
 }
