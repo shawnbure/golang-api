@@ -84,6 +84,7 @@ func (h *authHandler) createAccessToken(c *gin.Context) {
 	msgBytes, err := hex.DecodeString(req.Message)
 	if err != nil {
 		h.badReqResp(c, err.Error())
+		return
 	}
 
 	jwt, refresh, err := h.service.CreateToken(pk.AddressBytes(), sigBytes, msgBytes)
