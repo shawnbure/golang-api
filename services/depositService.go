@@ -61,9 +61,14 @@ func GetDeposit(marketplaceAddress string, address string) (float64, error) {
 		return priceVal.(float64), nil
 	}
 
-	deposit, err := DoGetDepositVmQuery(marketplaceAddress, address)
+	depositMaybeEmpty, err := DoGetDepositVmQuery(marketplaceAddress, address)
 	if err != nil {
 		return 0, err
+	}
+
+	deposit := "00"
+	if len(depositMaybeEmpty) != 0 {
+		deposit = depositMaybeEmpty
 	}
 
 	depositNominal, err := GetPriceNominal(deposit)
