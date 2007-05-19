@@ -52,7 +52,7 @@ definitions:
     properties:
       createdAt:
         type: integer
-      creatorID:
+      creatorId:
         type: integer
       description:
         type: string
@@ -68,7 +68,7 @@ definitions:
         type: integer
       telegramLink:
         type: string
-      tokenID:
+      tokenId:
         type: string
       twitterLink:
         type: string
@@ -81,7 +81,7 @@ definitions:
         items:
           type: integer
         type: array
-      collectionID:
+      collectionId:
         type: integer
       createdAt:
         type: integer
@@ -105,28 +105,28 @@ definitions:
         type: string
       royaltiesPercent:
         type: number
-      tokenID:
+      tokenId:
         type: string
       tokenName:
         type: string
     type: object
   entities.Transaction:
     properties:
-      buyerID:
+      buyer_id:
         type: integer
-      collectionID:
+      collection_id:
         type: integer
       hash:
         type: string
       id:
         type: integer
-      priceNominal:
+      price_nominal:
         type: number
-      sellerID:
+      seller_id:
         type: integer
       timestamp:
         type: integer
-      tokenID:
+      token_id:
         type: integer
       type:
         type: string

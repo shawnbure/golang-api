@@ -1682,7 +1682,7 @@
                 "createdAt": {
                     "type": "integer"
                 },
-                "creatorID": {
+                "creatorId": {
                     "type": "integer"
                 },
                 "description": {
@@ -1706,7 +1706,7 @@
                 "telegramLink": {
                     "type": "string"
                 },
-                "tokenID": {
+                "tokenId": {
                     "type": "string"
                 },
                 "twitterLink": {
@@ -1726,7 +1726,7 @@
                         "type": "integer"
                     }
                 },
-                "collectionID": {
+                "collectionId": {
                     "type": "integer"
                 },
                 "createdAt": {
@@ -1762,7 +1762,7 @@
                 "royaltiesPercent": {
                     "type": "number"
                 },
-                "tokenID": {
+                "tokenId": {
                     "type": "string"
                 },
                 "tokenName": {
@@ -1773,10 +1773,10 @@
         "entities.Transaction": {
             "type": "object",
             "properties": {
-                "buyerID": {
+                "buyer_id": {
                     "type": "integer"
                 },
-                "collectionID": {
+                "collection_id": {
                     "type": "integer"
                 },
                 "hash": {
@@ -1785,16 +1785,16 @@
                 "id": {
                     "type": "integer"
                 },
-                "priceNominal": {
+                "price_nominal": {
                     "type": "number"
                 },
-                "sellerID": {
+                "seller_id": {
                     "type": "integer"
                 },
                 "timestamp": {
                     "type": "integer"
                 },
-                "tokenID": {
+                "token_id": {
                     "type": "integer"
                 },
                 "type": {

@@ -1698,7 +1698,7 @@ var doc = `{
                 "createdAt": {
                     "type": "integer"
                 },
-                "creatorID": {
+                "creatorId": {
                     "type": "integer"
                 },
                 "description": {
@@ -1722,7 +1722,7 @@ var doc = `{
                 "telegramLink": {
                     "type": "string"
                 },
-                "tokenID": {
+                "tokenId": {
                     "type": "string"
                 },
                 "twitterLink": {
@@ -1742,7 +1742,7 @@ var doc = `{
                         "type": "integer"
                     }
                 },
-                "collectionID": {
+                "collectionId": {
                     "type": "integer"
                 },
                 "createdAt": {
@@ -1778,7 +1778,7 @@ var doc = `{
                 "royaltiesPercent": {
                     "type": "number"
                 },
-                "tokenID": {
+                "tokenId": {
                     "type": "string"
                 },
                 "tokenName": {
@@ -1789,10 +1789,10 @@ var doc = `{
         "entities.Transaction": {
             "type": "object",
             "properties": {
-                "buyerID": {
+                "buyer_id": {
                     "type": "integer"
                 },
-                "collectionID": {
+                "collection_id": {
                     "type": "integer"
                 },
                 "hash": {
@@ -1801,16 +1801,16 @@ var doc = `{
                 "id": {
                     "type": "integer"
                 },
-                "priceNominal": {
+                "price_nominal": {
                     "type": "number"
                 },
-                "sellerID": {
+                "seller_id": {
                     "type": "integer"
                 },
                 "timestamp": {
                     "type": "integer"
                 },
-                "tokenID": {
+                "token_id": {
                     "type": "integer"
                 },
                 "type": {
