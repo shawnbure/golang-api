@@ -61,7 +61,7 @@ func NewTxFormatter(cfg config.BlockchainConfig) TxFormatter {
 		noFeeOnMintContracts[contract] = true
 	}
 	return TxFormatter{
-		config: cfg,
+		config:               cfg,
 		noFeeOnMintContracts: noFeeOnMintContracts,
 	}
 }
