@@ -10,7 +10,6 @@ import (
 
 	"github.com/erdsea/erdsea-api/config"
 	"github.com/erdsea/erdsea-api/data/entities"
-	"github.com/erdsea/erdsea-api/data/entities/images"
 	_ "github.com/lib/pq"
 )
 
@@ -141,26 +140,6 @@ func TryMigrate() error {
 	}
 
 	err = db.AutoMigrate(&entities.Collection{})
-	if err != nil {
-		return err
-	}
-
-	err = db.AutoMigrate(&images.AccountCoverImage{})
-	if err != nil {
-		return err
-	}
-
-	err = db.AutoMigrate(&images.AccountProfileImage{})
-	if err != nil {
-		return err
-	}
-
-	err = db.AutoMigrate(&images.CollectionCoverImage{})
-	if err != nil {
-		return err
-	}
-
-	err = db.AutoMigrate(&images.CollectionProfileImage{})
 	if err != nil {
 		return err
 	}

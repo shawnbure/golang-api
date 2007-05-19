@@ -43,8 +43,6 @@ func NewAccountsHandler(groupHandler *groupHandler, authCfg config.AuthConfig) {
 
 	publicEndpoints := []EndpointHandler{
 		{Method: http.MethodGet, Path: accountByIdEndpoint, HandlerFunc: handler.get},
-		{Method: http.MethodGet, Path: accountProfileEndpoint, HandlerFunc: handler.getAccountProfile},
-		{Method: http.MethodGet, Path: accountCoverEndpoint, HandlerFunc: handler.getAccountCover},
 		{Method: http.MethodGet, Path: accountTokensEndpoint, HandlerFunc: handler.getAccountTokens},
 		{Method: http.MethodGet, Path: accountCollectionsEndpoint, HandlerFunc: handler.getAccountCollections},
 	}
@@ -174,36 +172,8 @@ func (handler *accountsHandler) create(c *gin.Context) {
 	dtos.JsonResponse(c, http.StatusOK, account, "")
 }
 
-// @Summary Get account profile image
-// @Description Retrieves an account profile image. It will be sent as base64 encoding (sdt, raw) of its byte representation.
-// @Tags accounts
-// @Accept json
-// @Produce json
-// @Param walletAddress path string true "wallet address"
-// @Success 200 {object} string
-// @Failure 400 {object} dtos.ApiResponse
-// @Failure 404 {object} dtos.ApiResponse
-// @Router /accounts/{walletAddress}/profile [get]
-func (handler *accountsHandler) getAccountProfile(c *gin.Context) {
-	walletAddress := c.Param("walletAddress")
-
-	cacheInfo, err := services.GetOrAddAccountCacheInfo(walletAddress)
-	if err != nil {
-		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
-		return
-	}
-
-	image, err := storage.GetAccountProfileImageByAccountId(cacheInfo.AccountId)
-	if err != nil {
-		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
-		return
-	}
-
-	dtos.JsonResponse(c, http.StatusOK, &image, "")
-}
-
 // @Summary Set account profile image
-// @Description Expects base64 encoding (sdt, raw) of the image representation. Returns empty string. Max size of byte array is 512KB.
+// @Description Expects base64 std encoding of the image representation. Returns empty string. Max size of byte array is 512KB.
 // @Tags accounts
 // @Accept json
 // @Produce json
@@ -236,7 +206,7 @@ func (handler *accountsHandler) setAccountProfile(c *gin.Context) {
 		return
 	}
 
-	err = services.SetAccountProfileImage(cacheInfo.AccountId, &imageBase64)
+	err = services.SetAccountProfileImage(walletAddress, cacheInfo.AccountId, &imageBase64)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
@@ -245,36 +215,9 @@ func (handler *accountsHandler) setAccountProfile(c *gin.Context) {
 	dtos.JsonResponse(c, http.StatusOK, "", "")
 }
 
-// @Summary Get account cover image
-// @Description Retrieves an account cover image. It will be sent as base64 encoding (sdt, raw) of its byte representation.
-// @Tags accounts
-// @Accept json
-// @Produce json
-// @Param walletAddress path string true "wallet address"
-// @Success 200 {object} string
-// @Failure 400 {object} dtos.ApiResponse
-// @Failure 404 {object} dtos.ApiResponse
-// @Router /accounts/{walletAddress}/cover [get]
-func (handler *accountsHandler) getAccountCover(c *gin.Context) {
-	walletAddress := c.Param("walletAddress")
-
-	cacheInfo, err := services.GetOrAddAccountCacheInfo(walletAddress)
-	if err != nil {
-		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
-		return
-	}
-
-	image, err := storage.GetAccountCoverImageByAccountId(cacheInfo.AccountId)
-	if err != nil {
-		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
-		return
-	}
-
-	dtos.JsonResponse(c, http.StatusOK, &image, "")
-}
 
 // @Summary Set account cover image
-// @Description Expects base64 encoding (sdt, raw) of the image representation. Returns empty string. Max size of byte array is 1MB.
+// @Description Expects base64 std encoding of the image representation. Returns empty string. Max size of byte array is 1MB.
 // @Tags accounts
 // @Accept json
 // @Produce json
@@ -307,7 +250,7 @@ func (handler *accountsHandler) setAccountCover(c *gin.Context) {
 		return
 	}
 
-	err = services.SetAccountCoverImage(cacheInfo.AccountId, &imageBase64)
+	err = services.SetAccountCoverImage(walletAddress, cacheInfo.AccountId, &imageBase64)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return

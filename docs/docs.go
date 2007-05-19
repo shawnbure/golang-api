@@ -243,50 +243,8 @@ var doc = `{
             }
         },
         "/accounts/{walletAddress}/cover": {
-            "get": {
-                "description": "Retrieves an account cover image. It will be sent as base64 encoding (sdt, raw) of its byte representation.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "accounts"
-                ],
-                "summary": "Get account cover image",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "wallet address",
-                        "name": "walletAddress",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/dtos.ApiResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/dtos.ApiResponse"
-                        }
-                    }
-                }
-            },
             "post": {
-                "description": "Expects base64 encoding (sdt, raw) of the image representation. Returns empty string. Max size of byte array is 1MB.",
+                "description": "Expects base64 std encoding of the image representation. Returns empty string. Max size of byte array is 1MB.",
                 "consumes": [
                     "application/json"
                 ],
@@ -344,50 +302,8 @@ var doc = `{
             }
         },
         "/accounts/{walletAddress}/profile": {
-            "get": {
-                "description": "Retrieves an account profile image. It will be sent as base64 encoding (sdt, raw) of its byte representation.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "accounts"
-                ],
-                "summary": "Get account profile image",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "wallet address",
-                        "name": "walletAddress",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/dtos.ApiResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/dtos.ApiResponse"
-                        }
-                    }
-                }
-            },
             "post": {
-                "description": "Expects base64 encoding (sdt, raw) of the image representation. Returns empty string. Max size of byte array is 512KB.",
+                "description": "Expects base64 std encoding of the image representation. Returns empty string. Max size of byte array is 512KB.",
                 "consumes": [
                     "application/json"
                 ],
@@ -862,50 +778,8 @@ var doc = `{
             }
         },
         "/collections/{collectionId}/cover": {
-            "get": {
-                "description": "Retrieves a collection cover image. It will be sent as base64 encoding (sdt, raw) of its byte representation.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "collections"
-                ],
-                "summary": "Get collection cover image",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "collection id",
-                        "name": "collectionId",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/dtos.ApiResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/dtos.ApiResponse"
-                        }
-                    }
-                }
-            },
             "post": {
-                "description": "Expects base64 encoding (sdt, raw) of the image representation. Returns empty string. Max size of byte array is 1MB.",
+                "description": "Expects base64 std encoding of the image representation. Returns empty string. Max size of byte array is 1MB.",
                 "consumes": [
                     "application/json"
                 ],
@@ -1013,50 +887,8 @@ var doc = `{
             }
         },
         "/collections/{collectionId}/profile": {
-            "get": {
-                "description": "Retrieves a collection cover image. It will be sent as base64 encoding (sdt, raw) of its byte representation.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "collections"
-                ],
-                "summary": "Get collection profile image",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "collection id",
-                        "name": "collectionId",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/dtos.ApiResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/dtos.ApiResponse"
-                        }
-                    }
-                }
-            },
             "post": {
-                "description": "Expects base64 encoding (sdt, raw) of the image representation. Returns empty string. Max size of byte array is 1MB.",
+                "description": "Expects base64 std encoding of the image representation. Returns empty string. Max size of byte array is 1MB.",
                 "consumes": [
                     "application/json"
                 ],
@@ -1337,7 +1169,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.AvailableTokensRequest"
+                            "$ref": "#/definitions/services.AvailableTokensRequest"
                         }
                     }
                 ],
@@ -1345,7 +1177,7 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/handlers.AvailableTokensResponse"
+                            "$ref": "#/definitions/services.AvailableTokensResponse"
                         }
                     },
                     "400": {
@@ -1884,16 +1716,27 @@ var doc = `{
                 }
             }
         },
+        "dtos.AttributeStat": {
+            "type": "object",
+            "properties": {
+                "total": {
+                    "type": "integer"
+                },
+                "trait_type": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
         "dtos.CollectionStatistics": {
             "type": "object",
             "properties": {
                 "attributes": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "object",
-                        "additionalProperties": {
-                            "type": "integer"
-                        }
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dtos.AttributeStat"
                     }
                 },
                 "floorPrice": {
@@ -1933,6 +1776,9 @@ var doc = `{
                 "address": {
                     "type": "string"
                 },
+                "coverImageLink": {
+                    "type": "string"
+                },
                 "createdAt": {
                     "type": "integer"
                 },
@@ -1948,6 +1794,9 @@ var doc = `{
                 "name": {
                     "type": "string"
                 },
+                "profileImageLink": {
+                    "type": "string"
+                },
                 "twitterLink": {
                     "type": "string"
                 },
@@ -1960,6 +1809,9 @@ var doc = `{
             "type": "object",
             "properties": {
                 "contractAddress": {
+                    "type": "string"
+                },
+                "coverImageLink": {
                     "type": "string"
                 },
                 "createdAt": {
@@ -1994,6 +1846,9 @@ var doc = `{
                 },
                 "priority": {
                     "type": "integer"
+                },
+                "profileImageLink": {
+                    "type": "string"
                 },
                 "telegramLink": {
                     "type": "string"
@@ -2132,61 +1987,6 @@ var doc = `{
                 }
             }
         },
-        "handlers.AvailableToken": {
-            "type": "object",
-            "properties": {
-                "collection": {
-                    "type": "object",
-                    "properties": {
-                        "id": {
-                            "type": "string"
-                        },
-                        "name": {
-                            "type": "string"
-                        }
-                    }
-                },
-                "token": {
-                    "type": "object",
-                    "properties": {
-                        "available": {
-                            "type": "boolean"
-                        },
-                        "id": {
-                            "type": "string"
-                        },
-                        "name": {
-                            "type": "string"
-                        },
-                        "nonce": {
-                            "type": "integer"
-                        }
-                    }
-                }
-            }
-        },
-        "handlers.AvailableTokensRequest": {
-            "type": "object",
-            "properties": {
-                "tokens": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "handlers.AvailableTokensResponse": {
-            "type": "object",
-            "properties": {
-                "tokens": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "$ref": "#/definitions/handlers.AvailableToken"
-                    }
-                }
-            }
-        },
         "handlers.GeneralSearchResponse": {
             "type": "object",
             "properties": {
@@ -2249,6 +2049,61 @@ var doc = `{
                 },
                 "refreshToken": {
                     "type": "string"
+                }
+            }
+        },
+        "services.AvailableToken": {
+            "type": "object",
+            "properties": {
+                "collection": {
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "string"
+                        },
+                        "name": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "token": {
+                    "type": "object",
+                    "properties": {
+                        "available": {
+                            "type": "boolean"
+                        },
+                        "id": {
+                            "type": "string"
+                        },
+                        "name": {
+                            "type": "string"
+                        },
+                        "nonce": {
+                            "type": "integer"
+                        }
+                    }
+                }
+            }
+        },
+        "services.AvailableTokensRequest": {
+            "type": "object",
+            "properties": {
+                "tokens": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "services.AvailableTokensResponse": {
+            "type": "object",
+            "properties": {
+                "tokens": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/services.AvailableToken"
+                    }
                 }
             }
         },
