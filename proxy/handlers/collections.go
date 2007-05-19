@@ -4,9 +4,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/erdsea/erdsea-api/data/dtos"
-
 	"github.com/erdsea/erdsea-api/config"
+	"github.com/erdsea/erdsea-api/data/dtos"
 	"github.com/erdsea/erdsea-api/proxy/middleware"
 	"github.com/erdsea/erdsea-api/services"
 	"github.com/erdsea/erdsea-api/stats/collstats"
@@ -19,7 +18,6 @@ const (
 	collectionByNameEndpoint     = "/:collectionId"
 	collectionListEndpoint       = "/list/:offset/:limit"
 	collectionCreateEndpoint     = "/create"
-	collectionStatisticsEndpoint = "/:collectionId/statistics"
 	collectionTokensEndpoint     = "/:collectionId/tokens/:offset/:limit"
 	collectionProfileEndpoint    = "/:collectionId/profile/"
 	collectionCoverEndpoint      = "/:collectionId/cover"
@@ -37,7 +35,6 @@ func NewCollectionsHandler(groupHandler *groupHandler, authCfg config.AuthConfig
 		{Method: http.MethodGet, Path: collectionByNameEndpoint, HandlerFunc: handler.get},
 		{Method: http.MethodPost, Path: collectionByNameEndpoint, HandlerFunc: handler.set},
 
-		{Method: http.MethodGet, Path: collectionStatisticsEndpoint, HandlerFunc: handler.getStatistics},
 		{Method: http.MethodPost, Path: collectionCreateEndpoint, HandlerFunc: handler.create},
 		{Method: http.MethodGet, Path: collectionTokensEndpoint, HandlerFunc: handler.getTokens},
 
@@ -93,26 +90,26 @@ func (handler *collectionsHandler) getList(c *gin.Context) {
 	dtos.JsonResponse(c, http.StatusOK, collections, "")
 }
 
-// @Summary Gets collection by name.
-// @Description Retrieves a collection by its name.
+// @Summary Gets collection by collection id.
+// @Description Retrieves a collection by id.
 // @Tags collections
 // @Accept json
 // @Produce json
-// @Param collectionId path uint64 true "collection id"
+// @Param collectionId path string true "collection id"
 // @Success 200 {object} entities.Collection
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 404 {object} dtos.ApiResponse
 // @Router /collections/{collectionId} [get]
 func (handler *collectionsHandler) get(c *gin.Context) {
-	collectionIdString := c.Param("collectionId")
+	tokenId := c.Param("collectionId")
 
-	collectionId, err := strconv.ParseUint(collectionIdString, 10, 16)
+	cacheInfo, err := collstats.GetCollection(tokenId)
 	if err != nil {
-		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
-	collection, err := storage.GetCollectionById(collectionId)
+	collection, err := storage.GetCollectionById(cacheInfo.CollectionId)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
@@ -126,7 +123,7 @@ func (handler *collectionsHandler) get(c *gin.Context) {
 // @Tags collections
 // @Accept json
 // @Produce json
-// @Param collectionId path uint64 true "collection id"
+// @Param collectionId path string true "collection id"
 // @Param updateCollectionRequest body services.UpdateCollectionRequest true "collection info"
 // @Success 200 {object} entities.Collection
 // @Failure 401 {object} dtos.ApiResponse
@@ -135,7 +132,7 @@ func (handler *collectionsHandler) get(c *gin.Context) {
 // @Router /collections/{collectionId} [post]
 func (handler *collectionsHandler) set(c *gin.Context) {
 	var request services.UpdateCollectionRequest
-	collectionIdString := c.Param("collectionId")
+	tokenId := c.Param("collectionId")
 
 	err := c.Bind(&request)
 	if err != nil {
@@ -143,13 +140,13 @@ func (handler *collectionsHandler) set(c *gin.Context) {
 		return
 	}
 
-	collectionId, err := strconv.ParseUint(collectionIdString, 10, 16)
+	cacheInfo, err := collstats.GetCollection(tokenId)
 	if err != nil {
-		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
-	collection, err := storage.GetCollectionById(collectionId)
+	collection, err := storage.GetCollectionById(cacheInfo.CollectionId)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
@@ -174,41 +171,6 @@ func (handler *collectionsHandler) set(c *gin.Context) {
 	}
 
 	dtos.JsonResponse(c, http.StatusOK, collection, "")
-}
-
-// @Summary Gets collection statistics.
-// @Description Gets statistics for a collection. It will be cached for 15 minutes.
-// @Tags collections
-// @Accept json
-// @Produce json
-// @Param collectionId path uint64 true "collection id"
-// @Success 200 {object} dtos.CollectionStatistics
-// @Failure 404 {object} dtos.ApiResponse
-// @Failure 500 {object} dtos.ApiResponse
-// @Router /collections/{collectionId}/statistics [post]
-func (handler *collectionsHandler) getStatistics(c *gin.Context) {
-	collectionIdString := c.Param("collectionId")
-
-	collectionId, err := strconv.ParseUint(collectionIdString, 10, 16)
-	if err != nil {
-		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
-		return
-	}
-
-	//Will use token id here
-	collection, err := storage.GetCollectionById(collectionId)
-	if err != nil {
-		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
-		return
-	}
-
-	stats, err := collstats.GetStatisticsForTokenId(collection.TokenID)
-	if err != nil {
-		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
-		return
-	}
-
-	dtos.JsonResponse(c, http.StatusOK, stats, "")
 }
 
 // @Summary Creates a collection.
@@ -251,7 +213,7 @@ func (handler *collectionsHandler) create(c *gin.Context) {
 // @Tags collections
 // @Accept json
 // @Produce json
-// @Param collectionId path uint64 true "collection id"
+// @Param collectionId path string true "collection id"
 // @Param offset path int true "offset"
 // @Param limit path int true "limit"
 // @Success 200 {object} []entities.Token
@@ -259,14 +221,14 @@ func (handler *collectionsHandler) create(c *gin.Context) {
 // @Failure 404 {object} dtos.ApiResponse
 // @Router /collections/{collectionId}/tokens/{offset}/{limit} [get]
 func (handler *collectionsHandler) getTokens(c *gin.Context) {
-	collectionIdString := c.Param("collectionId")
 	offsetStr := c.Param("offset")
 	limitStr := c.Param("limit")
 	filters := c.QueryMap("filters")
+	tokenId := c.Param("collectionId")
 
-	collectionId, err := strconv.ParseUint(collectionIdString, 10, 16)
+	cacheInfo, err := collstats.GetCollection(tokenId)
 	if err != nil {
-		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
@@ -282,7 +244,7 @@ func (handler *collectionsHandler) getTokens(c *gin.Context) {
 		return
 	}
 
-	tokens, err := storage.GetTokensByCollectionIdWithOffsetLimit(collectionId, offset, limit, filters)
+	tokens, err := storage.GetTokensByCollectionIdWithOffsetLimit(cacheInfo.CollectionId, offset, limit, filters)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
@@ -296,21 +258,21 @@ func (handler *collectionsHandler) getTokens(c *gin.Context) {
 // @Tags collections
 // @Accept json
 // @Produce json
-// @Param collectionId path uint64 true "collection id"
+// @Param collectionId path string true "collection id"
 // @Success 200 {object} string
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 404 {object} dtos.ApiResponse
 // @Router /collections/{collectionId}/profile [get]
 func (handler *collectionsHandler) getCollectionProfile(c *gin.Context) {
-	collectionIdString := c.Param("collectionId")
+	tokenId := c.Param("collectionId")
 
-	collectionId, err := strconv.ParseUint(collectionIdString, 10, 16)
+	cacheInfo, err := collstats.GetCollection(tokenId)
 	if err != nil {
-		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
-	image, err := storage.GetCollectionProfileImageByCollectionId(collectionId)
+	image, err := storage.GetCollectionProfileImageByCollectionId(cacheInfo.CollectionId)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
@@ -324,7 +286,7 @@ func (handler *collectionsHandler) getCollectionProfile(c *gin.Context) {
 // @Tags collections
 // @Accept json
 // @Produce json
-// @Param collectionId path uint64 true "collection id"
+// @Param collectionId path string true "collection id"
 // @Param image body string true "base64 encoded image"
 // @Success 200 {object} string
 // @Failure 400 {object} dtos.ApiResponse
@@ -332,7 +294,7 @@ func (handler *collectionsHandler) getCollectionProfile(c *gin.Context) {
 // @Router /collections/{collectionId}/profile [post]
 func (handler *collectionsHandler) setCollectionProfile(c *gin.Context) {
 	var imageBase64 string
-	collectionIdString := c.Param("collectionId")
+	tokenId := c.Param("collectionId")
 
 	err := c.Bind(&imageBase64)
 	if err != nil {
@@ -340,13 +302,13 @@ func (handler *collectionsHandler) setCollectionProfile(c *gin.Context) {
 		return
 	}
 
-	collectionId, err := strconv.ParseUint(collectionIdString, 10, 16)
+	cacheInfo, err := collstats.GetCollection(tokenId)
 	if err != nil {
-		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
-	collection, err := storage.GetCollectionById(collectionId)
+	collection, err := storage.GetCollectionById(cacheInfo.CollectionId)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
@@ -364,7 +326,7 @@ func (handler *collectionsHandler) setCollectionProfile(c *gin.Context) {
 		return
 	}
 
-	err = services.SetCollectionProfileImage(collectionId, &imageBase64)
+	err = services.SetCollectionProfileImage(cacheInfo.CollectionId, &imageBase64)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
@@ -378,21 +340,21 @@ func (handler *collectionsHandler) setCollectionProfile(c *gin.Context) {
 // @Tags collections
 // @Accept json
 // @Produce json
-// @Param collectionId path uint64 true "collection id"
+// @Param collectionId path string true "collection id"
 // @Success 200 {object} string
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 404 {object} dtos.ApiResponse
 // @Router /collections/{collectionId}/cover [get]
 func (handler *collectionsHandler) getCollectionCover(c *gin.Context) {
-	collectionIdString := c.Param("collectionId")
+	tokenId := c.Param("collectionId")
 
-	collectionId, err := strconv.ParseUint(collectionIdString, 10, 16)
+	cacheInfo, err := collstats.GetCollection(tokenId)
 	if err != nil {
-		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
-	image, err := storage.GetCollectionCoverImageByCollectionId(collectionId)
+	image, err := storage.GetCollectionCoverImageByCollectionId(cacheInfo.CollectionId)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
@@ -415,7 +377,7 @@ func (handler *collectionsHandler) getCollectionCover(c *gin.Context) {
 // @Router /collections/{collectionId}/cover [post]
 func (handler *collectionsHandler) setCollectionCover(c *gin.Context) {
 	var imageBase64 string
-	collectionIdString := c.Param("collectionId")
+	tokenId := c.Param("collectionId")
 
 	err := c.Bind(&imageBase64)
 	if err != nil {
@@ -423,13 +385,13 @@ func (handler *collectionsHandler) setCollectionCover(c *gin.Context) {
 		return
 	}
 
-	collectionId, err := strconv.ParseUint(collectionIdString, 10, 16)
+	cacheInfo, err := collstats.GetCollection(tokenId)
 	if err != nil {
-		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
-	collection, err := storage.GetCollectionById(collectionId)
+	collection, err := storage.GetCollectionById(cacheInfo.CollectionId)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
@@ -447,7 +409,7 @@ func (handler *collectionsHandler) setCollectionCover(c *gin.Context) {
 		return
 	}
 
-	err = services.SetCollectionCoverImage(collectionId, &imageBase64)
+	err = services.SetCollectionCoverImage(cacheInfo.CollectionId, &imageBase64)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
