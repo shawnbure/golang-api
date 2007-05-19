@@ -1444,17 +1444,17 @@ paths:
       summary: Get available tokens
       tags:
       - tokens
-  /transactions/account/{accountId}/{offset}/{limit}:
+  /transactions/account/{userAddress}/{offset}/{limit}:
     get:
       consumes:
       - application/json
       description: Retrieves transactions for an account. Unordered.
       parameters:
-      - description: account id
+      - description: user wallet address
         in: path
-        name: accountId
+        name: userAddress
         required: true
-        type: integer
+        type: string
       - description: offset
         in: path
         name: offset
@@ -1495,7 +1495,7 @@ paths:
         in: path
         name: collectionId
         required: true
-        type: integer
+        type: string
       - description: offset
         in: path
         name: offset
@@ -1562,7 +1562,7 @@ paths:
       summary: Gets transaction list.
       tags:
       - transactions
-  /transactions/token/{tokenId}/{offset}/{limit}:
+  /transactions/token/{tokenId}/{nonce}/{offset}/{limit}:
     get:
       consumes:
       - application/json
@@ -1573,6 +1573,11 @@ paths:
         name: tokenId
         required: true
         type: string
+      - description: nonce
+        in: path
+        name: nonce
+        required: true
+        type: integer
       - description: offset
         in: path
         name: offset

@@ -1476,7 +1476,7 @@ var doc = `{
                 }
             }
         },
-        "/transactions/account/{accountId}/{offset}/{limit}": {
+        "/transactions/account/{userAddress}/{offset}/{limit}": {
             "get": {
                 "description": "Retrieves transactions for an account. Unordered.",
                 "consumes": [
@@ -1491,9 +1491,9 @@ var doc = `{
                 "summary": "Gets transaction for an account.",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "account id",
-                        "name": "accountId",
+                        "type": "string",
+                        "description": "user wallet address",
+                        "name": "userAddress",
                         "in": "path",
                         "required": true
                     },
@@ -1552,7 +1552,7 @@ var doc = `{
                 "summary": "Gets transaction for a collection.",
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "collection id",
                         "name": "collectionId",
                         "in": "path",
@@ -1652,7 +1652,7 @@ var doc = `{
                 }
             }
         },
-        "/transactions/token/{tokenId}/{offset}/{limit}": {
+        "/transactions/token/{tokenId}/{nonce}/{offset}/{limit}": {
             "get": {
                 "description": "Retrieves transactions for an token. Unordered.",
                 "consumes": [
@@ -1670,6 +1670,13 @@ var doc = `{
                         "type": "string",
                         "description": "token id",
                         "name": "tokenId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "nonce",
+                        "name": "nonce",
                         "in": "path",
                         "required": true
                     },
