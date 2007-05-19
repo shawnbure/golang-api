@@ -11,7 +11,7 @@ import (
 const (
 	baseCollectionsEndpoint = "/collections"
 	getCollectionsEndpoint = "/:offset/:limit"
-	getCollectionByNameEndpoint  = "/by-name/:name"
+	getCollectionByNameEndpoint  = "/by-name/:collectionName"
 )
 
 type collectionsHandler struct {
