@@ -16,6 +16,20 @@ func AddNewAsset(asset *data.Asset) error {
 	return nil
 }
 
+func UpdateAsset(asset *data.Asset) error {
+	database, err := GetDBOrError()
+	if err != nil {
+		return err
+	}
+
+	txCreate := database.Save(&asset)
+	if txCreate.Error != nil {
+		return txCreate.Error
+	}
+
+	return nil
+}
+
 func GetAssetById(id uint64) (*data.Asset, error) {
 	var asset data.Asset
 

@@ -20,6 +20,23 @@ func Test_AddNewAsset(t *testing.T) {
 	require.Equal(t, assetRead, asset)
 }
 
+func Test_UpdateAsset(t *testing.T) {
+	connectToDb(t)
+
+	asset := defaultAsset()
+	err := AddNewAsset(&asset)
+	require.Nil(t, err)
+
+	asset.TokenID = "new_token_id"
+	err = UpdateAsset(&asset)
+
+	var assetRead data.Asset
+	txRead := GetDB().Last(&assetRead)
+
+	require.Nil(t, txRead.Error)
+	require.Equal(t, assetRead, asset)
+}
+
 func Test_GetAssetById(t *testing.T) {
 	connectToDb(t)
 
