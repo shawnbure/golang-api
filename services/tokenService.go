@@ -329,12 +329,12 @@ func StartAuction(args StartAuctionArgs, blockchainProxy string, marketplaceAddr
 			MetadataLink:     metadataLink,
 			CreatedAt:        args.Timestamp,
 			Attributes:       GetAttributesFromMetadata(metadataLink),
-			TokenName:        args.TokenName,
 			ImageLink:        args.FirstLink,
-			Hash:             args.Hash,
 		}
 	}
 
+	token.Hash = args.Hash
+	token.TokenName = args.TokenName
 	token.Status = entities.Auction
 	token.PriceString = args.MinBid
 	token.PriceNominal = amountNominal
