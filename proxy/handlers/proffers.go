@@ -41,8 +41,8 @@ func NewProfferHandler(groupHandler *groupHandler) {
 // @Produce json
 // @Param tokenId path string true "token id"
 // @Param nonce path int true "token nonce"
-// @Param offset path int true "offset"
-// @Param limit path int true "limit"
+// @Param offset path uint true "offset"
+// @Param limit path uint true "limit"
 // @Success 200 {object} []entities.Proffer
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 404 {object} dtos.ApiResponse
@@ -59,13 +59,19 @@ func (handler *profferHandler) getProffersForToken(c *gin.Context) {
 		return
 	}
 
-	offset, err := strconv.Atoi(offsetStr)
+	offset, err := strconv.ParseUint(offsetStr, 10, 0)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
-	limit, err := strconv.Atoi(limitStr)
+	limit, err := strconv.ParseUint(limitStr, 10, 0)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	err = ValidateLimit(limit)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
@@ -77,7 +83,7 @@ func (handler *profferHandler) getProffersForToken(c *gin.Context) {
 		return
 	}
 
-	proffers, err := storage.GetProffersForTokenWithOffsetLimit(tokenCacheInfo.TokenDbId, offset, limit)
+	proffers, err := storage.GetProffersForTokenWithOffsetLimit(tokenCacheInfo.TokenDbId, int(offset), int(limit))
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
