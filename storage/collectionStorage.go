@@ -40,13 +40,13 @@ func UpdateCollection(collection *entities.Collection) error {
 	return nil
 }
 
-func UpdateCollectionProfileWhereId(collectionId uint64, url string) error {
+func UpdateCollectionProfileWhereId(collectionId uint64, link string) error {
 	database, err := GetDBOrError()
 	if err != nil {
 		return err
 	}
 
-	tx := database.Table("collections").Where("id = ?", collectionId).Update("profile_image_url", url)
+	tx := database.Table("collections").Where("id = ?", collectionId).Update("profile_image_link", link)
 	if tx.Error != nil {
 		return tx.Error
 	}
@@ -56,13 +56,13 @@ func UpdateCollectionProfileWhereId(collectionId uint64, url string) error {
 	return nil
 }
 
-func UpdateCollectionCoverWhereId(collectionId uint64, url string) error {
+func UpdateCollectionCoverWhereId(collectionId uint64, link string) error {
 	database, err := GetDBOrError()
 	if err != nil {
 		return err
 	}
 
-	tx := database.Table("collections").Where("id = ?", collectionId).Update("cover_image_url", url)
+	tx := database.Table("collections").Where("id = ?", collectionId).Update("cover_image_link", link)
 	if tx.Error != nil {
 		return tx.Error
 	}

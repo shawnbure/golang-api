@@ -1760,6 +1760,9 @@
                 "address": {
                     "type": "string"
                 },
+                "coverImageLink": {
+                    "type": "string"
+                },
                 "createdAt": {
                     "type": "integer"
                 },
@@ -1775,6 +1778,9 @@
                 "name": {
                     "type": "string"
                 },
+                "profileImageLink": {
+                    "type": "string"
+                },
                 "twitterLink": {
                     "type": "string"
                 },
@@ -1787,6 +1793,9 @@
             "type": "object",
             "properties": {
                 "contractAddress": {
+                    "type": "string"
+                },
+                "coverImageLink": {
                     "type": "string"
                 },
                 "createdAt": {
@@ -1821,6 +1830,9 @@
                 },
                 "priority": {
                     "type": "integer"
+                },
+                "profileImageLink": {
+                    "type": "string"
                 },
                 "telegramLink": {
                     "type": "string"

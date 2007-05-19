@@ -40,13 +40,13 @@ func UpdateAccount(account *entities.Account) error {
 	return nil
 }
 
-func UpdateAccountProfileWhereId(accountId uint64, url string) error {
+func UpdateAccountProfileWhereId(accountId uint64, link string) error {
 	database, err := GetDBOrError()
 	if err != nil {
 		return err
 	}
 
-	tx := database.Table("accounts").Where("id = ?", accountId).Update("profile_image_url", url)
+	tx := database.Table("accounts").Where("id = ?", accountId).Update("profile_image_link", link)
 	if tx.Error != nil {
 		return tx.Error
 	}
@@ -56,13 +56,13 @@ func UpdateAccountProfileWhereId(accountId uint64, url string) error {
 	return nil
 }
 
-func UpdateAccountCoverWhereId(accountId uint64, url string) error {
+func UpdateAccountCoverWhereId(accountId uint64, link string) error {
 	database, err := GetDBOrError()
 	if err != nil {
 		return err
 	}
 
-	tx := database.Table("accounts").Where("id = ?", accountId).Update("cover_image_url", url)
+	tx := database.Table("accounts").Where("id = ?", accountId).Update("cover_image_link", link)
 	if tx.Error != nil {
 		return tx.Error
 	}

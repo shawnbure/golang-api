@@ -1776,6 +1776,9 @@ var doc = `{
                 "address": {
                     "type": "string"
                 },
+                "coverImageLink": {
+                    "type": "string"
+                },
                 "createdAt": {
                     "type": "integer"
                 },
@@ -1791,6 +1794,9 @@ var doc = `{
                 "name": {
                     "type": "string"
                 },
+                "profileImageLink": {
+                    "type": "string"
+                },
                 "twitterLink": {
                     "type": "string"
                 },
@@ -1803,6 +1809,9 @@ var doc = `{
             "type": "object",
             "properties": {
                 "contractAddress": {
+                    "type": "string"
+                },
+                "coverImageLink": {
                     "type": "string"
                 },
                 "createdAt": {
@@ -1837,6 +1846,9 @@ var doc = `{
                 },
                 "priority": {
                     "type": "integer"
+                },
+                "profileImageLink": {
+                    "type": "string"
                 },
                 "telegramLink": {
                     "type": "string"
