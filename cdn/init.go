@@ -2,6 +2,7 @@ package cdn
 
 import (
 	"errors"
+	logger "github.com/ElrondNetwork/elrond-go-logger"
 	"sync"
 
 	"github.com/cloudinary/cloudinary-go"
@@ -9,8 +10,16 @@ import (
 )
 
 var (
-	once   sync.Once
-	cloudy *cloudinary.Cloudinary
+	once        sync.Once
+	cloudy      *cloudinary.Cloudinary
+	imgUploader ImageUploader
+
+	log = logger.GetOrCreate("cdn")
+)
+
+const (
+	local     = "local"
+	cloudyCDN = "cloudy"
 )
 
 func MakeCloudyCDN(cfg config.CDNConfig) {
@@ -34,4 +43,15 @@ func GetCloudyCDNOrErr() (*cloudinary.Cloudinary, error) {
 	}
 
 	return cloudy, nil
+}
+
+func makeUploader(cfg config.CDNConfig) (ImageUploader, error) {
+	switch cfg.Selector {
+	case local:
+		return NewLocalUploader(cfg), nil
+	case cloudyCDN:
+		return NewCloudyUploader(cfg)
+	default:
+		return nil, errors.New("unknown selector provided")
+	}
 }

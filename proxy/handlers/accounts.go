@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"bytes"
+	"fmt"
+	"github.com/erdsea/erdsea-api/cdn"
 	"net/http"
 	"strconv"
 
@@ -20,6 +22,9 @@ const (
 	accountCollectionsEndpoint = "/:walletAddress/collections/:offset/:limit"
 	accountProfileEndpoint     = "/:walletAddress/profile"
 	accountCoverEndpoint       = "/:walletAddress/cover"
+	imageEndpoint              = "/image/:filename"
+
+	contentTypeImage = "image/%s"
 )
 
 type accountsHandler struct {
@@ -44,6 +49,7 @@ func NewAccountsHandler(groupHandler *groupHandler, authCfg config.AuthConfig) {
 		{Method: http.MethodGet, Path: accountByIdEndpoint, HandlerFunc: handler.get},
 		{Method: http.MethodGet, Path: accountTokensEndpoint, HandlerFunc: handler.getAccountTokens},
 		{Method: http.MethodGet, Path: accountCollectionsEndpoint, HandlerFunc: handler.getAccountCollections},
+		{Method: http.MethodGet, Path: imageEndpoint, HandlerFunc: handler.getImage},
 	}
 	publicEndpointGroupHandler := EndpointGroupHandler{
 		Root:             baseAccountsEndpoint,
@@ -63,7 +69,7 @@ func NewAccountsHandler(groupHandler *groupHandler, authCfg config.AuthConfig) {
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 404 {object} dtos.ApiResponse
 // @Router /accounts/{walletAddress} [get]
-func (handler *accountsHandler) get(c *gin.Context) {
+func (h *accountsHandler) get(c *gin.Context) {
 	walletAddress := c.Param("walletAddress")
 
 	cacheInfo, err := services.GetOrAddAccountCacheInfo(walletAddress)
@@ -93,7 +99,7 @@ func (handler *accountsHandler) get(c *gin.Context) {
 // @Failure 401 {object} dtos.ApiResponse
 // @Failure 500 {object} dtos.ApiResponse
 // @Router /accounts/{walletAddress} [post]
-func (handler *accountsHandler) set(c *gin.Context) {
+func (h *accountsHandler) set(c *gin.Context) {
 	var request services.SetAccountRequest
 	walletAddress := c.Param("walletAddress")
 
@@ -137,7 +143,7 @@ func (handler *accountsHandler) set(c *gin.Context) {
 // @Failure 401 {object} dtos.ApiResponse
 // @Failure 500 {object} dtos.ApiResponse
 // @Router /accounts/{walletAddress}/profile [post]
-func (handler *accountsHandler) setAccountProfile(c *gin.Context) {
+func (h *accountsHandler) setAccountProfile(c *gin.Context) {
 	walletAddress := c.Param("walletAddress")
 
 	buf := new(bytes.Buffer)
@@ -181,7 +187,7 @@ func (handler *accountsHandler) setAccountProfile(c *gin.Context) {
 // @Failure 401 {object} dtos.ApiResponse
 // @Failure 500 {object} dtos.ApiResponse
 // @Router /accounts/{walletAddress}/cover [post]
-func (handler *accountsHandler) setAccountCover(c *gin.Context) {
+func (h *accountsHandler) setAccountCover(c *gin.Context) {
 	walletAddress := c.Param("walletAddress")
 
 	buf := new(bytes.Buffer)
@@ -225,7 +231,7 @@ func (handler *accountsHandler) setAccountCover(c *gin.Context) {
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 404 {object} dtos.ApiResponse
 // @Router /accounts/{walletAddress}/tokens/{offset}/{limit} [get]
-func (handler *accountsHandler) getAccountTokens(c *gin.Context) {
+func (h *accountsHandler) getAccountTokens(c *gin.Context) {
 	offsetStr := c.Param("offset")
 	limitStr := c.Param("limit")
 	walletAddress := c.Param("walletAddress")
@@ -276,7 +282,7 @@ func (handler *accountsHandler) getAccountTokens(c *gin.Context) {
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 404 {object} dtos.ApiResponse
 // @Router /accounts/{walletAddress}/collections/{offset}/{limit} [get]
-func (handler *accountsHandler) getAccountCollections(c *gin.Context) {
+func (h *accountsHandler) getAccountCollections(c *gin.Context) {
 	offsetStr := c.Param("offset")
 	limitStr := c.Param("limit")
 	walletAddress := c.Param("walletAddress")
@@ -312,4 +318,16 @@ func (handler *accountsHandler) getAccountCollections(c *gin.Context) {
 	}
 
 	dtos.JsonResponse(c, http.StatusOK, collections, "")
+}
+
+func (h *accountsHandler) getImage(c *gin.Context) {
+	filename := c.Param("filename")
+	p := "/home/boop/aesdre/marketplace/erdsea-api/cdn"
+	s := cdn.NewLocalUploader("something:/", p)
+	i, t, err := s.GetImage(filename)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		return
+	}
+	c.Data(http.StatusOK, fmt.Sprintf(contentTypeImage, t), i)
 }

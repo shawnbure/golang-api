@@ -100,6 +100,9 @@ type CDNConfig struct {
 	Name      string
 	ApiKey    string
 	ApiSecret string
+	Selector  string
+	BaseUrl   string
+	RootDir   string
 }
 
 func (d DatabaseConfig) Url() string {

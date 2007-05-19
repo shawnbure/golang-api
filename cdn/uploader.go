@@ -1,21 +1,53 @@
 package cdn
 
 import (
-	"bytes"
 	"context"
-	"encoding/base64"
-	"io"
-	"strings"
-
+	"github.com/cloudinary/cloudinary-go"
 	"github.com/cloudinary/cloudinary-go/api/uploader"
+	"github.com/erdsea/erdsea-api/config"
 )
 
-const (
-	base64Separator = ","
-)
+type cloudyUploader struct {
+	cloudy *cloudinary.Cloudinary
+}
+
+func NewCloudyUploader(cfg config.CDNConfig) (*cloudyUploader, error) {
+	newCloudy, err := cloudinary.NewFromParams(
+		cfg.Name,
+		cfg.ApiKey,
+		cfg.ApiSecret,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &cloudyUploader{
+		cloudy: newCloudy,
+	}, nil
+}
+
+func (cu *cloudyUploader) UploadBase64(ctx context.Context, b64Img, imgID string) (string, error) {
+	buf, err := Base64ToReader(b64Img)
+	if err != nil {
+		return "", err
+	}
+	res, err := cu.cloudy.Upload.Upload(ctx, buf, uploader.UploadParams{
+		PublicID:  imgID,
+		Overwrite: true,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	return res.SecureURL, nil
+}
+
+func (cu *cloudyUploader) GetImage(fileName string) ([]byte, string, error) {
+	return nil, "", nil
+}
 
 func UploadToCloudy(ctx context.Context, base64Img, imgID string) (*uploader.UploadResult, error) {
-	buf, err := base64ToReader(base64Img)
+	buf, err := Base64ToReader(base64Img)
 	if err != nil {
 		return nil, err
 	}
@@ -34,18 +66,4 @@ func UploadToCloudy(ctx context.Context, base64Img, imgID string) (*uploader.Upl
 	}
 
 	return res, nil
-}
-
-func base64ToReader(base64Img string) (io.Reader, error) {
-	suffixIdx := strings.Index(base64Img, base64Separator)
-
-	imgContent := base64Img[suffixIdx+1:]
-
-	decoded, err := base64.StdEncoding.DecodeString(imgContent)
-	if err != nil {
-		return nil, err
-	}
-
-	buffReader := bytes.NewReader(decoded)
-	return buffReader, nil
 }

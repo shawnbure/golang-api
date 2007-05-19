@@ -86,3 +86,6 @@
     Name = "cloud_name"
     ApiKey = "cdn_api_key"
     ApiSecret = "cdn_api_secret"
+    Selector = "local"
+    BaseUrl = "http://localhost:5000/image/"
+    RootDir = "/home/root/pics"
