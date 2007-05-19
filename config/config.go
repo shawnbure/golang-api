@@ -43,6 +43,7 @@ type DatabaseConfig struct {
 
 type AuthConfig struct {
 	JwtSecret     string
+	JwtIssuer     string
 	JwtKeySeedHex string
 	JwtExpiryMins int
 }

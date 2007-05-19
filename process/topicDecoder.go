@@ -2,9 +2,10 @@ package process
 
 import (
 	"encoding/hex"
-	data2 "github.com/ElrondNetwork/elrond-sdk-erdgo/data"
 	"math/big"
 	"strconv"
+
+	erdData "github.com/ElrondNetwork/elrond-sdk-erdgo/data"
 )
 
 func decodeU64FromTopic(bytes []byte) uint64 {
@@ -18,7 +19,7 @@ func decodeStringFromTopic(bytes []byte) string {
 }
 
 func decodeAddressFromTopic(bytes []byte) string {
-	address := data2.NewAddressFromBytes(bytes)
+	address := erdData.NewAddressFromBytes(bytes)
 	return address.AddressAsBech32String()
 }
 

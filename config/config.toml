@@ -36,6 +36,7 @@
 
 [Auth]
     JwtSecret = "bitcoin-to-1-milly"
+    JwtIssuer = "localhost:5000"
     JwtKeySeedHex = "d6592724167553acf9c8cba9a7dbc7f514efc757d7906546cecfdfc5d4c2e8d1"
     JwtExpiryMins = 15
 
