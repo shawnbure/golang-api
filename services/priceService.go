@@ -12,7 +12,6 @@ import (
 )
 
 const (
-	httpGetVerb                 = "GET"
 	EGLDPriceCacheKey           = "EGLDPrice"
 	binanceEGLDPriceUrl         = "https://api.binance.com/api/v3/ticker/price?symbol=EGLDUSDT"
 	binanceResponseExpirePeriod = 10 * time.Minute
@@ -61,7 +60,7 @@ func GetEGLDPrice() (float64, error) {
 
 func HttpGet(url string, castTarget interface{}) error {
 	client := &http.Client{}
-	req, err := http.NewRequest(httpGetVerb, url, nil)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return err
 	}
