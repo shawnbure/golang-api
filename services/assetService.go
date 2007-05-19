@@ -10,6 +10,14 @@ import (
 
 var log = logger.GetOrCreate("services")
 
+const (
+	minPriceUnit     = 1000
+	minPercentUnit   = 1000
+	numPriceDecimals = 15
+)
+
+var baseExp = big.NewInt(10)
+
 func ListAsset(args ListAssetArgs) {
 	priceNominal, err := GetPriceNominal(args.Price)
 	if err != nil {
@@ -162,35 +170,42 @@ func WithdrawAsset(args WithdrawAssetArgs) {
 	addNewTransaction(&transaction)
 }
 
-func addNewTransaction(tx *data.Transaction) {
-	err := storage.AddNewTransaction(tx)
-	if err != nil {
-		log.Debug("could not create new transaction", "err", err)
-		return
-	}
-}
-
 func GetPriceNominal(priceHex string) (float64, error) {
 	priceBigUint, success := big.NewInt(0).SetString(priceHex, 16)
 	if !success {
 		return 0, errors.New("could not parse price")
 	}
 
-	denominatorBigUint := big.NewInt(0).Exp(big.NewInt(10), big.NewInt(15), nil)
+	denominatorBigUint := big.NewInt(0).Exp(baseExp, big.NewInt(numPriceDecimals), nil)
 	priceNominalInt := big.NewInt(0).Div(priceBigUint, denominatorBigUint).Int64()
-	priceNominal := float64(priceNominalInt) / 1000
+	priceNominal := float64(priceNominalInt) / minPercentUnit
 	return priceNominal, nil
 }
 
-//TODO: Help english please? Denominated or denominal? Goland likes denominated.
 func GetPriceDenominated(price float64) *big.Int {
-	priceUint := int64(price * 1000)
-	denominatorBigUint := big.NewInt(0).Exp(big.NewInt(10), big.NewInt(15), nil)
+	priceInt := int64(price * minPriceUnit)
+	if priceInt <= 0 {
+		log.Error("price less than min threshold",
+			"min_threshold_multiplied", "1",
+			"min_threshold_nominal", 1/minPriceUnit,
+			"price_int", priceInt,
+		)
+	}
 
-	priceBigUint := big.NewInt(0).Mul(big.NewInt(priceUint), denominatorBigUint)
+	denominatorBigUint := big.NewInt(0).Exp(baseExp, big.NewInt(numPriceDecimals), nil)
+
+	priceBigUint := big.NewInt(0).Mul(big.NewInt(priceInt), denominatorBigUint)
 	return priceBigUint
 }
 
 func GetRoyaltiesPercentNominal(percent uint64) float64 {
-	return float64(percent) / 1000
+	return float64(percent) / minPercentUnit
+}
+
+func addNewTransaction(tx *data.Transaction) {
+	err := storage.AddNewTransaction(tx)
+	if err != nil {
+		log.Debug("could not create new transaction", "err", err)
+		return
+	}
 }

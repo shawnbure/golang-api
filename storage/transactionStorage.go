@@ -180,7 +180,11 @@ func GetMinBuyPriceForTransactionsWithCollectionId(collectionId uint64) (float64
 		return float64(0), err
 	}
 
-	txRead := database.Select("MIN(price_nominal)").Where("type = 'Buy' AND collection_id = ?", collectionId).Table("transactions").Find(&price)
+	txRead := database.Select("MIN(price_nominal)").
+		Where("type = ? AND collection_id = ?", data.BuyAsset, collectionId).
+		Table("transactions").
+		Find(&price)
+
 	if txRead.Error != nil {
 		return float64(0), txRead.Error
 	}
@@ -196,7 +200,11 @@ func GetSumBuyPriceForTransactionsWithCollectionId(collectionId uint64) (float64
 		return float64(0), err
 	}
 
-	txRead := database.Select("SUM(price_nominal)").Where("type = 'Buy' AND collection_id = ?", collectionId).Table("transactions").Find(&price)
+	txRead := database.Select("SUM(price_nominal)").
+		Where("type = ? AND collection_id = ?", data.BuyAsset, collectionId).
+		Table("transactions").
+		Find(&price)
+
 	if txRead.Error != nil {
 		return float64(0), txRead.Error
 	}

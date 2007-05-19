@@ -2,10 +2,11 @@ package formatter
 
 import (
 	"encoding/hex"
+	"math/big"
+
 	"github.com/ElrondNetwork/elrond-sdk-erdgo/data"
 	"github.com/erdsea/erdsea-api/config"
 	"github.com/erdsea/erdsea-api/services"
-	"math/big"
 )
 
 var (
