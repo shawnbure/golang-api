@@ -83,7 +83,6 @@ func Test_SellAsset(t *testing.T) {
 		BuyerAddress: "buyerAddress",
 		TokenId:      "tokenId",
 		Nonce:        13,
-		Uri:          "col",
 		Price:        "1000",
 		TxHash:       "txHashBuy",
 	}
@@ -142,7 +141,6 @@ func Test_WithdrawAsset(t *testing.T) {
 		OwnerAddress: "ownerAddress",
 		TokenId:      "tokenId",
 		Nonce:        13,
-		Uri:          "col",
 		Price:        "1000",
 		TxHash:       "txHashWithdraw",
 	}

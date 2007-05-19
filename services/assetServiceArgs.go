@@ -21,7 +21,6 @@ type BuyAssetArgs struct {
 	BuyerAddress string
 	TokenId      string
 	Nonce        uint64
-	Uri          string
 	Price        string
 	Timestamp    uint64
 	TxHash       string
@@ -31,7 +30,6 @@ type WithdrawAssetArgs struct {
 	OwnerAddress string
 	TokenId      string
 	Nonce        uint64
-	Uri          string
 	Price        string
 	Timestamp    uint64
 	TxHash       string

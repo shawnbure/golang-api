@@ -103,10 +103,9 @@ func (e *EventProcessor) onEventBuyNft(event data.Event) {
 		BuyerAddress: decodeAddressFromTopic(event.Topics[1]),
 		TokenId:      decodeStringFromTopic(event.Topics[2]),
 		Nonce:        decodeU64FromTopic(event.Topics[3]),
-		Uri:          decodeStringFromTopic(event.Topics[4]),
-		Price:        decodeBigUintFromTopic(event.Topics[5]),
-		Timestamp:    decodeU64FromTopic(event.Topics[6]),
-		TxHash:       decodeTxHashFromTopic(event.Topics[7]),
+		Price:        decodeBigUintFromTopic(event.Topics[4]),
+		Timestamp:    decodeU64FromTopic(event.Topics[5]),
+		TxHash:       decodeTxHashFromTopic(event.Topics[6]),
 	}
 
 	eventJson, err := json.Marshal(args)
@@ -122,10 +121,9 @@ func (e *EventProcessor) onEventWithdrawNft(event data.Event) {
 		OwnerAddress: decodeAddressFromTopic(event.Topics[0]),
 		TokenId:      decodeStringFromTopic(event.Topics[1]),
 		Nonce:        decodeU64FromTopic(event.Topics[2]),
-		Uri:          decodeStringFromTopic(event.Topics[3]),
-		Price:        decodeBigUintFromTopic(event.Topics[4]),
-		Timestamp:    decodeU64FromTopic(event.Topics[5]),
-		TxHash:       decodeTxHashFromTopic(event.Topics[6]),
+		Price:        decodeBigUintFromTopic(event.Topics[3]),
+		Timestamp:    decodeU64FromTopic(event.Topics[4]),
+		TxHash:       decodeTxHashFromTopic(event.Topics[5]),
 	}
 
 	eventJson, err := json.Marshal(args)
