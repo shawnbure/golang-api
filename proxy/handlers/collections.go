@@ -192,7 +192,7 @@ func (handler *collectionsHandler) getStatisticsForCollectionWithName(c *gin.Con
 // @Success 200 {object} data.Collection
 // @Failure 400 {object} data.ApiResponse
 // @Failure 401 {object} data.ApiResponse
-// @Failure 505 {object} data.ApiResponse
+// @Failure 500 {object} data.ApiResponse
 // @Router /collections/create [post]
 func (handler *collectionsHandler) create(c *gin.Context) {
 	var request services.CreateCollectionRequest

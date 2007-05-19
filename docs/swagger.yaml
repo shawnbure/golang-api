@@ -121,6 +121,15 @@ definitions:
         type: integer
     type: object
   handlers.GeneralSearchResponse:
+    properties:
+      accounts:
+        items:
+          $ref: '#/definitions/data.Account'
+        type: array
+      collections:
+        items:
+          $ref: '#/definitions/data.Collection'
+        type: array
     type: object
   handlers.createTokenRequest:
     properties:
@@ -777,8 +786,8 @@ paths:
           description: Unauthorized
           schema:
             $ref: '#/definitions/data.ApiResponse'
-        "505":
-          description: HTTP Version Not Supported
+        "500":
+          description: Internal Server Error
           schema:
             $ref: '#/definitions/data.ApiResponse'
       summary: Creates a collection.

@@ -499,8 +499,8 @@ var doc = `{
                             "$ref": "#/definitions/data.ApiResponse"
                         }
                     },
-                    "505": {
-                        "description": "HTTP Version Not Supported",
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/data.ApiResponse"
                         }
@@ -1629,7 +1629,21 @@ var doc = `{
             }
         },
         "handlers.GeneralSearchResponse": {
-            "type": "object"
+            "type": "object",
+            "properties": {
+                "accounts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/data.Account"
+                    }
+                },
+                "collections": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/data.Collection"
+                    }
+                }
+            }
         },
         "handlers.createTokenRequest": {
             "type": "object",

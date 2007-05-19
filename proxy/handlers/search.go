@@ -20,8 +20,8 @@ const (
 )
 
 type GeneralSearchResponse struct {
-	accounts    []data.Account
-	collections []data.Collection
+	Accounts    []data.Account
+	Collections []data.Collection
 }
 
 type searchHandler struct {
@@ -70,8 +70,8 @@ func (handler *searchHandler) search(c *gin.Context) {
 	}
 
 	response := GeneralSearchResponse{
-		accounts:    accounts,
-		collections: collections,
+		Accounts:    accounts,
+		Collections: collections,
 	}
 	data.JsonResponse(c, http.StatusOK, response, "")
 }
