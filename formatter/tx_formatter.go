@@ -10,10 +10,11 @@ import (
 )
 
 var (
-	listNftEndpointName         = "putNftForSale"
-	buyNftEndpointName          = "buyNft"
-	withdrawNftEndpointName     = "withdrawNft"
-	ESDTNFTTransferEndpointName = "ESDTNFTTransfer"
+	listNftEndpointName            = "putNftForSale"
+	buyNftEndpointName             = "buyNft"
+	withdrawNftEndpointName        = "withdrawNft"
+	ESDTNFTTransferEndpointName    = "ESDTNFTTransfer"
+	registerCollectionEndpointName = "registerCollection"
 )
 
 type TxFormatter struct {
@@ -95,6 +96,27 @@ func (f *TxFormatter) NewWithdrawNftTxTemplate(senderAddr string, tokenId string
 		SndAddr:   senderAddr,
 		GasPrice:  f.config.GasPrice,
 		GasLimit:  f.config.WithdrawNftGasLimit,
+		Data:      []byte(txData),
+		Signature: "",
+		ChainID:   f.config.ChainID,
+		Version:   1,
+		Options:   0,
+	}
+}
+
+func (f *TxFormatter) NewRegisterCollectionTxTemplate(senderAddr string, tokenId string, collectionName string, collectionDescription string) data.Transaction {
+	txData := registerCollectionEndpointName +
+		"@" + hex.EncodeToString([]byte(tokenId)) +
+		"@" + hex.EncodeToString([]byte(collectionName)) +
+		"@" + hex.EncodeToString([]byte(collectionDescription))
+
+	return data.Transaction{
+		Nonce:     0,
+		Value:     "4096",
+		RcvAddr:   f.config.MarketplaceAddress,
+		SndAddr:   senderAddr,
+		GasPrice:  f.config.GasPrice,
+		GasLimit:  f.config.RegisterCollectionGasLimit,
 		Data:      []byte(txData),
 		Signature: "",
 		ChainID:   f.config.ChainID,

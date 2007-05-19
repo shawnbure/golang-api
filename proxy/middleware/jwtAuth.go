@@ -1,10 +1,10 @@
 package middleware
 
 import (
+	"github.com/erdsea/erdsea-api/crypto"
 	"net/http"
 	"strings"
 
-	"github.com/erdsea/erdsea-api/crypto"
 	"github.com/erdsea/erdsea-api/data"
 	"github.com/gin-gonic/gin"
 )

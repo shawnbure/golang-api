@@ -23,14 +23,15 @@ type ConnectorApiConfig struct {
 }
 
 type BlockchainConfig struct {
-	GasPrice            uint64
-	ProxyUrl            string
-	ChainID             string
-	PemPath             string
-	MarketplaceAddress  string
-	ListNftGasLimit     uint64
-	BuyNftGasLimit      uint64
-	WithdrawNftGasLimit uint64
+	GasPrice                   uint64
+	ProxyUrl                   string
+	ChainID                    string
+	PemPath                    string
+	MarketplaceAddress         string
+	ListNftGasLimit            uint64
+	BuyNftGasLimit             uint64
+	WithdrawNftGasLimit        uint64
+	RegisterCollectionGasLimit uint64
 }
 
 type DatabaseConfig struct {
