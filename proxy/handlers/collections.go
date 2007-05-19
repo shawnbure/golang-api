@@ -79,6 +79,13 @@ func NewCollectionsHandler(groupHandler *groupHandler, authCfg config.AuthConfig
 func (handler *collectionsHandler) getList(c *gin.Context) {
 	offsetStr := c.Param("offset")
 	limitStr := c.Param("limit")
+	flags := c.QueryArray("flags")
+
+	err := services.CheckValidFlags(flags)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
 
 	offset, err := strconv.ParseUint(offsetStr, 10, 0)
 	if err != nil {
@@ -98,7 +105,7 @@ func (handler *collectionsHandler) getList(c *gin.Context) {
 		return
 	}
 
-	collections, err := storage.GetCollectionsWithOffsetLimit(int(offset), int(limit))
+	collections, err := storage.GetCollectionsWithOffsetLimit(int(offset), int(limit), flags)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return

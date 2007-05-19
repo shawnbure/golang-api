@@ -88,7 +88,7 @@ func Test_GetCollectionsSorted(t *testing.T) {
 
 	addCollectionsWithPriority()
 
-	colls, err := GetCollectionsWithOffsetLimit(0, 2)
+	colls, err := GetCollectionsWithOffsetLimit(0, 2, []string{})
 	require.Nil(t, err)
 	require.True(t, colls[0].Priority > colls[1].Priority)
 }

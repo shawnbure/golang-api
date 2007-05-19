@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"gorm.io/datatypes"
 	"strconv"
 	"strings"
 	"time"
@@ -19,6 +20,8 @@ import (
 
 const (
 	TokenIdMaxLen                  = 15
+	MaxFlags                       = 10
+	MaxFlagLen                     = 25
 	MaxNameLen                     = 20
 	MaxLinkLen                     = 100
 	MaxDescLen                     = 1000
@@ -30,6 +33,7 @@ const (
 	MintInfoSetNxKeyFormat         = "MintInfoNX:%s"
 	MintInfoSetNxExpirePeriod      = 6 * time.Second
 	MintInfoBucketName             = "MintInfo"
+	VerifiedFlag                   = "Verified"
 )
 
 type MintInfo struct {
@@ -38,24 +42,26 @@ type MintInfo struct {
 }
 
 type CreateCollectionRequest struct {
-	UserAddress   string `json:"userAddress"`
-	Name          string `json:"collectionName"`
-	TokenId       string `json:"tokenId"`
-	Description   string `json:"description"`
-	Website       string `json:"website"`
-	DiscordLink   string `json:"discordLink"`
-	TwitterLink   string `json:"twitterLink"`
-	InstagramLink string `json:"instagramLink"`
-	TelegramLink  string `json:"telegramLink"`
+	UserAddress   string   `json:"userAddress"`
+	Name          string   `json:"collectionName"`
+	TokenId       string   `json:"tokenId"`
+	Description   string   `json:"description"`
+	Website       string   `json:"website"`
+	DiscordLink   string   `json:"discordLink"`
+	TwitterLink   string   `json:"twitterLink"`
+	InstagramLink string   `json:"instagramLink"`
+	TelegramLink  string   `json:"telegramLink"`
+	Flags         []string `json:"flags"`
 }
 
 type UpdateCollectionRequest struct {
-	Description   string `json:"description"`
-	Website       string `json:"website"`
-	DiscordLink   string `json:"discordLink"`
-	TwitterLink   string `json:"twitterLink"`
-	InstagramLink string `json:"instagramLink"`
-	TelegramLink  string `json:"telegramLink"`
+	Description   string   `json:"description"`
+	Website       string   `json:"website"`
+	DiscordLink   string   `json:"discordLink"`
+	TwitterLink   string   `json:"twitterLink"`
+	InstagramLink string   `json:"instagramLink"`
+	TelegramLink  string   `json:"telegramLink"`
+	Flags         []string `json:"flags"`
 }
 
 type ProxyRegisteredNFTsResponse struct {
@@ -68,6 +74,11 @@ type ProxyRegisteredNFTsResponse struct {
 
 func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) (*entities.Collection, error) {
 	err := checkValidInputOnCreate(request)
+	if err != nil {
+		return nil, err
+	}
+
+	bytes, err := json.Marshal(request.Flags)
 	if err != nil {
 		return nil, err
 	}
@@ -106,6 +117,7 @@ func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) 
 		TwitterLink:   request.TwitterLink,
 		InstagramLink: request.InstagramLink,
 		TelegramLink:  request.TelegramLink,
+		Flags:         datatypes.JSON(bytes),
 		CreatorID:     account.ID,
 		CreatedAt:     uint64(time.Now().Unix()),
 	}
@@ -125,6 +137,14 @@ func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) 
 
 func UpdateCollection(collection *entities.Collection, request *UpdateCollectionRequest) error {
 	err := checkValidInputOnUpdate(request)
+	if err != nil {
+		return err
+	}
+
+	bytes, err := json.Marshal(request.Flags)
+	if err != nil {
+		return err
+	}
 
 	collection.Description = request.Description
 	collection.Website = request.Website
@@ -132,6 +152,7 @@ func UpdateCollection(collection *entities.Collection, request *UpdateCollection
 	collection.TwitterLink = request.TwitterLink
 	collection.InstagramLink = request.InstagramLink
 	collection.TelegramLink = request.TelegramLink
+	collection.Flags = bytes
 
 	err = storage.UpdateCollection(collection)
 	if err != nil {
@@ -345,6 +366,20 @@ func checkValidInputOnCreate(request *CreateCollectionRequest) error {
 		return errors.New("telegram link too long")
 	}
 
+	if len(request.Flags) > MaxFlags {
+		return errors.New("too many flags")
+	}
+
+	for _, flag := range request.Flags {
+		if len(flag) > MaxFlagLen {
+			return errors.New("flag too long")
+		}
+
+		if flag == VerifiedFlag {
+			return errors.New("cannot set verified flag")
+		}
+	}
+
 	return nil
 }
 
@@ -373,9 +408,43 @@ func checkValidInputOnUpdate(request *UpdateCollectionRequest) error {
 		return errors.New("telegram link too long")
 	}
 
+	if len(request.Flags) > MaxFlags {
+		return errors.New("too many flags")
+	}
+
+	for _, flag := range request.Flags {
+		if len(flag) > MaxFlagLen {
+			return errors.New("flag too long")
+		}
+
+		if flag == VerifiedFlag {
+			return errors.New("cannot set verified flag")
+		}
+	}
+
 	return nil
 }
 
 func standardizeName(s string) string {
 	return strings.Join(strings.Fields(strings.TrimSpace(s)), " ")
+}
+
+func CheckValidFlags(flags []string) error {
+	for _, flag := range flags {
+		if !hasOnlyLettersAndWhitespaces(flag) {
+			return errors.New("invalid flag")
+		}
+	}
+
+	return nil
+}
+
+func hasOnlyLettersAndWhitespaces(s string) bool {
+	for _, r := range s {
+		if (r < 'a' || r > 'z') && (r < 'A' || r > 'Z') && (r != ' ') {
+			return false
+		}
+	}
+
+	return true
 }
