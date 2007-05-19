@@ -1740,6 +1740,15 @@ var doc = `{
         "services.CollectionStatistics": {
             "type": "object",
             "properties": {
+                "attributes": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "integer"
+                        }
+                    }
+                },
                 "floorPrice": {
                     "type": "number"
                 },

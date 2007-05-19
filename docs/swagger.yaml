@@ -153,6 +153,12 @@ definitions:
     type: object
   services.CollectionStatistics:
     properties:
+      attributes:
+        additionalProperties:
+          additionalProperties:
+            type: integer
+          type: object
+        type: object
       floorPrice:
         type: number
       itemsCount:
