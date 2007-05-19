@@ -38,7 +38,7 @@ func NewTokensHandler(groupHandler *groupHandler, cfg config.BlockchainConfig) {
 		{Method: http.MethodGet, Path: offersForTokenIdAndNonceEndpoint, HandlerFunc: handler.getOffers},
 		{Method: http.MethodGet, Path: bidsForTokenIdAndNonceEndpoint, HandlerFunc: handler.getBids},
 		{Method: http.MethodGet, Path: tokenMetadataRelayEndpoint, HandlerFunc: handler.relayMetadataResponse},
-		{Method: http.MethodPost, Path: refreshTokenMetadataEndpoint, HandlerFunc: handler.refreshMetadata},
+		{Method: http.MethodPost, Path: refreshTokenMetadataEndpoint, HandlerFunc: handler.refresh},
 	}
 
 	endpointGroupHandler := EndpointGroupHandler{
@@ -264,7 +264,7 @@ func (handler *tokensHandler) relayMetadataResponse(c *gin.Context) {
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 404 {object} dtos.ApiResponse
 // @Router /tokens/{tokenId}/{nonce}/refresh [post]
-func (handler *tokensHandler) refreshMetadata(c *gin.Context) {
+func (handler *tokensHandler) refresh(c *gin.Context) {
 	tokenId := c.Param("tokenId")
 	nonceString := c.Param("nonce")
 
@@ -285,6 +285,10 @@ func (handler *tokensHandler) refreshMetadata(c *gin.Context) {
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
+	}
+
+	if token.CollectionID == 0 {
+		services.TryRefreshCollectionId(token)
 	}
 
 	metadata, err := services.RefreshMetadata(handler.blockchainConfig.ProxyUrl, token, jwtAddress, handler.blockchainConfig.MarketplaceAddress)

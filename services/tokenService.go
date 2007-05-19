@@ -722,6 +722,19 @@ func TryGetResponseCached(url string) (string, error) {
 	return metadataBytes, nil
 }
 
+func TryRefreshCollectionId(token *entities.Token) {
+	collection, err := storage.GetCollectionByTokenId(token.TokenID)
+	if err != nil {
+		return
+	}
+
+	token.CollectionID = collection.ID
+	err = storage.UpdateToken(token)
+	if err != nil {
+		log.Debug("could not update token", err)
+	}
+}
+
 func RefreshMetadata(blockchainProxy string, token *entities.Token, ownerAddress string, marketplaceAddress string) (datatypes.JSON, error) {
 	redisClient := cache.GetRedis()
 	redisContext := cache.GetContext()
