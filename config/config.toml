@@ -16,9 +16,12 @@
     ProxyUrl = "https://devnet-gateway.elrond.com"
 
 [Database]
+    Dialect = "postgres"
     Host = "localhost"
     Port = 5432
     DbName = "erdsea_db"
     User = "postgres"
     Password = "root"
     SslMode = "disable"
+    MaxOpenConns = 50
+    MaxIdleConns = 10
