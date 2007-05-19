@@ -55,7 +55,7 @@ func (f *TxFormatter) NewListNftTxTemplate(senderAddr string, tokenId string, no
 	tx := Transaction{
 		Nonce:     0,
 		Value:     "0",
-		RcvAddr:   f.config.MarketplaceAddress,
+		RcvAddr:   senderAddr,
 		SndAddr:   senderAddr,
 		GasPrice:  f.config.GasPrice,
 		GasLimit:  f.config.ListNftGasLimit,
@@ -69,16 +69,14 @@ func (f *TxFormatter) NewListNftTxTemplate(senderAddr string, tokenId string, no
 	return &tx, nil
 }
 
-func (f *TxFormatter) NewBuyNftTxTemplate(senderAddr string, tokenId string, nonce uint64, price float64) Transaction {
-	priceDecStr := services.GetPriceDenominated(price).Text(10)
-
+func (f *TxFormatter) NewBuyNftTxTemplate(senderAddr string, tokenId string, nonce uint64, price string) Transaction {
 	txData := buyNftEndpointName +
 		"@" + hex.EncodeToString([]byte(tokenId)) +
 		"@" + hex.EncodeToString(big.NewInt(int64(nonce)).Bytes())
 
 	return Transaction{
 		Nonce:     0,
-		Value:     priceDecStr,
+		Value:     price,
 		RcvAddr:   f.config.MarketplaceAddress,
 		SndAddr:   senderAddr,
 		GasPrice:  f.config.GasPrice,

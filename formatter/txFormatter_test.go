@@ -42,11 +42,11 @@ func TestTxFormatter_NewBuyNftTxTemplate(t *testing.T) {
 		"erd17s2pz8qrds6ake3qwheezgy48wzf7dr5nhdpuu2h4rr4mt5rt9ussj7xzh",
 		"LKMEX-85ea13",
 		2,
-		float64(4096),
+		"4096",
 	)
 
 	require.True(t, strings.EqualFold(tx.Data, "buyNft@4C4B4D45582D383565613133@02"))
-	require.Equal(t, tx.Value, "4096000000000000000000")
+	require.Equal(t, tx.Value, "4096")
 }
 
 func TestTxFormatter_NewWithdrawNftTxTemplate(t *testing.T) {

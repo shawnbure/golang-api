@@ -105,14 +105,7 @@ func (handler *txTemplateHandler) getBuyNftTemplate(c *gin.Context) {
 		return
 	}
 
-	price, err := strconv.ParseFloat(priceStr, 64)
-	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
-		return
-	}
-
-	template := handler.txFormatter.NewBuyNftTxTemplate(userAddress, tokenId, nonce, price)
-
+	template := handler.txFormatter.NewBuyNftTxTemplate(userAddress, tokenId, nonce, priceStr)
 	data.JsonResponse(c, http.StatusOK, template, "")
 }
 
