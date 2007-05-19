@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/erdsea/erdsea-api/cdn"
 	"net/http"
 	"os"
 	"os/signal"
@@ -109,8 +110,7 @@ func startProxy(ctx *cli.Context) error {
 		return err
 	}
 
-	cache.InitCacher(cfg.Cache)
-	storage.Connect(cfg.Database)
+	establishConnections(cfg)
 
 	api, err := proxy.NewWebServer(cfg)
 	if err != nil {
@@ -131,6 +131,12 @@ func startProxy(ctx *cli.Context) error {
 	cache.CloseCacher()
 
 	return nil
+}
+
+func establishConnections(cfg *config.GeneralConfig) {
+	cache.InitCacher(cfg.Cache)
+	storage.Connect(cfg.Database)
+	cdn.MakeCloudyCDN(cfg.CDN)
 }
 
 func initLogger(ctx *cli.Context) (logging.FileLogger, error) {
