@@ -17,6 +17,11 @@ type ExtendedTokenDto struct {
 	CollectionStats CollectionStatistics `json:"collectionStats"`
 }
 
+type OwnedTokenDto struct {
+	entities.Token      `json:"token"`
+	CollectionCacheInfo `json:"collection"`
+}
+
 func CreateExtendedTokenDto(
 	token entities.Token,
 	collection entities.Collection,
