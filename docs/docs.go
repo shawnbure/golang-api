@@ -402,7 +402,7 @@ var doc = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/entities.Token"
+                                "$ref": "#/definitions/dtos.OwnedTokenDto"
                             }
                         }
                     },
@@ -1000,6 +1000,44 @@ var doc = `{
                 }
             }
         },
+        "/deposits/{userAddress}": {
+            "get": {
+                "description": "Retrieves deposit amount for an address.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "deposits"
+                ],
+                "summary": "Gets the deposit (EGLD) located in the marketplace for an address.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "userAddress",
+                        "name": "userAddress",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/egld_price": {
             "get": {
                 "description": "Retrieves EGLD price in dollars. Price taken from Binance. Cached for 15 minutes.",
@@ -1022,6 +1060,150 @@ var doc = `{
                     },
                     "500": {
                         "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/proffers/{tokenId}/{nonce}/{offset}/{limit}": {
+            "get": {
+                "description": "Retrieves proffers for a token (identified by tokenId and nonce)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "proffers"
+                ],
+                "summary": "Get proffers (offers and bids) for token",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "token id",
+                        "name": "tokenId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "token nonce",
+                        "name": "nonce",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "offset",
+                        "name": "offset",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "limit",
+                        "name": "limit",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entities.Proffer"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/royalties/last/{userAddress}": {
+            "get": {
+                "description": "Gets last withdrawal epoch for a creator. Next withdraw needs to be calculated as (current_epoch - this_epoch) %30",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "royalties"
+                ],
+                "summary": "Gets last withdrawal epoch (EGLD) for an address.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "userAddress",
+                        "name": "userAddress",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/royalties/{userAddress}": {
+            "get": {
+                "description": "Retrieves royalties amount for an address.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "royalties"
+                ],
+                "summary": "Gets the royalties (EGLD) located in the marketplace for an address.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "userAddress",
+                        "name": "userAddress",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/dtos.ApiResponse"
                         }
@@ -1477,6 +1659,78 @@ var doc = `{
                 }
             }
         },
+        "/tx-template/accept-offer/{userAddress}/{tokenId}/{nonce}/{offerorAddress}/{amount}": {
+            "get": {
+                "description": "Retrieves tx-template for accept offer transaction.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tx-template"
+                ],
+                "summary": "Accepts offer for an NFT - tx template.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "user address",
+                        "name": "userAddress",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "token id",
+                        "name": "tokenId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "nonce",
+                        "name": "nonce",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "offerorAddress",
+                        "name": "offerorAddress",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "number",
+                        "description": "amount",
+                        "name": "amount",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/formatter.Transaction"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/tx-template/buy-nft/{userAddress}/{tokenId}/{nonce}/{price}": {
             "get": {
                 "description": "Retrieves tx-template for NFT buy. Only account nonce and signature must be added afterwards.",
@@ -1536,6 +1790,156 @@ var doc = `{
                 }
             }
         },
+        "/tx-template/cancel-offer/{userAddress}/{tokenId}/{nonce}/{amount}": {
+            "get": {
+                "description": "Retrieves tx-template for cancel offer transaction.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tx-template"
+                ],
+                "summary": "Cancels offer for an NFT - tx template.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "user address",
+                        "name": "userAddress",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "token id",
+                        "name": "tokenId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "nonce",
+                        "name": "nonce",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "number",
+                        "description": "amount",
+                        "name": "amount",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/formatter.Transaction"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/tx-template/deposit/{userAddress}/{amount}": {
+            "get": {
+                "description": "Retrieves tx-template for deposit transaction.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tx-template"
+                ],
+                "summary": "Deposit EGLD template.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "user address",
+                        "name": "userAddress",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "amount",
+                        "name": "amount",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/formatter.Transaction"
+                        }
+                    }
+                }
+            }
+        },
+        "/tx-template/end-auction/{userAddress}/{tokenId}/{nonce}": {
+            "get": {
+                "description": "Retrieves tx-template for end auction transaction.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tx-template"
+                ],
+                "summary": "End auction for an NFT - tx template.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "user address",
+                        "name": "userAddress",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "token id",
+                        "name": "tokenId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "nonce",
+                        "name": "nonce",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/formatter.Transaction"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/tx-template/list-nft/{userAddress}/{tokenId}/{nonce}/{price}": {
             "get": {
                 "description": "Retrieves tx-template for NFT list. Only account nonce and signature must be added afterwards.",
@@ -1575,6 +1979,78 @@ var doc = `{
                         "type": "number",
                         "description": "price",
                         "name": "price",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/formatter.Transaction"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/tx-template/make-offer/{userAddress}/{tokenId}/{nonce}/{amount}/{expire}": {
+            "get": {
+                "description": "Retrieves tx-template for make offer transaction.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tx-template"
+                ],
+                "summary": "Make offer for an NFT - tx template.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "user address",
+                        "name": "userAddress",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "token id",
+                        "name": "tokenId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "nonce",
+                        "name": "nonce",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "number",
+                        "description": "amount",
+                        "name": "amount",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "nonce",
+                        "name": "expire",
                         "in": "path",
                         "required": true
                     }
@@ -1653,6 +2129,183 @@ var doc = `{
                 }
             }
         },
+        "/tx-template/place-bid/{userAddress}/{tokenId}/{nonce}/{payment}/{bidAmount}": {
+            "get": {
+                "description": "Retrieves tx-template for place bid transaction.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tx-template"
+                ],
+                "summary": "Start auction for an NFT - tx template.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "user address",
+                        "name": "userAddress",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "token id",
+                        "name": "tokenId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "nonce",
+                        "name": "nonce",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "number",
+                        "description": "payment",
+                        "name": "payment",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "number",
+                        "description": "bidAmount",
+                        "name": "bidAmount",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/formatter.Transaction"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/tx-template/start-auction/{userAddress}/{tokenId}/{nonce}/{minBid}/{startTime}/{deadline}": {
+            "get": {
+                "description": "Retrieves tx-template for start auction transaction.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tx-template"
+                ],
+                "summary": "Start auction for an NFT - tx template.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "user address",
+                        "name": "userAddress",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "token id",
+                        "name": "tokenId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "nonce",
+                        "name": "nonce",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "number",
+                        "description": "minBid",
+                        "name": "minBid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "nonce",
+                        "name": "startTime",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "nonce",
+                        "name": "deadline",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/formatter.Transaction"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/tx-template/withdraw-creator-royalties/{userAddress}": {
+            "get": {
+                "description": "Retrieves tx-template for withdraw creator royalties transaction.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tx-template"
+                ],
+                "summary": "Withdraw Creator Royalties EGLD template.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "user address",
+                        "name": "userAddress",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/formatter.Transaction"
+                        }
+                    }
+                }
+            }
+        },
         "/tx-template/withdraw-nft/{userAddress}/{tokenId}/{nonce}": {
             "get": {
                 "description": "Retrieves tx-template for NFT withdraw. Only account nonce and signature must be added afterwards.",
@@ -1700,6 +2353,38 @@ var doc = `{
                         "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/tx-template/withdraw/{userAddress}": {
+            "get": {
+                "description": "Retrieves tx-template for withdraw transaction.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tx-template"
+                ],
+                "summary": "Withdraw EGLD template.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "user address",
+                        "name": "userAddress",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/formatter.Transaction"
                         }
                     }
                 }
@@ -1767,6 +2452,77 @@ var doc = `{
                 },
                 "statistics": {
                     "$ref": "#/definitions/dtos.CollectionStatistics"
+                }
+            }
+        },
+        "dtos.OwnedTokenDto": {
+            "type": "object",
+            "properties": {
+                "attributes": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "auctionDeadline": {
+                    "type": "integer"
+                },
+                "auctionStartTime": {
+                    "type": "integer"
+                },
+                "collectionFlags": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "collectionId": {
+                    "type": "integer"
+                },
+                "collectionName": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "integer"
+                },
+                "hash": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "imageLink": {
+                    "type": "string"
+                },
+                "lastBuyPriceNominal": {
+                    "type": "number"
+                },
+                "metadataLink": {
+                    "type": "string"
+                },
+                "nonce": {
+                    "type": "integer"
+                },
+                "ownerId": {
+                    "type": "integer"
+                },
+                "priceNominal": {
+                    "type": "number"
+                },
+                "priceString": {
+                    "type": "string"
+                },
+                "royaltiesPercent": {
+                    "type": "number"
+                },
+                "state": {
+                    "type": "string"
+                },
+                "tokenId": {
+                    "type": "string"
+                },
+                "tokenName": {
+                    "type": "string"
                 }
             }
         },
@@ -1863,6 +2619,38 @@ var doc = `{
                     "type": "string"
                 },
                 "website": {
+                    "type": "string"
+                }
+            }
+        },
+        "entities.Proffer": {
+            "type": "object",
+            "properties": {
+                "amountNominal": {
+                    "type": "number"
+                },
+                "amountString": {
+                    "type": "string"
+                },
+                "expire": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "offerorId": {
+                    "type": "integer"
+                },
+                "timestamp": {
+                    "type": "integer"
+                },
+                "tokenId": {
+                    "type": "integer"
+                },
+                "txHash": {
+                    "type": "string"
+                },
+                "type": {
                     "type": "string"
                 }
             }

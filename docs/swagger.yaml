@@ -40,6 +40,53 @@ definitions:
       statistics:
         $ref: '#/definitions/dtos.CollectionStatistics'
     type: object
+  dtos.OwnedTokenDto:
+    properties:
+      attributes:
+        items:
+          type: integer
+        type: array
+      auctionDeadline:
+        type: integer
+      auctionStartTime:
+        type: integer
+      collectionFlags:
+        items:
+          type: integer
+        type: array
+      collectionId:
+        type: integer
+      collectionName:
+        type: string
+      createdAt:
+        type: integer
+      hash:
+        type: string
+      id:
+        type: integer
+      imageLink:
+        type: string
+      lastBuyPriceNominal:
+        type: number
+      metadataLink:
+        type: string
+      nonce:
+        type: integer
+      ownerId:
+        type: integer
+      priceNominal:
+        type: number
+      priceString:
+        type: string
+      royaltiesPercent:
+        type: number
+      state:
+        type: string
+      tokenId:
+        type: string
+      tokenName:
+        type: string
+    type: object
   entities.Account:
     properties:
       address:
@@ -102,6 +149,27 @@ definitions:
       twitterLink:
         type: string
       website:
+        type: string
+    type: object
+  entities.Proffer:
+    properties:
+      amountNominal:
+        type: number
+      amountString:
+        type: string
+      expire:
+        type: integer
+      id:
+        type: integer
+      offerorId:
+        type: integer
+      timestamp:
+        type: integer
+      tokenId:
+        type: integer
+      txHash:
+        type: string
+      type:
         type: string
     type: object
   entities.Token:
@@ -563,7 +631,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/entities.Token'
+              $ref: '#/definitions/dtos.OwnedTokenDto'
             type: array
         "400":
           description: Bad Request
@@ -996,6 +1064,31 @@ paths:
       summary: Get collection rankings
       tags:
       - collections
+  /deposits/{userAddress}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves deposit amount for an address.
+      parameters:
+      - description: userAddress
+        in: path
+        name: userAddress
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: number
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: Gets the deposit (EGLD) located in the marketplace for an address.
+      tags:
+      - deposits
   /egld_price:
     get:
       consumes:
@@ -1016,6 +1109,103 @@ paths:
       summary: Gets EGLD price in dollars.
       tags:
       - egld_price
+  /proffers/{tokenId}/{nonce}/{offset}/{limit}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves proffers for a token (identified by tokenId and nonce)
+      parameters:
+      - description: token id
+        in: path
+        name: tokenId
+        required: true
+        type: string
+      - description: token nonce
+        in: path
+        name: nonce
+        required: true
+        type: integer
+      - description: offset
+        in: path
+        name: offset
+        required: true
+        type: integer
+      - description: limit
+        in: path
+        name: limit
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entities.Proffer'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: Get proffers (offers and bids) for token
+      tags:
+      - proffers
+  /royalties/{userAddress}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves royalties amount for an address.
+      parameters:
+      - description: userAddress
+        in: path
+        name: userAddress
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: number
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: Gets the royalties (EGLD) located in the marketplace for an address.
+      tags:
+      - royalties
+  /royalties/last/{userAddress}:
+    get:
+      consumes:
+      - application/json
+      description: Gets last withdrawal epoch for a creator. Next withdraw needs to
+        be calculated as (current_epoch - this_epoch) %30
+      parameters:
+      - description: userAddress
+        in: path
+        name: userAddress
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: number
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: Gets last withdrawal epoch (EGLD) for an address.
+      tags:
+      - royalties
   /search/{searchString}:
     get:
       consumes:
@@ -1316,6 +1506,55 @@ paths:
       summary: Gets transaction for an token.
       tags:
       - transactions
+  /tx-template/accept-offer/{userAddress}/{tokenId}/{nonce}/{offerorAddress}/{amount}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves tx-template for accept offer transaction.
+      parameters:
+      - description: user address
+        in: path
+        name: userAddress
+        required: true
+        type: integer
+      - description: token id
+        in: path
+        name: tokenId
+        required: true
+        type: integer
+      - description: nonce
+        in: path
+        name: nonce
+        required: true
+        type: integer
+      - description: offerorAddress
+        in: path
+        name: offerorAddress
+        required: true
+        type: string
+      - description: amount
+        in: path
+        name: amount
+        required: true
+        type: number
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/formatter.Transaction'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: Accepts offer for an NFT - tx template.
+      tags:
+      - tx-template
   /tx-template/buy-nft/{userAddress}/{tokenId}/{nonce}/{price}:
     get:
       consumes:
@@ -1357,6 +1596,107 @@ paths:
       summary: Gets tx-template for NFT buy.
       tags:
       - tx-template
+  /tx-template/cancel-offer/{userAddress}/{tokenId}/{nonce}/{amount}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves tx-template for cancel offer transaction.
+      parameters:
+      - description: user address
+        in: path
+        name: userAddress
+        required: true
+        type: integer
+      - description: token id
+        in: path
+        name: tokenId
+        required: true
+        type: integer
+      - description: nonce
+        in: path
+        name: nonce
+        required: true
+        type: integer
+      - description: amount
+        in: path
+        name: amount
+        required: true
+        type: number
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/formatter.Transaction'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: Cancels offer for an NFT - tx template.
+      tags:
+      - tx-template
+  /tx-template/deposit/{userAddress}/{amount}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves tx-template for deposit transaction.
+      parameters:
+      - description: user address
+        in: path
+        name: userAddress
+        required: true
+        type: integer
+      - description: amount
+        in: path
+        name: amount
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/formatter.Transaction'
+      summary: Deposit EGLD template.
+      tags:
+      - tx-template
+  /tx-template/end-auction/{userAddress}/{tokenId}/{nonce}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves tx-template for end auction transaction.
+      parameters:
+      - description: user address
+        in: path
+        name: userAddress
+        required: true
+        type: integer
+      - description: token id
+        in: path
+        name: tokenId
+        required: true
+        type: integer
+      - description: nonce
+        in: path
+        name: nonce
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/formatter.Transaction'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: End auction for an NFT - tx template.
+      tags:
+      - tx-template
   /tx-template/list-nft/{userAddress}/{tokenId}/{nonce}/{price}:
     get:
       consumes:
@@ -1395,7 +1735,56 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/dtos.ApiResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
       summary: Gets tx-template for NFT list.
+      tags:
+      - tx-template
+  /tx-template/make-offer/{userAddress}/{tokenId}/{nonce}/{amount}/{expire}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves tx-template for make offer transaction.
+      parameters:
+      - description: user address
+        in: path
+        name: userAddress
+        required: true
+        type: integer
+      - description: token id
+        in: path
+        name: tokenId
+        required: true
+        type: integer
+      - description: nonce
+        in: path
+        name: nonce
+        required: true
+        type: integer
+      - description: amount
+        in: path
+        name: amount
+        required: true
+        type: number
+      - description: nonce
+        in: path
+        name: expire
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/formatter.Transaction'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: Make offer for an NFT - tx template.
       tags:
       - tx-template
   /tx-template/mint-tokens/{userAddress}/{collectionId}/{numberOfTokens}:
@@ -1438,6 +1827,126 @@ paths:
       summary: Gets tx-template for mint tokens.
       tags:
       - tx-template
+  /tx-template/place-bid/{userAddress}/{tokenId}/{nonce}/{payment}/{bidAmount}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves tx-template for place bid transaction.
+      parameters:
+      - description: user address
+        in: path
+        name: userAddress
+        required: true
+        type: integer
+      - description: token id
+        in: path
+        name: tokenId
+        required: true
+        type: integer
+      - description: nonce
+        in: path
+        name: nonce
+        required: true
+        type: integer
+      - description: payment
+        in: path
+        name: payment
+        required: true
+        type: number
+      - description: bidAmount
+        in: path
+        name: bidAmount
+        required: true
+        type: number
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/formatter.Transaction'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: Start auction for an NFT - tx template.
+      tags:
+      - tx-template
+  /tx-template/start-auction/{userAddress}/{tokenId}/{nonce}/{minBid}/{startTime}/{deadline}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves tx-template for start auction transaction.
+      parameters:
+      - description: user address
+        in: path
+        name: userAddress
+        required: true
+        type: integer
+      - description: token id
+        in: path
+        name: tokenId
+        required: true
+        type: integer
+      - description: nonce
+        in: path
+        name: nonce
+        required: true
+        type: integer
+      - description: minBid
+        in: path
+        name: minBid
+        required: true
+        type: number
+      - description: nonce
+        in: path
+        name: startTime
+        required: true
+        type: integer
+      - description: nonce
+        in: path
+        name: deadline
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/formatter.Transaction'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: Start auction for an NFT - tx template.
+      tags:
+      - tx-template
+  /tx-template/withdraw-creator-royalties/{userAddress}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves tx-template for withdraw creator royalties transaction.
+      parameters:
+      - description: user address
+        in: path
+        name: userAddress
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/formatter.Transaction'
+      summary: Withdraw Creator Royalties EGLD template.
+      tags:
+      - tx-template
   /tx-template/withdraw-nft/{userAddress}/{tokenId}/{nonce}:
     get:
       consumes:
@@ -1472,6 +1981,27 @@ paths:
           schema:
             $ref: '#/definitions/dtos.ApiResponse'
       summary: Gets tx-template for NFT withdraw.
+      tags:
+      - tx-template
+  /tx-template/withdraw/{userAddress}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves tx-template for withdraw transaction.
+      parameters:
+      - description: user address
+        in: path
+        name: userAddress
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/formatter.Transaction'
+      summary: Withdraw EGLD template.
       tags:
       - tx-template
 swagger: "2.0"

@@ -1,47 +1,81 @@
 package services
 
 import (
-	"github.com/erdsea/erdsea-api/data/entities"
-	"github.com/erdsea/erdsea-api/storage"
+	"encoding/hex"
+	"fmt"
+	"math/big"
+	"time"
+
+	"github.com/erdsea/erdsea-api/cache"
+	"github.com/erdsea/erdsea-api/interaction"
 )
 
-func UpdateDeposit(args DepositUpdateArgs) (*entities.Deposit, error){
-	amountNominal, err := GetPriceNominal(args.Amount)
+var (
+	GetDepositView             = "getEgldDeposit"
+	DepositLocalCacheKeyFormat = "Deposit:%s"
+	DepositExpirePeriod        = 15 * time.Minute
+)
+
+func UpdateDeposit(args DepositUpdateArgs) error {
+	localCacher := cache.GetLocalCacher()
+	key := fmt.Sprintf(DepositLocalCacheKeyFormat, args.Owner)
+
+	if len(args.Amount) == 0 {
+		args.Amount = "00"
+	}
+
+	depositNominal, err := GetPriceNominal(args.Amount)
 	if err != nil {
-		log.Debug("could not parse price", "err", err)
-		return nil, err
+		log.Debug("could not get price nominal")
+		return nil
 	}
 
-	accountID := uint64(0)
-	accountCacheInfo, err := GetOrAddAccountCacheInfo(args.Owner)
-	if err != nil {
-		log.Debug("could not get or add acc cache info", err)
-
-		account, innerErr := GetOrCreateAccount(args.Owner)
-		if innerErr != nil {
-			log.Debug("could not get or add acc", err)
-		} else {
-			accountID = account.ID
-		}
-	} else {
-		accountID = accountCacheInfo.AccountId
+	errSet := localCacher.SetWithTTLSync(key, depositNominal, DepositExpirePeriod)
+	if errSet != nil {
+		log.Debug("could not set cache", errSet)
+		return nil
 	}
 
-	deposit := entities.Deposit{
-		AmountNominal: amountNominal,
-		AmountString:  args.Amount,
-		OwnerId:       accountID,
-	}
-
-	err = storage.UpdateDepositByOwnerId(&deposit, deposit.OwnerId)
-	if err != nil {
-		innerErr := storage.AddDeposit(&deposit)
-		if innerErr != nil {
-			log.Debug("could not update or add deposit", innerErr)
-			return nil, err
-		}
-	}
-
-	return &deposit, nil
+	return nil
 }
 
+func GetDeposit(marketplaceAddress string, address string) (float64, error) {
+	localCacher := cache.GetLocalCacher()
+	key := fmt.Sprintf(DepositLocalCacheKeyFormat, address)
+
+	priceVal, errRead := localCacher.Get(key)
+	if errRead == nil {
+		return priceVal.(float64), nil
+	}
+
+	deposit, err := DoGetDepositVmQuery(marketplaceAddress, address)
+	if err != nil {
+		return 0, err
+	}
+
+	depositNominal, err := GetPriceNominal(deposit)
+	if err != nil {
+		log.Debug("could not get price nominal")
+		return 0, err
+	}
+
+	errSet := localCacher.SetWithTTLSync(key, depositNominal, DepositExpirePeriod)
+	if errSet != nil {
+		log.Debug("could not cache result", errSet)
+	}
+
+	return depositNominal, nil
+}
+
+func DoGetDepositVmQuery(marketplaceAddress string, address string) (string, error) {
+	bi := interaction.GetBlockchainInteractor()
+
+	result, err := bi.DoVmQuery(marketplaceAddress, GetDepositView, []string{address})
+	if err != nil || len(result) == 0{
+		return "", nil
+	}
+
+	deposit := big.NewInt(0).SetBytes(result[0])
+	depositBytes := deposit.Bytes()
+	return hex.EncodeToString(depositBytes), nil
+}

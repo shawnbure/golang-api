@@ -1,6 +1,7 @@
 package services
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -35,6 +36,16 @@ type AvailableToken struct {
 	} `json:"token"`
 }
 
+type NftProxyResponse struct {
+	Data struct {
+		TokenData struct {
+			Uris []string `json:"uris"`
+		} `json:"tokenData"`
+	} `json:"data"`
+	Error string `json:"error"`
+	Code  string `json:"code"`
+}
+
 type AvailableTokensResponse struct {
 	Tokens map[string]AvailableToken `json:"tokens"`
 }
@@ -52,7 +63,8 @@ const (
 
 	maxTokenLinkResponseSize = 1024
 
-	ZeroAddress = "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu"
+	ZeroAddress           = "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu"
+	NftProxyRequestFormat = "%s/address/%s/nft/%s/nonce/%d"
 )
 
 var (
@@ -63,7 +75,7 @@ var (
 	log = logger.GetOrCreate("services")
 )
 
-func ListToken(args ListTokenArgs) {
+func ListToken(args ListTokenArgs, blockchainProxy string, marketplaceAddress string) {
 	priceNominal, err := GetPriceNominal(args.Price)
 	if err != nil {
 		log.Debug("could not parse price", "err", err)
@@ -84,11 +96,20 @@ func ListToken(args ListTokenArgs) {
 
 	token, err := storage.GetTokenByTokenIdAndNonce(args.TokenId, args.Nonce)
 	if err != nil {
+		metadataLink := args.SecondLink
+		if len(metadataLink) == 0 {
+			var innerErr error
+			metadataLink, innerErr = TryGetMetadataLink(blockchainProxy, marketplaceAddress, args.TokenId, args.Nonce)
+			if innerErr != nil {
+				log.Debug("could not get metadata link", innerErr)
+			}
+		}
+
 		token = &entities.Token{
 			TokenID:          args.TokenId,
 			Nonce:            args.Nonce,
 			RoyaltiesPercent: GetRoyaltiesPercentNominal(args.RoyaltiesPercent),
-			MetadataLink:     args.SecondLink,
+			MetadataLink:     metadataLink,
 			CreatedAt:        args.Timestamp,
 			Attributes:       GetAttributesFromMetadata(args.SecondLink),
 			TokenName:        args.TokenName,
@@ -171,6 +192,11 @@ func BuyToken(args BuyTokenArgs) {
 		return
 	}
 
+	err = storage.DeleteProffersForTokenId(token.ID)
+	if err != nil {
+		log.Debug("could not delete proffers for token", "err", err)
+	}
+
 	transaction := entities.Transaction{
 		Hash:         args.TxHash,
 		Type:         entities.BuyToken,
@@ -214,6 +240,11 @@ func WithdrawToken(args WithdrawTokenArgs) {
 		return
 	}
 
+	err = storage.DeleteProffersForTokenId(token.ID)
+	if err != nil {
+		log.Debug("could not delete proffers for token", "err", err)
+	}
+
 	transaction := entities.Transaction{
 		Hash:         args.TxHash,
 		Type:         entities.WithdrawToken,
@@ -228,7 +259,7 @@ func WithdrawToken(args WithdrawTokenArgs) {
 	AddTransaction(&transaction)
 }
 
-func StartAuction(args StartAuctionArgs) (*entities.Token, error) {
+func StartAuction(args StartAuctionArgs, blockchainProxy string, marketplaceAddress string) (*entities.Token, error) {
 	amountNominal, err := GetPriceNominal(args.MinBid)
 	if err != nil {
 		log.Debug("could not parse price", "err", err)
@@ -258,6 +289,15 @@ func StartAuction(args StartAuctionArgs) (*entities.Token, error) {
 
 	token, err := storage.GetTokenByTokenIdAndNonce(args.TokenId, args.Nonce)
 	if err != nil {
+		metadataLink := args.SecondLink
+		if len(metadataLink) == 0 {
+			var innerErr error
+			metadataLink, innerErr = TryGetMetadataLink(blockchainProxy, marketplaceAddress, args.TokenId, args.Nonce)
+			if innerErr != nil {
+				log.Debug("could not get metadata link", innerErr)
+			}
+		}
+
 		token = &entities.Token{
 			TokenID:          args.TokenId,
 			Nonce:            args.Nonce,
@@ -348,7 +388,6 @@ func EndAuction(args EndAuctionArgs) {
 	err = storage.DeleteProffersForTokenId(token.ID)
 	if err != nil {
 		log.Debug("could not delete proffers for token", "err", err)
-		return
 	}
 
 	transaction := entities.Transaction{
@@ -602,4 +641,47 @@ func GetAvailableTokens(args AvailableTokensRequest) AvailableTokensResponse {
 	}
 
 	return response
+}
+
+func TryGetMetadataLink(blockchainProxy string, address string, tokenId string, nonce uint64) (string, error) {
+	proxyRequest := fmt.Sprintf(NftProxyRequestFormat, blockchainProxy, address, tokenId, nonce)
+
+	var proxyResponse NftProxyResponse
+	err := HttpGet(proxyRequest, &proxyResponse)
+	if err != nil {
+		log.Debug("binance request failed")
+		return "", err
+	}
+	if len(proxyResponse.Data.TokenData.Uris) < 2 {
+		return "", nil
+	}
+
+	link, err := base64.StdEncoding.DecodeString(proxyResponse.Data.TokenData.Uris[1])
+	return string(link), err
+}
+
+func ConstructOwnedTokensFromTokens(tokens []entities.Token) []dtos.OwnedTokenDto {
+	tokenIds := make(map[string]bool)
+	for _, token := range tokens {
+		tokenIds[token.TokenID] = true
+	}
+
+	collections := make(map[string]dtos.CollectionCacheInfo)
+	for tokenId := range tokenIds {
+		info, innerErr := collstats.GetOrAddCollectionCacheInfo(tokenId)
+		if innerErr == nil {
+			collections[tokenId] = *info
+		}
+	}
+
+	ownedTokens := make([]dtos.OwnedTokenDto, len(tokens))
+	for index, token := range tokens {
+		ownedToken := dtos.OwnedTokenDto{
+			Token:               token,
+			CollectionCacheInfo: collections[token.TokenID],
+		}
+		ownedTokens[index] = ownedToken
+	}
+
+	return ownedTokens
 }

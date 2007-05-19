@@ -71,7 +71,6 @@ func AcceptOffer(args AcceptOfferArgs) {
 	err = storage.DeleteProffersForTokenId(token.ID)
 	if err != nil {
 		log.Debug("could not delete proffers for token", "err", err)
-		return
 	}
 
 	transaction := entities.Transaction{
