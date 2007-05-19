@@ -333,7 +333,7 @@ func (f *TxFormatter) NewMintNftsTxTemplate(
 	mintPricePerToken float64,
 	numberOfTokens uint64,
 ) Transaction {
-	gasLimit := f.config.MintTokenGasLimit * numberOfTokens
+	gasLimit := f.config.MintTokenGasLimit * (numberOfTokens / 10 + 1)
 	totalPrice := fmt.Sprintf("%f", mintPricePerToken*float64(numberOfTokens))
 	txData := mintTokensEndpointName +
 		"@" + hex.EncodeToString(big.NewInt(int64(numberOfTokens)).Bytes())
