@@ -20,7 +20,12 @@ func UploadToCloudy(ctx context.Context, base64Img, imgID string) (*uploader.Upl
 		return nil, err
 	}
 
-	res, err := cloudy.Upload.Upload(ctx, buf, uploader.UploadParams{
+	cld, err := GetCloudyCDNOrErr()
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := cld.Upload.Upload(ctx, buf, uploader.UploadParams{
 		PublicID: imgID,
 	})
 	if err != nil {
