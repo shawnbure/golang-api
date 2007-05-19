@@ -1,20 +1,20 @@
 package handlers
 
 import (
+	"net/http"
+	"strconv"
+
 	"github.com/erdsea/erdsea-api/config"
 	"github.com/erdsea/erdsea-api/data"
 	"github.com/erdsea/erdsea-api/proxy/middleware"
 	"github.com/erdsea/erdsea-api/services"
 	"github.com/erdsea/erdsea-api/storage"
-	"net/http"
-	"strconv"
-
 	"github.com/gin-gonic/gin"
 )
 
 const (
 	baseCollectionsEndpoint     = "/collections"
-	getCollectionsEndpoint      = "/:offset/:limit"
+	getCollectionsEndpoint      = "/:%s/:limit"
 	getCollectionByNameEndpoint = "/by-name/:collectionName"
 	createCollectionEndpoint    = "/create"
 )
@@ -41,7 +41,7 @@ func NewCollectionsHandler(groupHandler *groupHandler, authCfg config.AuthConfig
 	groupHandler.AddEndpointGroupHandler(endpointGroupHandler)
 }
 
-func (handler *collectionsHandler) get(c *gin.Context) {
+func (ch *collectionsHandler) get(c *gin.Context) {
 	offsetStr := c.Param("offset")
 	limitStr := c.Param("limit")
 
@@ -66,7 +66,7 @@ func (handler *collectionsHandler) get(c *gin.Context) {
 	data.JsonResponse(c, http.StatusOK, collections, "")
 }
 
-func (handler *collectionsHandler) getByName(c *gin.Context) {
+func (ch *collectionsHandler) getByName(c *gin.Context) {
 	collectionName := c.Param("collectionName")
 
 	asset, err := storage.GetCollectionByName(collectionName)
@@ -78,7 +78,7 @@ func (handler *collectionsHandler) getByName(c *gin.Context) {
 	data.JsonResponse(c, http.StatusOK, asset, "")
 }
 
-func (handler *collectionsHandler) create(c *gin.Context) {
+func (ch *collectionsHandler) create(c *gin.Context) {
 	var request services.CreateCollectionRequest
 
 	err := c.Bind(&request)
@@ -89,7 +89,7 @@ func (handler *collectionsHandler) create(c *gin.Context) {
 
 	jwtAddress, exists := c.Get(middleware.AddressKey)
 	if !exists {
-		data.JsonResponse(c, http.StatusInternalServerError, nil, "could not get address form context")
+		data.JsonResponse(c, http.StatusInternalServerError, nil, "could not get address from context")
 		return
 	}
 	if jwtAddress != request.UserAddress {
@@ -97,7 +97,7 @@ func (handler *collectionsHandler) create(c *gin.Context) {
 		return
 	}
 
-	err = services.CreateCollection(&request, handler.blockchainCfg.ProxyUrl)
+	err = services.CreateCollection(&request, ch.blockchainCfg.ProxyUrl)
 	if err != nil {
 		data.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return

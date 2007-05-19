@@ -3,22 +3,58 @@ package services
 import (
 	"encoding/json"
 	"errors"
-	"github.com/erdsea/erdsea-api/cache"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
+
+	"github.com/erdsea/erdsea-api/cache"
 )
 
 const (
+	USD                         = "USD"
+	USDTTicker                  = "USDT"
+	EGLDTicker                  = "EGLD"
 	EGLDPriceCacheKey           = "EGLDPrice"
-	binanceEGLDPriceUrl         = "https://api.binance.com/api/v3/ticker/price?symbol=EGLDUSDT"
+	binancePriceUrl             = "https://api.binance.com/api/v3/ticker/price?symbol=%s%s"
 	binanceResponseExpirePeriod = 10 * time.Minute
 )
 
 type BinancePriceRequest struct {
 	Symbol string `json:"symbol"`
 	Price  string `json:"price"`
+}
+
+func GetPrice(from, to string) (float64, error) {
+	to = strings.ToUpper(to)
+	if strings.Contains(to, USD) {
+		to = USDTTicker
+	}
+
+	from = strings.ToUpper(from)
+
+	url := fmt.Sprintf(binancePriceUrl, from, to)
+
+	var bpr BinancePriceRequest
+	err := HttpGet(url, &bpr)
+	if err != nil {
+		log.Debug("binance request failed")
+		return -1, err
+	}
+	if bpr.Price == "" {
+		log.Debug("price is empty")
+		return -1, errors.New("invalid response")
+	}
+
+	price, err := StrToFloat64(bpr.Price)
+	if err != nil {
+		log.Debug("could not parse price")
+		return -1, errors.New("could not parse price")
+	}
+
+	return price, err
 }
 
 func GetEGLDPrice() (float64, error) {
@@ -29,21 +65,9 @@ func GetEGLDPrice() (float64, error) {
 		return price, nil
 	}
 
-	var bpr BinancePriceRequest
-	err := HttpGet(binanceEGLDPriceUrl, &bpr)
+	price, err := GetPrice(EGLDTicker, USDTTicker)
 	if err != nil {
-		log.Debug("binance request failed")
-		return -1, err
-	}
-	if bpr.Price == "" {
-		log.Debug("price is empty")
-		return -1, errors.New("invalid response")
-	}
-
-	price, err = StrToFloat64(bpr.Price)
-	if err != nil {
-		log.Debug("could not parse price")
-		return -1, errors.New("invalid response")
+		return price, err
 	}
 
 	errSet := cache.GetCacher().Set(EGLDPriceCacheKey, price, binanceResponseExpirePeriod)

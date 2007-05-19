@@ -3,10 +3,11 @@ package services
 import (
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/erdsea/erdsea-api/cache"
 	"github.com/erdsea/erdsea-api/data"
 	"github.com/erdsea/erdsea-api/storage"
-	"time"
 )
 
 const (
@@ -19,7 +20,7 @@ const (
 )
 
 type CreateCollectionRequest struct {
-	UserAddress   string `json:"UserAddress"`
+	UserAddress   string `json:"userAddress"`
 	Name          string `json:"collectionName"`
 	TokenId       string `json:"tokenId"`
 	Description   string `json:"description"`
@@ -109,7 +110,7 @@ func getTokensRegisteredByUser(userAddress string, blockchainProxy string) ([]st
 
 	err = cache.GetCacher().Set(url, resp, HttpResponseExpirePeriod)
 	if err != nil {
-		log.Debug("could not cache response")
+		log.Debug("could not cache response", "err", err)
 	}
 
 	return resp.Data.Tokens, nil

@@ -1,114 +1,23 @@
 package services
 
 import (
-	"fmt"
 	logger "github.com/ElrondNetwork/elrond-go-logger"
 	"github.com/erdsea/erdsea-api/data"
 	"github.com/erdsea/erdsea-api/storage"
 )
 
-type ListAssetArgs struct {
-	OwnerAddress     string
-	TokenId          string
-	Nonce            uint64
-	Uri              string
-	Price            string
-	RoyaltiesPercent uint64
-	Timestamp        uint64
-	TxHash           string
-}
-
 var log = logger.GetOrCreate("services")
-
-func (args *ListAssetArgs) ToString() string {
-	return fmt.Sprintf(""+
-		"OwnerAddress = %s\n"+
-		"TokenId = %s\n"+
-		"Nonce = %d\n"+
-		"Uri = %s\n"+
-		"Price = %s\n"+
-		"RoyaltiesPercent = %d\n"+
-		"Timestamp = %d\n"+
-		"TxHash = %s\n",
-		args.OwnerAddress,
-		args.TokenId,
-		args.Nonce,
-		args.Uri,
-		args.Price,
-		args.RoyaltiesPercent,
-		args.Timestamp,
-		args.TxHash)
-}
-
-type BuyAssetArgs struct {
-	OwnerAddress string
-	BuyerAddress string
-	TokenId      string
-	Nonce        uint64
-	Uri          string
-	Price        string
-	Timestamp    uint64
-	TxHash       string
-}
-
-func (args *BuyAssetArgs) ToString() string {
-	return fmt.Sprintf(""+
-		"OwnerAddress = %s\n"+
-		"BuyerAddress = %s\n"+
-		"TokenId = %s\n"+
-		"Nonce = %d\n"+
-		"Uri = %s\n"+
-		"Price = %s\n"+
-		"Timestamp = %d\n"+
-		"TxHash = %s\n",
-		args.OwnerAddress,
-		args.BuyerAddress,
-		args.TokenId,
-		args.Nonce,
-		args.Uri,
-		args.Price,
-		args.Timestamp,
-		args.TxHash)
-}
-
-type WithdrawAssetArgs struct {
-	OwnerAddress string
-	TokenId      string
-	Nonce        uint64
-	Uri          string
-	Price        string
-	Timestamp    uint64
-	TxHash       string
-}
-
-func (args *WithdrawAssetArgs) ToString() string {
-	return fmt.Sprintf(""+
-		"OwnerAddress = %s\n"+
-		"TokenId = %s\n"+
-		"Nonce = %d\n"+
-		"Uri = %s\n"+
-		"Price = %s\n"+
-		"Timestamp = %d\n"+
-		"TxHash = %s\n",
-		args.OwnerAddress,
-		args.TokenId,
-		args.Nonce,
-		args.Uri,
-		args.Price,
-		args.Timestamp,
-		args.TxHash)
-}
 
 func ListAsset(args ListAssetArgs) {
 	ownerAccount, err := GetOrCreateAccount(args.OwnerAddress)
 	if err != nil {
-		log.Debug("Unexpected error: ", err)
+		log.Debug("could not get or create account", "err", err)
 		return
 	}
 
 	collection, err := storage.GetCollectionByTokenId(args.TokenId)
 	if err != nil {
-		log.Debug("Unexpected error: ", err)
+		log.Debug("could not get collection", "err", err)
 		return
 	}
 
@@ -125,20 +34,23 @@ func ListAsset(args ListAssetArgs) {
 	}
 
 	existingAsset, err := storage.GetAssetByTokenIdAndNonce(args.TokenId, args.Nonce)
+
+	var innerErr error
 	if err == nil {
 		asset.ID = existingAsset.ID
-		err = storage.UpdateAsset(&asset)
+		innerErr = storage.UpdateAsset(&asset)
 	} else {
-		err = storage.AddNewAsset(&asset)
+		innerErr = storage.AddNewAsset(&asset)
 	}
-	if err != nil {
-		log.Debug("Unexpected error: ", err)
+
+	if innerErr != nil {
+		log.Debug("could not create or update asset", "err", innerErr)
 		return
 	}
 
 	transaction := data.Transaction{
 		Hash:      args.TxHash,
-		Type:      "List",
+		Type:      data.ListAsset,
 		Price:     args.Price,
 		Timestamp: args.Timestamp,
 		SellerID:  ownerAccount.ID,
@@ -146,43 +58,40 @@ func ListAsset(args ListAssetArgs) {
 		AssetID:   asset.ID,
 	}
 
-	err = storage.AddNewTransaction(&transaction)
-	if err != nil {
-		log.Debug("Unexpected error: ", err)
-		return
-	}
+	addNewTransaction(&transaction)
 }
 
 func BuyAsset(args BuyAssetArgs) {
 	ownerAccount, err := storage.GetAccountByAddress(args.OwnerAddress)
 	if err != nil {
-		log.Debug("Unexpected error: ", err)
+		log.Debug("could not get owner account", "err", err)
 		return
 	}
 
 	buyerAccount, err := GetOrCreateAccount(args.BuyerAddress)
 	if err != nil {
-		log.Debug("Unexpected error: ", err)
+		log.Debug("could not get or create account", "err", err)
 		return
 	}
 
 	asset, err := storage.GetAssetByTokenIdAndNonce(args.TokenId, args.Nonce)
 	if err != nil {
-		log.Debug("Unexpected error: ", err)
+		log.Debug("could not get asset", "err", err)
 		return
 	}
 
 	asset.Listed = false
+	// TODO: is this intended ?
 	asset.OwnerId = 0
 	err = storage.UpdateAsset(asset)
 	if err != nil {
-		log.Debug("Unexpected error: ", err)
+		log.Debug("could not update asset", "err", err)
 		return
 	}
 
 	transaction := data.Transaction{
 		Hash:      args.TxHash,
-		Type:      "Buy",
+		Type:      data.BuyAsset,
 		Price:     args.Price,
 		Timestamp: args.Timestamp,
 		SellerID:  ownerAccount.ID,
@@ -190,37 +99,34 @@ func BuyAsset(args BuyAssetArgs) {
 		AssetID:   asset.ID,
 	}
 
-	err = storage.AddNewTransaction(&transaction)
-	if err != nil {
-		log.Debug("Unexpected error: ", err)
-		return
-	}
+	addNewTransaction(&transaction)
 }
 
 func WithdrawAsset(args WithdrawAssetArgs) {
 	ownerAccount, err := storage.GetAccountByAddress(args.OwnerAddress)
 	if err != nil {
-		log.Debug("Unexpected error: ", err)
+		log.Debug("could not get owner account", err)
 		return
 	}
 
 	asset, err := storage.GetAssetByTokenIdAndNonce(args.TokenId, args.Nonce)
 	if err != nil {
-		log.Debug("Unexpected error: ", err)
+		log.Debug("could not get asset", "err", err)
 		return
 	}
 
 	asset.Listed = false
+	// TODO: is this intended ?
 	asset.OwnerId = 0
 	err = storage.UpdateAsset(asset)
 	if err != nil {
-		log.Debug("Unexpected error: ", err)
+		log.Debug("could not update asset", "err", err)
 		return
 	}
 
 	transaction := data.Transaction{
 		Hash:      args.TxHash,
-		Type:      "Withdraw",
+		Type:      data.WithdrawAsset,
 		Price:     args.Price,
 		Timestamp: args.Timestamp,
 		SellerID:  0,
@@ -228,9 +134,13 @@ func WithdrawAsset(args WithdrawAssetArgs) {
 		AssetID:   asset.ID,
 	}
 
-	err = storage.AddNewTransaction(&transaction)
+	addNewTransaction(&transaction)
+}
+
+func addNewTransaction(tx *data.Transaction) {
+	err := storage.AddNewTransaction(tx)
 	if err != nil {
-		log.Debug("Unexpected error: ", err)
+		log.Debug("could not create new transaction", "err", err)
 		return
 	}
 }

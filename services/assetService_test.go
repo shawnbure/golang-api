@@ -1,11 +1,12 @@
 package services
 
 import (
+	"testing"
+
 	"github.com/erdsea/erdsea-api/config"
 	"github.com/erdsea/erdsea-api/data"
 	"github.com/erdsea/erdsea-api/storage"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func Test_ListAsset(t *testing.T) {
