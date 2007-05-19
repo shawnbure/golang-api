@@ -13,6 +13,7 @@ import (
 )
 
 type AssetLinkResponse struct {
+	Name       string      `json:"name"`
 	Image      string      `json:"image"`
 	Attributes []Attribute `json:"attributes"`
 }
@@ -54,45 +55,23 @@ func ListAsset(args ListAssetArgs) {
 		collectionId = collection.ID
 	}
 
-	asset := entities.Asset{
-		TokenID:          args.TokenId,
-		Nonce:            args.Nonce,
-		PriceNominal:     priceNominal,
-		RoyaltiesPercent: GetRoyaltiesPercentNominal(args.RoyaltiesPercent),
-		Link:             args.Uri,
-		CreatedAt:        args.Timestamp,
-		Listed:           true,
-		OwnerId:          ownerAccount.ID,
-		CollectionID:     collectionId,
-	}
-
-	existingAsset, err := storage.GetAssetByTokenIdAndNonce(args.TokenId, args.Nonce)
+	asset, err := storage.GetAssetByTokenIdAndNonce(args.TokenId, args.Nonce)
 
 	var innerErr error
 	if err != nil {
-		assetLinkWithNonce := GetAssetLinkWithNonce(&asset)
-		response, reqErr := HttpGetRaw(assetLinkWithNonce)
-		if reqErr != nil {
-			log.Debug("could not http get asset link response", "link", asset.Link)
-			response = ""
-		}
-		if len(response) > maxAssetLinkResponseSize {
-			log.Debug("response too long for asset link request", "link", asset.Link)
-			response = ""
-		}
-
-		//TODO: Can take other info from request as well. Do we want?
-		attributes, constructErr := ConstructAttributesJsonFromResponse(response)
-		if constructErr != nil {
-			log.Debug("could not construct attributes", "err", constructErr)
-		}
-
-		asset.Attributes = *attributes
-		innerErr = storage.AddAsset(&asset)
+		newAsset := ConstructNewAssetFromListArgs(args)
+		asset = &newAsset
+		asset.Listed = true
+		asset.PriceNominal = priceNominal
+		asset.OwnerId = ownerAccount.ID
+		asset.CollectionID = collectionId
+		innerErr = storage.AddAsset(asset)
 	} else {
-		asset.ID = existingAsset.ID
-		asset.Attributes = existingAsset.Attributes
-		innerErr = storage.UpdateAsset(&asset)
+		asset.Listed = true
+		asset.PriceNominal = priceNominal
+		asset.OwnerId = ownerAccount.ID
+		asset.CollectionID = collectionId
+		innerErr = storage.UpdateAsset(asset)
 	}
 
 	if innerErr != nil {
@@ -206,16 +185,64 @@ func WithdrawAsset(args WithdrawAssetArgs) {
 	AddTransaction(&transaction)
 }
 
-func ConstructAttributesJsonFromResponse(response string) (*datatypes.JSON, error) {
-	var responseParsed AssetLinkResponse
+func ConstructNewAssetFromListArgs(args ListAssetArgs) entities.Asset {
+	asset := entities.Asset{
+		TokenID:          args.TokenId,
+		Nonce:            args.Nonce,
+		RoyaltiesPercent: GetRoyaltiesPercentNominal(args.RoyaltiesPercent),
+		MetadataLink:     "",
+		CreatedAt:        args.Timestamp,
+		Listed:           true,
+		Attributes:       datatypes.JSON(""),
+		TokenName:        "",
+		ImageLink:        "",
+		Hash:             args.Hash,
+	}
 
-	err := json.Unmarshal([]byte(response), &responseParsed)
+	osResponse, err := GetOSMetadataForAsset(args.LastLink, args.Nonce)
+	if err == nil {
+		asset.MetadataLink = args.LastLink
+		asset.TokenName = osResponse.Name
+		asset.ImageLink = osResponse.Image
+
+		attributesJson, innerErr := ConstructAttributesJsonFromResponse(osResponse)
+		if innerErr != nil {
+			log.Debug("could not parse os response for attributes", "link", args.LastLink)
+		} else {
+			asset.Attributes = *attributesJson
+		}
+	} else {
+		asset.TokenName = args.TokenName
+		asset.ImageLink = args.FirstLink
+		asset.Attributes = datatypes.JSON(args.Attributes)
+	}
+
+	return asset
+}
+
+func GetOSMetadataForAsset(link string, nonce uint64) (*AssetLinkResponse, error) {
+	var response AssetLinkResponse
+
+	link = link + "/" + strconv.FormatUint(nonce, 10)
+	responseRaw, err := HttpGetRaw(link)
+	if err != nil {
+		return nil, err
+	}
+	if len(responseRaw) > maxAssetLinkResponseSize {
+		return nil, errors.New("response too long")
+	}
+
+	err = json.Unmarshal([]byte(responseRaw), &response)
 	if err != nil {
 		return nil, err
 	}
 
+	return &response, nil
+}
+
+func ConstructAttributesJsonFromResponse(response *AssetLinkResponse) (*datatypes.JSON, error) {
 	attrsMap := make(map[string]string)
-	for _, element := range responseParsed.Attributes {
+	for _, element := range response.Attributes {
 		attrsMap[element.TraitType] = element.Value
 	}
 
@@ -258,10 +285,6 @@ func GetPriceDenominated(price float64) *big.Int {
 
 func GetRoyaltiesPercentNominal(percent uint64) float64 {
 	return float64(percent) / minPercentRoyaltiesUnit
-}
-
-func GetAssetLinkWithNonce(asset *entities.Asset) string {
-	return asset.Link + "/" + strconv.FormatUint(asset.Nonce, 10)
 }
 
 func AddTransaction(tx *entities.Transaction) {
