@@ -1,11 +1,11 @@
 package services
 
 import (
+	"github.com/erdsea/erdsea-api/data/entities"
 	"testing"
 
 	"github.com/erdsea/erdsea-api/cache"
 	"github.com/erdsea/erdsea-api/config"
-	"github.com/erdsea/erdsea-api/data"
 	"github.com/erdsea/erdsea-api/storage"
 	"github.com/stretchr/testify/require"
 )
@@ -25,7 +25,7 @@ func Test_GetOrCreateAccount(t *testing.T) {
 func Test_AddOrUpdate(t *testing.T) {
 	connectToDb()
 
-	account := data.Account{}
+	account := entities.Account{}
 	account.Address = "unique_erd_addr_4real"
 	account.Description = "old"
 	err := AddOrUpdateAccount(&account)
@@ -50,7 +50,7 @@ func Test_SearchAccount(T *testing.T) {
 	connectToDb()
 	cache.InitCacher(config.CacheConfig{Url: "redis://localhost:6379"})
 
-	acc := &data.Account{
+	acc := &entities.Account{
 		Name: "this name is uniquee",
 	}
 

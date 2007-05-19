@@ -3,9 +3,9 @@ package storage
 import (
 	"crypto/rand"
 	"encoding/base64"
+	images2 "github.com/erdsea/erdsea-api/data/entities/images"
 	"testing"
 
-	"github.com/erdsea/erdsea-api/data/images"
 	"github.com/stretchr/testify/require"
 )
 
@@ -16,7 +16,7 @@ func Test_AddAccountProfileImage(T *testing.T) {
 	_, err := rand.Read(bytes)
 	require.Nil(T, err)
 
-	image := images.AccountProfileImage{
+	image := images2.AccountProfileImage{
 		ImageBase64: base64.StdEncoding.EncodeToString(bytes),
 		AccountID:   1,
 	}
@@ -32,7 +32,7 @@ func Test_GetAccountProfileImage(T *testing.T) {
 	_, err := rand.Read(bytes)
 	require.Nil(T, err)
 
-	image := images.AccountProfileImage{
+	image := images2.AccountProfileImage{
 		ImageBase64: base64.StdEncoding.EncodeToString(bytes),
 		AccountID:   5,
 	}
@@ -52,7 +52,7 @@ func Test_GetCollectionProfileImage(T *testing.T) {
 	_, err := rand.Read(bytes)
 	require.Nil(T, err)
 
-	image := images.CollectionProfileImage{
+	image := images2.CollectionProfileImage{
 		ImageBase64:  base64.StdEncoding.EncodeToString(bytes),
 		CollectionID: 5,
 	}

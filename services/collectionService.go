@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/erdsea/erdsea-api/data/entities"
 	"time"
 
 	"github.com/erdsea/erdsea-api/cache"
-	"github.com/erdsea/erdsea-api/data"
 	"github.com/erdsea/erdsea-api/storage"
 )
 
@@ -67,7 +67,7 @@ type ProxyRegisteredNFTsResponse struct {
 	Code  string `json:"code"`
 }
 
-func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) (*data.Collection, error) {
+func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) (*entities.Collection, error) {
 	err := checkValidInputOnCreate(request)
 	if err != nil {
 		return nil, err
@@ -96,7 +96,7 @@ func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) 
 		return nil, err
 	}
 
-	collection := &data.Collection{
+	collection := &entities.Collection{
 		ID:            0,
 		Name:          request.Name,
 		TokenID:       request.TokenId,
@@ -118,7 +118,7 @@ func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) 
 	return collection, nil
 }
 
-func UpdateCollection(collection *data.Collection, request *UpdateCollectionRequest) error {
+func UpdateCollection(collection *entities.Collection, request *UpdateCollectionRequest) error {
 	err := checkValidInputOnUpdate(request)
 
 	collection.Description = request.Description
@@ -176,9 +176,9 @@ func GetStatisticsForCollection(collectionId uint64) (*CollectionStatistics, err
 	return &stats, nil
 }
 
-func GetCollectionsWithNameAlike(name string, limit int) ([]data.Collection, error) {
+func GetCollectionsWithNameAlike(name string, limit int) ([]entities.Collection, error) {
 	var byteArray []byte
-	var collectionArray []data.Collection
+	var collectionArray []entities.Collection
 
 	cacheKey := fmt.Sprintf(CollectionSearchCacheKeyFormat, name)
 	err := cache.GetCacher().Get(cacheKey, &byteArray)

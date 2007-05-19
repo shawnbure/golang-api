@@ -4,8 +4,8 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	images2 "github.com/erdsea/erdsea-api/data/entities/images"
 
-	"github.com/erdsea/erdsea-api/data/images"
 	"github.com/erdsea/erdsea-api/storage"
 )
 
@@ -22,7 +22,7 @@ func SetAccountProfileImage(accountId uint64, image *string) error {
 		return errorProfileTooBig
 	}
 
-	profileImage := images.AccountProfileImage{
+	profileImage := images2.AccountProfileImage{
 		ImageBase64: *image,
 		AccountID:   accountId,
 	}
@@ -35,7 +35,7 @@ func SetAccountCoverImage(accountId uint64, image *string) error {
 		return errorCoverTooBig
 	}
 
-	coverImage := images.AccountCoverImage{
+	coverImage := images2.AccountCoverImage{
 		ImageBase64: *image,
 		AccountID:   accountId,
 	}
@@ -49,7 +49,7 @@ func SetCollectionCoverImage(collectionId uint64, image *string) error {
 		return errorCoverTooBig
 	}
 
-	coverImage := images.CollectionCoverImage{
+	coverImage := images2.CollectionCoverImage{
 		ImageBase64:  *image,
 		CollectionID: collectionId,
 	}
@@ -62,7 +62,7 @@ func SetCollectionProfileImage(collectionId uint64, image *string) error {
 		return errorCoverTooBig
 	}
 
-	profileImage := images.CollectionProfileImage{
+	profileImage := images2.CollectionProfileImage{
 		ImageBase64:  *image,
 		CollectionID: collectionId,
 	}

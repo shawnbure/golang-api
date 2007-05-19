@@ -1,12 +1,11 @@
 package storage
 
 import (
+	"github.com/erdsea/erdsea-api/data/entities"
 	"gorm.io/gorm"
-
-	"github.com/erdsea/erdsea-api/data"
 )
 
-func AddAccount(account *data.Account) error {
+func AddAccount(account *entities.Account) error {
 	database, err := GetDBOrError()
 	if err != nil {
 		return err
@@ -23,7 +22,7 @@ func AddAccount(account *data.Account) error {
 	return nil
 }
 
-func UpdateAccount(account *data.Account) error {
+func UpdateAccount(account *entities.Account) error {
 	database, err := GetDBOrError()
 	if err != nil {
 		return err
@@ -40,8 +39,8 @@ func UpdateAccount(account *data.Account) error {
 	return nil
 }
 
-func GetAccountById(id uint64) (*data.Account, error) {
-	var account data.Account
+func GetAccountById(id uint64) (*entities.Account, error) {
+	var account entities.Account
 
 	database, err := GetDBOrError()
 	if err != nil {
@@ -59,8 +58,8 @@ func GetAccountById(id uint64) (*data.Account, error) {
 	return &account, nil
 }
 
-func GetAccountByAddress(name string) (*data.Account, error) {
-	var account data.Account
+func GetAccountByAddress(name string) (*entities.Account, error) {
+	var account entities.Account
 
 	database, err := GetDBOrError()
 	if err != nil {
@@ -78,8 +77,8 @@ func GetAccountByAddress(name string) (*data.Account, error) {
 	return &account, nil
 }
 
-func GetAccountsWithNameAlikeWithLimit(name string, limit int) ([]data.Account, error) {
-	var accounts []data.Account
+func GetAccountsWithNameAlikeWithLimit(name string, limit int) ([]entities.Account, error) {
+	var accounts []entities.Account
 
 	database, err := GetDBOrError()
 	if err != nil {

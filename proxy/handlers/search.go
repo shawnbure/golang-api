@@ -1,10 +1,11 @@
 package handlers
 
 import (
+	"github.com/erdsea/erdsea-api/data/dtos"
+	"github.com/erdsea/erdsea-api/data/entities"
 	"net/http"
 
 	"github.com/erdsea/erdsea-api/config"
-	"github.com/erdsea/erdsea-api/data"
 	"github.com/erdsea/erdsea-api/proxy/middleware"
 	"github.com/erdsea/erdsea-api/services"
 	"github.com/gin-gonic/gin"
@@ -20,8 +21,8 @@ const (
 )
 
 type GeneralSearchResponse struct {
-	Accounts    []data.Account
-	Collections []data.Collection
+	Accounts    []entities.Account
+	Collections []entities.Collection
 }
 
 type searchHandler struct {
@@ -59,13 +60,13 @@ func (handler *searchHandler) search(c *gin.Context) {
 
 	collections, err := services.GetCollectionsWithNameAlike(searchString, SearchCategoryLimit)
 	if err != nil {
-		data.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
 	}
 
 	accounts, err := services.GetAccountsWithNameAlike(searchString, SearchCategoryLimit)
 	if err != nil {
-		data.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
 	}
 
@@ -73,7 +74,7 @@ func (handler *searchHandler) search(c *gin.Context) {
 		Accounts:    accounts,
 		Collections: collections,
 	}
-	data.JsonResponse(c, http.StatusOK, response, "")
+	dtos.JsonResponse(c, http.StatusOK, response, "")
 }
 
 // @Summary Search collections by name.
@@ -90,11 +91,11 @@ func (handler *searchHandler) collectionSearch(c *gin.Context) {
 
 	collections, err := services.GetCollectionsWithNameAlike(collectionName, SearchCategoryLimit)
 	if err != nil {
-		data.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
 	}
 
-	data.JsonResponse(c, http.StatusOK, collections, "")
+	dtos.JsonResponse(c, http.StatusOK, collections, "")
 }
 
 // @Summary Search accounts by name.
@@ -111,9 +112,9 @@ func (handler *searchHandler) accountSearch(c *gin.Context) {
 
 	accounts, err := services.GetAccountsWithNameAlike(accountName, SearchCategoryLimit)
 	if err != nil {
-		data.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
 	}
 
-	data.JsonResponse(c, http.StatusOK, accounts, "")
+	dtos.JsonResponse(c, http.StatusOK, accounts, "")
 }

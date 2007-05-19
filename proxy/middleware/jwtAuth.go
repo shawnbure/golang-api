@@ -1,11 +1,11 @@
 package middleware
 
 import (
+	"github.com/erdsea/erdsea-api/data/dtos"
 	"net/http"
 	"strings"
 
 	"github.com/erdsea/erdsea-api/crypto"
-	"github.com/erdsea/erdsea-api/data"
 	"github.com/gin-gonic/gin"
 )
 
@@ -21,7 +21,7 @@ const (
 )
 
 var returnUnauthorized = func(c *gin.Context, errMessage string) {
-	data.JsonResponse(c, http.StatusUnauthorized, nil, errMessage)
+	dtos.JsonResponse(c, http.StatusUnauthorized, nil, errMessage)
 }
 
 func Authorization(secret string) gin.HandlerFunc {

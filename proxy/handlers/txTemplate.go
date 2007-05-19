@@ -1,11 +1,11 @@
 package handlers
 
 import (
+	"github.com/erdsea/erdsea-api/data/dtos"
 	"net/http"
 	"strconv"
 
 	"github.com/erdsea/erdsea-api/config"
-	"github.com/erdsea/erdsea-api/data"
 	"github.com/erdsea/erdsea-api/formatter"
 	"github.com/erdsea/erdsea-api/proxy/middleware"
 	"github.com/gin-gonic/gin"
@@ -62,23 +62,23 @@ func (handler *txTemplateHandler) getListNftTemplate(c *gin.Context) {
 
 	nonce, err := strconv.ParseUint(nonceStr, 10, 64)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	price, err := strconv.ParseFloat(priceStr, 64)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	template, err := handler.txFormatter.NewListNftTxTemplate(userAddress, tokenId, nonce, price)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
-	data.JsonResponse(c, http.StatusOK, template, "")
+	dtos.JsonResponse(c, http.StatusOK, template, "")
 }
 
 // @Summary Gets tx-template for NFT buy.
@@ -101,12 +101,12 @@ func (handler *txTemplateHandler) getBuyNftTemplate(c *gin.Context) {
 
 	nonce, err := strconv.ParseUint(nonceStr, 10, 64)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	template := handler.txFormatter.NewBuyNftTxTemplate(userAddress, tokenId, nonce, priceStr)
-	data.JsonResponse(c, http.StatusOK, template, "")
+	dtos.JsonResponse(c, http.StatusOK, template, "")
 }
 
 // @Summary Gets tx-template for NFT withdraw.
@@ -127,10 +127,10 @@ func (handler *txTemplateHandler) getWithdrawNftTemplate(c *gin.Context) {
 
 	nonce, err := strconv.ParseUint(nonceStr, 10, 64)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	template := handler.txFormatter.NewWithdrawNftTxTemplate(userAddress, tokenId, nonce)
-	data.JsonResponse(c, http.StatusOK, template, "")
+	dtos.JsonResponse(c, http.StatusOK, template, "")
 }

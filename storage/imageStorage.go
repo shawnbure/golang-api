@@ -1,14 +1,13 @@
 package storage
 
 import (
+	images2 "github.com/erdsea/erdsea-api/data/entities/images"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
-
-	"github.com/erdsea/erdsea-api/data/images"
 )
 
-func GetAccountProfileImageByAccountId(accountId uint64) (*images.AccountProfileImage, error) {
-	var image images.AccountProfileImage
+func GetAccountProfileImageByAccountId(accountId uint64) (*images2.AccountProfileImage, error) {
+	var image images2.AccountProfileImage
 
 	database, err := GetDBOrError()
 	if err != nil {
@@ -23,7 +22,7 @@ func GetAccountProfileImageByAccountId(accountId uint64) (*images.AccountProfile
 	return &image, nil
 }
 
-func AddOrUpdateAccountProfileImage(image *images.AccountProfileImage) error {
+func AddOrUpdateAccountProfileImage(image *images2.AccountProfileImage) error {
 	database, err := GetDBOrError()
 	if err != nil {
 		return err
@@ -43,8 +42,8 @@ func AddOrUpdateAccountProfileImage(image *images.AccountProfileImage) error {
 	return nil
 }
 
-func GetAccountCoverImageByAccountId(accountId uint64) (*images.AccountCoverImage, error) {
-	var image images.AccountCoverImage
+func GetAccountCoverImageByAccountId(accountId uint64) (*images2.AccountCoverImage, error) {
+	var image images2.AccountCoverImage
 
 	database, err := GetDBOrError()
 	if err != nil {
@@ -59,7 +58,7 @@ func GetAccountCoverImageByAccountId(accountId uint64) (*images.AccountCoverImag
 	return &image, nil
 }
 
-func AddOrUpdateAccountCoverImage(image *images.AccountCoverImage) error {
+func AddOrUpdateAccountCoverImage(image *images2.AccountCoverImage) error {
 	database, err := GetDBOrError()
 	if err != nil {
 		return err
@@ -79,8 +78,8 @@ func AddOrUpdateAccountCoverImage(image *images.AccountCoverImage) error {
 	return nil
 }
 
-func GetCollectionProfileImageByCollectionId(collectionId uint64) (*images.CollectionProfileImage, error) {
-	var image images.CollectionProfileImage
+func GetCollectionProfileImageByCollectionId(collectionId uint64) (*images2.CollectionProfileImage, error) {
+	var image images2.CollectionProfileImage
 
 	database, err := GetDBOrError()
 	if err != nil {
@@ -95,7 +94,7 @@ func GetCollectionProfileImageByCollectionId(collectionId uint64) (*images.Colle
 	return &image, nil
 }
 
-func AddOrUpdateCollectionProfileImage(image *images.CollectionProfileImage) error {
+func AddOrUpdateCollectionProfileImage(image *images2.CollectionProfileImage) error {
 	database, err := GetDBOrError()
 	if err != nil {
 		return err
@@ -115,8 +114,8 @@ func AddOrUpdateCollectionProfileImage(image *images.CollectionProfileImage) err
 	return nil
 }
 
-func GetCollectionCoverImageByCollectionId(collectionId uint64) (*images.CollectionCoverImage, error) {
-	var image images.CollectionCoverImage
+func GetCollectionCoverImageByCollectionId(collectionId uint64) (*images2.CollectionCoverImage, error) {
+	var image images2.CollectionCoverImage
 
 	database, err := GetDBOrError()
 	if err != nil {
@@ -131,7 +130,7 @@ func GetCollectionCoverImageByCollectionId(collectionId uint64) (*images.Collect
 	return &image, nil
 }
 
-func AddOrUpdateCollectionCoverImage(image *images.CollectionCoverImage) error {
+func AddOrUpdateCollectionCoverImage(image *images2.CollectionCoverImage) error {
 	database, err := GetDBOrError()
 	if err != nil {
 		return err

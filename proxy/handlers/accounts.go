@@ -1,11 +1,11 @@
 package handlers
 
 import (
+	"github.com/erdsea/erdsea-api/data/dtos"
 	"net/http"
 	"strconv"
 
 	"github.com/erdsea/erdsea-api/config"
-	"github.com/erdsea/erdsea-api/data"
 	"github.com/erdsea/erdsea-api/proxy/middleware"
 	"github.com/erdsea/erdsea-api/services"
 	"github.com/erdsea/erdsea-api/storage"
@@ -68,17 +68,17 @@ func (handler *accountsHandler) get(c *gin.Context) {
 
 	accountId, err := strconv.ParseUint(accountIdString, 10, 16)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	account, err := storage.GetAccountById(accountId)
 	if err != nil {
-		data.JsonResponse(c, http.StatusNotFound, nil, "could not get price")
+		dtos.JsonResponse(c, http.StatusNotFound, nil, "could not get price")
 		return
 	}
 
-	data.JsonResponse(c, http.StatusOK, account, "")
+	dtos.JsonResponse(c, http.StatusOK, account, "")
 }
 
 // @Summary Get account by address
@@ -96,11 +96,11 @@ func (handler *accountsHandler) getByAddress(c *gin.Context) {
 
 	account, err := storage.GetAccountByAddress(accountAddress)
 	if err != nil {
-		data.JsonResponse(c, http.StatusNotFound, nil, "could not get price")
+		dtos.JsonResponse(c, http.StatusNotFound, nil, "could not get price")
 		return
 	}
 
-	data.JsonResponse(c, http.StatusOK, account, "")
+	dtos.JsonResponse(c, http.StatusOK, account, "")
 }
 
 // @Summary Set account information
@@ -121,35 +121,35 @@ func (handler *accountsHandler) set(c *gin.Context) {
 
 	err := c.Bind(&request)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, "cannot bind request")
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, "cannot bind request")
 		return
 	}
 
 	accountId, err := strconv.ParseUint(accountIdString, 10, 16)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	account, err := storage.GetAccountById(accountId)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	jwtAddress := c.GetString(middleware.AddressKey)
 	if account.Address != jwtAddress {
-		data.JsonResponse(c, http.StatusUnauthorized, nil, "unauthorized")
+		dtos.JsonResponse(c, http.StatusUnauthorized, nil, "unauthorized")
 		return
 	}
 
 	err = services.UpdateAccount(account, &request)
 	if err != nil {
-		data.JsonResponse(c, http.StatusInternalServerError, nil, "could not get price")
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, "could not get price")
 		return
 	}
 
-	data.JsonResponse(c, http.StatusOK, account, "")
+	dtos.JsonResponse(c, http.StatusOK, account, "")
 }
 
 // @Summary Creates an account
@@ -168,29 +168,29 @@ func (handler *accountsHandler) create(c *gin.Context) {
 
 	err := c.Bind(&request)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, "cannot bind request")
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, "cannot bind request")
 		return
 	}
 
 	jwtAddress := c.GetString(middleware.AddressKey)
 	if request.Address != jwtAddress {
-		data.JsonResponse(c, http.StatusUnauthorized, nil, "unauthorized")
+		dtos.JsonResponse(c, http.StatusUnauthorized, nil, "unauthorized")
 		return
 	}
 
 	_, err = storage.GetAccountByAddress(request.Address)
 	if err == nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, "account already exists for address")
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, "account already exists for address")
 		return
 	}
 
 	account, err := services.CreateAccount(&request)
 	if err != nil {
-		data.JsonResponse(c, http.StatusInternalServerError, nil, "could not get price")
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, "could not get price")
 		return
 	}
 
-	data.JsonResponse(c, http.StatusOK, account, "")
+	dtos.JsonResponse(c, http.StatusOK, account, "")
 }
 
 // @Summary Get account profile image
@@ -208,17 +208,17 @@ func (handler *accountsHandler) getAccountProfile(c *gin.Context) {
 
 	accountId, err := strconv.ParseUint(accountIdString, 10, 16)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	image, err := storage.GetAccountProfileImageByAccountId(accountId)
 	if err != nil {
-		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
-	data.JsonResponse(c, http.StatusOK, &image, "")
+	dtos.JsonResponse(c, http.StatusOK, &image, "")
 }
 
 // @Summary Set account profile image
@@ -239,34 +239,34 @@ func (handler *accountsHandler) setAccountProfile(c *gin.Context) {
 
 	err := c.Bind(&imageBase64)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	accountId, err := strconv.ParseUint(accountIdString, 10, 16)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	jwtAddress := c.GetString(middleware.AddressKey)
 	account, err := storage.GetAccountById(accountId)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 	if jwtAddress != account.Address {
-		data.JsonResponse(c, http.StatusUnauthorized, nil, "")
+		dtos.JsonResponse(c, http.StatusUnauthorized, nil, "")
 		return
 	}
 
 	err = services.SetAccountProfileImage(accountId, &imageBase64)
 	if err != nil {
-		data.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
 	}
 
-	data.JsonResponse(c, http.StatusOK, "", "")
+	dtos.JsonResponse(c, http.StatusOK, "", "")
 }
 
 // @Summary Get account cover image
@@ -284,17 +284,17 @@ func (handler *accountsHandler) getAccountCover(c *gin.Context) {
 
 	accountId, err := strconv.ParseUint(accountIdString, 10, 16)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	image, err := storage.GetAccountCoverImageByAccountId(accountId)
 	if err != nil {
-		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
-	data.JsonResponse(c, http.StatusOK, &image, "")
+	dtos.JsonResponse(c, http.StatusOK, &image, "")
 }
 
 // @Summary Set account cover image
@@ -315,34 +315,34 @@ func (handler *accountsHandler) setAccountCover(c *gin.Context) {
 
 	err := c.Bind(&imageBase64)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	accountId, err := strconv.ParseUint(accountIdString, 10, 16)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	jwtAddress := c.GetString(middleware.AddressKey)
 	account, err := storage.GetAccountById(accountId)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 	if jwtAddress != account.Address {
-		data.JsonResponse(c, http.StatusUnauthorized, nil, "")
+		dtos.JsonResponse(c, http.StatusUnauthorized, nil, "")
 		return
 	}
 
 	err = services.SetAccountCoverImage(accountId, &imageBase64)
 	if err != nil {
-		data.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
 	}
 
-	data.JsonResponse(c, http.StatusOK, "", "")
+	dtos.JsonResponse(c, http.StatusOK, "", "")
 }
 
 // @Summary Gets assets for an account.
@@ -364,27 +364,27 @@ func (handler *accountsHandler) getAccountAssets(c *gin.Context) {
 
 	accountId, err := strconv.ParseUint(accountIdString, 10, 16)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	offset, err := strconv.Atoi(offsetStr)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	limit, err := strconv.Atoi(limitStr)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	assets, err := storage.GetAssetsByOwnerIdWithOffsetLimit(accountId, offset, limit)
 	if err != nil {
-		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
-	data.JsonResponse(c, http.StatusOK, assets, "")
+	dtos.JsonResponse(c, http.StatusOK, assets, "")
 }

@@ -1,11 +1,11 @@
 package handlers
 
 import (
+	"github.com/erdsea/erdsea-api/data/dtos"
 	"net/http"
 	"strconv"
 
 	"github.com/erdsea/erdsea-api/config"
-	"github.com/erdsea/erdsea-api/data"
 	"github.com/erdsea/erdsea-api/proxy/middleware"
 	"github.com/erdsea/erdsea-api/storage"
 	"github.com/gin-gonic/gin"
@@ -52,15 +52,15 @@ func (handler *assetsHandler) getByTokenIdAndNonce(c *gin.Context) {
 
 	nonce, err := strconv.ParseUint(nonceString, 10, 64)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	asset, err := storage.GetAssetByTokenIdAndNonce(tokenId, nonce)
 	if err != nil {
-		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
-	data.JsonResponse(c, http.StatusOK, asset, "")
+	dtos.JsonResponse(c, http.StatusOK, asset, "")
 }

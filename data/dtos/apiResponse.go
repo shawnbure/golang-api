@@ -1,4 +1,4 @@
-package data
+package dtos
 
 import "github.com/gin-gonic/gin"
 

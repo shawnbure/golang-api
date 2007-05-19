@@ -2,14 +2,14 @@ package process
 
 import (
 	logger "github.com/ElrondNetwork/elrond-go-logger"
-	"github.com/erdsea/erdsea-api/data"
+	"github.com/erdsea/erdsea-api/data/entities"
 	"github.com/erdsea/erdsea-api/services"
 )
 
 type EventProcessor struct {
 	addressSet     map[string]bool
 	identifiersSet map[string]bool
-	eventsPool     chan []data.Event
+	eventsPool     chan []entities.Event
 }
 
 var log = logger.GetOrCreate("EventProcessor")
@@ -29,7 +29,7 @@ func NewEventProcessor(addresses []string, identifiers []string) *EventProcessor
 	processor := &EventProcessor{
 		addressSet:     addrSet,
 		identifiersSet: idSet,
-		eventsPool:     make(chan []data.Event),
+		eventsPool:     make(chan []entities.Event),
 	}
 
 	go processor.PoolWorker()
@@ -52,8 +52,8 @@ func (e *EventProcessor) PoolWorker() {
 	}
 }
 
-func (e *EventProcessor) OnEvents(events []data.Event) {
-	var filterableEvents []data.Event
+func (e *EventProcessor) OnEvents(events []entities.Event) {
+	var filterableEvents []entities.Event
 
 	for _, event := range events {
 		if e.isEventAccepted(event) {
@@ -68,11 +68,11 @@ func (e *EventProcessor) OnEvents(events []data.Event) {
 	return
 }
 
-func (e *EventProcessor) isEventAccepted(ev data.Event) bool {
+func (e *EventProcessor) isEventAccepted(ev entities.Event) bool {
 	return e.addressSet[ev.Address] && e.identifiersSet[ev.Identifier]
 }
 
-func (e *EventProcessor) onEventPutNftForSale(event data.Event) {
+func (e *EventProcessor) onEventPutNftForSale(event entities.Event) {
 	args := services.ListAssetArgs{
 		OwnerAddress:     decodeAddressFromTopic(event.Topics[0]),
 		TokenId:          decodeStringFromTopic(event.Topics[1]),
@@ -88,7 +88,7 @@ func (e *EventProcessor) onEventPutNftForSale(event data.Event) {
 	services.ListAsset(args)
 }
 
-func (e *EventProcessor) onEventBuyNft(event data.Event) {
+func (e *EventProcessor) onEventBuyNft(event entities.Event) {
 	args := services.BuyAssetArgs{
 		OwnerAddress: decodeAddressFromTopic(event.Topics[0]),
 		BuyerAddress: decodeAddressFromTopic(event.Topics[1]),
@@ -104,7 +104,7 @@ func (e *EventProcessor) onEventBuyNft(event data.Event) {
 	services.BuyAsset(args)
 }
 
-func (e *EventProcessor) onEventWithdrawNft(event data.Event) {
+func (e *EventProcessor) onEventWithdrawNft(event entities.Event) {
 	args := services.WithdrawAssetArgs{
 		OwnerAddress: decodeAddressFromTopic(event.Topics[0]),
 		TokenId:      decodeStringFromTopic(event.Topics[1]),

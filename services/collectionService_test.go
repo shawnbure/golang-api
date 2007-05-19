@@ -1,6 +1,7 @@
 package services
 
 import (
+	"github.com/erdsea/erdsea-api/data/entities"
 	"gorm.io/datatypes"
 	"strconv"
 	"testing"
@@ -8,7 +9,6 @@ import (
 
 	"github.com/erdsea/erdsea-api/cache"
 	"github.com/erdsea/erdsea-api/config"
-	"github.com/erdsea/erdsea-api/data"
 	"github.com/erdsea/erdsea-api/storage"
 	"github.com/stretchr/testify/require"
 )
@@ -66,7 +66,7 @@ func Test_SearchCollection(T *testing.T) {
 	connectToDb()
 	cache.InitCacher(config.CacheConfig{Url: "redis://localhost:6379"})
 
-	coll := &data.Collection{
+	coll := &entities.Collection{
 		Name: "this name is uniquee",
 	}
 
@@ -119,13 +119,13 @@ func Test_SearchCollection(T *testing.T) {
 func Test_GetCollectionMetadata(t *testing.T) {
 	connectToDb()
 
-	coll := data.Collection{
+	coll := entities.Collection{
 		Name: strconv.Itoa(int(time.Now().Unix())),
 	}
 	err := storage.AddCollection(&coll)
 	require.Nil(t, err)
 
-	asset1 := data.Asset{
+	asset1 := entities.Asset{
 		CollectionID: coll.ID,
 		Listed:       true,
 		OwnerId:      1,
@@ -134,7 +134,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 	err = storage.AddAsset(&asset1)
 	require.Nil(t, err)
 
-	asset2 := data.Asset{
+	asset2 := entities.Asset{
 		CollectionID: coll.ID,
 		Listed:       true,
 		OwnerId:      1,
@@ -143,7 +143,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 	err = storage.AddAsset(&asset2)
 	require.Nil(t, err)
 
-	asset3 := data.Asset{
+	asset3 := entities.Asset{
 		CollectionID: coll.ID,
 		Listed:       true,
 		OwnerId:      1,
@@ -152,7 +152,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 	err = storage.AddAsset(&asset3)
 	require.Nil(t, err)
 
-	asset4 := data.Asset{
+	asset4 := entities.Asset{
 		CollectionID: coll.ID,
 		Listed:       true,
 		OwnerId:      1,
@@ -161,7 +161,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 	err = storage.AddAsset(&asset4)
 	require.Nil(t, err)
 
-	asset5 := data.Asset{
+	asset5 := entities.Asset{
 		CollectionID: coll.ID,
 		Listed:       true,
 		OwnerId:      1,
@@ -170,7 +170,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 	err = storage.AddAsset(&asset5)
 	require.Nil(t, err)
 
-	asset6 := data.Asset{
+	asset6 := entities.Asset{
 		CollectionID: coll.ID,
 		Listed:       true,
 		OwnerId:      1,
@@ -179,7 +179,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 	err = storage.AddAsset(&asset6)
 	require.Nil(t, err)
 
-	asset7 := data.Asset{
+	asset7 := entities.Asset{
 		CollectionID: coll.ID,
 		Listed:       true,
 		OwnerId:      1,
@@ -188,7 +188,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 	err = storage.AddAsset(&asset7)
 	require.Nil(t, err)
 
-	asset8 := data.Asset{
+	asset8 := entities.Asset{
 		CollectionID: coll.ID,
 		Listed:       true,
 		OwnerId:      1,
@@ -197,7 +197,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 	err = storage.AddAsset(&asset8)
 	require.Nil(t, err)
 
-	asset9 := data.Asset{
+	asset9 := entities.Asset{
 		CollectionID: coll.ID,
 		Listed:       true,
 		OwnerId:      1,
@@ -206,7 +206,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 	err = storage.AddAsset(&asset9)
 	require.Nil(t, err)
 
-	asset10 := data.Asset{
+	asset10 := entities.Asset{
 		CollectionID: coll.ID,
 		Listed:       true,
 		OwnerId:      1,

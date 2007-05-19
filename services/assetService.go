@@ -3,12 +3,12 @@ package services
 import (
 	"encoding/json"
 	"errors"
+	"github.com/erdsea/erdsea-api/data/entities"
 	"gorm.io/datatypes"
 	"math/big"
 	"strconv"
 
 	logger "github.com/ElrondNetwork/elrond-go-logger"
-	"github.com/erdsea/erdsea-api/data"
 	"github.com/erdsea/erdsea-api/storage"
 )
 
@@ -54,7 +54,7 @@ func ListAsset(args ListAssetArgs) {
 		collectionId = collection.ID
 	}
 
-	asset := data.Asset{
+	asset := entities.Asset{
 		TokenID:          args.TokenId,
 		Nonce:            args.Nonce,
 		PriceNominal:     priceNominal,
@@ -100,9 +100,9 @@ func ListAsset(args ListAssetArgs) {
 		return
 	}
 
-	transaction := data.Transaction{
+	transaction := entities.Transaction{
 		Hash:         args.TxHash,
-		Type:         data.ListAsset,
+		Type:         entities.ListAsset,
 		PriceNominal: priceNominal,
 		Timestamp:    args.Timestamp,
 		SellerID:     ownerAccount.ID,
@@ -149,9 +149,9 @@ func BuyAsset(args BuyAssetArgs) {
 		return
 	}
 
-	transaction := data.Transaction{
+	transaction := entities.Transaction{
 		Hash:         args.TxHash,
-		Type:         data.BuyAsset,
+		Type:         entities.BuyAsset,
 		PriceNominal: priceNominal,
 		Timestamp:    args.Timestamp,
 		SellerID:     ownerAccount.ID,
@@ -192,9 +192,9 @@ func WithdrawAsset(args WithdrawAssetArgs) {
 		return
 	}
 
-	transaction := data.Transaction{
+	transaction := entities.Transaction{
 		Hash:         args.TxHash,
-		Type:         data.WithdrawAsset,
+		Type:         entities.WithdrawAsset,
 		PriceNominal: priceNominal,
 		Timestamp:    args.Timestamp,
 		SellerID:     0,
@@ -260,11 +260,11 @@ func GetRoyaltiesPercentNominal(percent uint64) float64 {
 	return float64(percent) / minPercentRoyaltiesUnit
 }
 
-func GetAssetLinkWithNonce(asset *data.Asset) string {
+func GetAssetLinkWithNonce(asset *entities.Asset) string {
 	return asset.Link + "/" + strconv.FormatUint(asset.Nonce, 10)
 }
 
-func AddTransaction(tx *data.Transaction) {
+func AddTransaction(tx *entities.Transaction) {
 	err := storage.AddTransaction(tx)
 	if err != nil {
 		log.Debug("could not create new transaction", "err", err)

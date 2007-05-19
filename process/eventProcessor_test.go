@@ -1,9 +1,8 @@
 package process
 
 import (
+	"github.com/erdsea/erdsea-api/data/entities"
 	"testing"
-
-	"github.com/erdsea/erdsea-api/data"
 )
 
 func TestEventProcessor_OnEvents(t *testing.T) {
@@ -12,7 +11,7 @@ func TestEventProcessor_OnEvents(t *testing.T) {
 	addresses := []string{"erd1", "erd2", "erd3"}
 	identifiers := []string{"func1", "func2", "func3"}
 
-	events := []data.Event{
+	events := []entities.Event{
 		{
 			Address:    addresses[0],
 			Identifier: identifiers[0],

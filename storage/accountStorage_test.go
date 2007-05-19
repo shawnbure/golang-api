@@ -1,9 +1,9 @@
 package storage
 
 import (
+	"github.com/erdsea/erdsea-api/data/entities"
 	"testing"
 
-	"github.com/erdsea/erdsea-api/data"
 	"github.com/stretchr/testify/require"
 )
 
@@ -14,7 +14,7 @@ func Test_AddAccount(t *testing.T) {
 	err := AddAccount(&account)
 	require.Nil(t, err)
 
-	var accountRead data.Account
+	var accountRead entities.Account
 	txRead := GetDB().Last(&accountRead)
 
 	require.Nil(t, txRead.Error)
@@ -61,8 +61,8 @@ func Test_GetAccountsWithNameAlikeWithLimit(t *testing.T) {
 	require.Equal(t, retrievedAccounts[1].Name, "default")
 }
 
-func defaultAccount() data.Account {
-	return data.Account{
+func defaultAccount() entities.Account {
+	return entities.Account{
 		Address: "erd123",
 		Name:    "default",
 	}

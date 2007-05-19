@@ -1,12 +1,11 @@
 package storage
 
 import (
+	"github.com/erdsea/erdsea-api/data/entities"
 	"gorm.io/gorm"
-
-	"github.com/erdsea/erdsea-api/data"
 )
 
-func AddTransaction(transaction *data.Transaction) error {
+func AddTransaction(transaction *entities.Transaction) error {
 	database, err := GetDBOrError()
 	if err != nil {
 		return err
@@ -23,8 +22,8 @@ func AddTransaction(transaction *data.Transaction) error {
 	return nil
 }
 
-func GetTransactionById(id uint64) (*data.Transaction, error) {
-	var transaction data.Transaction
+func GetTransactionById(id uint64) (*entities.Transaction, error) {
+	var transaction entities.Transaction
 
 	database, err := GetDBOrError()
 	if err != nil {
@@ -42,8 +41,8 @@ func GetTransactionById(id uint64) (*data.Transaction, error) {
 	return &transaction, nil
 }
 
-func GetTransactionsBySellerId(id uint64) ([]data.Transaction, error) {
-	var transactions []data.Transaction
+func GetTransactionsBySellerId(id uint64) ([]entities.Transaction, error) {
+	var transactions []entities.Transaction
 
 	database, err := GetDBOrError()
 	if err != nil {
@@ -58,8 +57,8 @@ func GetTransactionsBySellerId(id uint64) ([]data.Transaction, error) {
 	return transactions, nil
 }
 
-func GetTransactionsByBuyerId(id uint64) ([]data.Transaction, error) {
-	var transactions []data.Transaction
+func GetTransactionsByBuyerId(id uint64) ([]entities.Transaction, error) {
+	var transactions []entities.Transaction
 
 	database, err := GetDBOrError()
 	if err != nil {
@@ -74,8 +73,8 @@ func GetTransactionsByBuyerId(id uint64) ([]data.Transaction, error) {
 	return transactions, nil
 }
 
-func GetTransactionsByBuyerOrSellerId(id uint64) ([]data.Transaction, error) {
-	var transactions []data.Transaction
+func GetTransactionsByBuyerOrSellerId(id uint64) ([]entities.Transaction, error) {
+	var transactions []entities.Transaction
 
 	database, err := GetDBOrError()
 	if err != nil {
@@ -90,8 +89,8 @@ func GetTransactionsByBuyerOrSellerId(id uint64) ([]data.Transaction, error) {
 	return transactions, nil
 }
 
-func GetTransactionsByBuyerOrSellerIdWithOffsetLimit(id uint64, offset int, limit int) ([]data.Transaction, error) {
-	var transactions []data.Transaction
+func GetTransactionsByBuyerOrSellerIdWithOffsetLimit(id uint64, offset int, limit int) ([]entities.Transaction, error) {
+	var transactions []entities.Transaction
 
 	database, err := GetDBOrError()
 	if err != nil {
@@ -106,8 +105,8 @@ func GetTransactionsByBuyerOrSellerIdWithOffsetLimit(id uint64, offset int, limi
 	return transactions, nil
 }
 
-func GetTransactionsByAssetId(id uint64) ([]data.Transaction, error) {
-	var transactions []data.Transaction
+func GetTransactionsByAssetId(id uint64) ([]entities.Transaction, error) {
+	var transactions []entities.Transaction
 
 	database, err := GetDBOrError()
 	if err != nil {
@@ -122,8 +121,8 @@ func GetTransactionsByAssetId(id uint64) ([]data.Transaction, error) {
 	return transactions, nil
 }
 
-func GetTransactionsByAssetIdWithOffsetLimit(id uint64, offset int, limit int) ([]data.Transaction, error) {
-	var transactions []data.Transaction
+func GetTransactionsByAssetIdWithOffsetLimit(id uint64, offset int, limit int) ([]entities.Transaction, error) {
+	var transactions []entities.Transaction
 
 	database, err := GetDBOrError()
 	if err != nil {
@@ -138,8 +137,8 @@ func GetTransactionsByAssetIdWithOffsetLimit(id uint64, offset int, limit int) (
 	return transactions, nil
 }
 
-func GetTransactionsByCollectionIdWithOffsetLimit(id uint64, offset int, limit int) ([]data.Transaction, error) {
-	var transactions []data.Transaction
+func GetTransactionsByCollectionIdWithOffsetLimit(id uint64, offset int, limit int) ([]entities.Transaction, error) {
+	var transactions []entities.Transaction
 
 	database, err := GetDBOrError()
 	if err != nil {
@@ -154,8 +153,8 @@ func GetTransactionsByCollectionIdWithOffsetLimit(id uint64, offset int, limit i
 	return transactions, nil
 }
 
-func GetTransactionByHash(hash string) (*data.Transaction, error) {
-	var transaction data.Transaction
+func GetTransactionByHash(hash string) (*entities.Transaction, error) {
+	var transaction entities.Transaction
 
 	database, err := GetDBOrError()
 	if err != nil {
@@ -173,8 +172,8 @@ func GetTransactionByHash(hash string) (*data.Transaction, error) {
 	return &transaction, nil
 }
 
-func GetTransactionsWithOffsetLimit(offset int, limit int) ([]data.Transaction, error) {
-	var transactions []data.Transaction
+func GetTransactionsWithOffsetLimit(offset int, limit int) ([]entities.Transaction, error) {
+	var transactions []entities.Transaction
 
 	database, err := GetDBOrError()
 	if err != nil {
@@ -198,7 +197,7 @@ func GetMinBuyPriceForTransactionsWithCollectionId(collectionId uint64) (float64
 	}
 
 	txRead := database.Select("MIN(price_nominal)").
-		Where("type = ? AND collection_id = ?", data.BuyAsset, collectionId).
+		Where("type = ? AND collection_id = ?", entities.BuyAsset, collectionId).
 		Table("transactions").
 		Find(&price)
 
@@ -218,7 +217,7 @@ func GetSumBuyPriceForTransactionsWithCollectionId(collectionId uint64) (float64
 	}
 
 	txRead := database.Select("SUM(price_nominal)").
-		Where("type = ? AND collection_id = ?", data.BuyAsset, collectionId).
+		Where("type = ? AND collection_id = ?", entities.BuyAsset, collectionId).
 		Table("transactions").
 		Find(&price)
 

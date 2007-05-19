@@ -1,17 +1,12 @@
-package data
+package entities
 
-type Collection struct {
+type Account struct {
 	ID            uint64 `gorm:"primaryKey"`
+	Address       string
 	Name          string
-	TokenID       string
 	Description   string
 	Website       string
-	DiscordLink   string
 	TwitterLink   string
 	InstagramLink string
-	TelegramLink  string
 	CreatedAt     uint64
-	Priority      uint64
-
-	CreatorID uint64
 }

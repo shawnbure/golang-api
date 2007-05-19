@@ -3,13 +3,13 @@ package storage
 import (
 	"database/sql"
 	"errors"
+	"github.com/erdsea/erdsea-api/data/entities"
+	images2 "github.com/erdsea/erdsea-api/data/entities/images"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"sync"
 
 	"github.com/erdsea/erdsea-api/config"
-	"github.com/erdsea/erdsea-api/data"
-	"github.com/erdsea/erdsea-api/data/images"
 	_ "github.com/lib/pq"
 )
 
@@ -47,42 +47,42 @@ func Connect(cfg config.DatabaseConfig) {
 }
 
 func TryMigrate() error {
-	err := db.AutoMigrate(&data.Account{})
+	err := db.AutoMigrate(&entities.Account{})
 	if err != nil {
 		return err
 	}
 
-	err = db.AutoMigrate(&data.Asset{})
+	err = db.AutoMigrate(&entities.Asset{})
 	if err != nil {
 		return err
 	}
 
-	err = db.AutoMigrate(&data.Transaction{})
+	err = db.AutoMigrate(&entities.Transaction{})
 	if err != nil {
 		return err
 	}
 
-	err = db.AutoMigrate(&data.Collection{})
+	err = db.AutoMigrate(&entities.Collection{})
 	if err != nil {
 		return err
 	}
 
-	err = db.AutoMigrate(&images.AccountCoverImage{})
+	err = db.AutoMigrate(&images2.AccountCoverImage{})
 	if err != nil {
 		return err
 	}
 
-	err = db.AutoMigrate(&images.AccountProfileImage{})
+	err = db.AutoMigrate(&images2.AccountProfileImage{})
 	if err != nil {
 		return err
 	}
 
-	err = db.AutoMigrate(&images.CollectionCoverImage{})
+	err = db.AutoMigrate(&images2.CollectionCoverImage{})
 	if err != nil {
 		return err
 	}
 
-	err = db.AutoMigrate(&images.CollectionProfileImage{})
+	err = db.AutoMigrate(&images2.CollectionProfileImage{})
 	if err != nil {
 		return err
 	}

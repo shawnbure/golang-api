@@ -3,10 +3,10 @@ package services
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/erdsea/erdsea-api/data/entities"
 	"time"
 
 	"github.com/erdsea/erdsea-api/cache"
-	"github.com/erdsea/erdsea-api/data"
 	"github.com/erdsea/erdsea-api/storage"
 )
 
@@ -32,10 +32,10 @@ var (
 	AccountSearchExpirePeriod   = 20 * time.Minute
 )
 
-func GetOrCreateAccount(address string) (*data.Account, error) {
+func GetOrCreateAccount(address string) (*entities.Account, error) {
 	account, err := storage.GetAccountByAddress(address)
 	if err != nil {
-		account = &data.Account{
+		account = &entities.Account{
 			Address:   address,
 			CreatedAt: uint64(time.Now().Unix()),
 		}
@@ -49,8 +49,8 @@ func GetOrCreateAccount(address string) (*data.Account, error) {
 	return account, nil
 }
 
-func CreateAccount(request *CreateAccountRequest) (*data.Account, error) {
-	account := data.Account{
+func CreateAccount(request *CreateAccountRequest) (*entities.Account, error) {
+	account := entities.Account{
 		Address:       request.Address,
 		Name:          request.Name,
 		Description:   request.Description,
@@ -64,7 +64,7 @@ func CreateAccount(request *CreateAccountRequest) (*data.Account, error) {
 	return &account, err
 }
 
-func UpdateAccount(account *data.Account, request *SetAccountRequest) error {
+func UpdateAccount(account *entities.Account, request *SetAccountRequest) error {
 	account.Description = request.Description
 	account.InstagramLink = request.InstagramLink
 	account.TwitterLink = request.TwitterLink
@@ -73,9 +73,9 @@ func UpdateAccount(account *data.Account, request *SetAccountRequest) error {
 	return storage.UpdateAccount(account)
 }
 
-func GetAccountsWithNameAlike(name string, limit int) ([]data.Account, error) {
+func GetAccountsWithNameAlike(name string, limit int) ([]entities.Account, error) {
 	var byteArray []byte
-	var accountArray []data.Account
+	var accountArray []entities.Account
 
 	cacheKey := fmt.Sprintf(AccountSearchCacheKeyFormat, name)
 	err := cache.GetCacher().Get(cacheKey, &byteArray)

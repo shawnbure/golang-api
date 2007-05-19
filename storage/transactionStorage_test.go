@@ -1,9 +1,9 @@
 package storage
 
 import (
+	"github.com/erdsea/erdsea-api/data/entities"
 	"testing"
 
-	"github.com/erdsea/erdsea-api/data"
 	"github.com/stretchr/testify/require"
 )
 
@@ -14,7 +14,7 @@ func Test_AddTransaction(t *testing.T) {
 	err := AddTransaction(&transaction)
 	require.Nil(t, err)
 
-	var transactionRead data.Transaction
+	var transactionRead entities.Transaction
 	txRead := GetDB().Last(&transactionRead)
 
 	require.Nil(t, txRead.Error)
@@ -157,8 +157,8 @@ func Test_GetSumBuyPriceForTransactionsWithCollectionId(t *testing.T) {
 	require.GreaterOrEqual(t, sumPrice, float64(1_000_000_000_000_000_000_000))
 }
 
-func defaultTransaction() data.Transaction {
-	return data.Transaction{
+func defaultTransaction() entities.Transaction {
+	return entities.Transaction{
 		Hash:         "hash",
 		Type:         "test",
 		PriceNominal: 1_000_000_000_000_000_000_000,
