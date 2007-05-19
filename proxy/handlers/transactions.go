@@ -14,7 +14,7 @@ import (
 const (
 	baseTransactionsEndpoint         = "/transactions"
 	transactionsListEndpoint         = "/list/:offset/:limit"
-	transactionsByAssetEndpoint      = "/asset/:assetId/:offset/:limit"
+	transactionsByTokenEndpoint      = "/token/:tokenId/:offset/:limit"
 	transactionsByAccountEndpoint    = "/account/:accountId/:offset/:limit"
 	transactionsByCollectionEndpoint = "/collection/:collectionId/:offset/:limit"
 )
@@ -27,7 +27,7 @@ func NewTransactionsHandler(groupHandler *groupHandler, authCfg config.AuthConfi
 
 	endpoints := []EndpointHandler{
 		{Method: http.MethodGet, Path: transactionsListEndpoint, HandlerFunc: handler.getList},
-		{Method: http.MethodGet, Path: transactionsByAssetEndpoint, HandlerFunc: handler.getByAsset},
+		{Method: http.MethodGet, Path: transactionsByTokenEndpoint, HandlerFunc: handler.getByToken},
 		{Method: http.MethodGet, Path: transactionsByAccountEndpoint, HandlerFunc: handler.getByAccount},
 		{Method: http.MethodGet, Path: transactionsByCollectionEndpoint, HandlerFunc: handler.getByCollection},
 	}
@@ -48,9 +48,9 @@ func NewTransactionsHandler(groupHandler *groupHandler, authCfg config.AuthConfi
 // @Produce json
 // @Param offset path int true "offset"
 // @Param limit path int true "limit"
-// @Success 200 {object} []data.Transaction
-// @Failure 400 {object} data.ApiResponse
-// @Failure 404 {object} data.ApiResponse
+// @Success 200 {object} []entities.Transaction
+// @Failure 400 {object} dtos.ApiResponse
+// @Failure 404 {object} dtos.ApiResponse
 // @Router /transactions/list/{offset}/{limit} [get]
 func (handler *transactionsHandler) getList(c *gin.Context) {
 	offsetStr := c.Param("offset")
@@ -77,24 +77,24 @@ func (handler *transactionsHandler) getList(c *gin.Context) {
 	dtos.JsonResponse(c, http.StatusOK, transactions, "")
 }
 
-// @Summary Gets transaction for an asset.
-// @Description Retrieves transactions for an asset. Unordered.
+// @Summary Gets transaction for an token.
+// @Description Retrieves transactions for an token. Unordered.
 // @Tags transactions
 // @Accept json
 // @Produce json
-// @Param assetId path uint64 true "asset id"
+// @Param tokenId path uint64 true "token id"
 // @Param offset path int true "offset"
 // @Param limit path int true "limit"
-// @Success 200 {object} []data.Transaction
-// @Failure 400 {object} data.ApiResponse
-// @Failure 404 {object} data.ApiResponse
-// @Router /transactions/asset/{assetId}/{offset}/{limit} [get]
-func (handler *transactionsHandler) getByAsset(c *gin.Context) {
-	assetIdString := c.Param("assetId")
+// @Success 200 {object} []entities.Transaction
+// @Failure 400 {object} dtos.ApiResponse
+// @Failure 404 {object} dtos.ApiResponse
+// @Router /transactions/token/{tokenId}/{offset}/{limit} [get]
+func (handler *transactionsHandler) getByToken(c *gin.Context) {
+	tokenIdString := c.Param("tokenId")
 	offsetStr := c.Param("offset")
 	limitStr := c.Param("limit")
 
-	assetId, err := strconv.ParseUint(assetIdString, 10, 64)
+	tokenId, err := strconv.ParseUint(tokenIdString, 10, 64)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
@@ -112,7 +112,7 @@ func (handler *transactionsHandler) getByAsset(c *gin.Context) {
 		return
 	}
 
-	transactions, err := storage.GetTransactionsByAssetIdWithOffsetLimit(assetId, offset, limit)
+	transactions, err := storage.GetTransactionsByTokenIdWithOffsetLimit(tokenId, offset, limit)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
@@ -129,9 +129,9 @@ func (handler *transactionsHandler) getByAsset(c *gin.Context) {
 // @Param accountId path uint64 true "account id"
 // @Param offset path int true "offset"
 // @Param limit path int true "limit"
-// @Success 200 {object} []data.Transaction
-// @Failure 400 {object} data.ApiResponse
-// @Failure 404 {object} data.ApiResponse
+// @Success 200 {object} []entities.Transaction
+// @Failure 400 {object} dtos.ApiResponse
+// @Failure 404 {object} dtos.ApiResponse
 // @Router /transactions/account/{accountId}/{offset}/{limit} [get]
 func (handler *transactionsHandler) getByAccount(c *gin.Context) {
 	accountIdString := c.Param("accountId")
@@ -173,9 +173,9 @@ func (handler *transactionsHandler) getByAccount(c *gin.Context) {
 // @Param collectionId path uint64 true "collection id"
 // @Param offset path int true "offset"
 // @Param limit path int true "limit"
-// @Success 200 {object} []data.Transaction
-// @Failure 400 {object} data.ApiResponse
-// @Failure 404 {object} data.ApiResponse
+// @Success 200 {object} []entities.Transaction
+// @Failure 400 {object} dtos.ApiResponse
+// @Failure 404 {object} dtos.ApiResponse
 // @Router /transactions/collection/{collectionId}/{offset}/{limit} [get]
 func (handler *transactionsHandler) getByCollection(c *gin.Context) {
 	collectionIdString := c.Param("collectionId")

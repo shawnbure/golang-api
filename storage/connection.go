@@ -3,9 +3,10 @@ package storage
 import (
 	"database/sql"
 	"errors"
+	"sync"
+
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"sync"
 
 	"github.com/erdsea/erdsea-api/config"
 	"github.com/erdsea/erdsea-api/data/entities"
@@ -52,7 +53,7 @@ func TryMigrate() error {
 		return err
 	}
 
-	err = db.AutoMigrate(&entities.Asset{})
+	err = db.AutoMigrate(&entities.Token{})
 	if err != nil {
 		return err
 	}

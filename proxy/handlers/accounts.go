@@ -15,7 +15,7 @@ import (
 const (
 	baseAccountsEndpoint   = "/accounts"
 	accountByIdEndpoint    = "/:accountId"
-	accountAssetsEndpoint  = "/:accountId/assets/:offset/:limit"
+	accountTokensEndpoint  = "/:accountId/tokens/:offset/:limit"
 	accountProfileEndpoint = "/:accountId/profile"
 	accountCoverEndpoint   = "/:accountId/cover"
 
@@ -41,7 +41,7 @@ func NewAccountsHandler(groupHandler *groupHandler, authCfg config.AuthConfig) {
 
 		{Method: http.MethodGet, Path: accountByAddressEndpoint, HandlerFunc: handler.getByAddress},
 		{Method: http.MethodPost, Path: createAccountEndpoint, HandlerFunc: handler.create},
-		{Method: http.MethodGet, Path: accountAssetsEndpoint, HandlerFunc: handler.getAccountAssets},
+		{Method: http.MethodGet, Path: accountTokensEndpoint, HandlerFunc: handler.getAccountTokens},
 	}
 
 	endpointGroupHandler := EndpointGroupHandler{
@@ -59,9 +59,9 @@ func NewAccountsHandler(groupHandler *groupHandler, authCfg config.AuthConfig) {
 // @Accept json
 // @Produce json
 // @Param accountId path string true "account id"
-// @Success 200 {object} data.Account
-// @Failure 400 {object} data.ApiResponse
-// @Failure 404 {object} data.ApiResponse
+// @Success 200 {object} entities.Account
+// @Failure 400 {object} dtos.ApiResponse
+// @Failure 404 {object} dtos.ApiResponse
 // @Router /accounts/{accountId} [get]
 func (handler *accountsHandler) get(c *gin.Context) {
 	accountIdString := c.Param("accountId")
@@ -87,9 +87,9 @@ func (handler *accountsHandler) get(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param accountAddress path string true "account address"
-// @Success 200 {object} data.Account
-// @Failure 400 {object} data.ApiResponse
-// @Failure 404 {object} data.ApiResponse
+// @Success 200 {object} entities.Account
+// @Failure 400 {object} dtos.ApiResponse
+// @Failure 404 {object} dtos.ApiResponse
 // @Router /accounts/find/{accountAddress} [get]
 func (handler *accountsHandler) getByAddress(c *gin.Context) {
 	accountAddress := c.Param("accountAddress")
@@ -110,10 +110,10 @@ func (handler *accountsHandler) getByAddress(c *gin.Context) {
 // @Produce json
 // @Param accountId path string true "account id"
 // @Param setAccountRequest body services.SetAccountRequest true "account info"
-// @Success 200 {object} data.Account
-// @Failure 400 {object} data.ApiResponse
-// @Failure 401 {object} data.ApiResponse
-// @Failure 500 {object} data.ApiResponse
+// @Success 200 {object} entities.Account
+// @Failure 400 {object} dtos.ApiResponse
+// @Failure 401 {object} dtos.ApiResponse
+// @Failure 500 {object} dtos.ApiResponse
 // @Router /accounts/{accountId} [post]
 func (handler *accountsHandler) set(c *gin.Context) {
 	var request services.SetAccountRequest
@@ -158,10 +158,10 @@ func (handler *accountsHandler) set(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param createAccountRequest body services.CreateAccountRequest true "account info"
-// @Success 200 {object} data.Account
-// @Failure 400 {object} data.ApiResponse
-// @Failure 401 {object} data.ApiResponse
-// @Failure 500 {object} data.ApiResponse
+// @Success 200 {object} entities.Account
+// @Failure 400 {object} dtos.ApiResponse
+// @Failure 401 {object} dtos.ApiResponse
+// @Failure 500 {object} dtos.ApiResponse
 // @Router /accounts/{address} [post]
 func (handler *accountsHandler) create(c *gin.Context) {
 	var request services.CreateAccountRequest
@@ -200,8 +200,8 @@ func (handler *accountsHandler) create(c *gin.Context) {
 // @Produce json
 // @Param accountId path uint64 true "account id"
 // @Success 200 {object} string
-// @Failure 400 {object} data.ApiResponse
-// @Failure 404 {object} data.ApiResponse
+// @Failure 400 {object} dtos.ApiResponse
+// @Failure 404 {object} dtos.ApiResponse
 // @Router /accounts/{accountId}/profile [get]
 func (handler *accountsHandler) getAccountProfile(c *gin.Context) {
 	accountIdString := c.Param("accountId")
@@ -229,9 +229,9 @@ func (handler *accountsHandler) getAccountProfile(c *gin.Context) {
 // @Param accountId path uint64 true "account id"
 // @Param image body string true "base64 encoded image"
 // @Success 200 {object} string
-// @Failure 400 {object} data.ApiResponse
-// @Failure 401 {object} data.ApiResponse
-// @Failure 500 {object} data.ApiResponse
+// @Failure 400 {object} dtos.ApiResponse
+// @Failure 401 {object} dtos.ApiResponse
+// @Failure 500 {object} dtos.ApiResponse
 // @Router /accounts/{accountId}/profile [post]
 func (handler *accountsHandler) setAccountProfile(c *gin.Context) {
 	var imageBase64 string
@@ -276,8 +276,8 @@ func (handler *accountsHandler) setAccountProfile(c *gin.Context) {
 // @Produce json
 // @Param accountId path uint64 true "account id"
 // @Success 200 {object} string
-// @Failure 400 {object} data.ApiResponse
-// @Failure 404 {object} data.ApiResponse
+// @Failure 400 {object} dtos.ApiResponse
+// @Failure 404 {object} dtos.ApiResponse
 // @Router /accounts/{accountId}/cover [get]
 func (handler *accountsHandler) getAccountCover(c *gin.Context) {
 	accountIdString := c.Param("accountId")
@@ -305,9 +305,9 @@ func (handler *accountsHandler) getAccountCover(c *gin.Context) {
 // @Param accountId path uint64 true "account id"
 // @Param image body string true "base64 encoded image"
 // @Success 200 {object} string
-// @Failure 400 {object} data.ApiResponse
-// @Failure 401 {object} data.ApiResponse
-// @Failure 500 {object} data.ApiResponse
+// @Failure 400 {object} dtos.ApiResponse
+// @Failure 401 {object} dtos.ApiResponse
+// @Failure 500 {object} dtos.ApiResponse
 // @Router /accounts/{accountId}/cover [post]
 func (handler *accountsHandler) setAccountCover(c *gin.Context) {
 	var imageBase64 string
@@ -345,19 +345,19 @@ func (handler *accountsHandler) setAccountCover(c *gin.Context) {
 	dtos.JsonResponse(c, http.StatusOK, "", "")
 }
 
-// @Summary Gets assets for an account.
-// @Description Retrieves a list of assets. Unsorted.
+// @Summary Gets tokens for an account.
+// @Description Retrieves a list of tokens. Unsorted.
 // @Tags accounts
 // @Accept json
 // @Produce json
 // @Param accountId path uint64 true "account id"
 // @Param offset path int true "offset"
 // @Param limit path int true "limit"
-// @Success 200 {object} []data.Asset
-// @Failure 400 {object} data.ApiResponse
-// @Failure 404 {object} data.ApiResponse
-// @Router /accounts/{accountId}/assets/{offset}/{limit} [get]
-func (handler *accountsHandler) getAccountAssets(c *gin.Context) {
+// @Success 200 {object} []entities.Token
+// @Failure 400 {object} dtos.ApiResponse
+// @Failure 404 {object} dtos.ApiResponse
+// @Router /accounts/{accountId}/tokens/{offset}/{limit} [get]
+func (handler *accountsHandler) getAccountTokens(c *gin.Context) {
 	accountIdString := c.Param("accountId")
 	offsetStr := c.Param("offset")
 	limitStr := c.Param("limit")
@@ -380,11 +380,11 @@ func (handler *accountsHandler) getAccountAssets(c *gin.Context) {
 		return
 	}
 
-	assets, err := storage.GetAssetsByOwnerIdWithOffsetLimit(accountId, offset, limit)
+	tokens, err := storage.GetTokensByOwnerIdWithOffsetLimit(accountId, offset, limit)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
-	dtos.JsonResponse(c, http.StatusOK, assets, "")
+	dtos.JsonResponse(c, http.StatusOK, tokens, "")
 }

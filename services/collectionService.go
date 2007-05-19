@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/erdsea/erdsea-api/data/dtos"
 	"time"
 
 	"github.com/erdsea/erdsea-api/cache"
@@ -43,14 +44,6 @@ type UpdateCollectionRequest struct {
 	TwitterLink   string `json:"twitterLink"`
 	InstagramLink string `json:"instagramLink"`
 	TelegramLink  string `json:"telegramLink"`
-}
-
-type CollectionStatistics struct {
-	ItemsCount   uint64                    `json:"itemsCount"`
-	OwnersCount  uint64                    `json:"ownersCount"`
-	FloorPrice   float64                   `json:"floorPrice"`
-	VolumeTraded float64                   `json:"volumeTraded"`
-	AttrStats    map[string]map[string]int `json:"attributes"`
 }
 
 type CollectionMetadata struct {
@@ -136,8 +129,8 @@ func UpdateCollection(collection *entities.Collection, request *UpdateCollection
 	return nil
 }
 
-func GetStatisticsForCollection(collectionId uint64) (*CollectionStatistics, error) {
-	var stats CollectionStatistics
+func GetStatisticsForCollection(collectionId uint64) (*dtos.CollectionStatistics, error) {
+	var stats dtos.CollectionStatistics
 	cacheKey := fmt.Sprintf(StatisticsCacheKeyFormat, collectionId)
 
 	err := cache.GetCacher().Get(cacheKey, &stats)
@@ -161,7 +154,7 @@ func GetStatisticsForCollection(collectionId uint64) (*CollectionStatistics, err
 		return nil, err
 	}
 
-	stats = CollectionStatistics{
+	stats = dtos.CollectionStatistics{
 		ItemsCount:   collectionMetadata.NumItems,
 		OwnersCount:  uint64(len(collectionMetadata.Owners)),
 		FloorPrice:   minPrice,
@@ -212,25 +205,25 @@ func computeCollectionMetadata(collectionId uint64) (*CollectionMetadata, error)
 	attrStats := make(map[string]map[string]int)
 
 	for {
-		assets, innerErr := storage.GetListedAssetsByCollectionIdWithOffsetLimit(collectionId, offset, limit)
+		tokens, innerErr := storage.GetListedTokensByCollectionIdWithOffsetLimit(collectionId, offset, limit)
 		if innerErr != nil {
 			return nil, innerErr
 		}
-		if len(assets) == 0 {
+		if len(tokens) == 0 {
 			break
 		}
 
-		numItems = numItems + len(assets)
-		for _, asset := range assets {
-			assetAttrs := make(map[string]string)
-			ownersIDs[asset.OwnerId] = true
+		numItems = numItems + len(tokens)
+		for _, token := range tokens {
+			tokenAttrs := make(map[string]string)
+			ownersIDs[token.OwnerId] = true
 
-			innerErr = json.Unmarshal(asset.Attributes, &assetAttrs)
+			innerErr = json.Unmarshal(token.Attributes, &tokenAttrs)
 			if innerErr != nil {
 				continue
 			}
 
-			for attrName, attrValue := range assetAttrs {
+			for attrName, attrValue := range tokenAttrs {
 				if _, ok := attrStats[attrName]; ok {
 					attrStats[attrName][attrValue] += 1
 				} else {
