@@ -1,6 +1,7 @@
 package services
 
 import (
+	"github.com/erdsea/erdsea-api/data"
 	"testing"
 
 	"github.com/erdsea/erdsea-api/cache"
@@ -54,6 +55,60 @@ func Test_GetCollectionStatistics(T *testing.T) {
 
 	stats, err = GetStatisticsForCollection(1)
 	require.Nil(T, err)
+	hits := cache.GetCacher().GetStats().Hits
+	require.GreaterOrEqual(T, hits.Load(), int64(1))
+}
+
+func Test_SearchCollection(T *testing.T) {
+	connectToDb()
+	cache.InitCacher(config.CacheConfig{Url: "redis://localhost:6379"})
+
+	coll := &data.Collection{
+		Name: "this name is uniquee",
+	}
+
+	coll.ID = 0
+	err := storage.AddNewCollection(coll)
+	require.Nil(T, err)
+
+	coll.ID = 0
+	err = storage.AddNewCollection(coll)
+	require.Nil(T, err)
+
+	coll.ID = 0
+	err = storage.AddNewCollection(coll)
+	require.Nil(T, err)
+
+	coll.ID = 0
+	err = storage.AddNewCollection(coll)
+	require.Nil(T, err)
+
+	coll.ID = 0
+	err = storage.AddNewCollection(coll)
+	require.Nil(T, err)
+
+	coll.ID = 0
+	err = storage.AddNewCollection(coll)
+	require.Nil(T, err)
+
+	colls, err := GetCollectionsWithNameAlike("uniquee", 5)
+	require.Nil(T, err)
+	require.Equal(T, len(colls), 5)
+	require.Equal(T, colls[0].Name, "this name is uniquee")
+	require.Equal(T, colls[1].Name, "this name is uniquee")
+	require.Equal(T, colls[2].Name, "this name is uniquee")
+	require.Equal(T, colls[3].Name, "this name is uniquee")
+	require.Equal(T, colls[4].Name, "this name is uniquee")
+
+	colls, err = GetCollectionsWithNameAlike("uniquee", 5)
+	require.Nil(T, err)
+	require.Equal(T, len(colls), 5)
+	require.Equal(T, colls[0].Name, "this name is uniquee")
+	require.Equal(T, colls[1].Name, "this name is uniquee")
+	require.Equal(T, colls[2].Name, "this name is uniquee")
+	require.Equal(T, colls[3].Name, "this name is uniquee")
+	require.Equal(T, colls[4].Name, "this name is uniquee")
+
 	hits := cache.GetCacher().GetStats().Hits
 	require.GreaterOrEqual(T, hits.Load(), int64(1))
 }

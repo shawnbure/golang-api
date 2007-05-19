@@ -65,6 +65,21 @@ func Test_GetCollectionByName(t *testing.T) {
 	require.Equal(t, retrievedCollection.Name, collection.Name)
 }
 
+func Test_GetCollectionsWithNameAlikeWithLimit(t *testing.T) {
+	connectToTestDb()
+
+	collection := defaultCollection()
+	_ = AddNewCollection(&collection)
+	collection.ID = 0
+	_ = AddNewCollection(&collection)
+
+	retrievedCollection, err := GetCollectionsWithNameAlikeWithLimit("default", 5)
+	require.Nil(t, err)
+	require.GreaterOrEqual(t, len(retrievedCollection), 2)
+	require.Equal(t, retrievedCollection[0].Name, "default")
+	require.Equal(t, retrievedCollection[1].Name, "default")
+}
+
 func defaultCollection() data.Collection {
 	return data.Collection{
 		Name:      "default",
