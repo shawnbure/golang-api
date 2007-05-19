@@ -11,6 +11,11 @@
         "erd333"
     ]
 
+    Identifiers = [
+        "Func1",
+        "Func2"
+    ]
+
 [Blockchain]
     ChainID = "D"
     GasPrice = 1_000_000_000

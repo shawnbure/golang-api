@@ -5,23 +5,30 @@ import (
 )
 
 type EventProcessor struct {
-	addressSet map[string]bool
-	eventsPool chan data.Event
+	addressSet     map[string]bool
+	identifiersSet map[string]bool
+	eventsPool     chan []data.Event
 
 	collected []data.Event
 }
 
-func NewEventProcessor(addresses []string) *EventProcessor {
-	set := map[string]bool{}
+func NewEventProcessor(addresses []string, identifiers []string) *EventProcessor {
+	addrSet := map[string]bool{}
+	idSet := map[string]bool{}
 
 	for _, addr := range addresses {
-		set[addr] = true
+		addrSet[addr] = true
+	}
+
+	for _, id := range identifiers {
+		idSet[id] = true
 	}
 
 	processor := &EventProcessor{
-		addressSet: set,
-		eventsPool: make(chan data.Event, 128),
-		collected:  []data.Event{},
+		addressSet:     addrSet,
+		identifiersSet: idSet,
+		eventsPool:     make(chan []data.Event),
+		collected:      []data.Event{},
 	}
 
 	go processor.PoolWorker()
@@ -30,21 +37,24 @@ func NewEventProcessor(addresses []string) *EventProcessor {
 }
 
 func (e *EventProcessor) PoolWorker() {
-	for event := range e.eventsPool {
-		e.collected = append(e.collected, event)
-	}
+	events := <-e.eventsPool
+	e.collected = append(e.collected, events...)
 }
 
 func (e *EventProcessor) OnEvents(events []data.Event) {
+	var filterableEvents []data.Event
+
 	for _, event := range events {
-		if e.isInSet(event.Address) {
-			e.eventsPool <- event
+		if e.isEventAccepted(event) {
+			filterableEvents = append(filterableEvents, event)
 		}
 	}
+
+	e.eventsPool <- filterableEvents
 
 	return
 }
 
-func (e *EventProcessor) isInSet(addr string) bool {
-	return e.addressSet[addr]
+func (e *EventProcessor) isEventAccepted(ev data.Event) bool {
+	return e.addressSet[ev.Address] && e.identifiersSet[ev.Identifier]
 }
