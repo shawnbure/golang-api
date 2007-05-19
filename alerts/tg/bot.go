@@ -8,6 +8,11 @@ import (
 	tb "gopkg.in/tucnak/telebot.v2"
 )
 
+type Bot interface {
+	Start()
+	ObserverDownAlert(lastBlockHash string)
+}
+
 type TelegramBot struct {
 	bot       *tb.Bot
 	recipient *recipient
@@ -38,13 +43,13 @@ func NewTelegramBot() (*TelegramBot, error) {
 	}, nil
 }
 
+func (tgb *TelegramBot) Start() {
+	go tgb.bot.Start()
+}
+
 func (tgb *TelegramBot) ObserverDownAlert(lastBlockHash string) {
 	msg := fmt.Sprintf("🚨🚨🚨\n\nObserver seems down. Last block hash received: %s", lastBlockHash)
 	_, _ = tgb.bot.Send(tgb.recipient, msg)
-}
-
-func (tgb *TelegramBot) Start() {
-	go tgb.bot.Start()
 }
 
 type recipient struct {

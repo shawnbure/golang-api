@@ -3,6 +3,8 @@ package process
 import (
 	"context"
 	"time"
+
+	"github.com/erdsea/erdsea-api/alerts/tg"
 )
 
 const (
@@ -15,14 +17,14 @@ type observerMonitor struct {
 	ticker *time.Ticker
 
 	livenessChan chan string
-	alertBot     interface{}
+	alertBot     tg.Bot
 
 	lastBlockHash string
 
 	ctx context.Context
 }
 
-func NewObserverMonitor(alertBot interface{}, ctx context.Context) *observerMonitor {
+func NewObserverMonitor(alertBot tg.Bot, ctx context.Context) *observerMonitor {
 	om := &observerMonitor{
 		watchDog:     false,
 		ticker:       time.NewTicker(tickInterval),
@@ -31,26 +33,29 @@ func NewObserverMonitor(alertBot interface{}, ctx context.Context) *observerMoni
 		ctx:          ctx,
 	}
 
-	go om.Monitor()
+	go om.monitor()
 
 	return om
 }
 
-func (om *observerMonitor) Monitor() {
+func (om *observerMonitor) WatchDogChan() chan string {
+	return om.livenessChan
+}
+
+func (om *observerMonitor) monitor() {
 	for {
 		select {
 		case hash := <-om.livenessChan:
 			om.lastBlockHash = hash
 			om.watchDog = true
 		case _ = <-om.ticker.C:
-			_ = om.alertBot
+			if !om.watchDog {
+				om.alertBot.ObserverDownAlert(om.lastBlockHash)
+			}
+			om.watchDog = false
 		case <-om.ctx.Done():
 			om.ticker.Stop()
 			return
 		}
 	}
-}
-
-func (om *observerMonitor) WatchDogChan() <-chan string {
-	return om.livenessChan
 }
