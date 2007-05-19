@@ -22,7 +22,7 @@ type createTokenRequest struct {
 	Message   string `json:"message"`
 }
 
-type refreshTokenRequest struct {
+type tokenPayload struct {
 	AccessToken  string `json:"accessToken"`
 	RefreshToken string `json:"refreshToken"`
 }
@@ -50,10 +50,14 @@ func NewAuthHandler(groupHandler *groupHandler, authService services.AuthService
 	groupHandler.AddEndpointGroupHandler(endpointGroupHandler)
 }
 
-// @Summary request a new token bla bla
-// @Description get bla bla bla bla bla
+// @Summary access token
+// @Description creates an access token
 // @Accept  json
 // @Produce  json
+// @Param tokenRequest body createTokenRequest true "token creation request"
+// @Success 200 {object} tokenPayload
+// @Failure 400 {object} data.ApiResponse
+// @Failure 500 {object} data.ApiResponse
 // @Router /auth/access [post]
 func (h *authHandler) createAccessToken(c *gin.Context) {
 	req := createTokenRequest{}
@@ -87,14 +91,14 @@ func (h *authHandler) createAccessToken(c *gin.Context) {
 		return
 	}
 
-	data.JsonResponse(c, http.StatusOK, gin.H{
-		"accessToken":  jwt,
-		"refreshToken": refresh,
+	data.JsonResponse(c, http.StatusOK, tokenPayload{
+		AccessToken:  jwt,
+		RefreshToken: refresh,
 	}, "")
 }
 
 func (h *authHandler) refreshAccessToken(c *gin.Context) {
-	req := refreshTokenRequest{}
+	req := tokenPayload{}
 
 	err := c.Bind(&req)
 	if err != nil {
@@ -108,9 +112,9 @@ func (h *authHandler) refreshAccessToken(c *gin.Context) {
 		return
 	}
 
-	data.JsonResponse(c, http.StatusOK, gin.H{
-		"accessToken":  jwt,
-		"refreshToken": refresh,
+	data.JsonResponse(c, http.StatusOK, tokenPayload{
+		AccessToken:  jwt,
+		RefreshToken: refresh,
 	}, "")
 }
 
