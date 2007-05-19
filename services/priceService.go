@@ -95,6 +95,23 @@ func HttpGet(url string, castTarget interface{}) error {
 	return json.Unmarshal(respBytes, castTarget)
 }
 
+func HttpGetRaw(url string) (string, error) {
+	client := &http.Client{}
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return "", err
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	respBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+	return string(respBytes), err
+}
+
 func StrToFloat64(v string) (float64, error) {
 	vFloat, err := strconv.ParseFloat(v, 64)
 	if err != nil {

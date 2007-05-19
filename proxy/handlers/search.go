@@ -3,9 +3,8 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/erdsea/erdsea-api/config"
-	"github.com/erdsea/erdsea-api/data"
-	"github.com/erdsea/erdsea-api/proxy/middleware"
+	"github.com/erdsea/erdsea-api/data/dtos"
+	"github.com/erdsea/erdsea-api/data/entities"
 	"github.com/erdsea/erdsea-api/services"
 	"github.com/gin-gonic/gin"
 )
@@ -20,14 +19,14 @@ const (
 )
 
 type GeneralSearchResponse struct {
-	Accounts    []data.Account
-	Collections []data.Collection
+	Accounts    []entities.Account
+	Collections []entities.Collection
 }
 
 type searchHandler struct {
 }
 
-func NewSearchHandler(groupHandler *groupHandler, authCfg config.AuthConfig) {
+func NewSearchHandler(groupHandler *groupHandler) {
 	handler := &searchHandler{}
 
 	endpoints := []EndpointHandler{
@@ -38,7 +37,7 @@ func NewSearchHandler(groupHandler *groupHandler, authCfg config.AuthConfig) {
 
 	endpointGroupHandler := EndpointGroupHandler{
 		Root:             baseSearchEndpoint,
-		Middlewares:      []gin.HandlerFunc{middleware.Authorization(authCfg.JwtSecret)},
+		Middlewares:      []gin.HandlerFunc{},
 		EndpointHandlers: endpoints,
 	}
 
@@ -52,20 +51,20 @@ func NewSearchHandler(groupHandler *groupHandler, authCfg config.AuthConfig) {
 // @Produce json
 // @Param searchString path string true "search string"
 // @Success 200 {object} GeneralSearchResponse
-// @Failure 500 {object} data.ApiResponse
+// @Failure 500 {object} dtos.ApiResponse
 // @Router /search/{searchString} [get]
 func (handler *searchHandler) search(c *gin.Context) {
 	searchString := c.Param("searchString")
 
 	collections, err := services.GetCollectionsWithNameAlike(searchString, SearchCategoryLimit)
 	if err != nil {
-		data.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
 	}
 
 	accounts, err := services.GetAccountsWithNameAlike(searchString, SearchCategoryLimit)
 	if err != nil {
-		data.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
 	}
 
@@ -73,7 +72,7 @@ func (handler *searchHandler) search(c *gin.Context) {
 		Accounts:    accounts,
 		Collections: collections,
 	}
-	data.JsonResponse(c, http.StatusOK, response, "")
+	dtos.JsonResponse(c, http.StatusOK, response, "")
 }
 
 // @Summary Search collections by name.
@@ -82,19 +81,19 @@ func (handler *searchHandler) search(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param collectionName path string true "search string"
-// @Success 200 {object} []data.Collection
-// @Failure 500 {object} data.ApiResponse
+// @Success 200 {object} []entities.Collection
+// @Failure 500 {object} dtos.ApiResponse
 // @Router /search/collections/{collectionName} [get]
 func (handler *searchHandler) collectionSearch(c *gin.Context) {
 	collectionName := c.Param("collectionName")
 
 	collections, err := services.GetCollectionsWithNameAlike(collectionName, SearchCategoryLimit)
 	if err != nil {
-		data.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
 	}
 
-	data.JsonResponse(c, http.StatusOK, collections, "")
+	dtos.JsonResponse(c, http.StatusOK, collections, "")
 }
 
 // @Summary Search accounts by name.
@@ -103,17 +102,17 @@ func (handler *searchHandler) collectionSearch(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param accountName path string true "search string"
-// @Success 200 {object} []data.Account
-// @Failure 500 {object} data.ApiResponse
+// @Success 200 {object} []entities.Account
+// @Failure 500 {object} dtos.ApiResponse
 // @Router /search/accounts/{accountName} [get]
 func (handler *searchHandler) accountSearch(c *gin.Context) {
 	accountName := c.Param("accountName")
 
 	accounts, err := services.GetAccountsWithNameAlike(accountName, SearchCategoryLimit)
 	if err != nil {
-		data.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
 	}
 
-	data.JsonResponse(c, http.StatusOK, accounts, "")
+	dtos.JsonResponse(c, http.StatusOK, accounts, "")
 }

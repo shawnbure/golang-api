@@ -1,4 +1,4 @@
-package data
+package entities
 
 type Event struct {
 	Address    string   `json:"address"`

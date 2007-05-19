@@ -3,13 +3,14 @@ package storage
 import (
 	"database/sql"
 	"errors"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
 	"sync"
 
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+
 	"github.com/erdsea/erdsea-api/config"
-	"github.com/erdsea/erdsea-api/data"
-	"github.com/erdsea/erdsea-api/data/images"
+	"github.com/erdsea/erdsea-api/data/entities"
+	"github.com/erdsea/erdsea-api/data/entities/images"
 	_ "github.com/lib/pq"
 )
 
@@ -43,26 +44,103 @@ func Connect(cfg config.DatabaseConfig) {
 		if err != nil {
 			panic(err)
 		}
+
+		err = createDefaultEntitiesIfNotExist()
+		if err != nil {
+			panic(err)
+		}
 	})
 }
 
+func createDefaultEntitiesIfNotExist() error {
+	err := createDefaultAccountIfNotExist()
+	if err != nil {
+		return err
+	}
+
+	err = createDefaultCollectionIfNotExist()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func createDefaultAccountIfNotExist() error {
+	account := entities.Account{}
+	tx := db.Where("id = 0").Find(&account)
+	if tx.Error != nil {
+		return tx.Error
+	}
+	if tx.RowsAffected == 1 {
+		return nil
+	}
+
+	tx = db.Create(&account)
+	if tx.Error != nil {
+		return tx.Error
+	}
+	if tx.RowsAffected == 0 {
+		return errors.New("could not create account")
+	}
+
+	tx = db.Table("accounts").Where("id = ?", account.ID).Update("id", uint64(0))
+	if tx.Error != nil {
+		return tx.Error
+	}
+	if tx.RowsAffected == 0 {
+		return errors.New("could not update new account to id = 0")
+	}
+
+	return nil
+}
+
+func createDefaultCollectionIfNotExist() error {
+	collection := entities.Collection{}
+	tx := db.Where("id = 0").Find(&collection)
+	if tx.Error != nil {
+		return tx.Error
+	}
+	if tx.RowsAffected == 1 {
+		return nil
+	}
+
+	tx = db.Create(&collection)
+	if tx.Error != nil {
+		return tx.Error
+	}
+	if tx.RowsAffected == 0 {
+		return errors.New("could not create collection")
+	}
+
+	tx = db.Table("collections").Where("id = ?", collection.ID).Update("id", uint64(0))
+	if tx.Error != nil {
+		return tx.Error
+	}
+	if tx.RowsAffected == 0 {
+		return errors.New("could not update new collection to id = 0")
+	}
+
+	return nil
+}
+
 func TryMigrate() error {
-	err := db.AutoMigrate(&data.Account{})
+	err := db.AutoMigrate(&entities.Account{})
 	if err != nil {
 		return err
 	}
 
-	err = db.AutoMigrate(&data.Asset{})
+	err = db.AutoMigrate(&entities.Token{})
 	if err != nil {
 		return err
 	}
 
-	err = db.AutoMigrate(&data.Transaction{})
+	err = db.AutoMigrate(&entities.Transaction{})
 	if err != nil {
 		return err
 	}
 
-	err = db.AutoMigrate(&data.Collection{})
+	err = db.AutoMigrate(&entities.Collection{})
 	if err != nil {
 		return err
 	}

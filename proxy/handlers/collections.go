@@ -1,26 +1,32 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/erdsea/erdsea-api/config"
-	"github.com/erdsea/erdsea-api/data"
+	"github.com/erdsea/erdsea-api/data/dtos"
 	"github.com/erdsea/erdsea-api/proxy/middleware"
 	"github.com/erdsea/erdsea-api/services"
+	"github.com/erdsea/erdsea-api/stats/collstats"
 	"github.com/erdsea/erdsea-api/storage"
 	"github.com/gin-gonic/gin"
 )
 
+type RankingEntry = collstats.LeaderboardEntry
+
 const (
-	baseCollectionsEndpoint      = "/collections"
-	collectionByNameEndpoint     = "/:collectionName"
-	collectionListEndpoint       = "/list/:offset/:limit"
-	collectionCreateEndpoint     = "/create"
-	collectionStatisticsEndpoint = "/:collectionName/statistics"
-	collectionAssetsEndpoint     = "/:collectionName/assets/:offset/:limit"
-	collectionProfileEndpoint    = "/:collectionName/profile/"
-	collectionCoverEndpoint      = "/:collectionName/cover"
+	baseCollectionsEndpoint    = "/collections"
+	collectionByNameEndpoint   = "/:collectionId"
+	collectionListEndpoint     = "/list/:offset/:limit"
+	collectionCreateEndpoint   = "/create"
+	collectionTokensEndpoint   = "/:collectionId/tokens/:offset/:limit"
+	collectionProfileEndpoint  = "/:collectionId/profile/"
+	collectionCoverEndpoint    = "/:collectionId/cover"
+	collectionMintInfoEndpoint = "/:collectionId/mintInfo"
+	collectionRankingEndpoint  = "/rankings/:offset/:limit"
 )
 
 type collectionsHandler struct {
@@ -31,40 +37,45 @@ func NewCollectionsHandler(groupHandler *groupHandler, authCfg config.AuthConfig
 	handler := &collectionsHandler{blockchainCfg: blockchainCfg}
 
 	endpoints := []EndpointHandler{
-		{Method: http.MethodGet, Path: collectionListEndpoint, HandlerFunc: handler.getList},
-		{Method: http.MethodGet, Path: collectionByNameEndpoint, HandlerFunc: handler.get},
 		{Method: http.MethodPost, Path: collectionByNameEndpoint, HandlerFunc: handler.set},
-
-		{Method: http.MethodGet, Path: collectionStatisticsEndpoint, HandlerFunc: handler.getStatisticsForCollectionWithName},
 		{Method: http.MethodPost, Path: collectionCreateEndpoint, HandlerFunc: handler.create},
-		{Method: http.MethodGet, Path: collectionAssetsEndpoint, HandlerFunc: handler.getAssetsForCollectionWithName},
-
-		{Method: http.MethodGet, Path: collectionProfileEndpoint, HandlerFunc: handler.getCollectionProfile},
 		{Method: http.MethodPost, Path: collectionProfileEndpoint, HandlerFunc: handler.setCollectionProfile},
-
-		{Method: http.MethodGet, Path: collectionCoverEndpoint, HandlerFunc: handler.getCollectionCover},
 		{Method: http.MethodPost, Path: collectionCoverEndpoint, HandlerFunc: handler.setCollectionCover},
 	}
-
 	endpointGroupHandler := EndpointGroupHandler{
 		Root:             baseCollectionsEndpoint,
 		Middlewares:      []gin.HandlerFunc{middleware.Authorization(authCfg.JwtSecret)},
 		EndpointHandlers: endpoints,
 	}
-
 	groupHandler.AddEndpointGroupHandler(endpointGroupHandler)
+
+	publicEndpoints := []EndpointHandler{
+		{Method: http.MethodGet, Path: collectionListEndpoint, HandlerFunc: handler.getList},
+		{Method: http.MethodGet, Path: collectionByNameEndpoint, HandlerFunc: handler.get},
+		{Method: http.MethodGet, Path: collectionTokensEndpoint, HandlerFunc: handler.getTokens},
+		{Method: http.MethodGet, Path: collectionProfileEndpoint, HandlerFunc: handler.getCollectionProfile},
+		{Method: http.MethodGet, Path: collectionCoverEndpoint, HandlerFunc: handler.getCollectionCover},
+		{Method: http.MethodGet, Path: collectionMintInfoEndpoint, HandlerFunc: handler.getMintInfo},
+		{Method: http.MethodGet, Path: collectionRankingEndpoint, HandlerFunc: handler.getCollectionRankings},
+	}
+	publicEndpointGroupHandler := EndpointGroupHandler{
+		Root:             baseCollectionsEndpoint,
+		Middlewares:      []gin.HandlerFunc{},
+		EndpointHandlers: publicEndpoints,
+	}
+	groupHandler.AddEndpointGroupHandler(publicEndpointGroupHandler)
 }
 
 // @Summary Gets collections.
-// @Description Retrieves a list of collections. Unsorted.
+// @Description Retrieves a list of collections. Sorted by priority.
 // @Tags collections
 // @Accept json
 // @Produce json
 // @Param offset path int true "offset"
 // @Param limit path int true "limit"
-// @Success 200 {object} []data.Collection
-// @Failure 400 {object} data.ApiResponse
-// @Failure 404 {object} data.ApiResponse
+// @Success 200 {object} []entities.Collection
+// @Failure 400 {object} dtos.ApiResponse
+// @Failure 404 {object} dtos.ApiResponse
 // @Router /collections/list/{offset}/{limit} [get]
 func (handler *collectionsHandler) getList(c *gin.Context) {
 	offsetStr := c.Param("offset")
@@ -72,44 +83,63 @@ func (handler *collectionsHandler) getList(c *gin.Context) {
 
 	offset, err := strconv.Atoi(offsetStr)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	limit, err := strconv.Atoi(limitStr)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	collections, err := storage.GetCollectionsWithOffsetLimit(offset, limit)
 	if err != nil {
-		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
-	data.JsonResponse(c, http.StatusOK, collections, "")
+	dtos.JsonResponse(c, http.StatusOK, collections, "")
 }
 
-// @Summary Gets collection by name.
-// @Description Retrieves a collection by its name.
+// @Summary Gets collection by collection id.
+// @Description Retrieves a collection by id.
 // @Tags collections
 // @Accept json
 // @Produce json
-// @Param collectionName path string true "collection name"
-// @Success 200 {object} data.Collection
-// @Failure 404 {object} data.ApiResponse
-// @Router /collections/{collectionName} [get]
+// @Param collectionId path string true "collection id"
+// @Success 200 {object} dtos.ExtendedCollectionDto
+// @Failure 400 {object} dtos.ApiResponse
+// @Failure 404 {object} dtos.ApiResponse
+// @Failure 500 {object} dtos.ApiResponse
+// @Router /collections/{collectionId} [get]
 func (handler *collectionsHandler) get(c *gin.Context) {
-	collectionName := c.Param("collectionName")
+	tokenId := c.Param("collectionId")
 
-	collection, err := storage.GetCollectionByName(collectionName)
+	cacheInfo, err := collstats.GetOrAddCollectionCacheInfo(tokenId)
 	if err != nil {
-		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
-	data.JsonResponse(c, http.StatusOK, collection, "")
+	collection, err := storage.GetCollectionById(cacheInfo.CollectionId)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	collectionStats, err := collstats.GetStatisticsForTokenId(tokenId)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		return
+	}
+
+	extendedDto := dtos.ExtendedCollectionDto{
+		Collection: *collection,
+		Statistics: *collectionStats,
+	}
+
+	dtos.JsonResponse(c, http.StatusOK, extendedDto, "")
 }
 
 // @Summary Set collection info.
@@ -117,70 +147,54 @@ func (handler *collectionsHandler) get(c *gin.Context) {
 // @Tags collections
 // @Accept json
 // @Produce json
-// @Param collectionName path string true "collection name"
+// @Param collectionId path string true "collection id"
 // @Param updateCollectionRequest body services.UpdateCollectionRequest true "collection info"
-// @Success 200 {object} data.Collection
-// @Failure 401 {object} data.ApiResponse
-// @Failure 404 {object} data.ApiResponse
-// @Failure 500 {object} data.ApiResponse
-// @Router /collections/{collectionName} [post]
+// @Success 200 {object} entities.Collection
+// @Failure 401 {object} dtos.ApiResponse
+// @Failure 404 {object} dtos.ApiResponse
+// @Failure 500 {object} dtos.ApiResponse
+// @Router /collections/{collectionId} [post]
 func (handler *collectionsHandler) set(c *gin.Context) {
-	collectionName := c.Param("collectionName")
 	var request services.UpdateCollectionRequest
+	tokenId := c.Param("collectionId")
 
-	collection, err := storage.GetCollectionByName(collectionName)
+	err := c.Bind(&request)
 	if err != nil {
-		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	cacheInfo, err := collstats.GetOrAddCollectionCacheInfo(tokenId)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	collection, err := storage.GetCollectionById(cacheInfo.CollectionId)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
 	creator, err := storage.GetAccountById(collection.CreatorID)
 	if err != nil {
-		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
 	jwtAddress := c.GetString(middleware.AddressKey)
 	if creator.Address != jwtAddress {
-		data.JsonResponse(c, http.StatusUnauthorized, nil, "")
+		dtos.JsonResponse(c, http.StatusUnauthorized, nil, "")
 		return
 	}
 
 	err = services.UpdateCollection(collection, &request)
 	if err != nil {
-		data.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
 	}
 
-	data.JsonResponse(c, http.StatusOK, collection, "")
-}
-
-// @Summary Gets collection statistics.
-// @Description Gets statistics for a collection. It will be cached for 10 minutes.
-// @Tags collections
-// @Accept json
-// @Produce json
-// @Param collectionName path string true "collection name"
-// @Success 200 {object} services.CollectionStatistics
-// @Failure 404 {object} data.ApiResponse
-// @Failure 500 {object} data.ApiResponse
-// @Router /collections/{collectionName}/statistics [post]
-func (handler *collectionsHandler) getStatisticsForCollectionWithName(c *gin.Context) {
-	collectionName := c.Param("collectionName")
-
-	collection, err := storage.GetCollectionByName(collectionName)
-	if err != nil {
-		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
-		return
-	}
-
-	stats, err := services.GetStatisticsForCollection(collection.ID)
-	if err != nil {
-		data.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
-		return
-	}
-
-	data.JsonResponse(c, http.StatusOK, stats, "")
+	dtos.JsonResponse(c, http.StatusOK, collection, "")
 }
 
 // @Summary Creates a collection.
@@ -189,77 +203,86 @@ func (handler *collectionsHandler) getStatisticsForCollectionWithName(c *gin.Con
 // @Accept json
 // @Produce json
 // @Param createCollectionRequest body services.CreateCollectionRequest true "collection info"
-// @Success 200 {object} data.Collection
-// @Failure 400 {object} data.ApiResponse
-// @Failure 401 {object} data.ApiResponse
-// @Failure 500 {object} data.ApiResponse
+// @Success 200 {object} entities.Collection
+// @Failure 400 {object} dtos.ApiResponse
+// @Failure 401 {object} dtos.ApiResponse
+// @Failure 500 {object} dtos.ApiResponse
 // @Router /collections/create [post]
 func (handler *collectionsHandler) create(c *gin.Context) {
 	var request services.CreateCollectionRequest
 
 	err := c.Bind(&request)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	jwtAddress := c.GetString(middleware.AddressKey)
 	if jwtAddress != request.UserAddress {
-		data.JsonResponse(c, http.StatusUnauthorized, nil, "jwt and request addresses differ")
+		dtos.JsonResponse(c, http.StatusUnauthorized, nil, "jwt and request addresses differ")
 		return
 	}
 
 	collection, err := services.CreateCollection(&request, handler.blockchainCfg.ProxyUrl)
 	if err != nil {
-		data.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
 	}
 
-	data.JsonResponse(c, http.StatusOK, collection, "")
+	dtos.JsonResponse(c, http.StatusOK, collection, "")
 }
 
-// @Summary Get collection assets.
-// @Description Retrieves the assets of a collection. Unsorted.
+// @Summary Get collection tokens.
+// @Description Retrieves the tokens of a collection. Unsorted.
 // @Tags collections
 // @Accept json
 // @Produce json
-// @Param collectionName path string true "collection name"
+// @Param collectionId path string true "collection id"
 // @Param offset path int true "offset"
 // @Param limit path int true "limit"
-// @Success 200 {object} []data.Asset
-// @Failure 400 {object} data.ApiResponse
-// @Failure 404 {object} data.ApiResponse
-// @Router /collections/{collectionName}/assets/{offset}/{limit} [get]
-func (handler *collectionsHandler) getAssetsForCollectionWithName(c *gin.Context) {
-	collectionName := c.Param("collectionName")
+// @Success 200 {object} []entities.Token
+// @Failure 400 {object} dtos.ApiResponse
+// @Failure 404 {object} dtos.ApiResponse
+// @Router /collections/{collectionId}/tokens/{offset}/{limit} [get]
+func (handler *collectionsHandler) getTokens(c *gin.Context) {
 	offsetStr := c.Param("offset")
 	limitStr := c.Param("limit")
+	filters := c.QueryMap("filters")
+	tokenId := c.Param("collectionId")
+	sortRules := c.QueryMap("sort")
+
+	acceptedCriteria := map[string]bool{"price_nominal": true, "created_at": true}
+	err := testInputSortParams(sortRules, acceptedCriteria)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	cacheInfo, err := collstats.GetOrAddCollectionCacheInfo(tokenId)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
 
 	offset, err := strconv.Atoi(offsetStr)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	limit, err := strconv.Atoi(limitStr)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
-	collection, err := storage.GetCollectionByName(collectionName)
+	tokens, err := storage.GetTokensByCollectionIdWithOffsetLimit(cacheInfo.CollectionId, offset, limit, filters, sortRules)
 	if err != nil {
-		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
-	assets, err := storage.GetAssetsByCollectionIdWithOffsetLimit(collection.ID, offset, limit)
-	if err != nil {
-		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
-		return
-	}
-
-	data.JsonResponse(c, http.StatusOK, assets, "")
+	dtos.JsonResponse(c, http.StatusOK, tokens, "")
 }
 
 // @Summary Get collection profile image
@@ -267,20 +290,27 @@ func (handler *collectionsHandler) getAssetsForCollectionWithName(c *gin.Context
 // @Tags collections
 // @Accept json
 // @Produce json
-// @Param collectionName path string true "collection name"
+// @Param collectionId path string true "collection id"
 // @Success 200 {object} string
-// @Failure 404 {object} data.ApiResponse
-// @Router /collections/{collectionName}/profile [get]
+// @Failure 400 {object} dtos.ApiResponse
+// @Failure 404 {object} dtos.ApiResponse
+// @Router /collections/{collectionId}/profile [get]
 func (handler *collectionsHandler) getCollectionProfile(c *gin.Context) {
-	collectionName := c.Param("collectionName")
+	tokenId := c.Param("collectionId")
 
-	image, err := services.GetCollectionProfileImage(collectionName)
+	cacheInfo, err := collstats.GetOrAddCollectionCacheInfo(tokenId)
 	if err != nil {
-		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
-	data.JsonResponse(c, http.StatusOK, &image, "")
+	image, err := storage.GetCollectionProfileImageByCollectionId(cacheInfo.CollectionId)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	dtos.JsonResponse(c, http.StatusOK, &image, "")
 }
 
 // @Summary Set collection profile image
@@ -288,30 +318,53 @@ func (handler *collectionsHandler) getCollectionProfile(c *gin.Context) {
 // @Tags collections
 // @Accept json
 // @Produce json
-// @Param collectionName path string true "collection name"
+// @Param collectionId path string true "collection id"
 // @Param image body string true "base64 encoded image"
 // @Success 200 {object} string
-// @Failure 400 {object} data.ApiResponse
-// @Failure 500 {object} data.ApiResponse
-// @Router /collections/{collectionName}/profile [post]
+// @Failure 400 {object} dtos.ApiResponse
+// @Failure 500 {object} dtos.ApiResponse
+// @Router /collections/{collectionId}/profile [post]
 func (handler *collectionsHandler) setCollectionProfile(c *gin.Context) {
 	var imageBase64 string
-	collectionName := c.Param("collectionName")
+	tokenId := c.Param("collectionId")
 
 	err := c.Bind(&imageBase64)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	cacheInfo, err := collstats.GetOrAddCollectionCacheInfo(tokenId)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	collection, err := storage.GetCollectionById(cacheInfo.CollectionId)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	account, err := storage.GetAccountById(collection.CreatorID)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
 	jwtAddress := c.GetString(middleware.AddressKey)
-	err = services.SetCollectionProfileImage(collectionName, &imageBase64, jwtAddress)
-	if err != nil {
-		data.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+	if account.Address != jwtAddress {
+		dtos.JsonResponse(c, http.StatusUnauthorized, nil, "")
 		return
 	}
 
-	data.JsonResponse(c, http.StatusOK, "", "")
+	err = services.SetCollectionProfileImage(cacheInfo.CollectionId, &imageBase64)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		return
+	}
+
+	dtos.JsonResponse(c, http.StatusOK, "", "")
 }
 
 // @Summary Get collection cover image
@@ -319,20 +372,27 @@ func (handler *collectionsHandler) setCollectionProfile(c *gin.Context) {
 // @Tags collections
 // @Accept json
 // @Produce json
-// @Param collectionName path string true "collection name"
+// @Param collectionId path string true "collection id"
 // @Success 200 {object} string
-// @Failure 404 {object} data.ApiResponse
-// @Router /collections/{collectionName}/cover [get]
+// @Failure 400 {object} dtos.ApiResponse
+// @Failure 404 {object} dtos.ApiResponse
+// @Router /collections/{collectionId}/cover [get]
 func (handler *collectionsHandler) getCollectionCover(c *gin.Context) {
-	collectionName := c.Param("collectionName")
+	tokenId := c.Param("collectionId")
 
-	image, err := services.GetCollectionCoverImage(collectionName)
+	cacheInfo, err := collstats.GetOrAddCollectionCacheInfo(tokenId)
 	if err != nil {
-		data.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
-	data.JsonResponse(c, http.StatusOK, &image, "")
+	image, err := storage.GetCollectionCoverImageByCollectionId(cacheInfo.CollectionId)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	dtos.JsonResponse(c, http.StatusOK, &image, "")
 }
 
 // @Summary Set collection cover image
@@ -340,28 +400,178 @@ func (handler *collectionsHandler) getCollectionCover(c *gin.Context) {
 // @Tags collections
 // @Accept json
 // @Produce json
-// @Param collectionName path string true "collection name"
+// @Param collectionId path string true "collection id"
 // @Param image body string true "base64 encoded image"
 // @Success 200 {object} string
-// @Failure 400 {object} data.ApiResponse
-// @Failure 500 {object} data.ApiResponse
-// @Router /collections/{collectionName}/cover [post]
+// @Failure 400 {object} dtos.ApiResponse
+// @Failure 401 {object} dtos.ApiResponse
+// @Failure 500 {object} dtos.ApiResponse
+// @Router /collections/{collectionId}/cover [post]
 func (handler *collectionsHandler) setCollectionCover(c *gin.Context) {
 	var imageBase64 string
-	collectionName := c.Param("collectionName")
+	tokenId := c.Param("collectionId")
 
 	err := c.Bind(&imageBase64)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	cacheInfo, err := collstats.GetOrAddCollectionCacheInfo(tokenId)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	collection, err := storage.GetCollectionById(cacheInfo.CollectionId)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	account, err := storage.GetAccountById(collection.CreatorID)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
 	jwtAddress := c.GetString(middleware.AddressKey)
-	err = services.SetCollectionCoverImage(collectionName, &imageBase64, jwtAddress)
-	if err != nil {
-		data.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+	if account.Address != jwtAddress {
+		dtos.JsonResponse(c, http.StatusUnauthorized, nil, "")
 		return
 	}
 
-	data.JsonResponse(c, http.StatusOK, "", "")
+	err = services.SetCollectionCoverImage(cacheInfo.CollectionId, &imageBase64)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		return
+	}
+
+	dtos.JsonResponse(c, http.StatusOK, "", "")
+}
+
+// @Summary Gets mint info about a collection.
+// @Description Retrieves max supply and total sold for a collection. Cached for 6 seconds.
+// @Tags collections
+// @Accept json
+// @Produce json
+// @Param collectionId path string true "collection id"
+// @Success 200 {object} services.MintInfo
+// @Failure 400 {object} dtos.ApiResponse
+// @Failure 404 {object} dtos.ApiResponse
+// @Failure 500 {object} dtos.ApiResponse
+// @Router /collections/{collectionId}/mintInfo [get]
+func (handler *collectionsHandler) getMintInfo(c *gin.Context) {
+	tokenId := c.Param("collectionId")
+
+	cacheInfo, err := collstats.GetOrAddCollectionCacheInfo(tokenId)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	collection, err := storage.GetCollectionById(cacheInfo.CollectionId)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	if len(collection.ContractAddress) == 0 {
+		dtos.JsonResponse(c, http.StatusNotFound, nil, "no contract address")
+		return
+	}
+
+	mintInfo, err := services.GetMintInfoForContract(collection.ContractAddress)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, "")
+		return
+	}
+
+	dtos.JsonResponse(c, http.StatusOK, mintInfo, "")
+}
+
+// @Summary Get collection rankings
+// @Description Acts as a leaderboard. Optionally provide ?sort[criteria]=volumeTraded&sort[mode]=asc
+// @Tags collections
+// @Accept json
+// @Produce json
+// @Param offset path int true "offset"
+// @Param limit path int true "limit"
+// @Success 200 {object} RankingEntry
+// @Failure 400 {object} dtos.ApiResponse
+// @Failure 500 {object} dtos.ApiResponse
+// @Router /collections/rankings/{offset}/{limit} [get]
+func (handler *collectionsHandler) getCollectionRankings(c *gin.Context) {
+	offsetStr := c.Param("offset")
+	limitStr := c.Param("limit")
+	sortParams := c.QueryMap("sort")
+
+	offset, err := strconv.Atoi(offsetStr)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	if len(sortParams) == 0 {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, "no sorting rules")
+		return
+	}
+
+	acceptedCriteria := map[string]bool{
+		"floorprice":   true,
+		"volumetraded": true,
+		"itemstotal":   true,
+		"ownerstotal":  true,
+	}
+	err = testInputSortParams(sortParams, acceptedCriteria)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	table := sortParams["criteria"]
+	isRev := strings.ToLower(sortParams["mode"]) == "desc"
+	entries, err := collstats.GetLeaderboardEntries(table, offset, limit, isRev)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		return
+	}
+
+	dtos.JsonResponse(c, http.StatusOK, entries, "")
+}
+
+func testInputSortParams(sortParams map[string]string, acceptedCriteria map[string]bool) error {
+	if len(sortParams) == 0 {
+		return nil
+	}
+
+	if len(sortParams) != 2 {
+		return errors.New("bad sorting input len")
+	}
+
+	if v, ok := sortParams["mode"]; ok {
+		vLower := strings.ToLower(v)
+		if vLower != "asc" && vLower != "desc" {
+			return errors.New("bad sorting mode")
+		}
+	} else {
+		return errors.New("no sorting mode")
+	}
+
+	if v, ok := sortParams["criteria"]; ok {
+		vLower := strings.ToLower(v)
+		if _, accepted := acceptedCriteria[vLower]; !accepted {
+			return errors.New("bad sorting criteria")
+		}
+	} else {
+		return errors.New("no sorting criteria")
+	}
+
+	return nil
 }

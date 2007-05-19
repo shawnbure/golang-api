@@ -6,6 +6,7 @@ require (
 	github.com/ElrondNetwork/elrond-go-core v1.0.1-0.20210721164025-65cf7f169349
 	github.com/ElrondNetwork/elrond-go-logger v1.0.4
 	github.com/ElrondNetwork/elrond-sdk-erdgo v1.0.0
+	github.com/boltdb/bolt v1.3.1
 	github.com/cpuguy83/go-md2man/v2 v2.0.1 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gin-contrib/cors v0.0.0-20190301062745-f9e10995c85a
@@ -31,7 +32,8 @@ require (
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/tools v0.1.6 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
-	gopkg.in/tucnak/telebot.v2 v2.4.0 // indirect
+	gopkg.in/tucnak/telebot.v2 v2.4.0
+	gorm.io/datatypes v1.0.2
 	gorm.io/driver/postgres v1.1.0
-	gorm.io/gorm v1.21.14
+	gorm.io/gorm v1.21.15
 )

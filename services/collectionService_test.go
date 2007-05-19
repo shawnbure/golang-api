@@ -1,11 +1,16 @@
 package services
 
 import (
+	"gorm.io/datatypes"
+	"strconv"
 	"testing"
+	"time"
 
 	"github.com/erdsea/erdsea-api/cache"
 	"github.com/erdsea/erdsea-api/config"
-	"github.com/erdsea/erdsea-api/data"
+	"github.com/erdsea/erdsea-api/data/entities"
+	"github.com/erdsea/erdsea-api/interaction"
+	"github.com/erdsea/erdsea-api/stats"
 	"github.com/erdsea/erdsea-api/storage"
 	"github.com/stretchr/testify/require"
 )
@@ -46,24 +51,19 @@ func Test_GetCollectionStatistics(T *testing.T) {
 	connectToDb()
 	cache.InitCacher(config.CacheConfig{Url: "redis://localhost:6379"})
 
-	stats, err := GetStatisticsForCollection(1)
+	collectionStats, err := stats.ComputeStatisticsForCollection(1)
 	require.Nil(T, err)
-	require.GreaterOrEqual(T, stats.FloorPrice, float64(1))
-	require.GreaterOrEqual(T, stats.ItemsCount, uint64(1))
-	require.GreaterOrEqual(T, stats.OwnersCount, uint64(1))
-	require.GreaterOrEqual(T, stats.VolumeTraded, float64(1))
-
-	stats, err = GetStatisticsForCollection(1)
-	require.Nil(T, err)
-	hits := cache.GetCacher().GetStats().Hits
-	require.GreaterOrEqual(T, hits.Load(), int64(1))
+	require.GreaterOrEqual(T, collectionStats.FloorPrice, float64(1))
+	require.GreaterOrEqual(T, collectionStats.ItemsTotal, uint64(1))
+	require.GreaterOrEqual(T, collectionStats.OwnersTotal, uint64(1))
+	require.GreaterOrEqual(T, collectionStats.VolumeTraded, float64(1))
 }
 
 func Test_SearchCollection(T *testing.T) {
 	connectToDb()
 	cache.InitCacher(config.CacheConfig{Url: "redis://localhost:6379"})
 
-	coll := &data.Collection{
+	coll := &entities.Collection{
 		Name: "this name is uniquee",
 	}
 
@@ -111,4 +111,152 @@ func Test_SearchCollection(T *testing.T) {
 
 	hits := cache.GetCacher().GetStats().Hits
 	require.GreaterOrEqual(T, hits.Load(), int64(1))
+}
+
+func Test_GetCollectionMetadata(t *testing.T) {
+	connectToDb()
+
+	coll := entities.Collection{
+		Name: strconv.Itoa(int(time.Now().Unix())),
+	}
+	err := storage.AddCollection(&coll)
+	require.Nil(t, err)
+
+	token1 := entities.Token{
+		CollectionID: coll.ID,
+		Listed:       true,
+		OwnerId:      1,
+		Attributes:   datatypes.JSON(`{"hair": "red", "background": "dark"}`),
+	}
+	err = storage.AddToken(&token1)
+	require.Nil(t, err)
+
+	token2 := entities.Token{
+		CollectionID: coll.ID,
+		Listed:       true,
+		OwnerId:      1,
+		Attributes:   datatypes.JSON(`{"hair": "green", "background": "dark"}`),
+	}
+	err = storage.AddToken(&token2)
+	require.Nil(t, err)
+
+	token3 := entities.Token{
+		CollectionID: coll.ID,
+		Listed:       true,
+		OwnerId:      1,
+		Attributes:   datatypes.JSON(`{"hair": "blue", "background": "dark"}`),
+	}
+	err = storage.AddToken(&token3)
+	require.Nil(t, err)
+
+	token4 := entities.Token{
+		CollectionID: coll.ID,
+		Listed:       true,
+		OwnerId:      1,
+		Attributes:   datatypes.JSON(`{}`),
+	}
+	err = storage.AddToken(&token4)
+	require.Nil(t, err)
+
+	token5 := entities.Token{
+		CollectionID: coll.ID,
+		Listed:       true,
+		OwnerId:      1,
+		Attributes:   datatypes.JSON(`{"hair": "green"}`),
+	}
+	err = storage.AddToken(&token5)
+	require.Nil(t, err)
+
+	token6 := entities.Token{
+		CollectionID: coll.ID,
+		Listed:       true,
+		OwnerId:      1,
+		Attributes:   datatypes.JSON(`{"background": "dark"}`),
+	}
+	err = storage.AddToken(&token6)
+	require.Nil(t, err)
+
+	token7 := entities.Token{
+		CollectionID: coll.ID,
+		Listed:       true,
+		OwnerId:      1,
+		Attributes:   datatypes.JSON(`{"hair": "yellow", "background": "dark"}`),
+	}
+	err = storage.AddToken(&token7)
+	require.Nil(t, err)
+
+	token8 := entities.Token{
+		CollectionID: coll.ID,
+		Listed:       true,
+		OwnerId:      1,
+		Attributes:   datatypes.JSON(`{"hair": "white", "background": "dark"}`),
+	}
+	err = storage.AddToken(&token8)
+	require.Nil(t, err)
+
+	token9 := entities.Token{
+		CollectionID: coll.ID,
+		Listed:       true,
+		OwnerId:      1,
+		Attributes:   datatypes.JSON(`{"hair": "white", "background": "dark"}`),
+	}
+	err = storage.AddToken(&token9)
+	require.Nil(t, err)
+
+	token10 := entities.Token{
+		CollectionID: coll.ID,
+		Listed:       true,
+		OwnerId:      1,
+		Attributes:   datatypes.JSON(`{"something_else": "yea"}`),
+	}
+	err = storage.AddToken(&token10)
+	require.Nil(t, err)
+
+	collStats, err := stats.ComputeCollectionMetadata(coll.ID)
+	require.Nil(t, err)
+
+	expected := stats.CollectionMetadata{
+		NumItems: 10,
+		Owners:   map[uint64]bool{1: true},
+		AttrStats: map[string]map[string]int{
+			"hair": {
+				"white":  2,
+				"red":    1,
+				"green":  2,
+				"blue":   1,
+				"yellow": 1,
+			},
+			"background": {
+				"dark": 7,
+			},
+			"something_else": {
+				"yea": 1,
+			},
+		},
+	}
+	require.Equal(t, expected, *collStats)
+}
+
+func Test_GetMintInfoFromContract(t *testing.T) {
+	cache.InitCacher(config.CacheConfig{Url: "redis://localhost:6379"})
+	defer cache.CloseCacher()
+
+	cfg := config.BlockchainConfig{
+		ProxyUrl:            "https://devnet-gateway.elrond.com",
+		ChainID:             "D",
+	}
+
+	interaction.InitBlockchainInteractor(cfg)
+	bi := interaction.GetBlockchainInteractor()
+	require.NotNil(t, bi)
+
+	info, err := GetMintInfoForContract("erd1qqqqqqqqqqqqqpgq3uvfynvpvcs8aldhuyrseuyepmp0cj7at9usgefv56")
+	require.Nil(t, err)
+	require.True(t, info.MaxSupply > 0)
+	require.True(t, info.TotalSold > 0)
+
+	info, err = GetMintInfoForContract("erd1qqqqqqqqqqqqqpgq3uvfynvpvcs8aldhuyrseuyepmp0cj7at9usgefv56")
+	require.Nil(t, err)
+	require.True(t, info.MaxSupply > 0)
+	require.True(t, info.TotalSold > 0)
 }

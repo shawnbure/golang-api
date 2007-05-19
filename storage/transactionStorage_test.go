@@ -3,7 +3,7 @@ package storage
 import (
 	"testing"
 
-	"github.com/erdsea/erdsea-api/data"
+	"github.com/erdsea/erdsea-api/data/entities"
 	"github.com/stretchr/testify/require"
 )
 
@@ -14,7 +14,7 @@ func Test_AddTransaction(t *testing.T) {
 	err := AddTransaction(&transaction)
 	require.Nil(t, err)
 
-	var transactionRead data.Transaction
+	var transactionRead entities.Transaction
 	txRead := GetDB().Last(&transactionRead)
 
 	require.Nil(t, txRead.Error)
@@ -95,7 +95,7 @@ func Test_GetTransactionsByBuyerOrSellerId(t *testing.T) {
 	}
 }
 
-func Test_GetTransactionsByAssetId(t *testing.T) {
+func Test_GetTransactionsByTokenId(t *testing.T) {
 	connectToTestDb()
 
 	transaction := defaultTransaction()
@@ -106,12 +106,12 @@ func Test_GetTransactionsByAssetId(t *testing.T) {
 	err = AddTransaction(&otherTransaction)
 	require.Nil(t, err)
 
-	transactionsRead, err := GetTransactionsByAssetId(transaction.AssetID)
+	transactionsRead, err := GetTransactionsByTokenId(transaction.TokenID)
 	require.Nil(t, err)
 	require.GreaterOrEqual(t, len(transactionsRead), 2)
 
 	for _, transactionRead := range transactionsRead {
-		require.Equal(t, transactionRead.AssetID, transaction.AssetID)
+		require.Equal(t, transactionRead.TokenID, transaction.TokenID)
 	}
 }
 
@@ -157,14 +157,14 @@ func Test_GetSumBuyPriceForTransactionsWithCollectionId(t *testing.T) {
 	require.GreaterOrEqual(t, sumPrice, float64(1_000_000_000_000_000_000_000))
 }
 
-func defaultTransaction() data.Transaction {
-	return data.Transaction{
+func defaultTransaction() entities.Transaction {
+	return entities.Transaction{
 		Hash:         "hash",
 		Type:         "test",
 		PriceNominal: 1_000_000_000_000_000_000_000,
 		SellerID:     1,
 		BuyerID:      2,
-		AssetID:      3,
+		TokenID:      3,
 		CollectionID: 1,
 	}
 }

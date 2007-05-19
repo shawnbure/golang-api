@@ -1,5 +1,35 @@
 definitions:
-  data.Account:
+  dtos.ApiResponse:
+    properties:
+      data: {}
+      error:
+        type: string
+    type: object
+  dtos.CollectionStatistics:
+    properties:
+      attributes:
+        additionalProperties:
+          additionalProperties:
+            type: integer
+          type: object
+        type: object
+      floorPrice:
+        type: number
+      itemsTotal:
+        type: integer
+      ownersTotal:
+        type: integer
+      volumeTraded:
+        type: number
+    type: object
+  dtos.ExtendedCollectionDto:
+    properties:
+      collection:
+        $ref: '#/definitions/entities.Collection'
+      statistics:
+        $ref: '#/definitions/dtos.CollectionStatistics'
+    type: object
+  entities.Account:
     properties:
       address:
         type: string
@@ -18,48 +48,27 @@ definitions:
       website:
         type: string
     type: object
-  data.ApiResponse:
+  entities.Collection:
     properties:
-      data: {}
-      error:
+      contractAddress:
         type: string
-    type: object
-  data.Asset:
-    properties:
-      collectionID:
-        type: integer
       createdAt:
         type: integer
-      id:
-        type: integer
-      link:
-        type: string
-      listed:
-        type: boolean
-      nonce:
-        type: integer
-      ownerId:
-        type: integer
-      priceNominal:
-        type: number
-      royaltiesPercent:
-        type: number
-      tokenID:
-        type: string
-    type: object
-  data.Collection:
-    properties:
-      createdAt:
-        type: integer
-      creatorID:
+      creatorId:
         type: integer
       description:
         type: string
       discordLink:
         type: string
+      flags:
+        items:
+          type: integer
+        type: array
       id:
         type: integer
       instagramLink:
+        type: string
+      mintPricePerTokenString:
         type: string
       name:
         type: string
@@ -67,20 +76,53 @@ definitions:
         type: integer
       telegramLink:
         type: string
-      tokenID:
+      tokenId:
         type: string
       twitterLink:
         type: string
       website:
         type: string
     type: object
-  data.Transaction:
+  entities.Token:
     properties:
-      assetID:
+      attributes:
+        items:
+          type: integer
+        type: array
+      collectionId:
         type: integer
-      buyerID:
+      createdAt:
         type: integer
-      collectionID:
+      hash:
+        type: string
+      id:
+        type: integer
+      imageLink:
+        type: string
+      listed:
+        type: boolean
+      metadataLink:
+        type: string
+      nonce:
+        type: integer
+      ownerId:
+        type: integer
+      priceNominal:
+        type: number
+      priceString:
+        type: string
+      royaltiesPercent:
+        type: number
+      tokenId:
+        type: string
+      tokenName:
+        type: string
+    type: object
+  entities.Transaction:
+    properties:
+      buyerId:
+        type: integer
+      collectionId:
         type: integer
       hash:
         type: string
@@ -88,9 +130,11 @@ definitions:
         type: integer
       priceNominal:
         type: number
-      sellerID:
+      sellerId:
         type: integer
       timestamp:
+        type: integer
+      tokenId:
         type: integer
       type:
         type: string
@@ -124,12 +168,27 @@ definitions:
     properties:
       accounts:
         items:
-          $ref: '#/definitions/data.Account'
+          $ref: '#/definitions/entities.Account'
         type: array
       collections:
         items:
-          $ref: '#/definitions/data.Collection'
+          $ref: '#/definitions/entities.Collection'
         type: array
+    type: object
+  handlers.RankingEntry:
+    properties:
+      CollectionId:
+        type: string
+      CollectionName:
+        type: string
+      floorPrice:
+        type: number
+      itemsTotal:
+        type: integer
+      ownersTotal:
+        type: integer
+      volumeTraded:
+        type: number
     type: object
   handlers.createTokenRequest:
     properties:
@@ -147,16 +206,20 @@ definitions:
       refreshToken:
         type: string
     type: object
-  services.CollectionStatistics:
+  services.CreateAccountRequest:
     properties:
-      floorPrice:
-        type: number
-      itemsCount:
-        type: integer
-      ownersCount:
-        type: integer
-      volumeTraded:
-        type: number
+      address:
+        type: string
+      description:
+        type: string
+      instagramLink:
+        type: string
+      name:
+        type: string
+      twitterLink:
+        type: string
+      website:
+        type: string
     type: object
   services.CreateCollectionRequest:
     properties:
@@ -179,13 +242,18 @@ definitions:
       website:
         type: string
     type: object
+  services.MintInfo:
+    properties:
+      maxSupply:
+        type: integer
+      totalSold:
+        type: integer
+    type: object
   services.SetAccountRequest:
     properties:
       description:
         type: string
       instagramLink:
-        type: string
-      name:
         type: string
       twitterLink:
         type: string
@@ -217,15 +285,15 @@ info:
   title: erdsea-api
   version: "1.0"
 paths:
-  /accounts/{userAddress}:
+  /accounts/{walletAddress}:
     get:
       consumes:
       - application/json
-      description: Retrieves an account by an elrond user address (erd1...)
+      description: Retrieves an account by walletAddress
       parameters:
-      - description: user address
+      - description: wallet address
         in: path
-        name: userAddress
+        name: walletAddress
         required: true
         type: string
       produces:
@@ -234,12 +302,16 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/data.Account'
+            $ref: '#/definitions/entities.Account'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/data.ApiResponse'
-      summary: Get account by user address
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: Get account by account walletAddress
       tags:
       - accounts
     post:
@@ -247,9 +319,9 @@ paths:
       - application/json
       description: Sets an account settable information
       parameters:
-      - description: user address
+      - description: wallet address
         in: path
-        name: userAddress
+        name: walletAddress
         required: true
         type: string
       - description: account info
@@ -264,31 +336,31 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/data.Account'
+            $ref: '#/definitions/entities.Account'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/data.ApiResponse'
+            $ref: '#/definitions/dtos.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/data.ApiResponse'
+            $ref: '#/definitions/dtos.ApiResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/data.ApiResponse'
+            $ref: '#/definitions/dtos.ApiResponse'
       summary: Set account information
       tags:
       - accounts
-  /accounts/{userAddress}/assets/{offset}/{limit}:
+  /accounts/{walletAddress}/collections/{offset}/{limit}:
     get:
       consumes:
       - application/json
-      description: Retrieves a list of assets. Unsorted.
+      description: Retrieves a list of collections. Unsorted.
       parameters:
-      - description: user address
+      - description: wallet address
         in: path
-        name: userAddress
+        name: walletAddress
         required: true
         type: string
       - description: offset
@@ -308,29 +380,29 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/data.Asset'
+              $ref: '#/definitions/entities.Collection'
             type: array
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/data.ApiResponse'
+            $ref: '#/definitions/dtos.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/data.ApiResponse'
-      summary: Gets assets for a user address.
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: Gets collections for an account.
       tags:
       - accounts
-  /accounts/{userAddress}/cover:
+  /accounts/{walletAddress}/cover:
     get:
       consumes:
       - application/json
       description: Retrieves an account cover image. It will be sent as base64 encoding
         (sdt, raw) of its byte representation.
       parameters:
-      - description: user address
+      - description: wallet address
         in: path
-        name: userAddress
+        name: walletAddress
         required: true
         type: string
       produces:
@@ -340,10 +412,14 @@ paths:
           description: OK
           schema:
             type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/data.ApiResponse'
+            $ref: '#/definitions/dtos.ApiResponse'
       summary: Get account cover image
       tags:
       - accounts
@@ -353,9 +429,9 @@ paths:
       description: Expects base64 encoding (sdt, raw) of the image representation.
         Returns empty string. Max size of byte array is 1MB.
       parameters:
-      - description: user address
+      - description: wallet address
         in: path
-        name: userAddress
+        name: walletAddress
         required: true
         type: string
       - description: base64 encoded image
@@ -374,28 +450,28 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/data.ApiResponse'
+            $ref: '#/definitions/dtos.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/data.ApiResponse'
+            $ref: '#/definitions/dtos.ApiResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/data.ApiResponse'
+            $ref: '#/definitions/dtos.ApiResponse'
       summary: Set account cover image
       tags:
       - accounts
-  /accounts/{userAddress}/profile:
+  /accounts/{walletAddress}/profile:
     get:
       consumes:
       - application/json
       description: Retrieves an account profile image. It will be sent as base64 encoding
         (sdt, raw) of its byte representation.
       parameters:
-      - description: user address
+      - description: wallet address
         in: path
-        name: userAddress
+        name: walletAddress
         required: true
         type: string
       produces:
@@ -405,10 +481,14 @@ paths:
           description: OK
           schema:
             type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/data.ApiResponse'
+            $ref: '#/definitions/dtos.ApiResponse'
       summary: Get account profile image
       tags:
       - accounts
@@ -418,9 +498,9 @@ paths:
       description: Expects base64 encoding (sdt, raw) of the image representation.
         Returns empty string. Max size of byte array is 512KB.
       parameters:
-      - description: user address
+      - description: wallet address
         in: path
-        name: userAddress
+        name: walletAddress
         required: true
         type: string
       - description: base64 encoded image
@@ -439,32 +519,37 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/data.ApiResponse'
+            $ref: '#/definitions/dtos.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/data.ApiResponse'
+            $ref: '#/definitions/dtos.ApiResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/data.ApiResponse'
+            $ref: '#/definitions/dtos.ApiResponse'
       summary: Set account profile image
       tags:
       - accounts
-  /assets/{tokenId}/{nonce}:
+  /accounts/{walletAddress}/tokens/{offset}/{limit}:
     get:
       consumes:
       - application/json
-      description: Retrieves an asset by tokenId and nonce
+      description: Retrieves a list of tokens. Unsorted.
       parameters:
-      - description: token id
+      - description: wallet address
         in: path
-        name: tokenId
+        name: walletAddress
         required: true
         type: string
-      - description: token nonce
+      - description: offset
         in: path
-        name: nonce
+        name: offset
+        required: true
+        type: integer
+      - description: limit
+        in: path
+        name: limit
         required: true
         type: integer
       produces:
@@ -473,18 +558,54 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/data.Asset'
+            items:
+              $ref: '#/definitions/entities.Token'
+            type: array
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/data.ApiResponse'
+            $ref: '#/definitions/dtos.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/data.ApiResponse'
-      summary: Get asset by token by id and nonce
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: Gets tokens for an account.
       tags:
-      - assets
+      - accounts
+  /accounts/create:
+    post:
+      consumes:
+      - application/json
+      description: Creates an account
+      parameters:
+      - description: account info
+        in: body
+        name: createAccountRequest
+        required: true
+        schema:
+          $ref: '#/definitions/services.CreateAccountRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entities.Account'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: Creates an account
+      tags:
+      - accounts
   /auth/access:
     post:
       consumes:
@@ -507,11 +628,11 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/data.ApiResponse'
+            $ref: '#/definitions/dtos.ApiResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/data.ApiResponse'
+            $ref: '#/definitions/dtos.ApiResponse'
       summary: Access credentials
       tags:
       - auth
@@ -537,23 +658,23 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/data.ApiResponse'
+            $ref: '#/definitions/dtos.ApiResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/data.ApiResponse'
+            $ref: '#/definitions/dtos.ApiResponse'
       summary: Refresh credentials
       tags:
       - auth
-  /collections/{collectionName}:
+  /collections/{collectionId}:
     get:
       consumes:
       - application/json
-      description: Retrieves a collection by its name.
+      description: Retrieves a collection by id.
       parameters:
-      - description: collection name
+      - description: collection id
         in: path
-        name: collectionName
+        name: collectionId
         required: true
         type: string
       produces:
@@ -562,12 +683,20 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/data.Collection'
+            $ref: '#/definitions/dtos.ExtendedCollectionDto'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/data.ApiResponse'
-      summary: Gets collection by name.
+            $ref: '#/definitions/dtos.ApiResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: Gets collection by collection id.
       tags:
       - collections
     post:
@@ -575,9 +704,9 @@ paths:
       - application/json
       description: Sets info for a collection.
       parameters:
-      - description: collection name
+      - description: collection id
         in: path
-        name: collectionName
+        name: collectionId
         required: true
         type: string
       - description: collection info
@@ -592,31 +721,199 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/data.Collection'
+            $ref: '#/definitions/entities.Collection'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/data.ApiResponse'
+            $ref: '#/definitions/dtos.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/data.ApiResponse'
+            $ref: '#/definitions/dtos.ApiResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/data.ApiResponse'
+            $ref: '#/definitions/dtos.ApiResponse'
       summary: Set collection info.
       tags:
       - collections
-  /collections/{collectionName}/assets/{offset}/{limit}:
+  /collections/{collectionId}/cover:
     get:
       consumes:
       - application/json
-      description: Retrieves the assets of a collection. Unsorted.
+      description: Retrieves a collection cover image. It will be sent as base64 encoding
+        (sdt, raw) of its byte representation.
       parameters:
-      - description: collection name
+      - description: collection id
         in: path
-        name: collectionName
+        name: collectionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: Get collection cover image
+      tags:
+      - collections
+    post:
+      consumes:
+      - application/json
+      description: Expects base64 encoding (sdt, raw) of the image representation.
+        Returns empty string. Max size of byte array is 1MB.
+      parameters:
+      - description: collection id
+        in: path
+        name: collectionId
+        required: true
+        type: string
+      - description: base64 encoded image
+        in: body
+        name: image
+        required: true
+        schema:
+          type: primitive
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: Set collection cover image
+      tags:
+      - collections
+  /collections/{collectionId}/mintInfo:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves max supply and total sold for a collection. Cached for
+        6 seconds.
+      parameters:
+      - description: collection id
+        in: path
+        name: collectionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/services.MintInfo'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: Gets mint info about a collection.
+      tags:
+      - collections
+  /collections/{collectionId}/profile:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a collection cover image. It will be sent as base64 encoding
+        (sdt, raw) of its byte representation.
+      parameters:
+      - description: collection id
+        in: path
+        name: collectionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: Get collection profile image
+      tags:
+      - collections
+    post:
+      consumes:
+      - application/json
+      description: Expects base64 encoding (sdt, raw) of the image representation.
+        Returns empty string. Max size of byte array is 1MB.
+      parameters:
+      - description: collection id
+        in: path
+        name: collectionId
+        required: true
+        type: string
+      - description: base64 encoded image
+        in: body
+        name: image
+        required: true
+        schema:
+          type: primitive
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: Set collection profile image
+      tags:
+      - collections
+  /collections/{collectionId}/tokens/{offset}/{limit}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves the tokens of a collection. Unsorted.
+      parameters:
+      - description: collection id
+        in: path
+        name: collectionId
         required: true
         type: string
       - description: offset
@@ -636,168 +933,17 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/data.Asset'
+              $ref: '#/definitions/entities.Token'
             type: array
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/data.ApiResponse'
+            $ref: '#/definitions/dtos.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/data.ApiResponse'
-      summary: Get collection assets.
-      tags:
-      - collections
-  /collections/{collectionName}/cover:
-    get:
-      consumes:
-      - application/json
-      description: Retrieves a collection cover image. It will be sent as base64 encoding
-        (sdt, raw) of its byte representation.
-      parameters:
-      - description: collection name
-        in: path
-        name: collectionName
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: string
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/data.ApiResponse'
-      summary: Get collection cover image
-      tags:
-      - collections
-    post:
-      consumes:
-      - application/json
-      description: Expects base64 encoding (sdt, raw) of the image representation.
-        Returns empty string. Max size of byte array is 1MB.
-      parameters:
-      - description: collection name
-        in: path
-        name: collectionName
-        required: true
-        type: string
-      - description: base64 encoded image
-        in: body
-        name: image
-        required: true
-        schema:
-          type: primitive
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: string
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/data.ApiResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/data.ApiResponse'
-      summary: Set collection cover image
-      tags:
-      - collections
-  /collections/{collectionName}/profile:
-    get:
-      consumes:
-      - application/json
-      description: Retrieves a collection cover image. It will be sent as base64 encoding
-        (sdt, raw) of its byte representation.
-      parameters:
-      - description: collection name
-        in: path
-        name: collectionName
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: string
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/data.ApiResponse'
-      summary: Get collection profile image
-      tags:
-      - collections
-    post:
-      consumes:
-      - application/json
-      description: Expects base64 encoding (sdt, raw) of the image representation.
-        Returns empty string. Max size of byte array is 1MB.
-      parameters:
-      - description: collection name
-        in: path
-        name: collectionName
-        required: true
-        type: string
-      - description: base64 encoded image
-        in: body
-        name: image
-        required: true
-        schema:
-          type: primitive
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: string
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/data.ApiResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/data.ApiResponse'
-      summary: Set collection profile image
-      tags:
-      - collections
-  /collections/{collectionName}/statistics:
-    post:
-      consumes:
-      - application/json
-      description: Gets statistics for a collection. It will be cached for 10 minutes.
-      parameters:
-      - description: collection name
-        in: path
-        name: collectionName
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/services.CollectionStatistics'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/data.ApiResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/data.ApiResponse'
-      summary: Gets collection statistics.
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: Get collection tokens.
       tags:
       - collections
   /collections/create:
@@ -818,19 +964,19 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/data.Collection'
+            $ref: '#/definitions/entities.Collection'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/data.ApiResponse'
+            $ref: '#/definitions/dtos.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/data.ApiResponse'
+            $ref: '#/definitions/dtos.ApiResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/data.ApiResponse'
+            $ref: '#/definitions/dtos.ApiResponse'
       summary: Creates a collection.
       tags:
       - collections
@@ -838,7 +984,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: Retrieves a list of collections. Unsorted.
+      description: Retrieves a list of collections. Sorted by priority.
       parameters:
       - description: offset
         in: path
@@ -857,17 +1003,51 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/data.Collection'
+              $ref: '#/definitions/entities.Collection'
             type: array
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/data.ApiResponse'
+            $ref: '#/definitions/dtos.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/data.ApiResponse'
+            $ref: '#/definitions/dtos.ApiResponse'
       summary: Gets collections.
+      tags:
+      - collections
+  /collections/rankings/{offset}/{limit}:
+    get:
+      consumes:
+      - application/json
+      description: Acts as a leaderboard. Optionally provide ?sort[criteria]=volumeTraded&sort[mode]=asc
+      parameters:
+      - description: offset
+        in: path
+        name: offset
+        required: true
+        type: integer
+      - description: limit
+        in: path
+        name: limit
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.RankingEntry'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: Get collection rankings
       tags:
       - collections
   /egld_price:
@@ -886,7 +1066,7 @@ paths:
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/data.ApiResponse'
+            $ref: '#/definitions/dtos.ApiResponse'
       summary: Gets EGLD price in dollars.
       tags:
       - egld_price
@@ -912,7 +1092,7 @@ paths:
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/data.ApiResponse'
+            $ref: '#/definitions/dtos.ApiResponse'
       summary: General search by string.
       tags:
       - search
@@ -934,12 +1114,12 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/data.Account'
+              $ref: '#/definitions/entities.Account'
             type: array
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/data.ApiResponse'
+            $ref: '#/definitions/dtos.ApiResponse'
       summary: Search accounts by name.
       tags:
       - search
@@ -962,70 +1142,58 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/data.Collection'
+              $ref: '#/definitions/entities.Collection'
             type: array
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/data.ApiResponse'
+            $ref: '#/definitions/dtos.ApiResponse'
       summary: Search collections by name.
       tags:
       - search
-  /transactions/address/{address}/{offset}/{limit}:
+  /tokens/{tokenId}/{nonce}:
     get:
       consumes:
       - application/json
-      description: Retrieves transactions for a user address. Unordered.
-      parameters:
-      - description: user address
-        in: path
-        name: userAddress
-        required: true
-        type: integer
-      - description: offset
-        in: path
-        name: offset
-        required: true
-        type: integer
-      - description: limit
-        in: path
-        name: limit
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/data.Transaction'
-            type: array
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/data.ApiResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/data.ApiResponse'
-      summary: Gets transaction for a user address.
-      tags:
-      - transactions
-  /transactions/asset/{tokenId}/{nonce}/{offset}/{limit}:
-    get:
-      consumes:
-      - application/json
-      description: Retrieves transactions for an asset. Unordered.
+      description: Retrieves a token by tokenId and nonce
       parameters:
       - description: token id
         in: path
         name: tokenId
         required: true
         type: string
-      - description: nonce
+      - description: token nonce
         in: path
         name: nonce
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entities.Token'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: Get token by id and nonce
+      tags:
+      - tokens
+  /transactions/account/{accountId}/{offset}/{limit}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves transactions for an account. Unordered.
+      parameters:
+      - description: account id
+        in: path
+        name: accountId
         required: true
         type: integer
       - description: offset
@@ -1045,28 +1213,28 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/data.Transaction'
+              $ref: '#/definitions/entities.Transaction'
             type: array
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/data.ApiResponse'
+            $ref: '#/definitions/dtos.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/data.ApiResponse'
-      summary: Gets transaction for an asset.
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: Gets transaction for an account.
       tags:
       - transactions
-  /transactions/collection/{collectionName}/{offset}/{limit}:
+  /transactions/collection/{collectionId}/{offset}/{limit}:
     get:
       consumes:
       - application/json
       description: Retrieves transactions for a collection. Unordered.
       parameters:
-      - description: collection name
+      - description: collection id
         in: path
-        name: collectionName
+        name: collectionId
         required: true
         type: integer
       - description: offset
@@ -1086,16 +1254,16 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/data.Transaction'
+              $ref: '#/definitions/entities.Transaction'
             type: array
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/data.ApiResponse'
+            $ref: '#/definitions/dtos.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/data.ApiResponse'
+            $ref: '#/definitions/dtos.ApiResponse'
       summary: Gets transaction for a collection.
       tags:
       - transactions
@@ -1122,17 +1290,58 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/data.Transaction'
+              $ref: '#/definitions/entities.Transaction'
             type: array
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/data.ApiResponse'
+            $ref: '#/definitions/dtos.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/data.ApiResponse'
+            $ref: '#/definitions/dtos.ApiResponse'
       summary: Gets transaction list.
+      tags:
+      - transactions
+  /transactions/token/{tokenId}/{offset}/{limit}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves transactions for an token. Unordered.
+      parameters:
+      - description: token id
+        in: path
+        name: tokenId
+        required: true
+        type: integer
+      - description: offset
+        in: path
+        name: offset
+        required: true
+        type: integer
+      - description: limit
+        in: path
+        name: limit
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entities.Transaction'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: Gets transaction for an token.
       tags:
       - transactions
   /tx-template/buy-nft/{userAddress}/{tokenId}/{nonce}/{price}:
@@ -1172,7 +1381,7 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/data.ApiResponse'
+            $ref: '#/definitions/dtos.ApiResponse'
       summary: Gets tx-template for NFT buy.
       tags:
       - tx-template
@@ -1213,8 +1422,48 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/data.ApiResponse'
+            $ref: '#/definitions/dtos.ApiResponse'
       summary: Gets tx-template for NFT list.
+      tags:
+      - tx-template
+  /tx-template/mint-tokens/{userAddress}/{collectionId}/{numberOfTokens}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves tx-template for mint tokens. Only account nonce and signature
+        must be added afterwards.
+      parameters:
+      - description: user address
+        in: path
+        name: userAddress
+        required: true
+        type: integer
+      - description: collection id
+        in: path
+        name: collectionId
+        required: true
+        type: string
+      - description: number of tokens
+        in: path
+        name: numberOfTokens
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/formatter.Transaction'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: Gets tx-template for mint tokens.
       tags:
       - tx-template
   /tx-template/withdraw-nft/{userAddress}/{tokenId}/{nonce}:
@@ -1249,7 +1498,7 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/data.ApiResponse'
+            $ref: '#/definitions/dtos.ApiResponse'
       summary: Gets tx-template for NFT withdraw.
       tags:
       - tx-template

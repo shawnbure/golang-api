@@ -28,9 +28,9 @@ var doc = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/accounts/{userAddress}": {
-            "get": {
-                "description": "Retrieves an account by an elrond user address (erd1...)",
+        "/accounts/create": {
+            "post": {
+                "description": "Creates an account",
                 "consumes": [
                     "application/json"
                 ],
@@ -40,12 +40,64 @@ var doc = `{
                 "tags": [
                     "accounts"
                 ],
-                "summary": "Get account by user address",
+                "summary": "Creates an account",
+                "parameters": [
+                    {
+                        "description": "account info",
+                        "name": "createAccountRequest",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/services.CreateAccountRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/entities.Account"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/accounts/{walletAddress}": {
+            "get": {
+                "description": "Retrieves an account by walletAddress",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "accounts"
+                ],
+                "summary": "Get account by account walletAddress",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "user address",
-                        "name": "userAddress",
+                        "description": "wallet address",
+                        "name": "walletAddress",
                         "in": "path",
                         "required": true
                     }
@@ -54,13 +106,19 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/data.Account"
+                            "$ref": "#/definitions/entities.Account"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     }
                 }
@@ -80,8 +138,8 @@ var doc = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "user address",
-                        "name": "userAddress",
+                        "description": "wallet address",
+                        "name": "walletAddress",
                         "in": "path",
                         "required": true
                     },
@@ -99,33 +157,33 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/data.Account"
+                            "$ref": "#/definitions/entities.Account"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     }
                 }
             }
         },
-        "/accounts/{userAddress}/assets/{offset}/{limit}": {
+        "/accounts/{walletAddress}/collections/{offset}/{limit}": {
             "get": {
-                "description": "Retrieves a list of assets. Unsorted.",
+                "description": "Retrieves a list of collections. Unsorted.",
                 "consumes": [
                     "application/json"
                 ],
@@ -135,12 +193,12 @@ var doc = `{
                 "tags": [
                     "accounts"
                 ],
-                "summary": "Gets assets for a user address.",
+                "summary": "Gets collections for an account.",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "user address",
-                        "name": "userAddress",
+                        "description": "wallet address",
+                        "name": "walletAddress",
                         "in": "path",
                         "required": true
                     },
@@ -165,26 +223,26 @@ var doc = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/data.Asset"
+                                "$ref": "#/definitions/entities.Collection"
                             }
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     }
                 }
             }
         },
-        "/accounts/{userAddress}/cover": {
+        "/accounts/{walletAddress}/cover": {
             "get": {
                 "description": "Retrieves an account cover image. It will be sent as base64 encoding (sdt, raw) of its byte representation.",
                 "consumes": [
@@ -200,8 +258,8 @@ var doc = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "user address",
-                        "name": "userAddress",
+                        "description": "wallet address",
+                        "name": "walletAddress",
                         "in": "path",
                         "required": true
                     }
@@ -213,10 +271,16 @@ var doc = `{
                             "type": "string"
                         }
                     },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     }
                 }
@@ -236,8 +300,8 @@ var doc = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "user address",
-                        "name": "userAddress",
+                        "description": "wallet address",
+                        "name": "walletAddress",
                         "in": "path",
                         "required": true
                     },
@@ -261,25 +325,25 @@ var doc = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     }
                 }
             }
         },
-        "/accounts/{userAddress}/profile": {
+        "/accounts/{walletAddress}/profile": {
             "get": {
                 "description": "Retrieves an account profile image. It will be sent as base64 encoding (sdt, raw) of its byte representation.",
                 "consumes": [
@@ -295,8 +359,8 @@ var doc = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "user address",
-                        "name": "userAddress",
+                        "description": "wallet address",
+                        "name": "walletAddress",
                         "in": "path",
                         "required": true
                     }
@@ -308,10 +372,16 @@ var doc = `{
                             "type": "string"
                         }
                     },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     }
                 }
@@ -331,8 +401,8 @@ var doc = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "user address",
-                        "name": "userAddress",
+                        "description": "wallet address",
+                        "name": "walletAddress",
                         "in": "path",
                         "required": true
                     },
@@ -356,27 +426,27 @@ var doc = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     }
                 }
             }
         },
-        "/assets/{tokenId}/{nonce}": {
+        "/accounts/{walletAddress}/tokens/{offset}/{limit}": {
             "get": {
-                "description": "Retrieves an asset by tokenId and nonce",
+                "description": "Retrieves a list of tokens. Unsorted.",
                 "consumes": [
                     "application/json"
                 ],
@@ -384,21 +454,28 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "assets"
+                    "accounts"
                 ],
-                "summary": "Get asset by token by id and nonce",
+                "summary": "Gets tokens for an account.",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "token id",
-                        "name": "tokenId",
+                        "description": "wallet address",
+                        "name": "walletAddress",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "integer",
-                        "description": "token nonce",
-                        "name": "nonce",
+                        "description": "offset",
+                        "name": "offset",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "limit",
+                        "name": "limit",
                         "in": "path",
                         "required": true
                     }
@@ -407,19 +484,22 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/data.Asset"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entities.Token"
+                            }
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     }
                 }
@@ -459,13 +539,13 @@ var doc = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     }
                 }
@@ -505,13 +585,13 @@ var doc = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     }
                 }
@@ -545,25 +625,25 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/data.Collection"
+                            "$ref": "#/definitions/entities.Collection"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     }
                 }
@@ -571,7 +651,7 @@ var doc = `{
         },
         "/collections/list/{offset}/{limit}": {
             "get": {
-                "description": "Retrieves a list of collections. Unsorted.",
+                "description": "Retrieves a list of collections. Sorted by priority.",
                 "consumes": [
                     "application/json"
                 ],
@@ -604,28 +684,28 @@ var doc = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/data.Collection"
+                                "$ref": "#/definitions/entities.Collection"
                             }
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     }
                 }
             }
         },
-        "/collections/{collectionName}": {
+        "/collections/rankings/{offset}/{limit}": {
             "get": {
-                "description": "Retrieves a collection by its name.",
+                "description": "Acts as a leaderboard. Optionally provide ?sort[criteria]=volumeTraded\u0026sort[mode]=asc",
                 "consumes": [
                     "application/json"
                 ],
@@ -635,12 +715,19 @@ var doc = `{
                 "tags": [
                     "collections"
                 ],
-                "summary": "Gets collection by name.",
+                "summary": "Get collection rankings",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "collection name",
-                        "name": "collectionName",
+                        "type": "integer",
+                        "description": "offset",
+                        "name": "offset",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "limit",
+                        "name": "limit",
                         "in": "path",
                         "required": true
                     }
@@ -649,13 +736,69 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/data.Collection"
+                            "$ref": "#/definitions/handlers.RankingEntry"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/collections/{collectionId}": {
+            "get": {
+                "description": "Retrieves a collection by id.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "collections"
+                ],
+                "summary": "Gets collection by collection id.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "collection id",
+                        "name": "collectionId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ExtendedCollectionDto"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     }
                 }
@@ -675,8 +818,8 @@ var doc = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "collection name",
-                        "name": "collectionName",
+                        "description": "collection id",
+                        "name": "collectionId",
                         "in": "path",
                         "required": true
                     },
@@ -694,33 +837,33 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/data.Collection"
+                            "$ref": "#/definitions/entities.Collection"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     }
                 }
             }
         },
-        "/collections/{collectionName}/assets/{offset}/{limit}": {
+        "/collections/{collectionId}/cover": {
             "get": {
-                "description": "Retrieves the assets of a collection. Unsorted.",
+                "description": "Retrieves a collection cover image. It will be sent as base64 encoding (sdt, raw) of its byte representation.",
                 "consumes": [
                     "application/json"
                 ],
@@ -730,12 +873,258 @@ var doc = `{
                 "tags": [
                     "collections"
                 ],
-                "summary": "Get collection assets.",
+                "summary": "Get collection cover image",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "collection name",
-                        "name": "collectionName",
+                        "description": "collection id",
+                        "name": "collectionId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Expects base64 encoding (sdt, raw) of the image representation. Returns empty string. Max size of byte array is 1MB.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "collections"
+                ],
+                "summary": "Set collection cover image",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "collection id",
+                        "name": "collectionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "base64 encoded image",
+                        "name": "image",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "primitive"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/collections/{collectionId}/mintInfo": {
+            "get": {
+                "description": "Retrieves max supply and total sold for a collection. Cached for 6 seconds.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "collections"
+                ],
+                "summary": "Gets mint info about a collection.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "collection id",
+                        "name": "collectionId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/services.MintInfo"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/collections/{collectionId}/profile": {
+            "get": {
+                "description": "Retrieves a collection cover image. It will be sent as base64 encoding (sdt, raw) of its byte representation.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "collections"
+                ],
+                "summary": "Get collection profile image",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "collection id",
+                        "name": "collectionId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Expects base64 encoding (sdt, raw) of the image representation. Returns empty string. Max size of byte array is 1MB.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "collections"
+                ],
+                "summary": "Set collection profile image",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "collection id",
+                        "name": "collectionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "base64 encoded image",
+                        "name": "image",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "primitive"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/collections/{collectionId}/tokens/{offset}/{limit}": {
+            "get": {
+                "description": "Retrieves the tokens of a collection. Unsorted.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "collections"
+                ],
+                "summary": "Get collection tokens.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "collection id",
+                        "name": "collectionId",
                         "in": "path",
                         "required": true
                     },
@@ -760,242 +1149,20 @@ var doc = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/data.Asset"
+                                "$ref": "#/definitions/entities.Token"
                             }
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/collections/{collectionName}/cover": {
-            "get": {
-                "description": "Retrieves a collection cover image. It will be sent as base64 encoding (sdt, raw) of its byte representation.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "collections"
-                ],
-                "summary": "Get collection cover image",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "collection name",
-                        "name": "collectionName",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "Expects base64 encoding (sdt, raw) of the image representation. Returns empty string. Max size of byte array is 1MB.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "collections"
-                ],
-                "summary": "Set collection cover image",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "collection name",
-                        "name": "collectionName",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "base64 encoded image",
-                        "name": "image",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "primitive"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/collections/{collectionName}/profile": {
-            "get": {
-                "description": "Retrieves a collection cover image. It will be sent as base64 encoding (sdt, raw) of its byte representation.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "collections"
-                ],
-                "summary": "Get collection profile image",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "collection name",
-                        "name": "collectionName",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "Expects base64 encoding (sdt, raw) of the image representation. Returns empty string. Max size of byte array is 1MB.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "collections"
-                ],
-                "summary": "Set collection profile image",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "collection name",
-                        "name": "collectionName",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "base64 encoded image",
-                        "name": "image",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "primitive"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/collections/{collectionName}/statistics": {
-            "post": {
-                "description": "Gets statistics for a collection. It will be cached for 10 minutes.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "collections"
-                ],
-                "summary": "Gets collection statistics.",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "collection name",
-                        "name": "collectionName",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/services.CollectionStatistics"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     }
                 }
@@ -1024,7 +1191,7 @@ var doc = `{
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     }
                 }
@@ -1058,14 +1225,14 @@ var doc = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/data.Account"
+                                "$ref": "#/definitions/entities.Account"
                             }
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     }
                 }
@@ -1099,14 +1266,14 @@ var doc = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/data.Collection"
+                                "$ref": "#/definitions/entities.Collection"
                             }
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     }
                 }
@@ -1144,15 +1311,15 @@ var doc = `{
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     }
                 }
             }
         },
-        "/transactions/address/{address}/{offset}/{limit}": {
+        "/tokens/{tokenId}/{nonce}": {
             "get": {
-                "description": "Retrieves transactions for a user address. Unordered.",
+                "description": "Retrieves a token by tokenId and nonce",
                 "consumes": [
                     "application/json"
                 ],
@@ -1160,70 +1327,9 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "transactions"
+                    "tokens"
                 ],
-                "summary": "Gets transaction for a user address.",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "user address",
-                        "name": "userAddress",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "offset",
-                        "name": "offset",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "limit",
-                        "name": "limit",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/data.Transaction"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/transactions/asset/{tokenId}/{nonce}/{offset}/{limit}": {
-            "get": {
-                "description": "Retrieves transactions for an asset. Unordered.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "transactions"
-                ],
-                "summary": "Gets transaction for an asset.",
+                "summary": "Get token by id and nonce",
                 "parameters": [
                     {
                         "type": "string",
@@ -1234,8 +1340,52 @@ var doc = `{
                     },
                     {
                         "type": "integer",
-                        "description": "nonce",
+                        "description": "token nonce",
                         "name": "nonce",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/entities.Token"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/transactions/account/{accountId}/{offset}/{limit}": {
+            "get": {
+                "description": "Retrieves transactions for an account. Unordered.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "transactions"
+                ],
+                "summary": "Gets transaction for an account.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "account id",
+                        "name": "accountId",
                         "in": "path",
                         "required": true
                     },
@@ -1260,26 +1410,26 @@ var doc = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/data.Transaction"
+                                "$ref": "#/definitions/entities.Transaction"
                             }
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     }
                 }
             }
         },
-        "/transactions/collection/{collectionName}/{offset}/{limit}": {
+        "/transactions/collection/{collectionId}/{offset}/{limit}": {
             "get": {
                 "description": "Retrieves transactions for a collection. Unordered.",
                 "consumes": [
@@ -1295,8 +1445,8 @@ var doc = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "collection name",
-                        "name": "collectionName",
+                        "description": "collection id",
+                        "name": "collectionId",
                         "in": "path",
                         "required": true
                     },
@@ -1321,20 +1471,20 @@ var doc = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/data.Transaction"
+                                "$ref": "#/definitions/entities.Transaction"
                             }
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     }
                 }
@@ -1375,20 +1525,81 @@ var doc = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/data.Transaction"
+                                "$ref": "#/definitions/entities.Transaction"
                             }
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/transactions/token/{tokenId}/{offset}/{limit}": {
+            "get": {
+                "description": "Retrieves transactions for an token. Unordered.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "transactions"
+                ],
+                "summary": "Gets transaction for an token.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "token id",
+                        "name": "tokenId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "offset",
+                        "name": "offset",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "limit",
+                        "name": "limit",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entities.Transaction"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     }
                 }
@@ -1447,7 +1658,7 @@ var doc = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     }
                 }
@@ -1506,7 +1717,65 @@ var doc = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/tx-template/mint-tokens/{userAddress}/{collectionId}/{numberOfTokens}": {
+            "get": {
+                "description": "Retrieves tx-template for mint tokens. Only account nonce and signature must be added afterwards.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tx-template"
+                ],
+                "summary": "Gets tx-template for mint tokens.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "user address",
+                        "name": "userAddress",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "collection id",
+                        "name": "collectionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "number of tokens",
+                        "name": "numberOfTokens",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/formatter.Transaction"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     }
                 }
@@ -1558,7 +1827,7 @@ var doc = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     }
                 }
@@ -1566,7 +1835,53 @@ var doc = `{
         }
     },
     "definitions": {
-        "data.Account": {
+        "dtos.ApiResponse": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "error": {
+                    "type": "string"
+                }
+            }
+        },
+        "dtos.CollectionStatistics": {
+            "type": "object",
+            "properties": {
+                "attributes": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "integer"
+                        }
+                    }
+                },
+                "floorPrice": {
+                    "type": "number"
+                },
+                "itemsTotal": {
+                    "type": "integer"
+                },
+                "ownersTotal": {
+                    "type": "integer"
+                },
+                "volumeTraded": {
+                    "type": "number"
+                }
+            }
+        },
+        "dtos.ExtendedCollectionDto": {
+            "type": "object",
+            "properties": {
+                "collection": {
+                    "$ref": "#/definitions/entities.Collection"
+                },
+                "statistics": {
+                    "$ref": "#/definitions/dtos.CollectionStatistics"
+                }
+            }
+        },
+        "entities.Account": {
             "type": "object",
             "properties": {
                 "address": {
@@ -1595,57 +1910,16 @@ var doc = `{
                 }
             }
         },
-        "data.ApiResponse": {
+        "entities.Collection": {
             "type": "object",
             "properties": {
-                "data": {},
-                "error": {
+                "contractAddress": {
                     "type": "string"
-                }
-            }
-        },
-        "data.Asset": {
-            "type": "object",
-            "properties": {
-                "collectionID": {
-                    "type": "integer"
                 },
                 "createdAt": {
                     "type": "integer"
                 },
-                "id": {
-                    "type": "integer"
-                },
-                "link": {
-                    "type": "string"
-                },
-                "listed": {
-                    "type": "boolean"
-                },
-                "nonce": {
-                    "type": "integer"
-                },
-                "ownerId": {
-                    "type": "integer"
-                },
-                "priceNominal": {
-                    "type": "number"
-                },
-                "royaltiesPercent": {
-                    "type": "number"
-                },
-                "tokenID": {
-                    "type": "string"
-                }
-            }
-        },
-        "data.Collection": {
-            "type": "object",
-            "properties": {
-                "createdAt": {
-                    "type": "integer"
-                },
-                "creatorID": {
+                "creatorId": {
                     "type": "integer"
                 },
                 "description": {
@@ -1654,10 +1928,19 @@ var doc = `{
                 "discordLink": {
                     "type": "string"
                 },
+                "flags": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
                 "id": {
                     "type": "integer"
                 },
                 "instagramLink": {
+                    "type": "string"
+                },
+                "mintPricePerTokenString": {
                     "type": "string"
                 },
                 "name": {
@@ -1669,7 +1952,7 @@ var doc = `{
                 "telegramLink": {
                     "type": "string"
                 },
-                "tokenID": {
+                "tokenId": {
                     "type": "string"
                 },
                 "twitterLink": {
@@ -1680,16 +1963,66 @@ var doc = `{
                 }
             }
         },
-        "data.Transaction": {
+        "entities.Token": {
             "type": "object",
             "properties": {
-                "assetID": {
+                "attributes": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "collectionId": {
                     "type": "integer"
                 },
-                "buyerID": {
+                "createdAt": {
                     "type": "integer"
                 },
-                "collectionID": {
+                "hash": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "imageLink": {
+                    "type": "string"
+                },
+                "listed": {
+                    "type": "boolean"
+                },
+                "metadataLink": {
+                    "type": "string"
+                },
+                "nonce": {
+                    "type": "integer"
+                },
+                "ownerId": {
+                    "type": "integer"
+                },
+                "priceNominal": {
+                    "type": "number"
+                },
+                "priceString": {
+                    "type": "string"
+                },
+                "royaltiesPercent": {
+                    "type": "number"
+                },
+                "tokenId": {
+                    "type": "string"
+                },
+                "tokenName": {
+                    "type": "string"
+                }
+            }
+        },
+        "entities.Transaction": {
+            "type": "object",
+            "properties": {
+                "buyerId": {
+                    "type": "integer"
+                },
+                "collectionId": {
                     "type": "integer"
                 },
                 "hash": {
@@ -1701,10 +2034,13 @@ var doc = `{
                 "priceNominal": {
                     "type": "number"
                 },
-                "sellerID": {
+                "sellerId": {
                     "type": "integer"
                 },
                 "timestamp": {
+                    "type": "integer"
+                },
+                "tokenId": {
                     "type": "integer"
                 },
                 "type": {
@@ -1756,14 +2092,37 @@ var doc = `{
                 "accounts": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/data.Account"
+                        "$ref": "#/definitions/entities.Account"
                     }
                 },
                 "collections": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/data.Collection"
+                        "$ref": "#/definitions/entities.Collection"
                     }
+                }
+            }
+        },
+        "handlers.RankingEntry": {
+            "type": "object",
+            "properties": {
+                "CollectionId": {
+                    "type": "string"
+                },
+                "CollectionName": {
+                    "type": "string"
+                },
+                "floorPrice": {
+                    "type": "number"
+                },
+                "itemsTotal": {
+                    "type": "integer"
+                },
+                "ownersTotal": {
+                    "type": "integer"
+                },
+                "volumeTraded": {
+                    "type": "number"
                 }
             }
         },
@@ -1792,20 +2151,26 @@ var doc = `{
                 }
             }
         },
-        "services.CollectionStatistics": {
+        "services.CreateAccountRequest": {
             "type": "object",
             "properties": {
-                "floorPrice": {
-                    "type": "number"
+                "address": {
+                    "type": "string"
                 },
-                "itemsCount": {
-                    "type": "integer"
+                "description": {
+                    "type": "string"
                 },
-                "ownersCount": {
-                    "type": "integer"
+                "instagramLink": {
+                    "type": "string"
                 },
-                "volumeTraded": {
-                    "type": "number"
+                "name": {
+                    "type": "string"
+                },
+                "twitterLink": {
+                    "type": "string"
+                },
+                "website": {
+                    "type": "string"
                 }
             }
         },
@@ -1841,6 +2206,17 @@ var doc = `{
                 }
             }
         },
+        "services.MintInfo": {
+            "type": "object",
+            "properties": {
+                "maxSupply": {
+                    "type": "integer"
+                },
+                "totalSold": {
+                    "type": "integer"
+                }
+            }
+        },
         "services.SetAccountRequest": {
             "type": "object",
             "properties": {
@@ -1848,9 +2224,6 @@ var doc = `{
                     "type": "string"
                 },
                 "instagramLink": {
-                    "type": "string"
-                },
-                "name": {
                     "type": "string"
                 },
                 "twitterLink": {

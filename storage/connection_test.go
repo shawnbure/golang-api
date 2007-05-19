@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/erdsea/erdsea-api/config"
-	"github.com/erdsea/erdsea-api/data"
+	"github.com/erdsea/erdsea-api/data/entities"
 	_ "github.com/lib/pq"
 	"github.com/stretchr/testify/require"
 )
@@ -28,11 +28,29 @@ func Test_BasicWriteRead(t *testing.T) {
 	tx := GetDB().Create(&collection)
 	require.Nil(t, tx.Error)
 
-	var collectionRead data.Collection
+	var collectionRead entities.Collection
 	txRead := GetDB().Last(&collectionRead)
 
 	require.Nil(t, txRead.Error)
 	require.Equal(t, collectionRead, collection)
+}
+
+func Test_InitDb(t *testing.T) {
+	connectToTestDb()
+
+	account := entities.Account{
+		ID: 0,
+	}
+	tx := GetDB().Find(&account)
+	require.Nil(t, tx.Error)
+	require.Equal(t, tx.RowsAffected, int64(1))
+
+	collection := entities.Collection{
+		ID: 0,
+	}
+	tx = GetDB().Find(&collection)
+	require.Nil(t, tx.Error)
+	require.Equal(t, tx.RowsAffected, int64(1))
 }
 
 func connectToTestDb() {
@@ -42,7 +60,7 @@ func connectToTestDb() {
 		Port:          5432,
 		DbName:        "erdsea_db_test",
 		User:          "postgres",
-		Password:      "root",
+		Password:      "boop",
 		SslMode:       "disable",
 		MaxOpenConns:  50,
 		MaxIdleConns:  10,

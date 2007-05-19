@@ -1,13 +1,18 @@
 package services
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
 
+	"github.com/boltdb/bolt"
 	"github.com/erdsea/erdsea-api/cache"
-	"github.com/erdsea/erdsea-api/data"
+	"github.com/erdsea/erdsea-api/data/entities"
+	"github.com/erdsea/erdsea-api/interaction"
+	"github.com/erdsea/erdsea-api/stats/collstats"
 	"github.com/erdsea/erdsea-api/storage"
 )
 
@@ -18,11 +23,18 @@ const (
 	MaxDescLen                     = 1000
 	RegisteredNFTsBaseFormat       = "%s/address/%s/registered-nfts"
 	HttpResponseExpirePeriod       = 10 * time.Minute
-	StatisticsCacheKeyFormat       = "StatisticsForId:%d"
-	StatisticsExpirePeriod         = 15 * time.Minute
 	CollectionSearchCacheKeyFormat = "CollectionSearch:%s"
 	CollectionSearchExpirePeriod   = 20 * time.Minute
+	MintInfoViewName               = "getMaxSupplyAndTotalSold"
+	MintInfoSetNxKeyFormat         = "MintInfoNX:%s"
+	MintInfoSetNxExpirePeriod      = 6 * time.Second
+	MintInfoBucketName             = "MintInfo"
 )
+
+type MintInfo struct {
+	MaxSupply uint64 `json:"maxSupply"`
+	TotalSold uint64 `json:"totalSold"`
+}
 
 type CreateCollectionRequest struct {
 	UserAddress   string `json:"userAddress"`
@@ -45,13 +57,6 @@ type UpdateCollectionRequest struct {
 	TelegramLink  string `json:"telegramLink"`
 }
 
-type CollectionStatistics struct {
-	ItemsCount   uint64  `json:"itemsCount"`
-	OwnersCount  uint64  `json:"ownersCount"`
-	FloorPrice   float64 `json:"floorPrice"`
-	VolumeTraded float64 `json:"volumeTraded"`
-}
-
 type ProxyRegisteredNFTsResponse struct {
 	Data struct {
 		Tokens []string `json:"tokens"`
@@ -60,7 +65,7 @@ type ProxyRegisteredNFTsResponse struct {
 	Code  string `json:"code"`
 }
 
-func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) (*data.Collection, error) {
+func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) (*entities.Collection, error) {
 	err := checkValidInputOnCreate(request)
 	if err != nil {
 		return nil, err
@@ -89,7 +94,7 @@ func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) 
 		return nil, err
 	}
 
-	collection := &data.Collection{
+	collection := &entities.Collection{
 		ID:            0,
 		Name:          request.Name,
 		TokenID:       request.TokenId,
@@ -108,10 +113,15 @@ func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) 
 		return nil, err
 	}
 
+	_, err = collstats.AddCollectionToCache(collection.ID, collection.Name, collection.TokenID)
+	if err != nil {
+		log.Debug("could not add to coll stats")
+	}
+
 	return collection, nil
 }
 
-func UpdateCollection(collection *data.Collection, request *UpdateCollectionRequest) error {
+func UpdateCollection(collection *entities.Collection, request *UpdateCollectionRequest) error {
 	err := checkValidInputOnUpdate(request)
 
 	collection.Description = request.Description
@@ -129,54 +139,9 @@ func UpdateCollection(collection *data.Collection, request *UpdateCollectionRequ
 	return nil
 }
 
-func GetStatisticsForCollection(collectionId uint64) (*CollectionStatistics, error) {
-	var stats CollectionStatistics
-	cacheKey := fmt.Sprintf(StatisticsCacheKeyFormat, collectionId)
-
-	err := cache.GetCacher().Get(cacheKey, &stats)
-	if err == nil {
-		return &stats, nil
-	}
-
-	numItems, err := storage.CountListedAssetsByCollectionId(collectionId)
-	if err != nil {
-		return nil, err
-	}
-
-	numOwners, err := storage.CountUniqueOwnersWithListedAssetsByCollectionId(collectionId)
-	if err != nil {
-		return nil, err
-	}
-
-	//TODO: refactor this to something smarter. Min price is not good
-	minPrice, err := storage.GetMinBuyPriceForTransactionsWithCollectionId(collectionId)
-	if err != nil {
-		return nil, err
-	}
-
-	sumPrice, err := storage.GetSumBuyPriceForTransactionsWithCollectionId(collectionId)
-	if err != nil {
-		return nil, err
-	}
-
-	stats = CollectionStatistics{
-		ItemsCount:   numItems,
-		OwnersCount:  numOwners,
-		FloorPrice:   minPrice,
-		VolumeTraded: sumPrice,
-	}
-
-	err = cache.GetCacher().Set(cacheKey, stats, StatisticsExpirePeriod)
-	if err != nil {
-		log.Debug("could not set cache", "err", err)
-	}
-
-	return &stats, nil
-}
-
-func GetCollectionsWithNameAlike(name string, limit int) ([]data.Collection, error) {
+func GetCollectionsWithNameAlike(name string, limit int) ([]entities.Collection, error) {
 	var byteArray []byte
-	var collectionArray []data.Collection
+	var collectionArray []entities.Collection
 
 	cacheKey := fmt.Sprintf(CollectionSearchCacheKeyFormat, name)
 	err := cache.GetCacher().Get(cacheKey, &byteArray)
@@ -200,6 +165,110 @@ func GetCollectionsWithNameAlike(name string, limit int) ([]data.Collection, err
 	}
 
 	return collectionArray, nil
+}
+
+func GetMintInfoForContract(contractAddress string) (*MintInfo, error) {
+	redisClient := cache.GetRedis()
+	redisContext := cache.GetContext()
+
+	mintInfoSetNxKey := fmt.Sprintf(MintInfoSetNxKeyFormat, contractAddress)
+	ok, err := redisClient.SetNX(redisContext, mintInfoSetNxKey, true, MintInfoSetNxExpirePeriod).Result()
+	if err != nil {
+		log.Debug("set nx resulted in error", err)
+	}
+
+	shouldDoQuery := ok == true && err == nil
+	if shouldDoQuery {
+		mintInfo, innerErr := setMintInfoCache(contractAddress)
+		if innerErr != nil {
+			_, _ = redisClient.Del(redisContext, mintInfoSetNxKey).Result()
+			return nil, innerErr
+		}
+		return mintInfo, nil
+	} else {
+		return getMintInfoCache(contractAddress)
+	}
+}
+
+func setMintInfoCache(contractAddress string) (*MintInfo, error) {
+	db := cache.GetBolt()
+
+	bi := interaction.GetBlockchainInteractor()
+	if bi == nil {
+		return nil, errors.New("no blockchain interactor")
+	}
+
+	result, err := bi.DoSimpleVmQuery(contractAddress, MintInfoViewName)
+	if err != nil {
+		return nil, err
+	}
+	if len(result) != 2 {
+		return nil, errors.New("unknown result len")
+	}
+
+	maxSupplyHex := hex.EncodeToString(result[0])
+	maxSupply, err := strconv.ParseUint(maxSupplyHex, 16, 64)
+	if err != nil {
+		return nil, err
+	}
+
+	totalSoldHex := hex.EncodeToString(result[1])
+	totalSold, err := strconv.ParseUint(totalSoldHex, 16, 64)
+	if err != nil {
+		return nil, err
+	}
+
+	mintInfo := MintInfo{
+		MaxSupply: maxSupply,
+		TotalSold: totalSold,
+	}
+
+	entryBytes, err := json.Marshal(&mintInfo)
+	if err != nil {
+		log.Debug("could not marshal", err.Error())
+	} else {
+		innerErr := db.Update(func(tx *bolt.Tx) error {
+			bucket, innerErr := tx.CreateBucketIfNotExists([]byte(MintInfoBucketName))
+			if innerErr != nil {
+				return innerErr
+			}
+
+			innerErr = bucket.Put([]byte(contractAddress), entryBytes)
+			return innerErr
+		})
+
+		if innerErr != nil {
+			log.Debug("could not set to bolt db")
+		}
+	}
+
+	return &mintInfo, nil
+}
+
+func getMintInfoCache(contractAddress string) (*MintInfo, error) {
+	db := cache.GetBolt()
+
+	var bytes []byte
+	err := db.View(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket([]byte(MintInfoBucketName))
+		if bucket == nil {
+			return errors.New("no bucket for collection cache")
+		}
+
+		bytes = bucket.Get([]byte(contractAddress))
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	var mintInfo MintInfo
+	err = json.Unmarshal(bytes, &mintInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	return &mintInfo, nil
 }
 
 func contains(arr []string, str string) bool {

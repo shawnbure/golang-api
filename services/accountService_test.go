@@ -5,7 +5,7 @@ import (
 
 	"github.com/erdsea/erdsea-api/cache"
 	"github.com/erdsea/erdsea-api/config"
-	"github.com/erdsea/erdsea-api/data"
+	"github.com/erdsea/erdsea-api/data/entities"
 	"github.com/erdsea/erdsea-api/storage"
 	"github.com/stretchr/testify/require"
 )
@@ -22,35 +22,11 @@ func Test_GetOrCreateAccount(t *testing.T) {
 	require.Equal(t, accountRead.Address, "address")
 }
 
-func Test_AddOrUpdate(t *testing.T) {
-	connectToDb()
-
-	account := data.Account{}
-	account.Address = "unique_erd_addr_4real"
-	account.Description = "old"
-	err := AddOrUpdateAccount(&account)
-	require.Nil(t, err)
-
-	retrievedAccount, err := storage.GetAccountByAddress(account.Address)
-	require.Nil(t, err)
-	require.GreaterOrEqual(t, retrievedAccount.Address, account.Address)
-	require.Equal(t, retrievedAccount.Description, "old")
-
-	account.Description = "new"
-	err = AddOrUpdateAccount(&account)
-
-	retrievedAccount2, err := storage.GetAccountByAddress(account.Address)
-	require.Nil(t, err)
-	require.GreaterOrEqual(t, retrievedAccount2.Address, account.Address)
-	require.Equal(t, retrievedAccount2.Description, "new")
-	require.Equal(t, retrievedAccount.ID, retrievedAccount2.ID)
-}
-
 func Test_SearchAccount(T *testing.T) {
 	connectToDb()
 	cache.InitCacher(config.CacheConfig{Url: "redis://localhost:6379"})
 
-	acc := &data.Account{
+	acc := &entities.Account{
 		Name: "this name is uniquee",
 	}
 

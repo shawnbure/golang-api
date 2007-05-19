@@ -2,6 +2,7 @@ package formatter
 
 import (
 	"encoding/hex"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -42,11 +43,11 @@ func TestTxFormatter_NewBuyNftTxTemplate(t *testing.T) {
 		"erd17s2pz8qrds6ake3qwheezgy48wzf7dr5nhdpuu2h4rr4mt5rt9ussj7xzh",
 		"LKMEX-85ea13",
 		2,
-		float64(4096),
+		"4096",
 	)
 
 	require.True(t, strings.EqualFold(tx.Data, "buyNft@4C4B4D45582D383565613133@02"))
-	require.Equal(t, tx.Value, "4096000000000000000000")
+	require.Equal(t, tx.Value, "4096")
 }
 
 func TestTxFormatter_NewWithdrawNftTxTemplate(t *testing.T) {
@@ -59,6 +60,20 @@ func TestTxFormatter_NewWithdrawNftTxTemplate(t *testing.T) {
 	)
 
 	require.True(t, strings.EqualFold(tx.Data, "withdrawNft@4C4B4D45582D383565613133@02"))
+}
+
+func TestTxFormatter_MintTokensTxTemplate(t *testing.T) {
+	formatter := NewTxFormatter(defaultConfig())
+
+	tx := formatter.NewMintNftsTxTemplate(
+		"erd17s2pz8qrds6ake3qwheezgy48wzf7dr5nhdpuu2h4rr4mt5rt9ussj7xzh",
+		"erd17s2pz8qrds6ake3qwheezgy48wzf7dr5nhdpuu2h4rr4mt5rt9ussj7xzy",
+		1.1,
+		5,
+	)
+
+	require.True(t, strings.EqualFold(tx.Data, "mintTokens@05"))
+	require.Equal(t, tx.Value, fmt.Sprintf("%f", 1.1 * 5))
 }
 
 func defaultConfig() config.BlockchainConfig {

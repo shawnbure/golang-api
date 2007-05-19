@@ -16,7 +16,7 @@ type GeneralConfig struct {
 }
 
 type ConnectorApiConfig struct {
-	Port        string
+	Address     string
 	Username    string
 	Password    string
 	Addresses   []string
@@ -32,6 +32,7 @@ type BlockchainConfig struct {
 	ListNftGasLimit     uint64
 	BuyNftGasLimit      uint64
 	WithdrawNftGasLimit uint64
+	MintTokenGasLimit   uint64
 }
 
 type DatabaseConfig struct {
@@ -59,7 +60,8 @@ type CacheConfig struct {
 }
 
 type SwaggerConfig struct {
-	Enabled bool
+	LocalDocRoute string
+	Enabled       bool
 }
 
 func (d DatabaseConfig) Url() string {

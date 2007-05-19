@@ -32,3 +32,19 @@ func decodeBigUintFromTopic(bytes []byte) string {
 func decodeTxHashFromTopic(bytes []byte) string {
 	return hex.EncodeToString(bytes)
 }
+
+func decodeHexStringOrEmptyWhenZeroFromTopic(bytes []byte) string {
+	if allZero(bytes) {
+		return ""
+	}
+	return hex.EncodeToString(bytes)
+}
+
+func allZero(s []byte) bool {
+	for _, v := range s {
+		if v != 0 {
+			return false
+		}
+	}
+	return true
+}

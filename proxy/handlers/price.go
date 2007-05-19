@@ -3,9 +3,7 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/erdsea/erdsea-api/config"
-	"github.com/erdsea/erdsea-api/data"
-	"github.com/erdsea/erdsea-api/proxy/middleware"
+	"github.com/erdsea/erdsea-api/data/dtos"
 	"github.com/erdsea/erdsea-api/services"
 	"github.com/gin-gonic/gin"
 )
@@ -17,7 +15,7 @@ const (
 type eEGLDPriceHandler struct {
 }
 
-func NewPriceHandler(groupHandler *groupHandler, authCfg config.AuthConfig) {
+func NewPriceHandler(groupHandler *groupHandler) {
 	handler := &eEGLDPriceHandler{}
 
 	endpoints := []EndpointHandler{
@@ -26,7 +24,7 @@ func NewPriceHandler(groupHandler *groupHandler, authCfg config.AuthConfig) {
 
 	endpointGroupHandler := EndpointGroupHandler{
 		Root:             baseEGLDPriceEndpoint,
-		Middlewares:      []gin.HandlerFunc{middleware.Authorization(authCfg.JwtSecret)},
+		Middlewares:      []gin.HandlerFunc{},
 		EndpointHandlers: endpoints,
 	}
 
@@ -39,14 +37,14 @@ func NewPriceHandler(groupHandler *groupHandler, authCfg config.AuthConfig) {
 // @Accept json
 // @Produce json
 // @Success 200 {object} float64
-// @Failure 500 {object} data.ApiResponse
+// @Failure 500 {object} dtos.ApiResponse
 // @Router /egld_price [get]
 func (handler *eEGLDPriceHandler) get(c *gin.Context) {
 	price, err := services.GetEGLDPrice()
 	if err != nil {
-		data.JsonResponse(c, http.StatusInternalServerError, nil, "could not get price")
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, "could not get price")
 		return
 	}
 
-	data.JsonResponse(c, http.StatusOK, price, "")
+	dtos.JsonResponse(c, http.StatusOK, price, "")
 }

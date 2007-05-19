@@ -1,7 +1,6 @@
 package proxy
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -62,15 +61,14 @@ func NewWebServer(cfg *config.GeneralConfig) (*webServer, error) {
 		return nil, err
 	}
 
-	//TODO: think about handlers params - maybe single param
 	handlers.NewAuthHandler(groupHandler, *authService)
-	handlers.NewAssetsHandler(groupHandler, cfg.Auth)
+	handlers.NewTokensHandler(groupHandler)
 	handlers.NewCollectionsHandler(groupHandler, cfg.Auth, cfg.Blockchain)
-	handlers.NewTransactionsHandler(groupHandler, cfg.Auth)
+	handlers.NewTransactionsHandler(groupHandler)
 	handlers.NewTxTemplateHandler(groupHandler, cfg.Auth, cfg.Blockchain)
-	handlers.NewPriceHandler(groupHandler, cfg.Auth)
+	handlers.NewPriceHandler(groupHandler)
 	handlers.NewAccountsHandler(groupHandler, cfg.Auth)
-	handlers.NewSearchHandler(groupHandler, cfg.Auth)
+	handlers.NewSearchHandler(groupHandler)
 	handlers.NewSwaggerHandler(groupHandler, cfg.Swagger)
 
 	groupHandler.RegisterEndpoints(router)
@@ -82,12 +80,12 @@ func NewWebServer(cfg *config.GeneralConfig) (*webServer, error) {
 }
 
 func (w *webServer) Run() *http.Server {
-	port := w.generalConfig.ConnectorApi.Port
-	if !strings.Contains(port, ":") {
-		port = fmt.Sprintf(":%s", port)
+	address := w.generalConfig.ConnectorApi.Address
+	if !strings.Contains(address, ":") {
+		panic("bad address")
 	}
 	server := &http.Server{
-		Addr:    port,
+		Addr:    address,
 		Handler: w.router,
 	}
 

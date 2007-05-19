@@ -2,6 +2,7 @@ package formatter
 
 import (
 	"encoding/hex"
+	"fmt"
 	"math/big"
 
 	"github.com/ElrondNetwork/elrond-sdk-erdgo/data"
@@ -14,6 +15,7 @@ var (
 	buyNftEndpointName          = "buyNft"
 	withdrawNftEndpointName     = "withdrawNft"
 	ESDTNFTTransferEndpointName = "ESDTNFTTransfer"
+	mintTokensEndpointName      = "mintTokens"
 )
 
 type Transaction struct {
@@ -55,7 +57,7 @@ func (f *TxFormatter) NewListNftTxTemplate(senderAddr string, tokenId string, no
 	tx := Transaction{
 		Nonce:     0,
 		Value:     "0",
-		RcvAddr:   f.config.MarketplaceAddress,
+		RcvAddr:   senderAddr,
 		SndAddr:   senderAddr,
 		GasPrice:  f.config.GasPrice,
 		GasLimit:  f.config.ListNftGasLimit,
@@ -69,16 +71,14 @@ func (f *TxFormatter) NewListNftTxTemplate(senderAddr string, tokenId string, no
 	return &tx, nil
 }
 
-func (f *TxFormatter) NewBuyNftTxTemplate(senderAddr string, tokenId string, nonce uint64, price float64) Transaction {
-	priceDecStr := services.GetPriceDenominated(price).Text(10)
-
+func (f *TxFormatter) NewBuyNftTxTemplate(senderAddr string, tokenId string, nonce uint64, price string) Transaction {
 	txData := buyNftEndpointName +
 		"@" + hex.EncodeToString([]byte(tokenId)) +
 		"@" + hex.EncodeToString(big.NewInt(int64(nonce)).Bytes())
 
 	return Transaction{
 		Nonce:     0,
-		Value:     priceDecStr,
+		Value:     price,
 		RcvAddr:   f.config.MarketplaceAddress,
 		SndAddr:   senderAddr,
 		GasPrice:  f.config.GasPrice,
@@ -103,6 +103,32 @@ func (f *TxFormatter) NewWithdrawNftTxTemplate(senderAddr string, tokenId string
 		SndAddr:   senderAddr,
 		GasPrice:  f.config.GasPrice,
 		GasLimit:  f.config.WithdrawNftGasLimit,
+		Data:      txData,
+		Signature: "",
+		ChainID:   f.config.ChainID,
+		Version:   1,
+		Options:   0,
+	}
+}
+
+func (f *TxFormatter) NewMintNftsTxTemplate(
+	walletAddress string,
+	contractAddress string,
+	mintPricePerToken float64,
+	numberOfTokens uint64,
+) Transaction {
+	gasLimit := f.config.MintTokenGasLimit * numberOfTokens
+	totalPrice := fmt.Sprintf("%f", mintPricePerToken * float64(numberOfTokens))
+	txData := mintTokensEndpointName +
+		"@" + hex.EncodeToString(big.NewInt(int64(numberOfTokens)).Bytes())
+
+	return Transaction{
+		Nonce:     0,
+		Value:	   totalPrice,
+		RcvAddr:   contractAddress,
+		SndAddr:   walletAddress,
+		GasPrice:  f.config.GasPrice,
+		GasLimit:  gasLimit,
 		Data:      txData,
 		Signature: "",
 		ChainID:   f.config.ChainID,
