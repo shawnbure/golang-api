@@ -13,10 +13,11 @@ type GeneralConfig struct {
 }
 
 type ConnectorApiConfig struct {
-	Port      string
-	Username  string
-	Password  string
-	Addresses []string
+	Port        string
+	Username    string
+	Password    string
+	Addresses   []string
+	Identifiers []string
 }
 
 type BlockchainConfig struct {

@@ -1,6 +1,9 @@
 package storage
 
-import "github.com/erdsea/erdsea-api/data"
+import (
+	"github.com/erdsea/erdsea-api/data"
+	"gorm.io/gorm"
+)
 
 func AddNewTransaction(transaction *data.Transaction) error {
 	database, err := GetDBOrError()
@@ -11,6 +14,9 @@ func AddNewTransaction(transaction *data.Transaction) error {
 	txCreate := database.Create(&transaction)
 	if txCreate.Error != nil {
 		return txCreate.Error
+	}
+	if txCreate.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
 	}
 
 	return nil
@@ -27,6 +33,9 @@ func GetTransactionById(id uint64) (*data.Transaction, error) {
 	txRead := database.Find(&transaction, id)
 	if txRead.Error != nil {
 		return nil, txRead.Error
+	}
+	if txRead.RowsAffected == 0 {
+		return nil, gorm.ErrRecordNotFound
 	}
 
 	return &transaction, nil
@@ -107,6 +116,9 @@ func GetTransactionByHash(hash string) (*data.Transaction, error) {
 	txRead := database.Find(&transaction, "hash = ?", hash)
 	if txRead.Error != nil {
 		return nil, txRead.Error
+	}
+	if txRead.RowsAffected == 0 {
+		return nil, gorm.ErrRecordNotFound
 	}
 
 	return &transaction, nil

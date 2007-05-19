@@ -1,6 +1,9 @@
 package storage
 
-import "github.com/erdsea/erdsea-api/data"
+import (
+	"github.com/erdsea/erdsea-api/data"
+	"gorm.io/gorm"
+)
 
 func AddNewAsset(asset *data.Asset) error {
 	database, err := GetDBOrError()
@@ -11,6 +14,9 @@ func AddNewAsset(asset *data.Asset) error {
 	txCreate := database.Create(&asset)
 	if txCreate.Error != nil {
 		return txCreate.Error
+	}
+	if txCreate.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
 	}
 
 	return nil
@@ -25,6 +31,9 @@ func UpdateAsset(asset *data.Asset) error {
 	txCreate := database.Save(&asset)
 	if txCreate.Error != nil {
 		return txCreate.Error
+	}
+	if txCreate.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
 	}
 
 	return nil
@@ -42,6 +51,9 @@ func GetAssetById(id uint64) (*data.Asset, error) {
 	if txRead.Error != nil {
 		return nil, txRead.Error
 	}
+	if txRead.RowsAffected == 0 {
+		return nil, gorm.ErrRecordNotFound
+	}
 
 	return &asset, nil
 }
@@ -57,6 +69,9 @@ func GetAssetByTokenIdAndNonce(tokenId string, nonce uint64) (*data.Asset, error
 	txRead := database.Find(&asset, "token_id = ? AND nonce = ?", tokenId, nonce)
 	if txRead.Error != nil {
 		return nil, txRead.Error
+	}
+	if txRead.RowsAffected == 0 {
+		return nil, gorm.ErrRecordNotFound
 	}
 
 	return &asset, nil
