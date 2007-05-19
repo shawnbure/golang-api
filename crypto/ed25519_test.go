@@ -54,7 +54,7 @@ func TestVerifyForIncorrectSig_ShouldErr(t *testing.T) {
 	assert.Equal(t, ErrInvalidSignature, err)
 }
 
-func TestGibKeySir_KeySignatureWillBeVerified(t *testing.T) {
+func TestNewEdKey_KeySignatureWillBeVerified(t *testing.T) {
 	t.Parallel()
 
 	seed := "202d2274940909b4f3c23691c857d7d3352a0574cfb96efbf1ef90cbc66e2cbc"
@@ -62,7 +62,7 @@ func TestGibKeySir_KeySignatureWillBeVerified(t *testing.T) {
 
 	seedBytes, _ := hex.DecodeString(seed)
 
-	sk := GibKeySir(seedBytes)
+	sk := NewEdKey(seedBytes)
 	pk := sk[libed25519.PublicKeySize:]
 
 	sig, _ := SignPayload(sk, msg)

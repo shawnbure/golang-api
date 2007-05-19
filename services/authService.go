@@ -25,7 +25,7 @@ func NewAuthService(cfg config.AuthConfig) (*AuthService, error) {
 		return nil, err
 	}
 
-	sk := crypto.GibKeySir(seedBytes)
+	sk := crypto.NewEdKey(seedBytes)
 
 	a.privKey = sk
 	a.pubKey = sk[32:]

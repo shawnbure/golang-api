@@ -13,7 +13,7 @@ func generateSeed() string {
 	return hex.EncodeToString(sk.Seed())
 }
 
-func GibKeySir(seed []byte) libed25519.PrivateKey {
+func NewEdKey(seed []byte) libed25519.PrivateKey {
 	return libed25519.NewKeyFromSeed(seed)
 }
 
