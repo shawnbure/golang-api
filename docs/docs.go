@@ -402,7 +402,7 @@ var doc = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/entities.Token"
+                                "$ref": "#/definitions/dtos.OwnedTokenDto"
                             }
                         }
                     },
@@ -2452,6 +2452,77 @@ var doc = `{
                 },
                 "statistics": {
                     "$ref": "#/definitions/dtos.CollectionStatistics"
+                }
+            }
+        },
+        "dtos.OwnedTokenDto": {
+            "type": "object",
+            "properties": {
+                "attributes": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "auctionDeadline": {
+                    "type": "integer"
+                },
+                "auctionStartTime": {
+                    "type": "integer"
+                },
+                "collectionFlags": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "collectionId": {
+                    "type": "integer"
+                },
+                "collectionName": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "integer"
+                },
+                "hash": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "imageLink": {
+                    "type": "string"
+                },
+                "lastBuyPriceNominal": {
+                    "type": "number"
+                },
+                "metadataLink": {
+                    "type": "string"
+                },
+                "nonce": {
+                    "type": "integer"
+                },
+                "ownerId": {
+                    "type": "integer"
+                },
+                "priceNominal": {
+                    "type": "number"
+                },
+                "priceString": {
+                    "type": "string"
+                },
+                "royaltiesPercent": {
+                    "type": "number"
+                },
+                "state": {
+                    "type": "string"
+                },
+                "tokenId": {
+                    "type": "string"
+                },
+                "tokenName": {
+                    "type": "string"
                 }
             }
         },

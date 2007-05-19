@@ -266,7 +266,7 @@ func (handler *accountsHandler) setAccountCover(c *gin.Context) {
 // @Param walletAddress path string true "wallet address"
 // @Param offset path uint true "offset"
 // @Param limit path uint true "limit"
-// @Success 200 {object} []entities.Token
+// @Success 200 {object} []dtos.OwnedTokenDto
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 404 {object} dtos.ApiResponse
 // @Router /accounts/{walletAddress}/tokens/{offset}/{limit} [get]
