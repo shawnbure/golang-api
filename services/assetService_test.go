@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"gorm.io/datatypes"
 	"strconv"
-	"strings"
 	"testing"
 
 	"github.com/erdsea/erdsea-api/config"
@@ -50,7 +49,7 @@ func Test_ListAsset(t *testing.T) {
 		TokenID:      "tokenId",
 		Nonce:        13,
 		PriceNominal: 1_000_000_000_000_000_000_000,
-		Link:         "uri",
+		MetadataLink: "uri",
 		Listed:       true,
 		OwnerId:      ownerAccount.ID,
 		CollectionID: asset.CollectionID,
@@ -110,7 +109,7 @@ func Test_SellAsset(t *testing.T) {
 		TokenID:      "tokenId",
 		Nonce:        13,
 		PriceNominal: 1_000_000_000_000_000_000_000,
-		Link:         "uri",
+		MetadataLink: "uri",
 		Listed:       false,
 		OwnerId:      0,
 		CollectionID: asset.CollectionID,
@@ -165,7 +164,7 @@ func Test_WithdrawAsset(t *testing.T) {
 		TokenID:      "tokenId",
 		Nonce:        13,
 		PriceNominal: 1_000_000_000_000_000_000_000,
-		Link:         "uri",
+		MetadataLink: "uri",
 		Listed:       false,
 		OwnerId:      0,
 		CollectionID: asset.CollectionID,
@@ -206,21 +205,14 @@ func Test_GetPriceDenominated(T *testing.T) {
 
 func Test_GetAssetLinkResponse(t *testing.T) {
 	asset := data.Asset{
-		Nonce: 1,
-		Link:  "https://wow-prod-nftribe.s3.eu-west-2.amazonaws.com/t",
+		Nonce:        1,
+		MetadataLink: "https://wow-prod-nftribe.s3.eu-west-2.amazonaws.com/t",
 	}
 
-	assetLinkWithNonce := GetAssetLinkWithNonce(&asset)
-	response, err := HttpGetRaw(assetLinkWithNonce)
+	osResponse, err := GetOSMetadataForAsset(asset.MetadataLink, asset.Nonce)
 	require.Nil(t, err)
 
-	responseLen := len(response)
-	require.GreaterOrEqual(t, responseLen, 0)
-
-	attribute := "\"value\":\"Lightning Bolts\",\"trait_type\":\"Earrings\""
-	require.True(t, strings.Contains(response, attribute))
-
-	attrs, err := ConstructAttributesJsonFromResponse(response)
+	attrs, err := ConstructAttributesJsonFromResponse(osResponse)
 	require.Nil(t, err)
 	connectToDb()
 
@@ -239,7 +231,7 @@ func Test_GetAssetLinkResponse(t *testing.T) {
 	var assetRead data.Asset
 	txRead := db.First(&assetRead, datatypes.JSONQuery("attributes").Equals("Lightning Bolts", "Earrings"))
 	require.Nil(t, txRead.Error)
-	require.Equal(t, asset.Link, "https://wow-prod-nftribe.s3.eu-west-2.amazonaws.com/t")
+	require.Equal(t, asset.MetadataLink, "https://wow-prod-nftribe.s3.eu-west-2.amazonaws.com/t")
 }
 
 func connectToDb() {

@@ -1,6 +1,7 @@
 package process
 
 import (
+	"encoding/json"
 	logger "github.com/ElrondNetwork/elrond-go-logger"
 	"github.com/erdsea/erdsea-api/data"
 	"github.com/erdsea/erdsea-api/services"
@@ -77,14 +78,22 @@ func (e *EventProcessor) onEventPutNftForSale(event data.Event) {
 		OwnerAddress:     decodeAddressFromTopic(event.Topics[0]),
 		TokenId:          decodeStringFromTopic(event.Topics[1]),
 		Nonce:            decodeU64FromTopic(event.Topics[2]),
-		Uri:              decodeStringFromTopic(event.Topics[3]),
-		Price:            decodeBigUintFromTopic(event.Topics[4]),
-		RoyaltiesPercent: decodeU64FromTopic(event.Topics[5]),
-		Timestamp:        decodeU64FromTopic(event.Topics[6]),
-		TxHash:           decodeTxHashFromTopic(event.Topics[7]),
+		TokenName:        decodeStringFromTopic(event.Topics[3]),
+		FirstLink:        decodeStringFromTopic(event.Topics[4]),
+		LastLink:         decodeStringFromTopic(event.Topics[5]),
+		Hash:             decodeStringFromTopic(event.Topics[6]),
+		Attributes:       decodeStringFromTopic(event.Topics[7]),
+		Price:            decodeBigUintFromTopic(event.Topics[8]),
+		RoyaltiesPercent: decodeU64FromTopic(event.Topics[9]),
+		Timestamp:        decodeU64FromTopic(event.Topics[10]),
+		TxHash:           decodeTxHashFromTopic(event.Topics[11]),
 	}
 
-	log.Debug("onEventPutNftForSale", args.ToString())
+	eventJson, err := json.Marshal(args)
+	if err != nil {
+		log.Debug("onEventPutNftForSale", string(eventJson))
+	}
+
 	services.ListAsset(args)
 }
 
@@ -100,7 +109,11 @@ func (e *EventProcessor) onEventBuyNft(event data.Event) {
 		TxHash:       decodeTxHashFromTopic(event.Topics[7]),
 	}
 
-	log.Debug("onEventBuyNft", args.ToString())
+	eventJson, err := json.Marshal(args)
+	if err != nil {
+		log.Debug("onEventBuyNft", string(eventJson))
+	}
+
 	services.BuyAsset(args)
 }
 
@@ -115,6 +128,10 @@ func (e *EventProcessor) onEventWithdrawNft(event data.Event) {
 		TxHash:       decodeTxHashFromTopic(event.Topics[6]),
 	}
 
-	log.Debug("onEventWithdrawNft", args.ToString())
+	eventJson, err := json.Marshal(args)
+	if err != nil {
+		log.Debug("onEventWithdrawNft", string(eventJson))
+	}
+
 	services.WithdrawAsset(args)
 }
