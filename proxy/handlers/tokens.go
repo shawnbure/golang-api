@@ -4,7 +4,9 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/erdsea/erdsea-api/config"
 	"github.com/erdsea/erdsea-api/data/dtos"
+	"github.com/erdsea/erdsea-api/proxy/middleware"
 	"github.com/erdsea/erdsea-api/services"
 	"github.com/erdsea/erdsea-api/storage"
 	"github.com/gin-gonic/gin"
@@ -20,14 +22,13 @@ const (
 )
 
 type tokensHandler struct {
+	blockchainConfig config.BlockchainConfig
 }
 
-type metadataRelayRequest struct {
-	Url string `json:"url"`
-}
-
-func NewTokensHandler(groupHandler *groupHandler) {
-	handler := &tokensHandler{}
+func NewTokensHandler(groupHandler *groupHandler, cfg config.BlockchainConfig) {
+	handler := &tokensHandler{
+		blockchainConfig: cfg,
+	}
 
 	endpoints := []EndpointHandler{
 		{Method: http.MethodGet, Path: tokenByTokenIdAndNonceEndpoint, HandlerFunc: handler.getByTokenIdAndNonce},
@@ -222,7 +223,7 @@ func (handler *tokensHandler) getBids(c *gin.Context) {
 }
 
 func (handler *tokensHandler) relayMetadataResponse(c *gin.Context) {
-	var req metadataRelayRequest
+	var req services.MetadataRelayRequest
 
 	err := c.Bind(&req)
 	if err != nil {
@@ -237,4 +238,47 @@ func (handler *tokensHandler) relayMetadataResponse(c *gin.Context) {
 	}
 
 	dtos.JsonResponse(c, http.StatusOK, responseBytes, "")
+}
+
+func (handler *tokensHandler) refreshMetadata(c *gin.Context) {
+	tokenId := c.Param("tokenId")
+	nonceString := c.Param("nonce")
+
+	nonce, err := strconv.ParseUint(nonceString, 10, 64)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	tokenCacheInfo, err := services.GetOrAddTokenCacheInfo(tokenId, nonce)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	jwtAddress := c.GetString(middleware.AddressKey)
+	jwtUser, err := services.GetOrAddAccountCacheInfo(jwtAddress)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	token, err := storage.GetTokenById(tokenCacheInfo.TokenDbId)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	if jwtUser.AccountId != token.OwnerId {
+		dtos.JsonResponse(c, http.StatusUnauthorized, nil, "")
+		return
+	}
+
+	metadata, err := services.RefreshMetadata(handler.blockchainConfig.ProxyUrl, token, jwtAddress)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusNotFound, nil, "")
+		return
+	}
+
+	dtos.JsonResponse(c, http.StatusOK, metadata, "")
 }

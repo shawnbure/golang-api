@@ -48,6 +48,10 @@ type NftProxyResponse struct {
 	Code  string `json:"code"`
 }
 
+type MetadataRelayRequest struct {
+	Url string `json:"url"`
+}
+
 type AvailableTokensResponse struct {
 	Tokens map[string]AvailableToken `json:"tokens"`
 }
@@ -71,6 +75,9 @@ const (
 
 	UrlResponseCacheKeyFormat = "Url:%s"
 	UrlResponseExpirePeriod   = 5 * time.Minute
+
+	RefreshMetadataSetNxKeyFormat    = "Refresh:%d"
+	RefreshMetadataSetNxExpirePeriod = 15 * time.Minute
 )
 
 var (
@@ -711,4 +718,47 @@ func TryGetResponseCached(url string) (string, error) {
 	}
 
 	return metadataBytes, nil
+}
+
+func RefreshMetadata(blockchainProxy string, token *entities.Token, ownerAddress string) (string, error) {
+	redisClient := cache.GetRedis()
+	redisContext := cache.GetContext()
+
+	refreshKey := fmt.Sprintf(RefreshMetadataSetNxKeyFormat, token.ID)
+	ok, err := redisClient.SetNX(redisContext, refreshKey, true, RefreshMetadataSetNxExpirePeriod).Result()
+	if err != nil {
+		log.Debug("set nx resulted in error", err)
+	}
+
+	shouldTry := ok == true && err == nil
+	if !shouldTry {
+		return string(token.Attributes), nil
+	}
+
+	refreshedMetadataLink := false
+	if len(token.MetadataLink) == 0 {
+		link, innerErr := TryGetMetadataLink(blockchainProxy, ownerAddress, token.TokenID, token.Nonce)
+		if innerErr != nil {
+			log.Debug("could not get metadata link")
+		} else {
+			refreshedMetadataLink = true
+			token.MetadataLink = link
+		}
+	}
+
+	refreshedAttributes := false
+	attrs := GetAttributesFromMetadata(token.MetadataLink)
+	if len(attrs) != 0 {
+		refreshedAttributes = string(attrs) != string(token.Attributes)
+		token.Attributes = attrs
+	}
+
+	if refreshedMetadataLink || refreshedAttributes {
+		innerErr := storage.UpdateToken(token)
+		if innerErr != nil {
+			log.Debug("could not update token")
+		}
+	}
+
+	return string(attrs), nil
 }

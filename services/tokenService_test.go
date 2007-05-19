@@ -364,8 +364,10 @@ func Test_StartAuctionEndAuction(t *testing.T) {
 }
 
 func Test_GetMetadata(t *testing.T) {
+	cache.InitCacher(cacheCfg)
+
 	link := "https://www.chubbiverse.com/api/meta/1/1"
-	bytes, err := HttpGetRaw(link)
+	bytes, err := TryGetResponseCached(link)
 	require.Nil(t, err)
 	println(bytes)
 	println(len(bytes))
@@ -376,7 +378,7 @@ func Test_GetMetadata(t *testing.T) {
 	println("--------------------")
 
 	link = "https://gateway.pinata.cloud/ipfs/QmPxQivTP7tncEkyrB7yLG7XmQXXsj8H9GfZ7vdH69eJ8k/1"
-	bytes, err = HttpGetRaw(link)
+	bytes, err = TryGetResponseCached(link)
 	require.Nil(t, err)
 	println(bytes)
 	println(len(bytes))
@@ -386,7 +388,7 @@ func Test_GetMetadata(t *testing.T) {
 	println("--------------------")
 
 	link = "https://gateway.pinata.cloud/ipfs/QmZRb9AxuDAe8KfcVGw6XUQa1bH1pRPT2hbTWwWb48tLgb/1"
-	bytes, err = HttpGetRaw(link)
+	bytes, err = TryGetResponseCached(link)
 	require.Nil(t, err)
 	println(bytes)
 	println(len(bytes))
@@ -396,7 +398,7 @@ func Test_GetMetadata(t *testing.T) {
 	println("--------------------")
 
 	link = "https://nftartisans.mypinata.cloud/ipfs/QmRR919iHG8frctbLhktKzSgWJyCGUp8rktJaczDzyvAke/1"
-	bytes, err = HttpGetRaw(link)
+	bytes, err = TryGetResponseCached(link)
 	require.Nil(t, err)
 	println(bytes)
 	println(len(bytes))
@@ -406,7 +408,7 @@ func Test_GetMetadata(t *testing.T) {
 	println("--------------------")
 
 	link = "https://galacticapes.mypinata.cloud/ipfs/QmRDdnGJYQhPjq8ebxtsea8cptCUkgZwgBMnq1grW8mWJr/1"
-	bytes, err = HttpGetRaw(link)
+	bytes, err = TryGetResponseCached(link)
 	require.Nil(t, err)
 	println(bytes)
 	println(len(bytes))
@@ -415,4 +417,36 @@ func Test_GetMetadata(t *testing.T) {
 
 
 	println("--------------------")
+}
+
+func Test_RefreshMetadata(t *testing.T) {
+	connectToDb()
+	cache.InitCacher(cacheCfg)
+
+	token := entities.Token{
+		TokenID:             "CHUB-dc4906",
+		Nonce:               5,
+		MetadataLink:        "",
+	}
+
+	err := storage.AddToken(&token)
+	require.Nil(t, err)
+
+	attrs, err := RefreshMetadata(blockchainCfg.ProxyUrl, &token, "erd17s2pz8qrds6ake3qwheezgy48wzf7dr5nhdpuu2h4rr4mt5rt9ussj7xzh")
+	require.Nil(t, err)
+	require.NotEqual(t, 0, len(attrs))
+
+	readToken, err := storage.GetTokenById(token.ID)
+	require.Nil(t, err)
+
+	var tokenAttrs map[string]interface{}
+	err = json.Unmarshal(token.Attributes, &tokenAttrs)
+	require.Nil(t, err)
+
+
+	var readTokenAttrs map[string]interface{}
+	err = json.Unmarshal(readToken.Attributes, &readTokenAttrs)
+	require.Nil(t, err)
+
+	require.Equal(t, tokenAttrs, readTokenAttrs)
 }
