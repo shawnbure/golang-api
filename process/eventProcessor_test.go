@@ -1,7 +1,9 @@
 package process
 
 import (
+	"context"
 	"fmt"
+	"github.com/erdsea/erdsea-api/alerts/tg"
 	"testing"
 	"time"
 
@@ -35,7 +37,9 @@ func TestEventProcessor_OnEvents(t *testing.T) {
 	}
 
 	cacher, _ := cache.NewLocalCacher()
-	proc := NewEventProcessor(addresses, identifiers, cacher)
+
+	monitor := NewObserverMonitor(&tg.DisabledBot{}, context.Background(), false)
+	proc := NewEventProcessor(addresses, identifiers, cacher, monitor)
 	proc.OnEvents(blockEvents)
 }
 
@@ -48,7 +52,8 @@ func TestNewEventProcessor_OnEventsWithFinalized(t *testing.T) {
 	addresses := []string{"erd1", "erd2", "erd3"}
 	identifiers := []string{"putNftForSale", "buyNft", "withdrawNft"}
 
-	proc := NewEventProcessor(addresses, identifiers, cacher)
+	monitor := NewObserverMonitor(&tg.DisabledBot{}, context.Background(), false)
+	proc := NewEventProcessor(addresses, identifiers, cacher, monitor)
 
 	events := []entities.Event{
 		{

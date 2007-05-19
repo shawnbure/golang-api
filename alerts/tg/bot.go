@@ -11,11 +11,14 @@ import (
 type Bot interface {
 	Start()
 	ObserverDownAlert(lastBlockHash string)
+	StoreBlockHash(lastBlockHash string)
 }
 
 type telegramBot struct {
 	bot       *tb.Bot
 	recipient *recipient
+
+	lastBlockHash string
 }
 
 func NewTelegramBot(cfg config.BotConfig) (*telegramBot, error) {
@@ -28,10 +31,14 @@ func NewTelegramBot(cfg config.BotConfig) (*telegramBot, error) {
 		return nil, err
 	}
 
-	return &telegramBot{
+	tgb := &telegramBot{
 		bot:       b,
 		recipient: &recipient{id: cfg.RecID},
-	}, nil
+	}
+
+	tgb.registerListeners()
+
+	return tgb, nil
 }
 
 func (tgb *telegramBot) Start() {
@@ -43,12 +50,21 @@ func (tgb *telegramBot) ObserverDownAlert(lastBlockHash string) {
 	_, _ = tgb.bot.Send(tgb.recipient, msg)
 }
 
-func (tgb *telegramBot) registerListeners() {
-	tgb.bot.Handle("/hello", func(m *tb.Message) {
-		r := &recipient{}
+func (tgb *telegramBot) StoreBlockHash(lastBlockHash string) {
+	tgb.lastBlockHash = lastBlockHash
+}
 
-		resp := fmt.Sprintf("Hello %s \U0001F976", m.Sender.FirstName+m.Sender.LastName)
-		_, _ = tgb.bot.Send(r, resp)
+func (tgb *telegramBot) registerListeners() {
+	tgb.bot.Handle("/hash", func(m *tb.Message) {
+		var msg string
+
+		if tgb.lastBlockHash != "" {
+			msg = fmt.Sprintf("last block hash 👇\n\n%s", tgb.lastBlockHash)
+		} else {
+			msg = "no block hash found in storage 🤔"
+		}
+
+		_, _ = tgb.bot.Send(tgb.recipient, msg)
 	})
 }
 
@@ -65,3 +81,5 @@ type DisabledBot struct{}
 func (db *DisabledBot) Start() {}
 
 func (db *DisabledBot) ObserverDownAlert(_ string) {}
+
+func (db *DisabledBot) StoreBlockHash(_ string) {}

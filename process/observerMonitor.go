@@ -54,6 +54,7 @@ func (om *observerMonitor) monitor() {
 	for {
 		select {
 		case hash := <-om.livenessChan:
+			om.alertBot.StoreBlockHash(hash)
 			om.lastBlockHash = hash
 			om.watchDog = true
 		case _ = <-om.ticker.C:
