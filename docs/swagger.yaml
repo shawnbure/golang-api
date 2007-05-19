@@ -1153,7 +1153,7 @@ paths:
         "200":
           description: OK
           schema:
-            type: integer
+            type: number
         "400":
           description: Bad Request
           schema:

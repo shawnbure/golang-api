@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/ElrondNetwork/elrond-sdk-erdgo/data"
 	"math/big"
+	"strconv"
 	"time"
 
 	"github.com/erdsea/erdsea-api/cache"
@@ -12,14 +13,15 @@ import (
 )
 
 var (
-	GetCreatorRoyaltiesView               = "getCreatorRoyalties"
-	GetCreatorLastWithdrawalEpochView     = "getCreatorLastWithdrawalEpoch"
-	GetRemainingEpochsUntilClaimView      = "getRemainingEpochsUntilClaim"
-	RoyaltiesLocalCacheKeyFormat          = "Royalties:%s"
-	CreatorLastWithdrawalEpochKeyFormat   = "CLWE:%s"
-	RoyaltiesExpirePeriod                 = 15 * time.Minute
-	CreatorLastWithdrawalExpirePeriod     = 15 * time.Minute
-	RemainingEpochsUntilClaimExpirePeriod = 15 * time.Minute
+	GetCreatorRoyaltiesView                      = "getCreatorRoyalties"
+	GetCreatorLastWithdrawalEpochView            = "getCreatorLastWithdrawalEpoch"
+	GetRemainingEpochsUntilClaimView             = "getRemainingEpochsUntilClaim"
+	RoyaltiesLocalCacheKeyFormat                 = "Royalties:%s"
+	CreatorLastWithdrawalEpochKeyFormat          = "CLWE:%s"
+	CreatorRemainingEpochsUntilWithdrawKeyFormat = "CWRE:%s"
+	RoyaltiesExpirePeriod                        = 15 * time.Minute
+	CreatorLastWithdrawalExpirePeriod            = 15 * time.Minute
+	RemainingEpochsUntilClaimExpirePeriod        = 15 * time.Minute
 )
 
 func GetCreatorRoyalties(marketplaceAddress string, address string) (float64, error) {
@@ -31,79 +33,94 @@ func GetCreatorRoyalties(marketplaceAddress string, address string) (float64, er
 		return priceVal.(float64), nil
 	}
 
-	deposit, err := DoGetCreatorRoyaltiesVmQuery(marketplaceAddress, address)
+	amountMaybeEmpty, err := DoGetCreatorRoyaltiesVmQuery(marketplaceAddress, address)
 	if err != nil {
 		return 0, err
 	}
 
-	depositNominal, err := GetPriceNominal(deposit)
+	amount := "00"
+	if len(amountMaybeEmpty) != 0 {
+		amount = amountMaybeEmpty
+	}
+
+	amountNominal, err := GetPriceNominal(amount)
 	if err != nil {
-		log.Debug("could not get price nominal")
+		log.Debug("could not get amount nominal")
 		return 0, err
 	}
 
-	errSet := localCacher.SetWithTTL(key, depositNominal, RoyaltiesExpirePeriod)
+	errSet := localCacher.SetWithTTL(key, amountNominal, RoyaltiesExpirePeriod)
 	if errSet != nil {
 		log.Debug("could not cache result", errSet)
 	}
 
-	return depositNominal, nil
+	return amountNominal, nil
 }
 
-func GetCreatorLastWithdrawalEpoch(marketplaceAddress string, address string) (float64, error) {
+func GetCreatorLastWithdrawalEpoch(marketplaceAddress string, address string) (int64, error) {
 	localCacher := cache.GetLocalCacher()
 	key := fmt.Sprintf(CreatorLastWithdrawalEpochKeyFormat, address)
 
 	priceVal, errRead := localCacher.Get(key)
 	if errRead == nil {
-		return priceVal.(float64), nil
+		return priceVal.(int64), nil
 	}
 
-	deposit, err := DoGetCreatorLastWithdrawalEpochVmQuery(marketplaceAddress, address)
+	epochsHexMaybeEmpty, err := DoGetCreatorLastWithdrawalEpochVmQuery(marketplaceAddress, address)
 	if err != nil {
 		return 0, err
 	}
 
-	depositNominal, err := GetPriceNominal(deposit)
+	epochsHex := "00"
+	if len(epochsHexMaybeEmpty) != 0 {
+		epochsHex = epochsHexMaybeEmpty
+	}
+
+	epochs, err := strconv.ParseInt(epochsHex, 16, 0)
 	if err != nil {
-		log.Debug("could not get price nominal")
+		log.Debug("could not decode epochs hex")
 		return 0, err
 	}
 
-	errSet := localCacher.SetWithTTL(key, depositNominal, CreatorLastWithdrawalExpirePeriod)
+	errSet := localCacher.SetWithTTL(key, epochs, CreatorLastWithdrawalExpirePeriod)
 	if errSet != nil {
 		log.Debug("could not cache result", errSet)
 	}
 
-	return depositNominal, nil
+	return epochs, nil
 }
 
-func GetCreatorRemainingEpochsUntilWithdraw(marketplaceAddress string, address string) (float64, error) {
+func GetCreatorRemainingEpochsUntilWithdraw(marketplaceAddress string, address string) (int64, error) {
 	localCacher := cache.GetLocalCacher()
-	key := fmt.Sprintf(CreatorLastWithdrawalEpochKeyFormat, address)
+	key := fmt.Sprintf(CreatorRemainingEpochsUntilWithdrawKeyFormat, address)
 
 	priceVal, errRead := localCacher.Get(key)
 	if errRead == nil {
-		return priceVal.(float64), nil
+		return priceVal.(int64), nil
 	}
 
-	deposit, err := DoGetRemainingEpochsUntilClaim(marketplaceAddress, address)
+	epochsHexMaybeEmpty, err := DoGetRemainingEpochsUntilClaim(marketplaceAddress, address)
 	if err != nil {
 		return 0, err
 	}
 
-	depositNominal, err := GetPriceNominal(deposit)
+	epochsHex := "00"
+	if len(epochsHexMaybeEmpty) != 0 {
+		epochsHex = epochsHexMaybeEmpty
+	}
+
+	epochs, err := strconv.ParseInt(epochsHex, 16, 0)
 	if err != nil {
-		log.Debug("could not get price nominal")
+		log.Debug("could not decode epochs hex")
 		return 0, err
 	}
 
-	errSet := localCacher.SetWithTTL(key, depositNominal, RemainingEpochsUntilClaimExpirePeriod)
+	errSet := localCacher.SetWithTTL(key, epochs, RemainingEpochsUntilClaimExpirePeriod)
 	if errSet != nil {
 		log.Debug("could not cache result", errSet)
 	}
 
-	return depositNominal, nil
+	return epochs, nil
 }
 
 func DoGetCreatorRoyaltiesVmQuery(marketplaceAddress string, address string) (string, error) {

@@ -44,17 +44,11 @@ func NewRoyaltiesHandler(groupHandler *groupHandler, cfg config.BlockchainConfig
 // @Accept json
 // @Produce json
 // @Param userAddress path string true "userAddress"
-// @Success 200 {object} int
+// @Success 200 {object} float64
 // @Failure 400 {object} dtos.ApiResponse
 // @Router /royalties/{userAddress}/amount [get]
 func (handler *royaltiesHandler) getRoyaltiesForAddress(c *gin.Context) {
 	userAddress := c.Param("userAddress")
-
-	_, err := services.GetOrAddAccountCacheInfo(userAddress)
-	if err != nil {
-		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
-		return
-	}
 
 	deposit, err := services.GetCreatorRoyalties(handler.cfg.MarketplaceAddress, userAddress)
 	if err != nil {
@@ -71,17 +65,11 @@ func (handler *royaltiesHandler) getRoyaltiesForAddress(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param userAddress path string true "userAddress"
-// @Success 200 {object} int
+// @Success 200 {object} int64
 // @Failure 400 {object} dtos.ApiResponse
 // @Router /royalties/{userAddress}/last [get]
 func (handler *royaltiesHandler) getLastWithdrawalEpochForAddress(c *gin.Context) {
 	userAddress := c.Param("userAddress")
-
-	_, err := services.GetOrAddAccountCacheInfo(userAddress)
-	if err != nil {
-		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
-		return
-	}
 
 	deposit, err := services.GetCreatorLastWithdrawalEpoch(handler.cfg.MarketplaceAddress, userAddress)
 	if err != nil {
@@ -98,23 +86,17 @@ func (handler *royaltiesHandler) getLastWithdrawalEpochForAddress(c *gin.Context
 // @Accept json
 // @Produce json
 // @Param userAddress path string true "userAddress"
-// @Success 200 {object} int
+// @Success 200 {object} int64
 // @Failure 400 {object} dtos.ApiResponse
 // @Router /royalties/{userAddress}/remaining [get]
 func (handler *royaltiesHandler) getRemainingEpochsUntilWithdrawForAddress(c *gin.Context) {
 	userAddress := c.Param("userAddress")
 
-	_, err := services.GetOrAddAccountCacheInfo(userAddress)
-	if err != nil {
-		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
-		return
-	}
-
-	deposit, err := services.GetCreatorRemainingEpochsUntilWithdraw(handler.cfg.MarketplaceAddress, userAddress)
+	epochs, err := services.GetCreatorRemainingEpochsUntilWithdraw(handler.cfg.MarketplaceAddress, userAddress)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
 	}
 
-	dtos.JsonResponse(c, http.StatusOK, deposit, "")
+	dtos.JsonResponse(c, http.StatusOK, epochs, "")
 }

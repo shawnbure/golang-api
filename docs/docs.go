@@ -1041,7 +1041,7 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "integer"
+                            "type": "number"
                         }
                     },
                     "400": {
