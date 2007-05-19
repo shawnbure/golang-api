@@ -37,9 +37,7 @@ func SetAccountProfileImage(accountAddress string, accountId uint64, image *stri
 	}
 
 	base64ImageSize := getRawBase64ImageLength(image)
-	if base64ImageSize % 4 != 0 {
-		*image = (*image)[:base64ImageSize-1]
-	}
+	*image = (*image)[:len(*image)-(base64ImageSize % 4)]
 
 	imgId := accountAddress + ProfileSuffix
 	imgUrl, err := uploader.UploadBase64(ctx, *image, imgId)
@@ -70,9 +68,7 @@ func SetAccountCoverImage(accountAddress string, accountId uint64, image *string
 	}
 
 	base64ImageSize := getRawBase64ImageLength(image)
-	if base64ImageSize % 4 != 0 {
-		*image = (*image)[:base64ImageSize-1]
-	}
+	*image = (*image)[:len(*image)-(base64ImageSize % 4)]
 
 	imgId := accountAddress + CoverSuffix
 	imgUrl, err := uploader.UploadBase64(ctx, *image, imgId)
@@ -103,9 +99,7 @@ func SetCollectionCoverImage(tokenId string, collectionId uint64, image *string)
 	}
 
 	base64ImageSize := getRawBase64ImageLength(image)
-	if base64ImageSize % 4 != 0 {
-		*image = (*image)[:base64ImageSize-1]
-	}
+	*image = (*image)[:len(*image)-(base64ImageSize % 4)]
 
 	imgId := tokenId + CoverSuffix
 	imgUrl, err := uploader.UploadBase64(ctx, *image, imgId)
@@ -136,9 +130,7 @@ func SetCollectionProfileImage(tokenId string, collectionId uint64, image *strin
 	}
 
 	base64ImageSize := getRawBase64ImageLength(image)
-	if base64ImageSize % 4 != 0 {
-		*image = (*image)[:base64ImageSize-1]
-	}
+	*image = (*image)[:len(*image)-(base64ImageSize % 4)]
 
 	imgId := tokenId + ProfileSuffix
 	imgUrl, err := uploader.UploadBase64(ctx, *image, imgId)
