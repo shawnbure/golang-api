@@ -2,13 +2,17 @@ package cdn
 
 import (
 	"encoding/base64"
+	"github.com/erdsea/erdsea-api/config"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 )
 
-var testUploader = NewLocalUploader("something:/", "")
+var testUploader = NewLocalUploader(config.CDNConfig{
+	BaseUrl: "something://",
+	RootDir: "",
+})
 
 func TestLocalUploader_UploadBase64(t *testing.T) {
 	t.Parallel()

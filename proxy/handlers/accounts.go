@@ -2,8 +2,6 @@ package handlers
 
 import (
 	"bytes"
-	"fmt"
-	"github.com/erdsea/erdsea-api/cdn"
 	"net/http"
 	"strconv"
 
@@ -23,8 +21,6 @@ const (
 	accountProfileEndpoint     = "/:walletAddress/profile"
 	accountCoverEndpoint       = "/:walletAddress/cover"
 	imageEndpoint              = "/image/:filename"
-
-	contentTypeImage = "image/%s"
 )
 
 type accountsHandler struct {
@@ -49,7 +45,6 @@ func NewAccountsHandler(groupHandler *groupHandler, authCfg config.AuthConfig) {
 		{Method: http.MethodGet, Path: accountByIdEndpoint, HandlerFunc: handler.get},
 		{Method: http.MethodGet, Path: accountTokensEndpoint, HandlerFunc: handler.getAccountTokens},
 		{Method: http.MethodGet, Path: accountCollectionsEndpoint, HandlerFunc: handler.getAccountCollections},
-		{Method: http.MethodGet, Path: imageEndpoint, HandlerFunc: handler.getImage},
 	}
 	publicEndpointGroupHandler := EndpointGroupHandler{
 		Root:             baseAccountsEndpoint,
@@ -318,16 +313,4 @@ func (h *accountsHandler) getAccountCollections(c *gin.Context) {
 	}
 
 	dtos.JsonResponse(c, http.StatusOK, collections, "")
-}
-
-func (h *accountsHandler) getImage(c *gin.Context) {
-	filename := c.Param("filename")
-	p := "/home/boop/aesdre/marketplace/erdsea-api/cdn"
-	s := cdn.NewLocalUploader("something:/", p)
-	i, t, err := s.GetImage(filename)
-	if err != nil {
-		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
-		return
-	}
-	c.Data(http.StatusOK, fmt.Sprintf(contentTypeImage, t), i)
 }
