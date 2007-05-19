@@ -147,7 +147,7 @@ func GetCollectionsWithNameAlike(name string, limit int) ([]data.Collection, err
 	var collectionArray []data.Collection
 
 	cacheKey := fmt.Sprintf(CollectionSearchCacheKeyFormat, name)
-	err := cache.GetCacher().Get(cacheKey, byteArray)
+	err := cache.GetCacher().Get(cacheKey, &byteArray)
 	if err == nil {
 		err = json.Unmarshal(byteArray, &collectionArray)
 		return collectionArray, err
@@ -207,7 +207,7 @@ func checkValidInput(request *CreateCollectionRequest) error {
 	}
 
 	if len(request.TokenId) > TokenIdMaxLen {
-		return errors.New("empty token id")
+		return errors.New("token id too long")
 	}
 
 	if len(request.Name) == 0 {

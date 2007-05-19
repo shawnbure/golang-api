@@ -60,7 +60,7 @@ func GetAccountsWithNameAlike(name string, limit int) ([]data.Account, error) {
 	var accountArray []data.Account
 
 	cacheKey := fmt.Sprintf(AccountSearchCacheKeyFormat, name)
-	err := cache.GetCacher().Get(cacheKey, byteArray)
+	err := cache.GetCacher().Get(cacheKey, &byteArray)
 	if err == nil {
 		err = json.Unmarshal(byteArray, &accountArray)
 		return accountArray, err
