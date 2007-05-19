@@ -11,6 +11,8 @@ PSQL_CLIENT_CONNECT_OPT="host        all         all             0.0.0.0/0      
 
 REDIS_PSW=some_pass
 
+NGINX_CONF_ABS_PATH="/home/elrond/Github/erdsea/erdsea-api/scripts/nginx.conf"
+
 postgres_install() {
   if ! [ -x "$(command psql -V)" ]; then
     echo "postgresql is not installed on your system. installing"
@@ -60,4 +62,16 @@ redis-install() {
 
 redis-restart() {
   sudo systemctl restart redis
+}
+
+nginx-install() {
+  sudo apt install nginx
+}
+
+nginx-start() {
+  sudo nginx -c $NGINX_CONF_ABS_PATH
+}
+
+nginx-stop() {
+  sudo nginx -s stop
 }
