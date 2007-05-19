@@ -2,12 +2,13 @@ package services
 
 import (
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/erdsea/erdsea-api/cache"
 	"github.com/erdsea/erdsea-api/data/entities"
 	"github.com/erdsea/erdsea-api/storage"
 	"github.com/stretchr/testify/require"
-	"testing"
-	"time"
 )
 
 func Test_MakeOffer(t *testing.T) {

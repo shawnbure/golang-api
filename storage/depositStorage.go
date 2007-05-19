@@ -1,8 +1,9 @@
 package storage
 
 import (
-	"github.com/erdsea/erdsea-api/data/entities"
 	"gorm.io/gorm"
+
+	"github.com/erdsea/erdsea-api/data/entities"
 )
 
 func AddDeposit(deposit *entities.Deposit) error {
