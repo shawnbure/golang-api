@@ -14,7 +14,7 @@ import (
 
 const (
 	baseCollectionsEndpoint     = "/collections"
-	getCollectionsEndpoint      = "/:%s/:limit"
+	getCollectionsEndpoint      = "/:offset/:limit"
 	getCollectionByNameEndpoint = "/by-name/:collectionName"
 	createCollectionEndpoint    = "/create"
 )
