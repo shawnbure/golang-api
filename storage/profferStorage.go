@@ -22,3 +22,22 @@ func AddProffer(p *entities.Proffer) error {
 
 	return nil
 }
+
+func DeleteProffersForTokenId(tokenDbId uint64) error {
+	var proffers []entities.Proffer
+
+	database, err := GetDBOrError()
+	if err != nil {
+		return err
+	}
+
+	txCreate := database.Delete(proffers, "token_id = ?", tokenDbId)
+	if txCreate.Error != nil {
+		return txCreate.Error
+	}
+	if txCreate.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+
+	return nil
+}

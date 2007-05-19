@@ -156,10 +156,11 @@ func BuyToken(args BuyTokenArgs) {
 		return
 	}
 
-	token.Listed = false
-	// This was to be reset since the token will no longer be on the marketplace.
+	// Owner ID was to be reset since the token will no longer be on the marketplace.
 	// Could have been kept like this, but bugs may appear when querying.
 	token.OwnerId = 0
+	token.Listed = false
+	token.LastBuyPriceNominal = priceNominal
 	err = storage.UpdateToken(token)
 	if err != nil {
 		log.Debug("could not update token", "err", err)
