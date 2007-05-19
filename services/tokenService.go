@@ -7,12 +7,14 @@ import (
 	"gorm.io/datatypes"
 	"math/big"
 	"strconv"
+	"strings"
 
 	logger "github.com/ElrondNetwork/elrond-go-logger"
 	"github.com/boltdb/bolt"
 	"github.com/erdsea/erdsea-api/cache"
 	"github.com/erdsea/erdsea-api/data/dtos"
 	"github.com/erdsea/erdsea-api/data/entities"
+	"github.com/erdsea/erdsea-api/proxy/handlers"
 	"github.com/erdsea/erdsea-api/stats/collstats"
 	"github.com/erdsea/erdsea-api/storage"
 )
@@ -29,7 +31,8 @@ type Attribute struct {
 }
 
 type TokenCacheInfo struct {
-	TokenDbId   uint64
+	TokenDbId uint64
+	TokenName string
 }
 
 const (
@@ -81,7 +84,7 @@ func ListToken(args ListTokenArgs) {
 		token.CollectionID = collectionId
 		innerErr = storage.AddToken(token)
 
-		_, cacheErr := AddTokenToCache(token.TokenID, token.Nonce, token.ID)
+		_, cacheErr := AddTokenToCache(token.TokenID, token.Nonce, token.TokenName, token.ID)
 		if cacheErr != nil {
 			log.Error("could not add token to cache")
 		}
@@ -351,10 +354,11 @@ func AddTransaction(tx *entities.Transaction) {
 	}
 }
 
-func AddTokenToCache(tokenId string, nonce uint64, tokenDbId uint64) (*TokenCacheInfo, error) {
+func AddTokenToCache(tokenId string, nonce uint64, tokenName string, tokenDbId uint64) (*TokenCacheInfo, error) {
 	db := cache.GetBolt()
 	cacheInfo := TokenCacheInfo{
-		TokenDbId:   tokenDbId,
+		TokenDbId: tokenDbId,
+		TokenName: tokenName,
 	}
 
 	entryBytes, err := json.Marshal(&cacheInfo)
@@ -411,11 +415,65 @@ func GetOrAddTokenCacheInfo(tokenId string, nonce uint64) (*TokenCacheInfo, erro
 			return nil, innerErr
 		}
 
-		cacheInfo, innerErr = AddTokenToCache(tokenId, nonce, token.ID)
+		cacheInfo, innerErr = AddTokenToCache(tokenId, nonce, token.TokenName, token.ID)
 		if innerErr != nil {
 			return nil, innerErr
 		}
 	}
 
 	return cacheInfo, nil
+}
+
+func GetAvailableTokens(args handlers.AvailableTokensRequest) handlers.AvailableTokensResponse {
+	var response handlers.AvailableTokensResponse
+
+	for _, token := range args.Tokens {
+		parts := strings.Split(token, "-")
+		if len(parts) != 3 {
+			continue
+		}
+
+		tokenId := parts[0] + "-" + parts[1]
+		nonce, err := strconv.ParseUint(parts[2], 10, 64)
+		if err != nil {
+			continue
+		}
+
+		tokenName := ""
+		tokenAvailable := false
+		tokenCacheInfo, err := GetOrAddTokenCacheInfo(tokenId, nonce)
+		if err == nil {
+			tokenAvailable = true
+			tokenName = tokenCacheInfo.TokenName
+		}
+
+		collectionName := ""
+		collectionCacheInfo, err := collstats.GetOrAddCollectionCacheInfo(tokenId)
+		if err == nil {
+			collectionName = collectionCacheInfo.CollectionName
+		}
+
+		response.Tokens[token] = handlers.AvailableToken{
+			Collection: struct {
+				Id   string `json:"id"`
+				Name string `json:"name"`
+			}{
+				Id:   tokenId,
+				Name: collectionName,
+			},
+			Token: struct {
+				Id        string `json:"id"`
+				Nonce     uint64 `json:"nonce"`
+				Name      string `json:"name"`
+				Available bool   `json:"available"`
+			}{
+				Id:        tokenId,
+				Nonce:     nonce,
+				Name:      tokenName,
+				Available: tokenAvailable,
+			},
+		}
+	}
+
+	return response
 }

@@ -128,6 +128,12 @@ func (handler *collectionsHandler) get(c *gin.Context) {
 		return
 	}
 
+	creator, err := storage.GetAccountById(collection.CreatorID)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		return
+	}
+
 	collectionStats, err := collstats.GetStatisticsForTokenId(tokenId)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
@@ -135,8 +141,10 @@ func (handler *collectionsHandler) get(c *gin.Context) {
 	}
 
 	extendedDto := dtos.ExtendedCollectionDto{
-		Collection: *collection,
-		Statistics: *collectionStats,
+		Collection:           *collection,
+		Statistics:           *collectionStats,
+		CreatorWalletAddress: creator.Address,
+		CreatorName:          creator.Name,
 	}
 
 	dtos.JsonResponse(c, http.StatusOK, extendedDto, "")
