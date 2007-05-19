@@ -56,7 +56,8 @@ func GetAccountCoverImage(userAddress string) (*string, error) {
 		return nil, err
 	}
 
-	return &image.ImageBase64, nil}
+	return &image.ImageBase64, nil
+}
 
 func SetAccountCoverImage(userAddress string, image *string) error {
 	if len(*image) > maxCoverImageSize {

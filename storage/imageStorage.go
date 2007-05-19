@@ -70,3 +70,69 @@ func AddNewAccountCoverImageByUserId(image *images.AccountCoverImage) error {
 
 	return nil
 }
+
+func GetCollectionProfileImageByUserId(userId uint64) (*images.CollectionProfileImage, error) {
+	var image images.CollectionProfileImage
+
+	database, err := GetDBOrError()
+	if err != nil {
+		return nil, err
+	}
+
+	txRead := database.Find(&image, "user_id = ?", userId)
+	if txRead.Error != nil {
+		return nil, txRead.Error
+	}
+
+	return &image, nil
+}
+
+func AddNewCollectionProfileImageByUserId(image *images.CollectionProfileImage) error {
+	database, err := GetDBOrError()
+	if err != nil {
+		return err
+	}
+
+	txCreate := database.Create(image)
+	if txCreate.Error != nil {
+		return txCreate.Error
+	}
+	if txCreate.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+
+	return nil
+}
+
+func GetCollectionCoverImageByUserId(userId uint64) (*images.CollectionCoverImage, error) {
+	var image images.CollectionCoverImage
+
+	database, err := GetDBOrError()
+	if err != nil {
+		return nil, err
+	}
+
+	txRead := database.Find(&image, "user_id = ?", userId)
+	if txRead.Error != nil {
+		return nil, txRead.Error
+	}
+
+	return &image, nil
+}
+
+func AddNewCollectionCoverImageByUserId(image *images.CollectionCoverImage) error {
+	database, err := GetDBOrError()
+	if err != nil {
+		return err
+	}
+
+	txCreate := database.Create(image)
+	if txCreate.Error != nil {
+		return txCreate.Error
+	}
+	if txCreate.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+
+	return nil
+}
