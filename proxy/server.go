@@ -80,7 +80,7 @@ func NewWebServer(cfg *config.GeneralConfig) (*webServer, error) {
 	}
 
 	handlers.NewAuthHandler(groupHandler, *authService)
-	handlers.NewTokensHandler(groupHandler)
+	handlers.NewTokensHandler(groupHandler, cfg.Auth, cfg.Blockchain)
 	handlers.NewCollectionsHandler(groupHandler, cfg.Auth, cfg.Blockchain)
 	handlers.NewTransactionsHandler(groupHandler)
 	handlers.NewTxTemplateHandler(groupHandler, cfg.Blockchain)

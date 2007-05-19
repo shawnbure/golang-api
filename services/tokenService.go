@@ -9,6 +9,7 @@ import (
 	"math/big"
 	"strconv"
 	"strings"
+	"time"
 
 	logger "github.com/ElrondNetwork/elrond-go-logger"
 	"github.com/boltdb/bolt"
@@ -47,6 +48,10 @@ type NftProxyResponse struct {
 	Code  string `json:"code"`
 }
 
+type MetadataRelayRequest struct {
+	Url string `json:"url"`
+}
+
 type AvailableTokensResponse struct {
 	Tokens map[string]AvailableToken `json:"tokens"`
 }
@@ -62,11 +67,17 @@ const (
 	minPercentRoyaltiesUnit = 100
 	minPriceDecimals        = 15
 
-	maxTokenLinkResponseSize = 1024
+	maxTokenLinkResponseSize = 2048
 	maxTokenNumAvailableSize = 25
 
 	ZeroAddress           = "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu"
 	NftProxyRequestFormat = "%s/address/%s/nft/%s/nonce/%d"
+
+	UrlResponseCacheKeyFormat = "Url:%s"
+	UrlResponseExpirePeriod   = 5 * time.Minute
+
+	RefreshMetadataSetNxKeyFormat    = "Refresh:%d"
+	RefreshMetadataSetNxExpirePeriod = 15 * time.Minute
 )
 
 var (
@@ -454,7 +465,7 @@ func GetAttributesFromMetadata(link string) datatypes.JSON {
 		return emptyResponse
 	}
 
-	attributes := make(map[string]string)
+	attributes := make(map[string]interface{})
 	for _, key := range response.Attributes {
 		attributes[key.TraitType] = key.Value
 	}
@@ -681,4 +692,73 @@ func ConstructOwnedTokensFromTokens(tokens []entities.Token) []dtos.OwnedTokenDt
 	}
 
 	return ownedTokens
+}
+
+func TryGetResponseCached(url string) (string, error) {
+	redis := cache.GetRedis()
+	redisCtx := cache.GetContext()
+
+	key := fmt.Sprintf(UrlResponseCacheKeyFormat, url)
+	metadataBytes, err := redis.Get(redisCtx, key).Result()
+	if err == nil {
+		return metadataBytes, nil
+	}
+
+	metadataBytes, err = HttpGetRaw(url)
+	if err != nil {
+		log.Debug("http get returned error", err)
+	}
+	if len(metadataBytes) > maxTokenLinkResponseSize {
+		metadataBytes = ""
+	}
+
+	err = redis.Set(redisCtx, key, metadataBytes, UrlResponseExpirePeriod).Err()
+	if err != nil {
+		log.Debug("could not set to redis", err)
+	}
+
+	return metadataBytes, nil
+}
+
+func RefreshMetadata(blockchainProxy string, token *entities.Token, ownerAddress string) (string, error) {
+	redisClient := cache.GetRedis()
+	redisContext := cache.GetContext()
+
+	refreshKey := fmt.Sprintf(RefreshMetadataSetNxKeyFormat, token.ID)
+	ok, err := redisClient.SetNX(redisContext, refreshKey, true, RefreshMetadataSetNxExpirePeriod).Result()
+	if err != nil {
+		log.Debug("set nx resulted in error", err)
+	}
+
+	shouldTry := ok == true && err == nil
+	if !shouldTry {
+		return string(token.Attributes), nil
+	}
+
+	refreshedMetadataLink := false
+	if len(token.MetadataLink) == 0 {
+		link, innerErr := TryGetMetadataLink(blockchainProxy, ownerAddress, token.TokenID, token.Nonce)
+		if innerErr != nil {
+			log.Debug("could not get metadata link")
+		} else {
+			refreshedMetadataLink = true
+			token.MetadataLink = link
+		}
+	}
+
+	refreshedAttributes := false
+	attrs := GetAttributesFromMetadata(token.MetadataLink)
+	if len(attrs) != 0 {
+		refreshedAttributes = string(attrs) != string(token.Attributes)
+		token.Attributes = attrs
+	}
+
+	if refreshedMetadataLink || refreshedAttributes {
+		innerErr := storage.UpdateToken(token)
+		if innerErr != nil {
+			log.Debug("could not update token")
+		}
+	}
+
+	return string(attrs), nil
 }

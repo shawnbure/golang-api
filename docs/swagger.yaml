@@ -11,8 +11,7 @@ definitions:
         type: integer
       trait_type:
         type: string
-      value:
-        type: string
+      value: {}
     type: object
   dtos.BidDto:
     properties:
@@ -425,6 +424,11 @@ definitions:
       userAddress:
         type: string
       website:
+        type: string
+    type: object
+  services.MetadataRelayRequest:
+    properties:
+      url:
         type: string
     type: object
   services.MintInfo:
@@ -1418,6 +1422,45 @@ paths:
       summary: Get offers for token
       tags:
       - tokens
+  /tokens/{tokenId}/{nonce}/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Returns attributes directly stored inside token (not OS format).
+        Check then before and after. If modified, reload the page maybe?
+      parameters:
+      - description: token id
+        in: path
+        name: tokenId
+        required: true
+        type: string
+      - description: token nonce
+        in: path
+        name: nonce
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+        "501":
+          description: Not Implemented
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: Tries to refresh token metadata link and attributes.
+      tags:
+      - tokens
   /tokens/available:
     get:
       consumes:
@@ -1442,6 +1485,36 @@ paths:
           schema:
             $ref: '#/definitions/dtos.ApiResponse'
       summary: Get available tokens
+      tags:
+      - tokens
+  /tokens/metadata/relay:
+    get:
+      consumes:
+      - application/json
+      description: Make request with ?url=link
+      parameters:
+      - description: the url
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/services.MetadataRelayRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: Gets metadata link response. Cached.
       tags:
       - tokens
   /transactions/account/{userAddress}/{offset}/{limit}:
