@@ -5,6 +5,7 @@ import (
 
 	"github.com/erdsea/erdsea-api/config"
 	"github.com/erdsea/erdsea-api/data"
+	"github.com/erdsea/erdsea-api/process"
 	"github.com/gin-gonic/gin"
 )
 
@@ -14,15 +15,18 @@ const (
 )
 
 type eventsHandler struct {
-	config config.ConnectorApiConfig
+	config    config.ConnectorApiConfig
+	processor process.EventProcessor
 }
 
 func NewEventsHandler(
 	groupHandler *groupHandler,
+	processor process.EventProcessor,
 	config config.ConnectorApiConfig,
 ) error {
 	h := &eventsHandler{
-		config: config,
+		config:    config,
+		processor: processor,
 	}
 
 	endpoints := []EndpointHandler{
@@ -49,7 +53,7 @@ func (h *eventsHandler) pushEvents(c *gin.Context) {
 		return
 	}
 	if events != nil {
-		// do something with events
+		h.processor.OnEvents(events)
 	}
 
 	JsonResponse(c, http.StatusOK, nil, "")
