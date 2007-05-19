@@ -20,6 +20,10 @@ func UpdateDeposit(args DepositUpdateArgs) error {
 	localCacher := cache.GetLocalCacher()
 	key := fmt.Sprintf(DepositLocalCacheKeyFormat, args.Owner)
 
+	if len(args.Amount) == 0 {
+		args.Amount = "00"
+	}
+
 	depositNominal, err := GetPriceNominal(args.Amount)
 	if err != nil {
 		log.Debug("could not get price nominal")

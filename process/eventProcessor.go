@@ -21,7 +21,7 @@ const (
 	startAuctionEventName  = "start_auction"
 	placeBidEventName      = "place_bid"
 	endAuctionEventName    = "end_bid"
-	updateDepositEventName = "update_deposit"
+	updateDepositEventName = "deposit_update"
 	cancelOfferEventName   = "cancel_offer"
 
 	saveEventsTTL = 5 * time.Minute
