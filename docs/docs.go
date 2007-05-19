@@ -28,53 +28,9 @@ var doc = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/accounts/find/{accountAddress}": {
-            "get": {
-                "description": "Retrieves an account by address. Useful for login.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "accounts"
-                ],
-                "summary": "Get account by address",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "account address",
-                        "name": "accountAddress",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/entities.Account"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/dtos.ApiResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/dtos.ApiResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/accounts/{accountId}": {
             "get": {
-                "description": "Retrieves an account by id",
+                "description": "Retrieves an account by walletAddress",
                 "consumes": [
                     "application/json"
                 ],
@@ -84,12 +40,12 @@ var doc = `{
                 "tags": [
                     "accounts"
                 ],
-                "summary": "Get account by account id",
+                "summary": "Get account by account walletAddress",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "account id",
-                        "name": "accountId",
+                        "description": "wallet address",
+                        "name": "walletAddress",
                         "in": "path",
                         "required": true
                     }
@@ -99,326 +55,6 @@ var doc = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/entities.Account"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/dtos.ApiResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/dtos.ApiResponse"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "Sets an account settable information",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "accounts"
-                ],
-                "summary": "Set account information",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "account id",
-                        "name": "accountId",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "account info",
-                        "name": "setAccountRequest",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/services.SetAccountRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/entities.Account"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/dtos.ApiResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/dtos.ApiResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/dtos.ApiResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/accounts/{accountId}/cover": {
-            "get": {
-                "description": "Retrieves an account cover image. It will be sent as base64 encoding (sdt, raw) of its byte representation.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "accounts"
-                ],
-                "summary": "Get account cover image",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "account id",
-                        "name": "accountId",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/dtos.ApiResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/dtos.ApiResponse"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "Expects base64 encoding (sdt, raw) of the image representation. Returns empty string. Max size of byte array is 1MB.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "accounts"
-                ],
-                "summary": "Set account cover image",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "account id",
-                        "name": "accountId",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "base64 encoded image",
-                        "name": "image",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "primitive"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/dtos.ApiResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/dtos.ApiResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/dtos.ApiResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/accounts/{accountId}/profile": {
-            "get": {
-                "description": "Retrieves an account profile image. It will be sent as base64 encoding (sdt, raw) of its byte representation.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "accounts"
-                ],
-                "summary": "Get account profile image",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "account id",
-                        "name": "accountId",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/dtos.ApiResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/dtos.ApiResponse"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "Expects base64 encoding (sdt, raw) of the image representation. Returns empty string. Max size of byte array is 512KB.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "accounts"
-                ],
-                "summary": "Set account profile image",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "account id",
-                        "name": "accountId",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "base64 encoded image",
-                        "name": "image",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "primitive"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/dtos.ApiResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/dtos.ApiResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/dtos.ApiResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/accounts/{accountId}/tokens/{offset}/{limit}": {
-            "get": {
-                "description": "Retrieves a list of tokens. Unsorted.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "accounts"
-                ],
-                "summary": "Gets tokens for an account.",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "account id",
-                        "name": "accountId",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "offset",
-                        "name": "offset",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "limit",
-                        "name": "limit",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/entities.Token"
-                            }
                         }
                     },
                     "400": {
@@ -481,6 +117,328 @@ var doc = `{
                     },
                     "500": {
                         "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/accounts/{walletAddress}": {
+            "post": {
+                "description": "Sets an account settable information",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "accounts"
+                ],
+                "summary": "Set account information",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "wallet address",
+                        "name": "walletAddress",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "account info",
+                        "name": "setAccountRequest",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/services.SetAccountRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/entities.Account"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/accounts/{walletAddress}/cover": {
+            "get": {
+                "description": "Retrieves an account cover image. It will be sent as base64 encoding (sdt, raw) of its byte representation.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "accounts"
+                ],
+                "summary": "Get account cover image",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "wallet address",
+                        "name": "walletAddress",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Expects base64 encoding (sdt, raw) of the image representation. Returns empty string. Max size of byte array is 1MB.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "accounts"
+                ],
+                "summary": "Set account cover image",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "wallet address",
+                        "name": "walletAddress",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "base64 encoded image",
+                        "name": "image",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "primitive"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/accounts/{walletAddress}/profile": {
+            "get": {
+                "description": "Retrieves an account profile image. It will be sent as base64 encoding (sdt, raw) of its byte representation.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "accounts"
+                ],
+                "summary": "Get account profile image",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "wallet address",
+                        "name": "walletAddress",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Expects base64 encoding (sdt, raw) of the image representation. Returns empty string. Max size of byte array is 512KB.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "accounts"
+                ],
+                "summary": "Set account profile image",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "wallet address",
+                        "name": "walletAddress",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "base64 encoded image",
+                        "name": "image",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "primitive"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/accounts/{walletAddress}/tokens/{offset}/{limit}": {
+            "get": {
+                "description": "Retrieves a list of tokens. Unsorted.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "accounts"
+                ],
+                "summary": "Gets tokens for an account.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "wallet address",
+                        "name": "walletAddress",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "offset",
+                        "name": "offset",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "limit",
+                        "name": "limit",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entities.Token"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/dtos.ApiResponse"
                         }
@@ -688,7 +646,7 @@ var doc = `{
         },
         "/collections/{collectionId}": {
             "get": {
-                "description": "Retrieves a collection by its name.",
+                "description": "Retrieves a collection by id.",
                 "consumes": [
                     "application/json"
                 ],
@@ -698,10 +656,10 @@ var doc = `{
                 "tags": [
                     "collections"
                 ],
-                "summary": "Gets collection by name.",
+                "summary": "Gets collection by collection id.",
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "collection id",
                         "name": "collectionId",
                         "in": "path",
@@ -712,7 +670,7 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entities.Collection"
+                            "$ref": "#/definitions/dtos.ExtendedCollectionDto"
                         }
                     },
                     "400": {
@@ -723,6 +681,12 @@ var doc = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/dtos.ApiResponse"
                         }
@@ -743,7 +707,7 @@ var doc = `{
                 "summary": "Set collection info.",
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "collection id",
                         "name": "collectionId",
                         "in": "path",
@@ -802,7 +766,7 @@ var doc = `{
                 "summary": "Get collection cover image",
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "collection id",
                         "name": "collectionId",
                         "in": "path",
@@ -903,7 +867,7 @@ var doc = `{
                 "summary": "Get collection profile image",
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "collection id",
                         "name": "collectionId",
                         "in": "path",
@@ -945,7 +909,7 @@ var doc = `{
                 "summary": "Set collection profile image",
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "collection id",
                         "name": "collectionId",
                         "in": "path",
@@ -983,50 +947,6 @@ var doc = `{
                 }
             }
         },
-        "/collections/{collectionId}/statistics": {
-            "post": {
-                "description": "Gets statistics for a collection. It will be cached for 15 minutes.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "collections"
-                ],
-                "summary": "Gets collection statistics.",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "collection id",
-                        "name": "collectionId",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dtos.CollectionStatistics"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/dtos.ApiResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/dtos.ApiResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/collections/{collectionId}/tokens/{offset}/{limit}": {
             "get": {
                 "description": "Retrieves the tokens of a collection. Unsorted.",
@@ -1042,7 +962,7 @@ var doc = `{
                 "summary": "Get collection tokens.",
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "collection id",
                         "name": "collectionId",
                         "in": "path",
@@ -1732,6 +1652,17 @@ var doc = `{
                 }
             }
         },
+        "dtos.ExtendedCollectionDto": {
+            "type": "object",
+            "properties": {
+                "collection": {
+                    "$ref": "#/definitions/entities.Collection"
+                },
+                "statistics": {
+                    "$ref": "#/definitions/dtos.CollectionStatistics"
+                }
+            }
+        },
         "entities.Account": {
             "type": "object",
             "properties": {
@@ -1840,6 +1771,9 @@ var doc = `{
                 },
                 "priceNominal": {
                     "type": "number"
+                },
+                "priceString": {
+                    "type": "string"
                 },
                 "royaltiesPercent": {
                     "type": "number"
@@ -2026,9 +1960,6 @@ var doc = `{
                     "type": "string"
                 },
                 "instagramLink": {
-                    "type": "string"
-                },
-                "name": {
                     "type": "string"
                 },
                 "twitterLink": {
