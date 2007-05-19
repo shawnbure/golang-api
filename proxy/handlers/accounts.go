@@ -215,7 +215,6 @@ func (handler *accountsHandler) setAccountProfile(c *gin.Context) {
 	dtos.JsonResponse(c, http.StatusOK, link, "")
 }
 
-
 // @Summary Set account cover image
 // @Description Expects base64 std encoding of the image representation. Returns empty string. Max size of byte array is 1MB.
 // @Tags accounts
@@ -306,7 +305,8 @@ func (handler *accountsHandler) getAccountTokens(c *gin.Context) {
 		return
 	}
 
-	dtos.JsonResponse(c, http.StatusOK, tokens, "")
+	ownedTokens := services.ConstructOwnedTokensFromTokens(tokens)
+	dtos.JsonResponse(c, http.StatusOK, ownedTokens, "")
 }
 
 // @Summary Gets collections for an account.

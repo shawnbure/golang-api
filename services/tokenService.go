@@ -659,3 +659,29 @@ func TryGetMetadataLink(blockchainProxy string, address string, tokenId string, 
 	link, err := base64.StdEncoding.DecodeString(proxyResponse.Data.TokenData.Uris[1])
 	return string(link), err
 }
+
+func ConstructOwnedTokensFromTokens(tokens []entities.Token) []dtos.OwnedTokenDto {
+	tokenIds := make(map[string]bool)
+	for _, token := range tokens {
+		tokenIds[token.TokenID] = true
+	}
+
+	collections := make(map[string]dtos.CollectionCacheInfo)
+	for tokenId := range tokenIds {
+		info, innerErr := collstats.GetOrAddCollectionCacheInfo(tokenId)
+		if innerErr == nil {
+			collections[tokenId] = *info
+		}
+	}
+
+	ownedTokens := make([]dtos.OwnedTokenDto, len(tokens))
+	for index, token := range tokens {
+		ownedToken := dtos.OwnedTokenDto{
+			Token:               token,
+			CollectionCacheInfo: collections[token.TokenID],
+		}
+		ownedTokens[index] = ownedToken
+	}
+
+	return ownedTokens
+}
