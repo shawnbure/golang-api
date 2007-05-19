@@ -192,6 +192,11 @@ func BuyToken(args BuyTokenArgs) {
 		return
 	}
 
+	err = storage.DeleteProffersForTokenId(token.ID)
+	if err != nil {
+		log.Debug("could not delete proffers for token", "err", err)
+	}
+
 	transaction := entities.Transaction{
 		Hash:         args.TxHash,
 		Type:         entities.BuyToken,
@@ -233,6 +238,11 @@ func WithdrawToken(args WithdrawTokenArgs) {
 	if err != nil {
 		log.Debug("could not update token", "err", err)
 		return
+	}
+
+	err = storage.DeleteProffersForTokenId(token.ID)
+	if err != nil {
+		log.Debug("could not delete proffers for token", "err", err)
 	}
 
 	transaction := entities.Transaction{
@@ -378,7 +388,6 @@ func EndAuction(args EndAuctionArgs) {
 	err = storage.DeleteProffersForTokenId(token.ID)
 	if err != nil {
 		log.Debug("could not delete proffers for token", "err", err)
-		return
 	}
 
 	transaction := entities.Transaction{
