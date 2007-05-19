@@ -16,12 +16,12 @@ const (
 
 type eventsHandler struct {
 	config    config.ConnectorApiConfig
-	processor process.EventProcessor
+	processor *process.EventProcessor
 }
 
 func NewEventsHandler(
 	groupHandler *groupHandler,
-	processor process.EventProcessor,
+	processor *process.EventProcessor,
 	config config.ConnectorApiConfig,
 ) error {
 	h := &eventsHandler{
@@ -52,6 +52,7 @@ func (h *eventsHandler) pushEvents(c *gin.Context) {
 		JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
+
 	if events != nil {
 		h.processor.OnEvents(events)
 	}

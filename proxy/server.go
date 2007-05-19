@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"fmt"
+	"github.com/erdsea/erdsea-api/process"
 	"net/http"
 	"strings"
 
@@ -22,10 +23,13 @@ func NewWebServer(generalConfig *config.GeneralConfig) (*webServer, error) {
 
 	groupHandler := handlers.NewGroupHandler()
 
-	err := handlers.NewEventsHandler(groupHandler, generalConfig.ConnectorApi)
+	processor := process.NewEventProcessor(nil, nil)
+	err := handlers.NewEventsHandler(groupHandler, processor, generalConfig.ConnectorApi)
 	if err != nil {
 		return nil, err
 	}
+
+	handlers.NewAssetsHandler(groupHandler)
 
 	groupHandler.RegisterEndpoints(router)
 

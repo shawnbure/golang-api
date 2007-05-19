@@ -28,7 +28,7 @@
     Port = 5432
     DbName = "erdsea_db"
     User = "postgres"
-    Password = "root"
+    Password = "boop"
     SslMode = "disable"
     MaxOpenConns = 50
     MaxIdleConns = 10
