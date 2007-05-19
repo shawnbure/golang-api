@@ -1,8 +1,9 @@
 package storage
 
 import (
-	"github.com/erdsea/erdsea-api/data"
 	"gorm.io/gorm"
+
+	"github.com/erdsea/erdsea-api/data"
 )
 
 func AddAccount(account *data.Account) error {

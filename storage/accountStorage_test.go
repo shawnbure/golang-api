@@ -1,9 +1,10 @@
 package storage
 
 import (
+	"testing"
+
 	"github.com/erdsea/erdsea-api/data"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func Test_AddAccount(t *testing.T) {
@@ -49,9 +50,9 @@ func Test_GetAccountsWithNameAlikeWithLimit(t *testing.T) {
 	connectToTestDb()
 
 	account := defaultAccount()
-	_ = AddNewAccount(&account)
+	_ = AddAccount(&account)
 	account.ID = 0
-	_ = AddNewAccount(&account)
+	_ = AddAccount(&account)
 
 	retrievedAccounts, err := GetAccountsWithNameAlikeWithLimit("default", 5)
 	require.Nil(t, err)

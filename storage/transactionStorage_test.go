@@ -1,9 +1,10 @@
 package storage
 
 import (
+	"testing"
+
 	"github.com/erdsea/erdsea-api/data"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func Test_AddTransaction(t *testing.T) {

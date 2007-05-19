@@ -1,9 +1,10 @@
 package storage
 
 import (
+	"testing"
+
 	"github.com/erdsea/erdsea-api/data"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func Test_AddCollection(t *testing.T) {
@@ -69,9 +70,9 @@ func Test_GetCollectionsWithNameAlikeWithLimit(t *testing.T) {
 	connectToTestDb()
 
 	collection := defaultCollection()
-	_ = AddNewCollection(&collection)
+	_ = AddCollection(&collection)
 	collection.ID = 0
-	_ = AddNewCollection(&collection)
+	_ = AddCollection(&collection)
 
 	retrievedCollection, err := GetCollectionsWithNameAlikeWithLimit("default", 5)
 	require.Nil(t, err)

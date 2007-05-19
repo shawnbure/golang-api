@@ -4,10 +4,10 @@ import (
 	libed25519 "crypto/ed25519"
 	"encoding/base64"
 	"encoding/hex"
-	"github.com/stretchr/testify/require"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGenerateSeed(t *testing.T) {

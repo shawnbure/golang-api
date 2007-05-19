@@ -2,14 +2,13 @@ package proxy
 
 import (
 	"fmt"
-	"github.com/erdsea/erdsea-api/services"
 	"net/http"
 	"strings"
 
-	"github.com/erdsea/erdsea-api/process"
-
 	"github.com/erdsea/erdsea-api/config"
+	"github.com/erdsea/erdsea-api/process"
 	"github.com/erdsea/erdsea-api/proxy/handlers"
+	"github.com/erdsea/erdsea-api/services"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
@@ -53,7 +52,6 @@ func NewWebServer(cfg *config.GeneralConfig) (*webServer, error) {
 	handlers.NewPriceHandler(groupHandler, cfg.Auth)
 	handlers.NewAccountsHandler(groupHandler, cfg.Auth)
 	handlers.NewSearchHandler(groupHandler, cfg.Auth)
-	handlers.NewImageHandler(groupHandler, cfg.Auth)
 
 	groupHandler.RegisterEndpoints(router)
 

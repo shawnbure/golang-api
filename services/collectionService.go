@@ -36,6 +36,15 @@ type CreateCollectionRequest struct {
 	TelegramLink  string `json:"telegramLink"`
 }
 
+type UpdateCollectionRequest struct {
+	Description   string `json:"description"`
+	Website       string `json:"website"`
+	DiscordLink   string `json:"discordLink"`
+	TwitterLink   string `json:"twitterLink"`
+	InstagramLink string `json:"instagramLink"`
+	TelegramLink  string `json:"telegramLink"`
+}
+
 type CollectionStatistics struct {
 	ItemsCount   uint64  `json:"itemsCount"`
 	OwnersCount  uint64  `json:"ownersCount"`
@@ -51,33 +60,33 @@ type ProxyRegisteredNFTsResponse struct {
 	Code  string `json:"code"`
 }
 
-func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) error {
-	err := checkValidInput(request)
+func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) (*data.Collection, error) {
+	err := checkValidInputOnCreate(request)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	tokensRegisteredByUser, err := getTokensRegisteredByUser(request.UserAddress, blockchainProxy)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if !contains(tokensRegisteredByUser, request.TokenId) {
-		return errors.New("token not owner by user")
+		return nil, errors.New("token not owner by user")
 	}
 
 	_, err = storage.GetCollectionByName(request.Name)
 	if err == nil {
-		return errors.New("collection name already taken")
+		return nil, errors.New("collection name already taken")
 	}
 
 	_, err = storage.GetCollectionByTokenId(request.TokenId)
 	if err == nil {
-		return errors.New("token id already has a collection associated")
+		return nil, errors.New("token id already has a collection associated")
 	}
 
 	account, err := GetOrCreateAccount(request.UserAddress)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	collection := &data.Collection{
@@ -94,7 +103,35 @@ func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) 
 		CreatedAt:     uint64(time.Now().Unix()),
 	}
 
-	return storage.AddCollection(collection)
+	err = storage.AddCollection(collection)
+	if err != nil {
+		return nil, err
+	}
+
+	return collection, nil
+}
+
+func UpdateCollection(collectionName string, request *UpdateCollectionRequest) (*data.Collection, error) {
+	err := checkValidInputOnUpdate(request)
+
+	collection, err := storage.GetCollectionByName(collectionName)
+	if err != nil {
+		return nil, err
+	}
+
+	collection.Description = request.Description
+	collection.Website = request.Website
+	collection.DiscordLink = request.DiscordLink
+	collection.TwitterLink = request.TwitterLink
+	collection.InstagramLink = request.InstagramLink
+	collection.TelegramLink = request.TelegramLink
+
+	err = storage.UpdateCollection(collection)
+	if err != nil {
+		return nil, err
+	}
+
+	return collection, nil
 }
 
 func GetStatisticsForCollection(collectionId uint64) (*CollectionStatistics, error) {
@@ -201,7 +238,7 @@ func getTokensRegisteredByUser(userAddress string, blockchainProxy string) ([]st
 	return resp.Data.Tokens, nil
 }
 
-func checkValidInput(request *CreateCollectionRequest) error {
+func checkValidInputOnCreate(request *CreateCollectionRequest) error {
 	if len(request.TokenId) == 0 {
 		return errors.New("empty token id")
 	}
@@ -218,6 +255,34 @@ func checkValidInput(request *CreateCollectionRequest) error {
 		return errors.New("name too long")
 	}
 
+	if len(request.Description) > MaxDescLen {
+		return errors.New("description too long")
+	}
+
+	if len(request.Website) > MaxLinkLen {
+		return errors.New("website too long")
+	}
+
+	if len(request.DiscordLink) > MaxLinkLen {
+		return errors.New("discord link too long")
+	}
+
+	if len(request.TwitterLink) > MaxLinkLen {
+		return errors.New("twitter link too long")
+	}
+
+	if len(request.InstagramLink) > MaxLinkLen {
+		return errors.New("instagram link too long")
+	}
+
+	if len(request.TelegramLink) > MaxLinkLen {
+		return errors.New("telegram link too long")
+	}
+
+	return nil
+}
+
+func checkValidInputOnUpdate(request *UpdateCollectionRequest) error {
 	if len(request.Description) > MaxDescLen {
 		return errors.New("description too long")
 	}

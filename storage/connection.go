@@ -1,16 +1,16 @@
 package storage
 
 import (
-	"errors"
-	"github.com/erdsea/erdsea-api/data/images"
-	"sync"
-
 	"database/sql"
-	"github.com/erdsea/erdsea-api/config"
-	"github.com/erdsea/erdsea-api/data"
-	_ "github.com/lib/pq"
+	"errors"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"sync"
+
+	"github.com/erdsea/erdsea-api/config"
+	"github.com/erdsea/erdsea-api/data"
+	"github.com/erdsea/erdsea-api/data/images"
+	_ "github.com/lib/pq"
 )
 
 var NoDBError = errors.New("no DB Connection")

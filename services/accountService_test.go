@@ -1,12 +1,13 @@
 package services
 
 import (
+	"testing"
+
 	"github.com/erdsea/erdsea-api/cache"
 	"github.com/erdsea/erdsea-api/config"
 	"github.com/erdsea/erdsea-api/data"
 	"github.com/erdsea/erdsea-api/storage"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func Test_GetOrCreateAccount(t *testing.T) {
@@ -54,27 +55,27 @@ func Test_SearchAccount(T *testing.T) {
 	}
 
 	acc.ID = 0
-	err := storage.AddNewAccount(acc)
+	err := storage.AddAccount(acc)
 	require.Nil(T, err)
 
 	acc.ID = 0
-	err = storage.AddNewAccount(acc)
+	err = storage.AddAccount(acc)
 	require.Nil(T, err)
 
 	acc.ID = 0
-	err = storage.AddNewAccount(acc)
+	err = storage.AddAccount(acc)
 	require.Nil(T, err)
 
 	acc.ID = 0
-	err = storage.AddNewAccount(acc)
+	err = storage.AddAccount(acc)
 	require.Nil(T, err)
 
 	acc.ID = 0
-	err = storage.AddNewAccount(acc)
+	err = storage.AddAccount(acc)
 	require.Nil(T, err)
 
 	acc.ID = 0
-	err = storage.AddNewAccount(acc)
+	err = storage.AddAccount(acc)
 	require.Nil(T, err)
 
 	accs, err := GetAccountsWithNameAlike("uniquee", 5)
