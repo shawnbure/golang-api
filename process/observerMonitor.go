@@ -18,28 +18,36 @@ type observerMonitor struct {
 
 	livenessChan chan string
 	alertBot     tg.Bot
+	isEnabled    bool
 
 	lastBlockHash string
 
 	ctx context.Context
 }
 
-func NewObserverMonitor(alertBot tg.Bot, ctx context.Context) *observerMonitor {
+func NewObserverMonitor(alertBot tg.Bot, ctx context.Context, isEnabled bool) *observerMonitor {
 	om := &observerMonitor{
 		watchDog:     false,
 		ticker:       time.NewTicker(tickInterval),
 		livenessChan: make(chan string),
 		alertBot:     alertBot,
+		isEnabled:    isEnabled,
 		ctx:          ctx,
 	}
 
-	go om.monitor()
+	if isEnabled {
+		go om.monitor()
+	}
 
 	return om
 }
 
-func (om *observerMonitor) WatchDogChan() chan string {
+func (om *observerMonitor) LivenessChan() chan string {
 	return om.livenessChan
+}
+
+func (om *observerMonitor) IsEnabled() bool {
+	return om.isEnabled
 }
 
 func (om *observerMonitor) monitor() {

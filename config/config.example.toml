@@ -52,5 +52,5 @@
     RecID = "recipient_id"
     Enable = false
 
-[Swagger]
+[Monitor]
     ObserverMonitorEnable = false

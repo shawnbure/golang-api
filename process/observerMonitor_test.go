@@ -37,7 +37,7 @@ func TestObserverMonitor_Monitor(t *testing.T) {
 			case _ = <-ticker.C:
 				if shouldNotBeZero != 0 {
 					hash := fmt.Sprintf("hash-%d", shouldNotBeZero)
-					monit.WatchDogChan() <- hash
+					monit.LivenessChan() <- hash
 					shouldNotBeZero--
 				}
 			}

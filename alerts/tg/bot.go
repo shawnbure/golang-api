@@ -2,7 +2,7 @@ package tg
 
 import (
 	"fmt"
-	"log"
+	"github.com/erdsea/erdsea-api/config"
 	"time"
 
 	tb "gopkg.in/tucnak/telebot.v2"
@@ -13,14 +13,14 @@ type Bot interface {
 	ObserverDownAlert(lastBlockHash string)
 }
 
-type TelegramBot struct {
+type telegramBot struct {
 	bot       *tb.Bot
 	recipient *recipient
 }
 
-func NewTelegramBot() (*TelegramBot, error) {
+func NewTelegramBot(cfg config.BotConfig) (*telegramBot, error) {
 	b, err := tb.NewBot(tb.Settings{
-		Token:  "2010065738:AAH0J6N2meI7Wj2c_5AsnMAXXGNcj2YTYPk",
+		Token:  cfg.Token,
 		Poller: &tb.LongPoller{Timeout: 10 * time.Second},
 	})
 
@@ -28,33 +28,40 @@ func NewTelegramBot() (*TelegramBot, error) {
 		return nil, err
 	}
 
-	b.Handle("/hello", func(m *tb.Message) {
-		r := &recipient{}
-
-		resp := fmt.Sprintf("Hello %s \U0001F976", m.Sender.FirstName+m.Sender.LastName)
-		_, innerErr := b.Send(r, resp)
-
-		log.Println(innerErr)
-	})
-
-	return &TelegramBot{
+	return &telegramBot{
 		bot:       b,
-		recipient: &recipient{},
+		recipient: &recipient{id: cfg.RecID},
 	}, nil
 }
 
-func (tgb *TelegramBot) Start() {
+func (tgb *telegramBot) Start() {
 	go tgb.bot.Start()
 }
 
-func (tgb *TelegramBot) ObserverDownAlert(lastBlockHash string) {
+func (tgb *telegramBot) ObserverDownAlert(lastBlockHash string) {
 	msg := fmt.Sprintf("🚨🚨🚨\n\nObserver seems down. Last block hash received: %s", lastBlockHash)
 	_, _ = tgb.bot.Send(tgb.recipient, msg)
 }
 
+func (tgb *telegramBot) registerListeners() {
+	tgb.bot.Handle("/hello", func(m *tb.Message) {
+		r := &recipient{}
+
+		resp := fmt.Sprintf("Hello %s \U0001F976", m.Sender.FirstName+m.Sender.LastName)
+		_, _ = tgb.bot.Send(r, resp)
+	})
+}
+
 type recipient struct {
+	id string
 }
 
 func (r *recipient) Recipient() string {
-	return "-1001435005959"
+	return r.id
 }
+
+type DisabledBot struct{}
+
+func (db *DisabledBot) Start() {}
+
+func (db *DisabledBot) ObserverDownAlert(_ string) {}

@@ -1,6 +1,8 @@
 package proxy
 
 import (
+	"context"
+	"github.com/erdsea/erdsea-api/alerts/tg"
 	"net/http"
 	"strings"
 
@@ -20,6 +22,8 @@ var corsHeaders = []string{
 	"Content-Type",
 	"Authorization",
 }
+
+var ctx = context.Background()
 
 type webServer struct {
 	router        *gin.Engine
@@ -48,10 +52,22 @@ func NewWebServer(cfg *config.GeneralConfig) (*webServer, error) {
 		return nil, err
 	}
 
+	bot, err := makeBot(cfg.Bot)
+	if err != nil {
+		return nil, err
+	}
+
+	observerMonitor := process.NewObserverMonitor(
+		bot,
+		ctx,
+		cfg.Monitor.ObserverMonitorEnable,
+	)
+
 	processor := process.NewEventProcessor(
 		cfg.ConnectorApi.Addresses,
 		cfg.ConnectorApi.Identifiers,
 		localCacher,
+		observerMonitor,
 	)
 
 	err = handlers.NewEventsHandler(
@@ -103,4 +119,12 @@ func (w *webServer) Run() *http.Server {
 	}()
 
 	return server
+}
+
+func makeBot(cfg config.BotConfig) (tg.Bot, error) {
+	if !cfg.Enable {
+		return &tg.DisabledBot{}, nil
+	}
+
+	return tg.NewTelegramBot(cfg)
 }
