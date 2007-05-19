@@ -5,7 +5,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func AddNewAccount(account *data.Account) error {
+func AddAccount(account *data.Account) error {
 	database, err := GetDBOrError()
 	if err != nil {
 		return err

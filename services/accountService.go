@@ -12,7 +12,7 @@ func GetOrCreateAccount(address string) (*data.Account, error) {
 			Address: address,
 		}
 
-		err = storage.AddNewAccount(account)
+		err = storage.AddAccount(account)
 		if err != nil {
 			return nil, err
 		}
