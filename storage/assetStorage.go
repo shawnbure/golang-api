@@ -78,7 +78,7 @@ func GetAssetByTokenIdAndNonce(tokenId string, nonce uint64) (*data.Asset, error
 	return &asset, nil
 }
 
-func GetAssetsOwnedBy(ownerId uint64) ([]data.Asset, error) {
+func GetAssetsByOwnerIdWithOffsetLimit(ownerId uint64, offset int, limit int) ([]data.Asset, error) {
 	var assets []data.Asset
 
 	database, err := GetDBOrError()
@@ -86,7 +86,7 @@ func GetAssetsOwnedBy(ownerId uint64) ([]data.Asset, error) {
 		return nil, err
 	}
 
-	txRead := database.Find(&assets, "owner_id = ?", ownerId)
+	txRead := database.Offset(offset).Limit(limit).Find(&assets, "owner_id = ?", ownerId)
 	if txRead.Error != nil {
 		return nil, txRead.Error
 	}
