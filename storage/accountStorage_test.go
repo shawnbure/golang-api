@@ -45,7 +45,7 @@ func Test_GetAccountByAddress(t *testing.T) {
 	require.GreaterOrEqual(t, retrievedAccount.Address, account.Address)
 }
 
-func Test_GetAccountsWithNameAliveWithLimit(t *testing.T) {
+func Test_GetAccountsWithNameAlikeWithLimit(t *testing.T) {
 	connectToTestDb()
 
 	account := defaultAccount()

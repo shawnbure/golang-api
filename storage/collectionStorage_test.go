@@ -65,7 +65,7 @@ func Test_GetCollectionByName(t *testing.T) {
 	require.Equal(t, retrievedCollection.Name, collection.Name)
 }
 
-func Test_GetCollectionsWithNameAliveWithLimit(t *testing.T) {
+func Test_GetCollectionsWithNameAlikeWithLimit(t *testing.T) {
 	connectToTestDb()
 
 	collection := defaultCollection()
