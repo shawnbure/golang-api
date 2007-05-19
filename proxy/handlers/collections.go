@@ -96,7 +96,8 @@ func (handler *collectionsHandler) set(c *gin.Context) {
 	collectionName := c.Param("collectionName")
 	var request services.UpdateCollectionRequest
 
-	collection, err := services.UpdateCollection(collectionName, &request)
+	jwtAddress := c.GetString(middleware.AddressKey)
+	collection, err := services.UpdateCollection(collectionName, &request, jwtAddress)
 	if err != nil {
 		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
@@ -132,11 +133,7 @@ func (handler *collectionsHandler) create(c *gin.Context) {
 		return
 	}
 
-	jwtAddress, exists := c.Get(middleware.AddressKey)
-	if !exists {
-		data.JsonResponse(c, http.StatusInternalServerError, nil, "could not get address from context")
-		return
-	}
+	jwtAddress := c.GetString(middleware.AddressKey)
 	if jwtAddress != request.UserAddress {
 		data.JsonResponse(c, http.StatusUnauthorized, nil, "jwt and request addresses differ")
 		return

@@ -111,12 +111,21 @@ func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) 
 	return collection, nil
 }
 
-func UpdateCollection(collectionName string, request *UpdateCollectionRequest) (*data.Collection, error) {
+func UpdateCollection(collectionName string, request *UpdateCollectionRequest, requestSourceAddress string) (*data.Collection, error) {
 	err := checkValidInputOnUpdate(request)
 
 	collection, err := storage.GetCollectionByName(collectionName)
 	if err != nil {
 		return nil, err
+	}
+
+	creator, err := storage.GetAccountById(collection.CreatorID)
+	if err != nil {
+		return nil, err
+	}
+
+	if creator.Address != requestSourceAddress {
+		return nil, errorNotAuthorized
 	}
 
 	collection.Description = request.Description
