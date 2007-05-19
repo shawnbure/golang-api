@@ -259,7 +259,7 @@ func getTokensRegisteredByUser(userAddress string, blockchainProxy string) ([]st
 	url := fmt.Sprintf(RegisteredNFTsBaseFormat, blockchainProxy, userAddress)
 	err := cache.GetCacher().Get(url, &resp)
 	if err == nil {
-		return resp.entities.Tokens, nil
+		return resp.Data.Tokens, nil
 	}
 
 	err = HttpGet(url, &resp)
@@ -272,7 +272,7 @@ func getTokensRegisteredByUser(userAddress string, blockchainProxy string) ([]st
 		log.Debug("could not cache response", "err", err)
 	}
 
-	return resp.entities.Tokens, nil
+	return resp.Data.Tokens, nil
 }
 
 func checkValidInputOnCreate(request *CreateCollectionRequest) error {
