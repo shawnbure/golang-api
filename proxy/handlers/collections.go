@@ -23,6 +23,7 @@ const (
 	collectionTokensEndpoint  = "/:collectionId/tokens/:offset/:limit"
 	collectionProfileEndpoint = "/:collectionId/profile/"
 	collectionCoverEndpoint   = "/:collectionId/cover"
+	collectionRankingEndpoint = "/rankings/:offset/:limit"
 )
 
 type collectionsHandler struct {
@@ -45,6 +46,8 @@ func NewCollectionsHandler(groupHandler *groupHandler, authCfg config.AuthConfig
 
 		{Method: http.MethodGet, Path: collectionCoverEndpoint, HandlerFunc: handler.getCollectionCover},
 		{Method: http.MethodPost, Path: collectionCoverEndpoint, HandlerFunc: handler.setCollectionCover},
+
+		{Method: http.MethodGet, Path: collectionRankingEndpoint, HandlerFunc: handler.getCollectionRankings},
 	}
 
 	endpointGroupHandler := EndpointGroupHandler{
@@ -241,7 +244,8 @@ func (handler *collectionsHandler) getTokens(c *gin.Context) {
 	tokenId := c.Param("collectionId")
 	sortRules := c.QueryMap("sort")
 
-	err := testInputSortParams(sortRules)
+	acceptedCriteria := map[string]bool{"price_nominal": true, "created_at": true}
+	err := testInputSortParams(sortRules, acceptedCriteria)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
@@ -439,13 +443,67 @@ func (handler *collectionsHandler) setCollectionCover(c *gin.Context) {
 	dtos.JsonResponse(c, http.StatusOK, "", "")
 }
 
-func testInputSortParams(sortParams map[string]string) error {
+// @Summary Get collection rankings
+// @Description Acts as a leaderboard. Optionally provide ?sort[criteria]=volumeTraded&sort[mode]=asc
+// @Tags collections
+// @Accept json
+// @Produce json
+// @Success 200 {object} []collstats.LeaderboardEntry
+// @Failure 400 {object} dtos.ApiResponse
+// @Failure 500 {object} dtos.ApiResponse
+// @Router /collections/rankings/{offset}/{limit} [get]
+func (handler *collectionsHandler) getCollectionRankings(c *gin.Context) {
+	offsetStr := c.Param("offset")
+	limitStr := c.Param("limit")
+	sortParams := c.QueryMap("sort")
+
+	offset, err := strconv.Atoi(offsetStr)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	if len(sortParams) == 0 {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, "no sorting rules")
+		return
+	}
+
+	acceptedCriteria := map[string]bool{
+		"floorprice":   true,
+		"volumetraded": true,
+		"itemstotal":   true,
+		"ownerstotal":  true,
+	}
+	err = testInputSortParams(sortParams, acceptedCriteria)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	table := sortParams["criteria"]
+	isRev := strings.ToLower(sortParams["mode"]) == "desc"
+	stats, err := collstats.GetLeaderboardEntries(table, offset, limit, isRev)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		return
+	}
+
+	dtos.JsonResponse(c, http.StatusOK, stats, "")
+}
+
+func testInputSortParams(sortParams map[string]string, acceptedCriteria map[string]bool) error {
 	if len(sortParams) == 0 {
 		return nil
 	}
 
 	if len(sortParams) != 2 {
-		return errors.New("bad sorting input")
+		return errors.New("bad sorting input len")
 	}
 
 	if v, ok := sortParams["mode"]; ok {
@@ -453,13 +511,17 @@ func testInputSortParams(sortParams map[string]string) error {
 		if vLower != "asc" && vLower != "desc" {
 			return errors.New("bad sorting mode")
 		}
+	} else {
+		return errors.New("no sorting mode")
 	}
 
 	if v, ok := sortParams["criteria"]; ok {
 		vLower := strings.ToLower(v)
-		if vLower != "price_nominal" && vLower != "created_at" {
+		if _, accepted := acceptedCriteria[vLower]; !accepted {
 			return errors.New("bad sorting criteria")
 		}
+	} else {
+		return errors.New("no sorting criteria")
 	}
 
 	return nil
