@@ -12,10 +12,11 @@ import (
 )
 
 const (
-	baseTransactionsEndpoint      = "/transactions"
-	transactionsListEndpoint      = "/list/:offset/:limit"
-	transactionsByAssetEndpoint   = "/asset/:tokenId/:nonce/:offset/:limit"
-	transactionsByAddressEndpoint = "/address/:address/:offset/:limit"
+	baseTransactionsEndpoint         = "/transactions"
+	transactionsListEndpoint         = "/list/:offset/:limit"
+	transactionsByAssetEndpoint      = "/asset/:tokenId/:nonce/:offset/:limit"
+	transactionsByAddressEndpoint    = "/address/:address/:offset/:limit"
+	transactionsByCollectionEndpoint = "/collection/:address/:offset/:limit"
 )
 
 type transactionsHandler struct {
@@ -28,6 +29,7 @@ func NewTransactionsHandler(groupHandler *groupHandler, authCfg config.AuthConfi
 		{Method: http.MethodGet, Path: transactionsListEndpoint, HandlerFunc: handler.getList},
 		{Method: http.MethodGet, Path: transactionsByAssetEndpoint, HandlerFunc: handler.getByAddress},
 		{Method: http.MethodGet, Path: transactionsByAddressEndpoint, HandlerFunc: handler.getByAsset},
+		{Method: http.MethodGet, Path: transactionsByCollectionEndpoint, HandlerFunc: handler.getByCollection},
 	}
 
 	endpointGroupHandler := EndpointGroupHandler{
@@ -163,6 +165,50 @@ func (handler *transactionsHandler) getByAddress(c *gin.Context) {
 	}
 
 	transactions, err := storage.GetTransactionsByBuyerOrSellerIdWithOffsetLimit(account.ID, offset, limit)
+	if err != nil {
+		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	data.JsonResponse(c, http.StatusOK, transactions, "")
+}
+
+// @Summary Gets transaction for a collection.
+// @Description Retrieves transactions for a collection. Unordered.
+// @Tags transactions
+// @Accept json
+// @Produce json
+// @Param collectionName path int true "collection name"
+// @Param offset path int true "offset"
+// @Param limit path int true "limit"
+// @Success 200 {object} []data.Transaction
+// @Failure 400 {object} data.ApiResponse
+// @Failure 404 {object} data.ApiResponse
+// @Router /transactions/collection/{collectionName}/{offset}/{limit} [get]
+func (handler *transactionsHandler) getByCollection(c *gin.Context) {
+	collectionName := c.Param("collectionName")
+	offsetStr := c.Param("offset")
+	limitStr := c.Param("limit")
+
+	offset, err := strconv.Atoi(offsetStr)
+	if err != nil {
+		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil {
+		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	collection, err := storage.GetCollectionByName(collectionName)
+	if err != nil {
+		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	transactions, err := storage.GetTransactionsByCollectionIdWithOffsetLimit(collection.ID, offset, limit)
 	if err != nil {
 		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return

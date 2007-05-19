@@ -138,6 +138,22 @@ func GetTransactionsByAssetIdWithOffsetLimit(id uint64, offset int, limit int) (
 	return transactions, nil
 }
 
+func GetTransactionsByCollectionIdWithOffsetLimit(id uint64, offset int, limit int) ([]data.Transaction, error) {
+	var transactions []data.Transaction
+
+	database, err := GetDBOrError()
+	if err != nil {
+		return nil, err
+	}
+
+	txRead := database.Offset(offset).Limit(limit).Find(&transactions, "collection_id = ?", id)
+	if txRead.Error != nil {
+		return nil, txRead.Error
+	}
+
+	return transactions, nil
+}
+
 func GetTransactionByHash(hash string) (*data.Transaction, error) {
 	var transaction data.Transaction
 

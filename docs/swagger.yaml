@@ -1017,6 +1017,47 @@ paths:
       summary: Gets transaction for an asset.
       tags:
       - transactions
+  /transactions/collection/{collectionName}/{offset}/{limit}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves transactions for a collection. Unordered.
+      parameters:
+      - description: collection name
+        in: path
+        name: collectionName
+        required: true
+        type: integer
+      - description: offset
+        in: path
+        name: offset
+        required: true
+        type: integer
+      - description: limit
+        in: path
+        name: limit
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/data.Transaction'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/data.ApiResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/data.ApiResponse'
+      summary: Gets transaction for a collection.
+      tags:
+      - transactions
   /transactions/list/{offset}/{limit}:
     get:
       consumes:
