@@ -322,6 +322,31 @@ definitions:
       version:
         type: integer
     type: object
+  handlers.CollectionListQueryBody:
+    properties:
+      flags:
+        items:
+          type: string
+        type: array
+    type: object
+  handlers.CollectionRankingQueryBody:
+    properties:
+      sortRules:
+        additionalProperties:
+          type: string
+        type: object
+    type: object
+  handlers.CollectionTokensQueryBody:
+    properties:
+      filters:
+        additionalProperties:
+          type: string
+        type: object
+      sortRules:
+        additionalProperties:
+          type: string
+        type: object
+    type: object
   handlers.GeneralSearchResponse:
     properties:
       accounts:
@@ -946,7 +971,7 @@ paths:
       tags:
       - collections
   /collections/{collectionId}/tokens/{offset}/{limit}:
-    get:
+    post:
       consumes:
       - application/json
       description: Retrieves the tokens of a collection. Unsorted.
@@ -966,6 +991,12 @@ paths:
         name: limit
         required: true
         type: integer
+      - description: filters and sort rules
+        in: body
+        name: query
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CollectionTokensQueryBody'
       produces:
       - application/json
       responses:
@@ -1021,7 +1052,7 @@ paths:
       tags:
       - collections
   /collections/list/{offset}/{limit}:
-    get:
+    post:
       consumes:
       - application/json
       description: Retrieves a list of collections. Sorted by priority.
@@ -1036,6 +1067,12 @@ paths:
         name: limit
         required: true
         type: integer
+      - description: flag array
+        in: body
+        name: query
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CollectionListQueryBody'
       produces:
       - application/json
       responses:
@@ -1057,10 +1094,10 @@ paths:
       tags:
       - collections
   /collections/rankings/{offset}/{limit}:
-    get:
+    post:
       consumes:
       - application/json
-      description: Acts as a leaderboard. Optionally provide ?sort[criteria]=volumeTraded&sort[mode]=asc
+      description: Acts as a leaderboard
       parameters:
       - description: offset
         in: path
@@ -1072,6 +1109,12 @@ paths:
         name: limit
         required: true
         type: integer
+      - description: sort rules
+        in: body
+        name: query
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CollectionRankingQueryBody'
       produces:
       - application/json
       responses:

@@ -30,6 +30,19 @@ const (
 	collectionRankingEndpoint  = "/rankings/:offset/:limit"
 )
 
+type CollectionTokensQueryBody struct {
+	Filters   map[string]string `json:"filters"`
+	SortRules map[string]string `json:"sortRules"`
+}
+
+type CollectionRankingQueryBody struct {
+	SortRules map[string]string `json:"sortRules"`
+}
+
+type CollectionListQueryBody struct {
+	Flags []string `json:"flags"`
+}
+
 type collectionsHandler struct {
 	blockchainCfg config.BlockchainConfig
 }
@@ -51,11 +64,11 @@ func NewCollectionsHandler(groupHandler *groupHandler, authCfg config.AuthConfig
 	groupHandler.AddEndpointGroupHandler(endpointGroupHandler)
 
 	publicEndpoints := []EndpointHandler{
-		{Method: http.MethodGet, Path: collectionListEndpoint, HandlerFunc: handler.getList},
+		{Method: http.MethodPost, Path: collectionListEndpoint, HandlerFunc: handler.getList},
 		{Method: http.MethodGet, Path: collectionByNameEndpoint, HandlerFunc: handler.get},
-		{Method: http.MethodGet, Path: collectionTokensEndpoint, HandlerFunc: handler.getTokens},
+		{Method: http.MethodPost, Path: collectionTokensEndpoint, HandlerFunc: handler.getTokens},
 		{Method: http.MethodGet, Path: collectionMintInfoEndpoint, HandlerFunc: handler.getMintInfo},
-		{Method: http.MethodGet, Path: collectionRankingEndpoint, HandlerFunc: handler.getCollectionRankings},
+		{Method: http.MethodPost, Path: collectionRankingEndpoint, HandlerFunc: handler.getCollectionRankings},
 	}
 	publicEndpointGroupHandler := EndpointGroupHandler{
 		Root:             baseCollectionsEndpoint,
@@ -72,16 +85,24 @@ func NewCollectionsHandler(groupHandler *groupHandler, authCfg config.AuthConfig
 // @Produce json
 // @Param offset path uint true "offset"
 // @Param limit path uint true "limit"
+// @Param query body CollectionListQueryBody true "flag array"
 // @Success 200 {object} []entities.Collection
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 404 {object} dtos.ApiResponse
-// @Router /collections/list/{offset}/{limit} [get]
+// @Router /collections/list/{offset}/{limit} [post]
 func (handler *collectionsHandler) getList(c *gin.Context) {
 	offsetStr := c.Param("offset")
 	limitStr := c.Param("limit")
-	flags := c.QueryArray("flags")
 
-	err := services.CheckValidFlags(flags)
+	var queries CollectionListQueryBody
+	err := c.BindJSON(&queries)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+	flags := queries.Flags
+
+	err = services.CheckValidFlags(flags)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
@@ -260,19 +281,27 @@ func (handler *collectionsHandler) create(c *gin.Context) {
 // @Param collectionId path string true "collection id"
 // @Param offset path uint true "offset"
 // @Param limit path uint true "limit"
+// @Param query body CollectionTokensQueryBody true "filters and sort rules"
 // @Success 200 {object} []entities.Token
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 404 {object} dtos.ApiResponse
-// @Router /collections/{collectionId}/tokens/{offset}/{limit} [get]
+// @Router /collections/{collectionId}/tokens/{offset}/{limit} [post]
 func (handler *collectionsHandler) getTokens(c *gin.Context) {
 	offsetStr := c.Param("offset")
 	limitStr := c.Param("limit")
-	filters := c.QueryMap("filters")
 	tokenId := c.Param("collectionId")
-	sortRules := c.QueryMap("sort")
+
+	var queries CollectionTokensQueryBody
+	err := c.BindJSON(&queries)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+	sortRules := queries.SortRules
+	filters := queries.Filters
 
 	acceptedCriteria := map[string]bool{"price_nominal": true, "created_at": true}
-	err := testInputSortParams(sortRules, acceptedCriteria)
+	err = testInputSortParams(sortRules, acceptedCriteria)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
@@ -463,20 +492,28 @@ func (handler *collectionsHandler) getMintInfo(c *gin.Context) {
 }
 
 // @Summary Get collection rankings
-// @Description Acts as a leaderboard. Optionally provide ?sort[criteria]=volumeTraded&sort[mode]=asc
+// @Description Acts as a leaderboard
 // @Tags collections
 // @Accept json
 // @Produce json
 // @Param offset path uint true "offset"
 // @Param limit path uint true "limit"
+// @Param query body CollectionRankingQueryBody true "sort rules"
 // @Success 200 {object} RankingEntry
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 500 {object} dtos.ApiResponse
-// @Router /collections/rankings/{offset}/{limit} [get]
+// @Router /collections/rankings/{offset}/{limit} [post]
 func (handler *collectionsHandler) getCollectionRankings(c *gin.Context) {
 	offsetStr := c.Param("offset")
 	limitStr := c.Param("limit")
-	sortParams := c.QueryMap("sort")
+
+	var queries CollectionRankingQueryBody
+	err := c.BindJSON(&queries)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+	sortRules := queries.SortRules
 
 	offset, err := strconv.ParseUint(offsetStr, 10, 0)
 	if err != nil {
@@ -496,7 +533,7 @@ func (handler *collectionsHandler) getCollectionRankings(c *gin.Context) {
 		return
 	}
 
-	if len(sortParams) == 0 {
+	if len(sortRules) == 0 {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, "no sorting rules")
 		return
 	}
@@ -507,14 +544,14 @@ func (handler *collectionsHandler) getCollectionRankings(c *gin.Context) {
 		"itemstotal":   true,
 		"ownerstotal":  true,
 	}
-	err = testInputSortParams(sortParams, acceptedCriteria)
+	err = testInputSortParams(sortRules, acceptedCriteria)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
-	table := sortParams["criteria"]
-	isRev := strings.ToLower(sortParams["mode"]) == "desc"
+	table := sortRules["criteria"]
+	isRev := strings.ToLower(sortRules["mode"]) == "desc"
 	entries, err := collstats.GetLeaderboardEntries(table, int(offset), int(limit), isRev)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())

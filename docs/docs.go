@@ -514,7 +514,7 @@ var doc = `{
             }
         },
         "/collections/list/{offset}/{limit}": {
-            "get": {
+            "post": {
                 "description": "Retrieves a list of collections. Sorted by priority.",
                 "consumes": [
                     "application/json"
@@ -540,6 +540,15 @@ var doc = `{
                         "name": "limit",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "flag array",
+                        "name": "query",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.CollectionListQueryBody"
+                        }
                     }
                 ],
                 "responses": {
@@ -568,8 +577,8 @@ var doc = `{
             }
         },
         "/collections/rankings/{offset}/{limit}": {
-            "get": {
-                "description": "Acts as a leaderboard. Optionally provide ?sort[criteria]=volumeTraded\u0026sort[mode]=asc",
+            "post": {
+                "description": "Acts as a leaderboard",
                 "consumes": [
                     "application/json"
                 ],
@@ -594,6 +603,15 @@ var doc = `{
                         "name": "limit",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "sort rules",
+                        "name": "query",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.CollectionRankingQueryBody"
+                        }
                     }
                 ],
                 "responses": {
@@ -888,7 +906,7 @@ var doc = `{
             }
         },
         "/collections/{collectionId}/tokens/{offset}/{limit}": {
-            "get": {
+            "post": {
                 "description": "Retrieves the tokens of a collection. Unsorted.",
                 "consumes": [
                     "application/json"
@@ -921,6 +939,15 @@ var doc = `{
                         "name": "limit",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "filters and sort rules",
+                        "name": "query",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.CollectionTokensQueryBody"
+                        }
                     }
                 ],
                 "responses": {
@@ -3349,6 +3376,45 @@ var doc = `{
                 },
                 "version": {
                     "type": "integer"
+                }
+            }
+        },
+        "handlers.CollectionListQueryBody": {
+            "type": "object",
+            "properties": {
+                "flags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "handlers.CollectionRankingQueryBody": {
+            "type": "object",
+            "properties": {
+                "sortRules": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "handlers.CollectionTokensQueryBody": {
+            "type": "object",
+            "properties": {
+                "filters": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "sortRules": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
                 }
             }
         },
