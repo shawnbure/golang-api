@@ -415,7 +415,6 @@ func Test_GetMetadata(t *testing.T) {
 	err = json.Unmarshal([]byte(bytes), &response)
 	require.Nil(t, err)
 
-
 	println("--------------------")
 }
 
@@ -424,15 +423,21 @@ func Test_RefreshMetadata(t *testing.T) {
 	cache.InitCacher(cacheCfg)
 
 	token := entities.Token{
-		TokenID:             "CHUB-dc4906",
-		Nonce:               5,
-		MetadataLink:        "",
+		TokenID:      "CHIBI-81192c",
+		Nonce:        11,
+		CollectionID: 1,
 	}
-
 	err := storage.AddToken(&token)
 	require.Nil(t, err)
 
-	attrs, err := RefreshMetadata(blockchainCfg.ProxyUrl, &token, "erd17s2pz8qrds6ake3qwheezgy48wzf7dr5nhdpuu2h4rr4mt5rt9ussj7xzh")
+	attrs, err := AddOrRefreshToken(
+		token.TokenID,
+		token.Nonce,
+		token.CollectionID,
+		"erd17s2pz8qrds6ake3qwheezgy48wzf7dr5nhdpuu2h4rr4mt5rt9ussj7xzh",
+		blockchainCfg.ProxyUrl,
+		blockchainCfg.MarketplaceAddress,
+	)
 	require.Nil(t, err)
 	require.NotEqual(t, 0, len(attrs))
 
@@ -442,7 +447,6 @@ func Test_RefreshMetadata(t *testing.T) {
 	var tokenAttrs map[string]interface{}
 	err = json.Unmarshal(token.Attributes, &tokenAttrs)
 	require.Nil(t, err)
-
 
 	var readTokenAttrs map[string]interface{}
 	err = json.Unmarshal(readToken.Attributes, &readTokenAttrs)
