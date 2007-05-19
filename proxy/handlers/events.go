@@ -11,8 +11,9 @@ import (
 )
 
 const (
-	baseEventsEndpoint = "/events"
-	pushEventsEndpoint = "/push"
+	baseEventsEndpoint    = "/events"
+	pushEventsEndpoint    = "/push"
+	pushFinalizedEndpoint = "/finalized"
 )
 
 type eventsHandler struct {
@@ -32,6 +33,7 @@ func NewEventsHandler(
 
 	endpoints := []EndpointHandler{
 		{Method: http.MethodPost, Path: pushEventsEndpoint, HandlerFunc: h.pushEvents},
+		{Method: http.MethodPost, Path: pushFinalizedEndpoint, HandlerFunc: h.pushFinalizedEvents},
 	}
 
 	endpointGroupHandler := EndpointGroupHandler{
@@ -46,17 +48,31 @@ func NewEventsHandler(
 }
 
 func (h *eventsHandler) pushEvents(c *gin.Context) {
-	var events []entities.Event
+	var blockEvents entities.BlockEvents
 
-	err := c.Bind(&events)
+	err := c.Bind(&blockEvents)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
-	if events != nil {
-		h.processor.OnEvents(events)
+	if blockEvents.Events != nil {
+		h.processor.OnEvents(blockEvents)
 	}
+
+	dtos.JsonResponse(c, http.StatusOK, nil, "")
+}
+
+func (h *eventsHandler) pushFinalizedEvents(c *gin.Context) {
+	var finalizedBlock entities.FinalizedBlock
+
+	err := c.Bind(&finalizedBlock)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	h.processor.OnFinalizedEvent(finalizedBlock)
 
 	dtos.JsonResponse(c, http.StatusOK, nil, "")
 }

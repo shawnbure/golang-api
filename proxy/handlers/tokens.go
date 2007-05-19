@@ -12,6 +12,7 @@ import (
 const (
 	baseTokensEndpoint             = "/tokens"
 	tokenByTokenIdAndNonceEndpoint = "/:tokenId/:nonce"
+	availableTokensEndpoint        = "/available"
 )
 
 type tokensHandler struct {
@@ -22,6 +23,7 @@ func NewTokensHandler(groupHandler *groupHandler) {
 
 	endpoints := []EndpointHandler{
 		{Method: http.MethodGet, Path: tokenByTokenIdAndNonceEndpoint, HandlerFunc: handler.getByTokenIdAndNonce},
+		{Method: http.MethodGet, Path: availableTokensEndpoint, HandlerFunc: handler.getAvailableTokens},
 	}
 
 	endpointGroupHandler := EndpointGroupHandler{
@@ -61,4 +63,26 @@ func (handler *tokensHandler) getByTokenIdAndNonce(c *gin.Context) {
 	}
 
 	dtos.JsonResponse(c, http.StatusOK, tokenDto, "")
+}
+
+// @Summary Get available tokens
+// @Description Get available tokens and some collection info
+// @Tags tokens
+// @Accept json
+// @Produce json
+// @Param availableTokensRequest body AvailableTokensRequest true "request"
+// @Success 200 {object} AvailableTokensResponse
+// @Failure 400 {object} dtos.ApiResponse
+// @Router /tokens/available [get]
+func (handler *tokensHandler) getAvailableTokens(c *gin.Context) {
+	var request services.AvailableTokensRequest
+
+	err := c.Bind(&request)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	response := services.GetAvailableTokens(request)
+	dtos.JsonResponse(c, http.StatusOK, response, "")
 }

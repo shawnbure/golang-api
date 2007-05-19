@@ -8,6 +8,7 @@ import (
 
 	"github.com/erdsea/erdsea-api/cache"
 	"github.com/erdsea/erdsea-api/config"
+	"github.com/erdsea/erdsea-api/data/dtos"
 	"github.com/erdsea/erdsea-api/data/entities"
 	"github.com/erdsea/erdsea-api/interaction"
 	"github.com/erdsea/erdsea-api/stats"
@@ -126,7 +127,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 		CollectionID: coll.ID,
 		Listed:       true,
 		OwnerId:      1,
-		Attributes:   datatypes.JSON(`{"hair": "red", "background": "dark"}`),
+		Attributes:   datatypes.JSON(`[{"trait_type": "hair", "value": "red"}, {"trait_type": "background", "value": "dark"}]`),
 	}
 	err = storage.AddToken(&token1)
 	require.Nil(t, err)
@@ -135,7 +136,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 		CollectionID: coll.ID,
 		Listed:       true,
 		OwnerId:      1,
-		Attributes:   datatypes.JSON(`{"hair": "green", "background": "dark"}`),
+		Attributes:   datatypes.JSON(`[{"trait_type": "hair", "value": "green"}, {"trait_type": "background", "value": "dark"}]`),
 	}
 	err = storage.AddToken(&token2)
 	require.Nil(t, err)
@@ -144,7 +145,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 		CollectionID: coll.ID,
 		Listed:       true,
 		OwnerId:      1,
-		Attributes:   datatypes.JSON(`{"hair": "blue", "background": "dark"}`),
+		Attributes:   datatypes.JSON(`[{"trait_type": "hair", "value": "blue"}, {"trait_type": "background", "value": "dark"}]`),
 	}
 	err = storage.AddToken(&token3)
 	require.Nil(t, err)
@@ -153,7 +154,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 		CollectionID: coll.ID,
 		Listed:       true,
 		OwnerId:      1,
-		Attributes:   datatypes.JSON(`{}`),
+		Attributes:   datatypes.JSON(`[]`),
 	}
 	err = storage.AddToken(&token4)
 	require.Nil(t, err)
@@ -162,7 +163,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 		CollectionID: coll.ID,
 		Listed:       true,
 		OwnerId:      1,
-		Attributes:   datatypes.JSON(`{"hair": "green"}`),
+		Attributes:   datatypes.JSON(`[{"trait_type": "hair", "value": "green"}, {"trait_type": "background", "value": "dark"}]`),
 	}
 	err = storage.AddToken(&token5)
 	require.Nil(t, err)
@@ -171,7 +172,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 		CollectionID: coll.ID,
 		Listed:       true,
 		OwnerId:      1,
-		Attributes:   datatypes.JSON(`{"background": "dark"}`),
+		Attributes:   datatypes.JSON(`[{"trait_type": "background", "value": "dark"}]`),
 	}
 	err = storage.AddToken(&token6)
 	require.Nil(t, err)
@@ -180,7 +181,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 		CollectionID: coll.ID,
 		Listed:       true,
 		OwnerId:      1,
-		Attributes:   datatypes.JSON(`{"hair": "yellow", "background": "dark"}`),
+		Attributes:   datatypes.JSON(`[{"trait_type": "hair", "value": "yellow"}, {"trait_type": "background", "value": "dark"}]`),
 	}
 	err = storage.AddToken(&token7)
 	require.Nil(t, err)
@@ -189,7 +190,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 		CollectionID: coll.ID,
 		Listed:       true,
 		OwnerId:      1,
-		Attributes:   datatypes.JSON(`{"hair": "white", "background": "dark"}`),
+		Attributes:   datatypes.JSON(`[{"trait_type": "hair", "value": "white"}, {"trait_type": "background", "value": "dark"}]`),
 	}
 	err = storage.AddToken(&token8)
 	require.Nil(t, err)
@@ -198,7 +199,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 		CollectionID: coll.ID,
 		Listed:       true,
 		OwnerId:      1,
-		Attributes:   datatypes.JSON(`{"hair": "white", "background": "dark"}`),
+		Attributes:   datatypes.JSON(`[{"trait_type": "hair", "value": "white"}, {"trait_type": "background", "value": "dark"}]`),
 	}
 	err = storage.AddToken(&token9)
 	require.Nil(t, err)
@@ -207,7 +208,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 		CollectionID: coll.ID,
 		Listed:       true,
 		OwnerId:      1,
-		Attributes:   datatypes.JSON(`{"something_else": "yea"}`),
+		Attributes:   datatypes.JSON(`[{"trait_type": "something_else", "value": "yea"}]`),
 	}
 	err = storage.AddToken(&token10)
 	require.Nil(t, err)
@@ -218,20 +219,35 @@ func Test_GetCollectionMetadata(t *testing.T) {
 	expected := stats.CollectionMetadata{
 		NumItems: 10,
 		Owners:   map[uint64]bool{1: true},
-		AttrStats: map[string]map[string]int{
-			"hair": {
-				"white":  2,
-				"red":    1,
-				"green":  2,
-				"blue":   1,
-				"yellow": 1,
-			},
-			"background": {
-				"dark": 7,
-			},
-			"something_else": {
-				"yea": 1,
-			},
+		AttrStats: []dtos.AttributeStat{{
+			TraitType: "hair",
+			Value:     "red",
+			Total:     1,
+		}, {
+			TraitType: "background",
+			Value:     "dark",
+			Total:     8,
+		}, {
+			TraitType: "hair",
+			Value:     "green",
+			Total:     2,
+		}, {
+			TraitType: "hair",
+			Value:     "blue",
+			Total:     1,
+		}, {
+			TraitType: "hair",
+			Value:     "yellow",
+			Total:     1,
+		}, {
+			TraitType: "hair",
+			Value:     "white",
+			Total:     2,
+		}, {
+			TraitType: "something_else",
+			Value:     "yea",
+			Total:     1,
+		},
 		},
 	}
 	require.Equal(t, expected, *collStats)
@@ -242,8 +258,8 @@ func Test_GetMintInfoFromContract(t *testing.T) {
 	defer cache.CloseCacher()
 
 	cfg := config.BlockchainConfig{
-		ProxyUrl:            "https://devnet-gateway.elrond.com",
-		ChainID:             "D",
+		ProxyUrl: "https://devnet-gateway.elrond.com",
+		ChainID:  "D",
 	}
 
 	interaction.InitBlockchainInteractor(cfg)
