@@ -64,12 +64,14 @@ func ListToken(args ListTokenArgs) {
 		newToken := ConstructNewTokenFromListArgs(args)
 		token = &newToken
 		token.Listed = true
+		token.PriceString = args.Price
 		token.PriceNominal = priceNominal
 		token.OwnerId = ownerAccount.ID
 		token.CollectionID = collectionId
 		innerErr = storage.AddToken(token)
 	} else {
 		token.Listed = true
+		token.PriceString = args.Price
 		token.PriceNominal = priceNominal
 		token.OwnerId = ownerAccount.ID
 		token.CollectionID = collectionId
@@ -122,7 +124,7 @@ func BuyToken(args BuyTokenArgs) {
 
 	token.Listed = false
 	// This was to be reset since the token will no longer be on the marketplace.
-	// Could have been kept like this, but bugs may appear when trying when querying.
+	// Could have been kept like this, but bugs may appear when querying.
 	token.OwnerId = 0
 	err = storage.UpdateToken(token)
 	if err != nil {

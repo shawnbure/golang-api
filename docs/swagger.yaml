@@ -22,6 +22,13 @@ definitions:
       volumeTraded:
         type: number
     type: object
+  dtos.ExtendedCollectionDto:
+    properties:
+      collection:
+        $ref: '#/definitions/entities.Collection'
+      statistics:
+        $ref: '#/definitions/dtos.CollectionStatistics'
+    type: object
   entities.Account:
     properties:
       address:
@@ -94,6 +101,8 @@ definitions:
         type: integer
       priceNominal:
         type: number
+      priceString:
+        type: string
       royaltiesPercent:
         type: number
       tokenID:
@@ -216,8 +225,6 @@ definitions:
         type: string
       instagramLink:
         type: string
-      name:
-        type: string
       twitterLink:
         type: string
       website:
@@ -252,11 +259,11 @@ paths:
     get:
       consumes:
       - application/json
-      description: Retrieves an account by id
+      description: Retrieves an account by walletAddress
       parameters:
-      - description: account id
+      - description: wallet address
         in: path
-        name: accountId
+        name: walletAddress
         required: true
         type: string
       produces:
@@ -274,224 +281,7 @@ paths:
           description: Not Found
           schema:
             $ref: '#/definitions/dtos.ApiResponse'
-      summary: Get account by account id
-      tags:
-      - accounts
-    post:
-      consumes:
-      - application/json
-      description: Sets an account settable information
-      parameters:
-      - description: account id
-        in: path
-        name: accountId
-        required: true
-        type: string
-      - description: account info
-        in: body
-        name: setAccountRequest
-        required: true
-        schema:
-          $ref: '#/definitions/services.SetAccountRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/entities.Account'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/dtos.ApiResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/dtos.ApiResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/dtos.ApiResponse'
-      summary: Set account information
-      tags:
-      - accounts
-  /accounts/{accountId}/cover:
-    get:
-      consumes:
-      - application/json
-      description: Retrieves an account cover image. It will be sent as base64 encoding
-        (sdt, raw) of its byte representation.
-      parameters:
-      - description: account id
-        in: path
-        name: accountId
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: string
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/dtos.ApiResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/dtos.ApiResponse'
-      summary: Get account cover image
-      tags:
-      - accounts
-    post:
-      consumes:
-      - application/json
-      description: Expects base64 encoding (sdt, raw) of the image representation.
-        Returns empty string. Max size of byte array is 1MB.
-      parameters:
-      - description: account id
-        in: path
-        name: accountId
-        required: true
-        type: integer
-      - description: base64 encoded image
-        in: body
-        name: image
-        required: true
-        schema:
-          type: primitive
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: string
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/dtos.ApiResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/dtos.ApiResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/dtos.ApiResponse'
-      summary: Set account cover image
-      tags:
-      - accounts
-  /accounts/{accountId}/profile:
-    get:
-      consumes:
-      - application/json
-      description: Retrieves an account profile image. It will be sent as base64 encoding
-        (sdt, raw) of its byte representation.
-      parameters:
-      - description: account id
-        in: path
-        name: accountId
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: string
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/dtos.ApiResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/dtos.ApiResponse'
-      summary: Get account profile image
-      tags:
-      - accounts
-    post:
-      consumes:
-      - application/json
-      description: Expects base64 encoding (sdt, raw) of the image representation.
-        Returns empty string. Max size of byte array is 512KB.
-      parameters:
-      - description: account id
-        in: path
-        name: accountId
-        required: true
-        type: integer
-      - description: base64 encoded image
-        in: body
-        name: image
-        required: true
-        schema:
-          type: primitive
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: string
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/dtos.ApiResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/dtos.ApiResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/dtos.ApiResponse'
-      summary: Set account profile image
-      tags:
-      - accounts
-  /accounts/{accountId}/tokens/{offset}/{limit}:
-    get:
-      consumes:
-      - application/json
-      description: Retrieves a list of tokens. Unsorted.
-      parameters:
-      - description: account id
-        in: path
-        name: accountId
-        required: true
-        type: integer
-      - description: offset
-        in: path
-        name: offset
-        required: true
-        type: integer
-      - description: limit
-        in: path
-        name: limit
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/entities.Token'
-            type: array
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/dtos.ApiResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/dtos.ApiResponse'
-      summary: Gets tokens for an account.
+      summary: Get account by account walletAddress
       tags:
       - accounts
   /accounts/{address}:
@@ -528,17 +318,23 @@ paths:
       summary: Creates an account
       tags:
       - accounts
-  /accounts/find/{accountAddress}:
-    get:
+  /accounts/{walletAddress}:
+    post:
       consumes:
       - application/json
-      description: Retrieves an account by address. Useful for login.
+      description: Sets an account settable information
       parameters:
-      - description: account address
+      - description: wallet address
         in: path
-        name: accountAddress
+        name: walletAddress
         required: true
         type: string
+      - description: account info
+        in: body
+        name: setAccountRequest
+        required: true
+        schema:
+          $ref: '#/definitions/services.SetAccountRequest'
       produces:
       - application/json
       responses:
@@ -550,11 +346,194 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/dtos.ApiResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: Set account information
+      tags:
+      - accounts
+  /accounts/{walletAddress}/cover:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves an account cover image. It will be sent as base64 encoding
+        (sdt, raw) of its byte representation.
+      parameters:
+      - description: wallet address
+        in: path
+        name: walletAddress
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
         "404":
           description: Not Found
           schema:
             $ref: '#/definitions/dtos.ApiResponse'
-      summary: Get account by address
+      summary: Get account cover image
+      tags:
+      - accounts
+    post:
+      consumes:
+      - application/json
+      description: Expects base64 encoding (sdt, raw) of the image representation.
+        Returns empty string. Max size of byte array is 1MB.
+      parameters:
+      - description: wallet address
+        in: path
+        name: walletAddress
+        required: true
+        type: integer
+      - description: base64 encoded image
+        in: body
+        name: image
+        required: true
+        schema:
+          type: primitive
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: Set account cover image
+      tags:
+      - accounts
+  /accounts/{walletAddress}/profile:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves an account profile image. It will be sent as base64 encoding
+        (sdt, raw) of its byte representation.
+      parameters:
+      - description: wallet address
+        in: path
+        name: walletAddress
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: Get account profile image
+      tags:
+      - accounts
+    post:
+      consumes:
+      - application/json
+      description: Expects base64 encoding (sdt, raw) of the image representation.
+        Returns empty string. Max size of byte array is 512KB.
+      parameters:
+      - description: wallet address
+        in: path
+        name: walletAddress
+        required: true
+        type: integer
+      - description: base64 encoded image
+        in: body
+        name: image
+        required: true
+        schema:
+          type: primitive
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: Set account profile image
+      tags:
+      - accounts
+  /accounts/{walletAddress}/tokens/{offset}/{limit}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a list of tokens. Unsorted.
+      parameters:
+      - description: wallet address
+        in: path
+        name: walletAddress
+        required: true
+        type: integer
+      - description: offset
+        in: path
+        name: offset
+        required: true
+        type: integer
+      - description: limit
+        in: path
+        name: limit
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entities.Token'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: Gets tokens for an account.
       tags:
       - accounts
   /auth/access:
@@ -621,20 +600,20 @@ paths:
     get:
       consumes:
       - application/json
-      description: Retrieves a collection by its name.
+      description: Retrieves a collection by id.
       parameters:
       - description: collection id
         in: path
         name: collectionId
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/entities.Collection'
+            $ref: '#/definitions/dtos.ExtendedCollectionDto'
         "400":
           description: Bad Request
           schema:
@@ -643,7 +622,11 @@ paths:
           description: Not Found
           schema:
             $ref: '#/definitions/dtos.ApiResponse'
-      summary: Gets collection by name.
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: Gets collection by collection id.
       tags:
       - collections
     post:
@@ -655,7 +638,7 @@ paths:
         in: path
         name: collectionId
         required: true
-        type: integer
+        type: string
       - description: collection info
         in: body
         name: updateCollectionRequest
@@ -695,7 +678,7 @@ paths:
         in: path
         name: collectionId
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -764,7 +747,7 @@ paths:
         in: path
         name: collectionId
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -793,7 +776,7 @@ paths:
         in: path
         name: collectionId
         required: true
-        type: integer
+        type: string
       - description: base64 encoded image
         in: body
         name: image
@@ -818,35 +801,6 @@ paths:
       summary: Set collection profile image
       tags:
       - collections
-  /collections/{collectionId}/statistics:
-    post:
-      consumes:
-      - application/json
-      description: Gets statistics for a collection. It will be cached for 15 minutes.
-      parameters:
-      - description: collection id
-        in: path
-        name: collectionId
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/dtos.CollectionStatistics'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/dtos.ApiResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/dtos.ApiResponse'
-      summary: Gets collection statistics.
-      tags:
-      - collections
   /collections/{collectionId}/tokens/{offset}/{limit}:
     get:
       consumes:
@@ -857,7 +811,7 @@ paths:
         in: path
         name: collectionId
         required: true
-        type: integer
+        type: string
       - description: offset
         in: path
         name: offset

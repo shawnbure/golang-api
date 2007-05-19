@@ -14,13 +14,11 @@ import (
 
 const (
 	baseAccountsEndpoint   = "/accounts"
-	accountByIdEndpoint    = "/:accountId"
-	accountTokensEndpoint  = "/:accountId/tokens/:offset/:limit"
-	accountProfileEndpoint = "/:accountId/profile"
-	accountCoverEndpoint   = "/:accountId/cover"
-
-	accountByAddressEndpoint = "/find/:accountAddress"
-	createAccountEndpoint    = "/create"
+	createAccountEndpoint  = "/create"
+	accountByIdEndpoint    = "/:walletAddress"
+	accountTokensEndpoint  = "/:walletAddress/tokens/:offset/:limit"
+	accountProfileEndpoint = "/:walletAddress/profile"
+	accountCoverEndpoint   = "/:walletAddress/cover"
 )
 
 type accountsHandler struct {
@@ -39,7 +37,6 @@ func NewAccountsHandler(groupHandler *groupHandler, authCfg config.AuthConfig) {
 		{Method: http.MethodGet, Path: accountCoverEndpoint, HandlerFunc: handler.getAccountCover},
 		{Method: http.MethodPost, Path: accountCoverEndpoint, HandlerFunc: handler.setAccountCover},
 
-		{Method: http.MethodGet, Path: accountByAddressEndpoint, HandlerFunc: handler.getByAddress},
 		{Method: http.MethodPost, Path: createAccountEndpoint, HandlerFunc: handler.create},
 		{Method: http.MethodGet, Path: accountTokensEndpoint, HandlerFunc: handler.getAccountTokens},
 	}
@@ -53,50 +50,28 @@ func NewAccountsHandler(groupHandler *groupHandler, authCfg config.AuthConfig) {
 	groupHandler.AddEndpointGroupHandler(endpointGroupHandler)
 }
 
-// @Summary Get account by account id
-// @Description Retrieves an account by id
+// @Summary Get account by account walletAddress
+// @Description Retrieves an account by walletAddress
 // @Tags accounts
 // @Accept json
 // @Produce json
-// @Param accountId path string true "account id"
+// @Param walletAddress path string true "wallet address"
 // @Success 200 {object} entities.Account
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 404 {object} dtos.ApiResponse
 // @Router /accounts/{accountId} [get]
 func (handler *accountsHandler) get(c *gin.Context) {
-	accountIdString := c.Param("accountId")
+	walletAddress := c.Param("walletAddress")
 
-	accountId, err := strconv.ParseUint(accountIdString, 10, 16)
+	cacheInfo, err := services.GetAccountCacheInfo(walletAddress)
 	if err != nil {
-		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
-	account, err := storage.GetAccountById(accountId)
+	account, err := storage.GetAccountById(cacheInfo.AccountId)
 	if err != nil {
-		dtos.JsonResponse(c, http.StatusNotFound, nil, "could not get price")
-		return
-	}
-
-	dtos.JsonResponse(c, http.StatusOK, account, "")
-}
-
-// @Summary Get account by address
-// @Description Retrieves an account by address. Useful for login.
-// @Tags accounts
-// @Accept json
-// @Produce json
-// @Param accountAddress path string true "account address"
-// @Success 200 {object} entities.Account
-// @Failure 400 {object} dtos.ApiResponse
-// @Failure 404 {object} dtos.ApiResponse
-// @Router /accounts/find/{accountAddress} [get]
-func (handler *accountsHandler) getByAddress(c *gin.Context) {
-	accountAddress := c.Param("accountAddress")
-
-	account, err := storage.GetAccountByAddress(accountAddress)
-	if err != nil {
-		dtos.JsonResponse(c, http.StatusNotFound, nil, "could not get price")
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
@@ -108,16 +83,16 @@ func (handler *accountsHandler) getByAddress(c *gin.Context) {
 // @Tags accounts
 // @Accept json
 // @Produce json
-// @Param accountId path string true "account id"
+// @Param walletAddress path string true "wallet address"
 // @Param setAccountRequest body services.SetAccountRequest true "account info"
 // @Success 200 {object} entities.Account
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 401 {object} dtos.ApiResponse
 // @Failure 500 {object} dtos.ApiResponse
-// @Router /accounts/{accountId} [post]
+// @Router /accounts/{walletAddress} [post]
 func (handler *accountsHandler) set(c *gin.Context) {
 	var request services.SetAccountRequest
-	accountIdString := c.Param("accountId")
+	walletAddress := c.Param("walletAddress")
 
 	err := c.Bind(&request)
 	if err != nil {
@@ -125,13 +100,13 @@ func (handler *accountsHandler) set(c *gin.Context) {
 		return
 	}
 
-	accountId, err := strconv.ParseUint(accountIdString, 10, 16)
+	cacheInfo, err := services.GetAccountCacheInfo(walletAddress)
 	if err != nil {
-		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
-	account, err := storage.GetAccountById(accountId)
+	account, err := storage.GetAccountById(cacheInfo.AccountId)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
@@ -198,21 +173,21 @@ func (handler *accountsHandler) create(c *gin.Context) {
 // @Tags accounts
 // @Accept json
 // @Produce json
-// @Param accountId path uint64 true "account id"
+// @Param walletAddress path uint64 true "wallet address"
 // @Success 200 {object} string
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 404 {object} dtos.ApiResponse
-// @Router /accounts/{accountId}/profile [get]
+// @Router /accounts/{walletAddress}/profile [get]
 func (handler *accountsHandler) getAccountProfile(c *gin.Context) {
-	accountIdString := c.Param("accountId")
+	walletAddress := c.Param("walletAddress")
 
-	accountId, err := strconv.ParseUint(accountIdString, 10, 16)
+	cacheInfo, err := services.GetAccountCacheInfo(walletAddress)
 	if err != nil {
-		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
-	image, err := storage.GetAccountProfileImageByAccountId(accountId)
+	image, err := storage.GetAccountProfileImageByAccountId(cacheInfo.AccountId)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
@@ -226,16 +201,16 @@ func (handler *accountsHandler) getAccountProfile(c *gin.Context) {
 // @Tags accounts
 // @Accept json
 // @Produce json
-// @Param accountId path uint64 true "account id"
+// @Param walletAddress path uint64 true "wallet address"
 // @Param image body string true "base64 encoded image"
 // @Success 200 {object} string
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 401 {object} dtos.ApiResponse
 // @Failure 500 {object} dtos.ApiResponse
-// @Router /accounts/{accountId}/profile [post]
+// @Router /accounts/{walletAddress}/profile [post]
 func (handler *accountsHandler) setAccountProfile(c *gin.Context) {
 	var imageBase64 string
-	accountIdString := c.Param("accountId")
+	walletAddress := c.Param("walletAddress")
 
 	err := c.Bind(&imageBase64)
 	if err != nil {
@@ -243,24 +218,19 @@ func (handler *accountsHandler) setAccountProfile(c *gin.Context) {
 		return
 	}
 
-	accountId, err := strconv.ParseUint(accountIdString, 10, 16)
-	if err != nil {
-		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
-		return
-	}
-
 	jwtAddress := c.GetString(middleware.AddressKey)
-	account, err := storage.GetAccountById(accountId)
-	if err != nil {
-		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
-		return
-	}
-	if jwtAddress != account.Address {
+	if jwtAddress != walletAddress {
 		dtos.JsonResponse(c, http.StatusUnauthorized, nil, "")
 		return
 	}
 
-	err = services.SetAccountProfileImage(accountId, &imageBase64)
+	cacheInfo, err := services.GetAccountCacheInfo(walletAddress)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	err = services.SetAccountProfileImage(cacheInfo.AccountId, &imageBase64)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
@@ -274,21 +244,21 @@ func (handler *accountsHandler) setAccountProfile(c *gin.Context) {
 // @Tags accounts
 // @Accept json
 // @Produce json
-// @Param accountId path uint64 true "account id"
+// @Param walletAddress path uint64 true "wallet address"
 // @Success 200 {object} string
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 404 {object} dtos.ApiResponse
-// @Router /accounts/{accountId}/cover [get]
+// @Router /accounts/{walletAddress}/cover [get]
 func (handler *accountsHandler) getAccountCover(c *gin.Context) {
-	accountIdString := c.Param("accountId")
+	walletAddress := c.Param("walletAddress")
 
-	accountId, err := strconv.ParseUint(accountIdString, 10, 16)
+	cacheInfo, err := services.GetAccountCacheInfo(walletAddress)
 	if err != nil {
-		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
-	image, err := storage.GetAccountCoverImageByAccountId(accountId)
+	image, err := storage.GetAccountCoverImageByAccountId(cacheInfo.AccountId)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
@@ -302,16 +272,16 @@ func (handler *accountsHandler) getAccountCover(c *gin.Context) {
 // @Tags accounts
 // @Accept json
 // @Produce json
-// @Param accountId path uint64 true "account id"
+// @Param walletAddress path uint64 true "wallet address"
 // @Param image body string true "base64 encoded image"
 // @Success 200 {object} string
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 401 {object} dtos.ApiResponse
 // @Failure 500 {object} dtos.ApiResponse
-// @Router /accounts/{accountId}/cover [post]
+// @Router /accounts/{walletAddress}/cover [post]
 func (handler *accountsHandler) setAccountCover(c *gin.Context) {
 	var imageBase64 string
-	accountIdString := c.Param("accountId")
+	walletAddress := c.Param("walletAddress")
 
 	err := c.Bind(&imageBase64)
 	if err != nil {
@@ -319,24 +289,19 @@ func (handler *accountsHandler) setAccountCover(c *gin.Context) {
 		return
 	}
 
-	accountId, err := strconv.ParseUint(accountIdString, 10, 16)
-	if err != nil {
-		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
-		return
-	}
-
 	jwtAddress := c.GetString(middleware.AddressKey)
-	account, err := storage.GetAccountById(accountId)
-	if err != nil {
-		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
-		return
-	}
-	if jwtAddress != account.Address {
+	if jwtAddress != walletAddress {
 		dtos.JsonResponse(c, http.StatusUnauthorized, nil, "")
 		return
 	}
 
-	err = services.SetAccountCoverImage(accountId, &imageBase64)
+	cacheInfo, err := services.GetAccountCacheInfo(walletAddress)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	err = services.SetAccountCoverImage(cacheInfo.AccountId, &imageBase64)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
@@ -350,21 +315,21 @@ func (handler *accountsHandler) setAccountCover(c *gin.Context) {
 // @Tags accounts
 // @Accept json
 // @Produce json
-// @Param accountId path uint64 true "account id"
+// @Param walletAddress path uint64 true "wallet address"
 // @Param offset path int true "offset"
 // @Param limit path int true "limit"
 // @Success 200 {object} []entities.Token
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 404 {object} dtos.ApiResponse
-// @Router /accounts/{accountId}/tokens/{offset}/{limit} [get]
+// @Router /accounts/{walletAddress}/tokens/{offset}/{limit} [get]
 func (handler *accountsHandler) getAccountTokens(c *gin.Context) {
-	accountIdString := c.Param("accountId")
 	offsetStr := c.Param("offset")
 	limitStr := c.Param("limit")
+	walletAddress := c.Param("walletAddress")
 
-	accountId, err := strconv.ParseUint(accountIdString, 10, 16)
+	cacheInfo, err := services.GetAccountCacheInfo(walletAddress)
 	if err != nil {
-		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
@@ -380,7 +345,7 @@ func (handler *accountsHandler) getAccountTokens(c *gin.Context) {
 		return
 	}
 
-	tokens, err := storage.GetTokensByOwnerIdWithOffsetLimit(accountId, offset, limit)
+	tokens, err := storage.GetTokensByOwnerIdWithOffsetLimit(cacheInfo.AccountId, offset, limit)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
