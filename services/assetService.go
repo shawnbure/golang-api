@@ -12,9 +12,10 @@ import (
 var log = logger.GetOrCreate("services")
 
 const (
-	minPriceUnit     = 1000
-	minPercentUnit   = 1000
-	minPriceDecimals = 15
+	minPriceUnit            = 1000
+	minPercentUnit          = 1000
+	minPercentRoyaltiesUnit = 100
+	minPriceDecimals        = 15
 )
 
 var baseExp = big.NewInt(10)
@@ -200,7 +201,7 @@ func GetPriceDenominated(price float64) *big.Int {
 }
 
 func GetRoyaltiesPercentNominal(percent uint64) float64 {
-	return float64(percent) / minPercentUnit
+	return float64(percent) / minPercentRoyaltiesUnit
 }
 
 func addNewTransaction(tx *data.Transaction) {
