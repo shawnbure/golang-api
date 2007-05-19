@@ -30,6 +30,8 @@ func NewWebServer(generalConfig *config.GeneralConfig) (*webServer, error) {
 	}
 
 	handlers.NewAssetsHandler(groupHandler)
+	handlers.NewCollectionsHandler(groupHandler)
+	handlers.NewTransactionsHandler(groupHandler)
 
 	groupHandler.RegisterEndpoints(router)
 

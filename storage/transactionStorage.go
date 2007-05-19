@@ -89,6 +89,22 @@ func GetTransactionsByBuyerOrSellerId(id uint64) ([]data.Transaction, error) {
 	return transactions, nil
 }
 
+func GetTransactionsByBuyerOrSellerIdWithOffsetLimit(id uint64, offset int, limit int) ([]data.Transaction, error) {
+	var transactions []data.Transaction
+
+	database, err := GetDBOrError()
+	if err != nil {
+		return nil, err
+	}
+
+	txRead := database.Offset(offset).Limit(limit).Find(&transactions, "seller_id = ? OR buyer_id = ?", id, id)
+	if txRead.Error != nil {
+		return nil, txRead.Error
+	}
+
+	return transactions, nil
+}
+
 func GetTransactionsByAssetId(id uint64) ([]data.Transaction, error) {
 	var transactions []data.Transaction
 
@@ -98,6 +114,22 @@ func GetTransactionsByAssetId(id uint64) ([]data.Transaction, error) {
 	}
 
 	txRead := database.Find(&transactions, "asset_id = ?", id)
+	if txRead.Error != nil {
+		return nil, txRead.Error
+	}
+
+	return transactions, nil
+}
+
+func GetTransactionsByAssetIdWithOffsetLimit(id uint64, offset int, limit int) ([]data.Transaction, error) {
+	var transactions []data.Transaction
+
+	database, err := GetDBOrError()
+	if err != nil {
+		return nil, err
+	}
+
+	txRead := database.Offset(offset).Limit(limit).Find(&transactions, "asset_id = ?", id)
 	if txRead.Error != nil {
 		return nil, txRead.Error
 	}
@@ -124,3 +156,18 @@ func GetTransactionByHash(hash string) (*data.Transaction, error) {
 	return &transaction, nil
 }
 
+func GetTransactionsWithOffsetLimit(offset int, limit int) ([]data.Transaction, error) {
+	var transactions []data.Transaction
+
+	database, err := GetDBOrError()
+	if err != nil {
+		return nil, err
+	}
+
+	txRead := database.Offset(offset).Limit(limit).Find(&transactions)
+	if txRead.Error != nil {
+		return nil, txRead.Error
+	}
+
+	return transactions, nil
+}

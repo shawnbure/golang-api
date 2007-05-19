@@ -6,7 +6,7 @@ type Asset struct {
 	Nonce   uint64
 	Price   string
 	Link    string
-	Listed	bool
+	Listed  bool
 
 	OwnerId      uint64
 	CollectionID uint64
