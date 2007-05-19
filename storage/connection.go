@@ -44,10 +44,10 @@ func Connect(cfg config.DatabaseConfig) {
 			panic(err)
 		}
 
-		err = createDefaultEntitiesIfNotExist()
-		if err != nil {
-			panic(err)
-		}
+		//err = createDefaultEntitiesIfNotExist()
+		//if err != nil {
+		//	panic(err)
+		//}
 	})
 }
 

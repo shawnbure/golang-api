@@ -75,6 +75,10 @@ func UpdateAccountCoverWhereId(accountId uint64, link string) error {
 func GetAccountById(id uint64) (*entities.Account, error) {
 	var account entities.Account
 
+	if id == 0 {
+		return &account, nil
+	}
+
 	database, err := GetDBOrError()
 	if err != nil {
 		return nil, err

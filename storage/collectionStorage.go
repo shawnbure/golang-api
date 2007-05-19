@@ -76,6 +76,10 @@ func UpdateCollectionCoverWhereId(collectionId uint64, link string) error {
 func GetCollectionById(id uint64) (*entities.Collection, error) {
 	var collection entities.Collection
 
+	if id == 0 {
+		return &collection, nil
+	}
+
 	database, err := GetDBOrError()
 	if err != nil {
 		return nil, err
