@@ -20,7 +20,7 @@ const (
 	makeOfferFormatEndpoint                = "/make-offer/:userAddress/:tokenId/:nonce/:amount/:expire"
 	acceptOfferFormatEndpoint              = "/accept-offer/:userAddress/:tokenId/:nonce/:offerorAddress/:amount"
 	cancelOfferFormatEndpoint              = "/cancel-offer/:userAddress/:tokenId/:nonce/:amount"
-	startAuctionFormatEndpoint             = "/start-auction/:userAddress/:tokenId/:nonce/:price/:startTime/:deadline"
+	startAuctionFormatEndpoint             = "/start-auction/:userAddress/:tokenId/:nonce/:minBid/:startTime/:deadline"
 	placeBidFormatEndpoint                 = "/place-bid/:userAddress/:tokenId/:nonce/:payment/:bidAmount"
 	endAuctionFormatEndpoint               = "/end-auction/:userAddress/:tokenId/:nonce"
 	depositFormatEndpoint                  = "/deposit/:userAddress/:amount"
