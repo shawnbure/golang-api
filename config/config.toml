@@ -26,3 +26,8 @@
     MaxOpenConns = 50
     MaxIdleConns = 10
     ShouldMigrate = true
+
+[Cache]
+    Urls = [
+        ":6379"
+    ]

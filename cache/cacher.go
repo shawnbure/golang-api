@@ -2,6 +2,8 @@ package cache
 
 import (
 	"context"
+	"fmt"
+	"github.com/erdsea/erdsea-api/config"
 	"time"
 
 	"github.com/go-redis/cache/v8"
@@ -14,9 +16,15 @@ type BaseCacher struct {
 	ctx context.Context
 }
 
-func NewBaseCacher() *BaseCacher {
+func NewBaseCacher(cfg config.CacheConfig) *BaseCacher {
+	addrs := map[string]string{}
+	for i, addr := range cfg.Addrs {
+		k := fmt.Sprintf("cache-%d", i)
+		addrs[k] = addr
+	}
+
 	ring := redis.NewRing(&redis.RingOptions{
-		Addrs: map[string]string{},
+		Addrs: addrs,
 	})
 
 	cacher := cache.New(&cache.Options{
@@ -39,8 +47,6 @@ func (c *BaseCacher) Set(k string, v interface{}, ttl time.Duration) error {
 	})
 }
 
-func (c *BaseCacher) Get(k string, v interface{}) (interface{}, error) {
-	err := c.cache.Get(c.ctx, k, &v)
-
-	return v, err
+func (c *BaseCacher) Get(k string, v interface{}) error {
+	return c.cache.Get(c.ctx, k, v)
 }

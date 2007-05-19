@@ -10,6 +10,7 @@ type GeneralConfig struct {
 	ConnectorApi ConnectorApiConfig
 	Blockchain   BlockchainConfig
 	Database     DatabaseConfig
+	Cache        CacheConfig
 }
 
 type ConnectorApiConfig struct {
@@ -37,6 +38,10 @@ type DatabaseConfig struct {
 	MaxOpenConns  int
 	MaxIdleConns  int
 	ShouldMigrate bool
+}
+
+type CacheConfig struct {
+	Addrs []string
 }
 
 func (d DatabaseConfig) Url() string {
