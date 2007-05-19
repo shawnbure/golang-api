@@ -129,12 +129,12 @@ func (handler *transactionsHandler) getByAsset(c *gin.Context) {
 	data.JsonResponse(c, http.StatusOK, transactions, "")
 }
 
-// @Summary Gets transaction for an address.
-// @Description Retrieves transactions for an address. Unordered.
+// @Summary Gets transaction for a user address.
+// @Description Retrieves transactions for a user address. Unordered.
 // @Tags transactions
 // @Accept json
 // @Produce json
-// @Param address path int true "address"
+// @Param userAddress path int true "user address"
 // @Param offset path int true "offset"
 // @Param limit path int true "limit"
 // @Success 200 {object} []data.Transaction
@@ -142,7 +142,7 @@ func (handler *transactionsHandler) getByAsset(c *gin.Context) {
 // @Failure 404 {object} data.ApiResponse
 // @Router /transactions/address/{address}/{offset}/{limit} [get]
 func (handler *transactionsHandler) getByAddress(c *gin.Context) {
-	address := c.Param("address")
+	userAddress := c.Param("userAddress")
 	offsetStr := c.Param("offset")
 	limitStr := c.Param("limit")
 
@@ -158,7 +158,7 @@ func (handler *transactionsHandler) getByAddress(c *gin.Context) {
 		return
 	}
 
-	account, err := storage.GetAccountByAddress(address)
+	account, err := storage.GetAccountByAddress(userAddress)
 	if err != nil {
 		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return

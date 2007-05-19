@@ -280,6 +280,47 @@ paths:
       summary: Set account information
       tags:
       - accounts
+  /accounts/{userAddress}/assets/{offset}/{limit}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a list of assets. Unsorted.
+      parameters:
+      - description: user address
+        in: path
+        name: userAddress
+        required: true
+        type: string
+      - description: offset
+        in: path
+        name: offset
+        required: true
+        type: integer
+      - description: limit
+        in: path
+        name: limit
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/data.Asset'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/data.ApiResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/data.ApiResponse'
+      summary: Gets assets for a user address.
+      tags:
+      - accounts
   /accounts/{userAddress}/cover:
     get:
       consumes:
@@ -934,11 +975,11 @@ paths:
     get:
       consumes:
       - application/json
-      description: Retrieves transactions for an address. Unordered.
+      description: Retrieves transactions for a user address. Unordered.
       parameters:
-      - description: address
+      - description: user address
         in: path
-        name: address
+        name: userAddress
         required: true
         type: integer
       - description: offset
@@ -968,7 +1009,7 @@ paths:
           description: Not Found
           schema:
             $ref: '#/definitions/data.ApiResponse'
-      summary: Gets transaction for an address.
+      summary: Gets transaction for a user address.
       tags:
       - transactions
   /transactions/asset/{tokenId}/{nonce}/{offset}/{limit}:
