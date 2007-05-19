@@ -15,26 +15,28 @@ type EndpointHandler struct {
 }
 
 type groupHandler struct {
-	endpointHandlersMap map[string]EndpointGroupHandler
+	endpointHandlersMap map[string][]EndpointGroupHandler
 }
 
 func NewGroupHandler() *groupHandler {
 	return &groupHandler{
-		endpointHandlersMap: make(map[string]EndpointGroupHandler),
+		endpointHandlersMap: make(map[string][]EndpointGroupHandler),
 	}
 }
 
 func (g *groupHandler) RegisterEndpoints(r *gin.Engine) {
-	for groupRoot, handlersGroup := range g.endpointHandlersMap {
-		routerGroup := r.Group(groupRoot).Use(handlersGroup.Middlewares...)
-		{
-			for _, h := range handlersGroup.EndpointHandlers {
-				routerGroup.Handle(h.Method, h.Path, h.HandlerFunc)
+	for groupRoot, handlersGroups := range g.endpointHandlersMap {
+		for _, handlersGroup := range handlersGroups {
+			routerGroup := r.Group(groupRoot).Use(handlersGroup.Middlewares...)
+			{
+				for _, h := range handlersGroup.EndpointHandlers {
+					routerGroup.Handle(h.Method, h.Path, h.HandlerFunc)
+				}
 			}
 		}
 	}
 }
 
 func (g *groupHandler) AddEndpointGroupHandler(endpointHandler EndpointGroupHandler) {
-	g.endpointHandlersMap[endpointHandler.Root] = endpointHandler
+	g.endpointHandlersMap[endpointHandler.Root] = append(g.endpointHandlersMap[endpointHandler.Root], endpointHandler)
 }

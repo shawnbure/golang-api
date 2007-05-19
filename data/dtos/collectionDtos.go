@@ -1,6 +1,10 @@
 package dtos
 
-import "github.com/erdsea/erdsea-api/data/entities"
+import (
+	"gorm.io/datatypes"
+
+	"github.com/erdsea/erdsea-api/data/entities"
+)
 
 type CollectionStatistics struct {
 	ItemsTotal   uint64          `json:"itemsTotal"`
@@ -21,10 +25,22 @@ type AttributeStat struct {
 	Total     uint64 `json:"total"`
 }
 
+type MetadataLinkResponse struct {
+	Name       string      `json:"name"`
+	Image      string      `json:"image"`
+	Attributes []Attribute `json:"attributes"`
+}
+
 type ExtendedCollectionDto struct {
 	Collection entities.Collection  `json:"collection"`
 	Statistics CollectionStatistics `json:"statistics"`
 
 	CreatorName          string `json:"creatorName"`
 	CreatorWalletAddress string `json:"creatorWalletAddress"`
+}
+
+type CollectionCacheInfo struct {
+	CollectionId    uint64         `json:"collectionId"`
+	CollectionName  string         `json:"collectionName"`
+	CollectionFlags datatypes.JSON `json:"collectionFlags"`
 }

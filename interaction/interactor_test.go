@@ -19,7 +19,7 @@ func Test_SimpleQuery(t *testing.T) {
 	bi := GetBlockchainInteractor()
 	require.NotNil(t, bi)
 
-	resp, err := bi.DoSimpleVmQuery("erd1qqqqqqqqqqqqqpgq3uvfynvpvcs8aldhuyrseuyepmp0cj7at9usgefv56", "getLeftForSale")
+	resp, err := bi.DoVmQuery("erd1qqqqqqqqqqqqqpgq3uvfynvpvcs8aldhuyrseuyepmp0cj7at9usgefv56", "getLeftForSale", []string{})
 	require.Nil(t, err)
 	require.True(t, len(resp) > 0)
 

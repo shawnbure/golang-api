@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -16,6 +17,8 @@ const (
 	transactionsByAccountEndpoint    = "/account/:accountId/:offset/:limit"
 	transactionsByCollectionEndpoint = "/collection/:collectionId/:offset/:limit"
 )
+
+const MaxQueryGetLimit = 50
 
 type transactionsHandler struct {
 }
@@ -44,8 +47,8 @@ func NewTransactionsHandler(groupHandler *groupHandler) {
 // @Tags transactions
 // @Accept json
 // @Produce json
-// @Param offset path int true "offset"
-// @Param limit path int true "limit"
+// @Param offset path uint true "offset"
+// @Param limit path uint true "limit"
 // @Success 200 {object} []entities.Transaction
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 404 {object} dtos.ApiResponse
@@ -54,19 +57,25 @@ func (handler *transactionsHandler) getList(c *gin.Context) {
 	offsetStr := c.Param("offset")
 	limitStr := c.Param("limit")
 
-	offset, err := strconv.Atoi(offsetStr)
+	offset, err := strconv.ParseUint(offsetStr, 10, 0)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
-	limit, err := strconv.Atoi(limitStr)
+	limit, err := strconv.ParseUint(limitStr, 10, 0)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
-	transactions, err := storage.GetTransactionsWithOffsetLimit(offset, limit)
+	err = ValidateLimit(limit)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	transactions, err := storage.GetTransactionsWithOffsetLimit(int(offset), int(limit))
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
@@ -81,8 +90,8 @@ func (handler *transactionsHandler) getList(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param tokenId path string true "token id"
-// @Param offset path int true "offset"
-// @Param limit path int true "limit"
+// @Param offset path uint true "offset"
+// @Param limit path uint true "limit"
 // @Success 200 {object} []entities.Transaction
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 404 {object} dtos.ApiResponse
@@ -98,19 +107,25 @@ func (handler *transactionsHandler) getByToken(c *gin.Context) {
 		return
 	}
 
-	offset, err := strconv.Atoi(offsetStr)
+	offset, err := strconv.ParseUint(offsetStr, 10, 0)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
-	limit, err := strconv.Atoi(limitStr)
+	limit, err := strconv.ParseUint(limitStr, 10, 0)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
-	transactions, err := storage.GetTransactionsByTokenIdWithOffsetLimit(tokenId, offset, limit)
+	err = ValidateLimit(limit)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	transactions, err := storage.GetTransactionsByTokenIdWithOffsetLimit(tokenId, int(offset), int(limit))
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
@@ -125,8 +140,8 @@ func (handler *transactionsHandler) getByToken(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param accountId path uint64 true "account id"
-// @Param offset path int true "offset"
-// @Param limit path int true "limit"
+// @Param offset path uint true "offset"
+// @Param limit path uint true "limit"
 // @Success 200 {object} []entities.Transaction
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 404 {object} dtos.ApiResponse
@@ -142,19 +157,25 @@ func (handler *transactionsHandler) getByAccount(c *gin.Context) {
 		return
 	}
 
-	offset, err := strconv.Atoi(offsetStr)
+	offset, err := strconv.ParseUint(offsetStr, 10, 0)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
-	limit, err := strconv.Atoi(limitStr)
+	limit, err := strconv.ParseUint(limitStr, 10, 0)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
-	transactions, err := storage.GetTransactionsByBuyerOrSellerIdWithOffsetLimit(accountId, offset, limit)
+	err = ValidateLimit(limit)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	transactions, err := storage.GetTransactionsByBuyerOrSellerIdWithOffsetLimit(accountId, int(offset), int(limit))
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
@@ -169,8 +190,8 @@ func (handler *transactionsHandler) getByAccount(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param collectionId path uint64 true "collection id"
-// @Param offset path int true "offset"
-// @Param limit path int true "limit"
+// @Param offset path uint true "offset"
+// @Param limit path uint true "limit"
 // @Success 200 {object} []entities.Transaction
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 404 {object} dtos.ApiResponse
@@ -186,23 +207,37 @@ func (handler *transactionsHandler) getByCollection(c *gin.Context) {
 		return
 	}
 
-	offset, err := strconv.Atoi(offsetStr)
+	offset, err := strconv.ParseUint(offsetStr, 10, 0)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
-	limit, err := strconv.Atoi(limitStr)
+	limit, err := strconv.ParseUint(limitStr, 10, 0)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
-	transactions, err := storage.GetTransactionsByCollectionIdWithOffsetLimit(collectionId, offset, limit)
+	err = ValidateLimit(limit)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	transactions, err := storage.GetTransactionsByCollectionIdWithOffsetLimit(collectionId, int(offset), int(limit))
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
 	dtos.JsonResponse(c, http.StatusOK, transactions, "")
+}
+
+func ValidateLimit(limit uint64) error {
+	if limit > MaxQueryGetLimit {
+		return errors.New("limit too big")
+	}
+
+	return nil
 }

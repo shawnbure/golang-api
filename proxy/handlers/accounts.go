@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"bytes"
 	"net/http"
 	"strconv"
 
@@ -14,7 +15,6 @@ import (
 
 const (
 	baseAccountsEndpoint       = "/accounts"
-	createAccountEndpoint      = "/create"
 	accountByIdEndpoint        = "/:walletAddress"
 	accountTokensEndpoint      = "/:walletAddress/tokens/:offset/:limit"
 	accountCollectionsEndpoint = "/:walletAddress/collections/:offset/:limit"
@@ -32,7 +32,6 @@ func NewAccountsHandler(groupHandler *groupHandler, authCfg config.AuthConfig) {
 		{Method: http.MethodPost, Path: accountByIdEndpoint, HandlerFunc: handler.set},
 		{Method: http.MethodPost, Path: accountProfileEndpoint, HandlerFunc: handler.setAccountProfile},
 		{Method: http.MethodPost, Path: accountCoverEndpoint, HandlerFunc: handler.setAccountCover},
-		{Method: http.MethodPost, Path: createAccountEndpoint, HandlerFunc: handler.create},
 	}
 	endpointGroupHandler := EndpointGroupHandler{
 		Root:             baseAccountsEndpoint,
@@ -98,74 +97,28 @@ func (handler *accountsHandler) set(c *gin.Context) {
 	var request services.SetAccountRequest
 	walletAddress := c.Param("walletAddress")
 
-	err := c.Bind(&request)
-	if err != nil {
-		dtos.JsonResponse(c, http.StatusBadRequest, nil, "cannot bind request")
-		return
-	}
-
-	cacheInfo, err := services.GetOrAddAccountCacheInfo(walletAddress)
-	if err != nil {
-		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
-		return
-	}
-
-	account, err := storage.GetAccountById(cacheInfo.AccountId)
-	if err != nil {
-		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
-		return
-	}
-
-	jwtAddress := c.GetString(middleware.AddressKey)
-	if account.Address != jwtAddress {
-		dtos.JsonResponse(c, http.StatusUnauthorized, nil, "unauthorized")
-		return
-	}
-
-	err = services.UpdateAccount(account, &request)
-	if err != nil {
-		dtos.JsonResponse(c, http.StatusInternalServerError, nil, "could not get price")
-		return
-	}
-
-	dtos.JsonResponse(c, http.StatusOK, account, "")
-}
-
-// @Summary Creates an account
-// @Description Creates an account
-// @Tags accounts
-// @Accept json
-// @Produce json
-// @Param createAccountRequest body services.CreateAccountRequest true "account info"
-// @Success 200 {object} entities.Account
-// @Failure 400 {object} dtos.ApiResponse
-// @Failure 401 {object} dtos.ApiResponse
-// @Failure 500 {object} dtos.ApiResponse
-// @Router /accounts/create [post]
-func (handler *accountsHandler) create(c *gin.Context) {
-	var request services.CreateAccountRequest
-
-	err := c.Bind(&request)
+	err := c.BindJSON(&request)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, "cannot bind request")
 		return
 	}
 
 	jwtAddress := c.GetString(middleware.AddressKey)
-	if request.Address != jwtAddress {
+	if walletAddress != jwtAddress {
 		dtos.JsonResponse(c, http.StatusUnauthorized, nil, "unauthorized")
 		return
 	}
 
-	_, err = storage.GetAccountByAddress(request.Address)
-	if err == nil {
-		dtos.JsonResponse(c, http.StatusBadRequest, nil, "account already exists for address")
-		return
+	var innerErr error
+	account, err := storage.GetAccountByAddress(walletAddress)
+	if err != nil {
+		account, innerErr = services.CreateAccount(walletAddress, &request)
+	} else {
+		innerErr = services.UpdateAccount(account, &request)
 	}
 
-	account, err := services.CreateAccount(&request)
-	if err != nil {
-		dtos.JsonResponse(c, http.StatusInternalServerError, nil, "could not get price")
+	if innerErr != nil {
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, innerErr.Error())
 		return
 	}
 
@@ -185,15 +138,16 @@ func (handler *accountsHandler) create(c *gin.Context) {
 // @Failure 500 {object} dtos.ApiResponse
 // @Router /accounts/{walletAddress}/profile [post]
 func (handler *accountsHandler) setAccountProfile(c *gin.Context) {
-	var imageBase64 string
 	walletAddress := c.Param("walletAddress")
 
-	err := c.Bind(&imageBase64)
+	buf := new(bytes.Buffer)
+	_, err := buf.ReadFrom(c.Request.Body)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
+	imageBase64 := buf.String()
 	jwtAddress := c.GetString(middleware.AddressKey)
 	if jwtAddress != walletAddress {
 		dtos.JsonResponse(c, http.StatusUnauthorized, nil, "")
@@ -206,15 +160,14 @@ func (handler *accountsHandler) setAccountProfile(c *gin.Context) {
 		return
 	}
 
-	err = services.SetAccountProfileImage(walletAddress, cacheInfo.AccountId, &imageBase64)
+	link, err := services.SetAccountProfileImage(walletAddress, cacheInfo.AccountId, &imageBase64)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
 	}
 
-	dtos.JsonResponse(c, http.StatusOK, "", "")
+	dtos.JsonResponse(c, http.StatusOK, link, "")
 }
-
 
 // @Summary Set account cover image
 // @Description Expects base64 std encoding of the image representation. Returns empty string. Max size of byte array is 1MB.
@@ -229,15 +182,16 @@ func (handler *accountsHandler) setAccountProfile(c *gin.Context) {
 // @Failure 500 {object} dtos.ApiResponse
 // @Router /accounts/{walletAddress}/cover [post]
 func (handler *accountsHandler) setAccountCover(c *gin.Context) {
-	var imageBase64 string
 	walletAddress := c.Param("walletAddress")
 
-	err := c.Bind(&imageBase64)
+	buf := new(bytes.Buffer)
+	_, err := buf.ReadFrom(c.Request.Body)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
+	imageBase64 := buf.String()
 	jwtAddress := c.GetString(middleware.AddressKey)
 	if jwtAddress != walletAddress {
 		dtos.JsonResponse(c, http.StatusUnauthorized, nil, "")
@@ -250,13 +204,13 @@ func (handler *accountsHandler) setAccountCover(c *gin.Context) {
 		return
 	}
 
-	err = services.SetAccountCoverImage(walletAddress, cacheInfo.AccountId, &imageBase64)
+	link, err := services.SetAccountCoverImage(walletAddress, cacheInfo.AccountId, &imageBase64)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
 	}
 
-	dtos.JsonResponse(c, http.StatusOK, "", "")
+	dtos.JsonResponse(c, http.StatusOK, link, "")
 }
 
 // @Summary Gets tokens for an account.
@@ -265,9 +219,9 @@ func (handler *accountsHandler) setAccountCover(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param walletAddress path string true "wallet address"
-// @Param offset path int true "offset"
-// @Param limit path int true "limit"
-// @Success 200 {object} []entities.Token
+// @Param offset path uint true "offset"
+// @Param limit path uint true "limit"
+// @Success 200 {object} []dtos.OwnedTokenDto
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 404 {object} dtos.ApiResponse
 // @Router /accounts/{walletAddress}/tokens/{offset}/{limit} [get]
@@ -282,25 +236,32 @@ func (handler *accountsHandler) getAccountTokens(c *gin.Context) {
 		return
 	}
 
-	offset, err := strconv.Atoi(offsetStr)
+	offset, err := strconv.ParseUint(offsetStr, 10, 0)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
-	limit, err := strconv.Atoi(limitStr)
+	limit, err := strconv.ParseUint(limitStr, 10, 0)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
-	tokens, err := storage.GetTokensByOwnerIdWithOffsetLimit(cacheInfo.AccountId, offset, limit)
+	err = ValidateLimit(limit)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	tokens, err := storage.GetTokensByOwnerIdWithOffsetLimit(cacheInfo.AccountId, int(offset), int(limit))
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
-	dtos.JsonResponse(c, http.StatusOK, tokens, "")
+	ownedTokens := services.ConstructOwnedTokensFromTokens(tokens)
+	dtos.JsonResponse(c, http.StatusOK, ownedTokens, "")
 }
 
 // @Summary Gets collections for an account.
@@ -309,8 +270,8 @@ func (handler *accountsHandler) getAccountTokens(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param walletAddress path string true "wallet address"
-// @Param offset path int true "offset"
-// @Param limit path int true "limit"
+// @Param offset path uint true "offset"
+// @Param limit path uint true "limit"
 // @Success 200 {object} []entities.Collection
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 404 {object} dtos.ApiResponse
@@ -326,19 +287,25 @@ func (handler *accountsHandler) getAccountCollections(c *gin.Context) {
 		return
 	}
 
-	offset, err := strconv.Atoi(offsetStr)
+	offset, err := strconv.ParseUint(offsetStr, 10, 0)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
-	limit, err := strconv.Atoi(limitStr)
+	limit, err := strconv.ParseUint(limitStr, 10, 0)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
-	collections, err := storage.GetCollectionsByOwnerIdWithOffsetLimit(cacheInfo.AccountId, offset, limit)
+	err = ValidateLimit(limit)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	collections, err := storage.GetCollectionsByOwnerIdWithOffsetLimit(cacheInfo.AccountId, int(offset), int(limit))
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
