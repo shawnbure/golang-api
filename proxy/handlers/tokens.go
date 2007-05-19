@@ -16,9 +16,14 @@ const (
 	availableTokensEndpoint          = "/available"
 	offersForTokenIdAndNonceEndpoint = "/:tokenId/:nonce/offers/:offset/:limit"
 	bidsForTokenIdAndNonceEndpoint   = "/:tokenId/:nonce/bids/:offset/:limit"
+	tokenMetadataRelayEndpoint       = "/token/metadata/relay"
 )
 
 type tokensHandler struct {
+}
+
+type metadataRelayRequest struct {
+	Url string `json:"url"`
 }
 
 func NewTokensHandler(groupHandler *groupHandler) {
@@ -29,6 +34,7 @@ func NewTokensHandler(groupHandler *groupHandler) {
 		{Method: http.MethodPost, Path: availableTokensEndpoint, HandlerFunc: handler.getAvailableTokens},
 		{Method: http.MethodGet, Path: offersForTokenIdAndNonceEndpoint, HandlerFunc: handler.getOffers},
 		{Method: http.MethodGet, Path: bidsForTokenIdAndNonceEndpoint, HandlerFunc: handler.getBids},
+		{Method: http.MethodPost, Path: tokenMetadataRelayEndpoint, HandlerFunc: handler.relayMetadataResponse},
 	}
 
 	endpointGroupHandler := EndpointGroupHandler{
@@ -38,6 +44,26 @@ func NewTokensHandler(groupHandler *groupHandler) {
 	}
 
 	groupHandler.AddEndpointGroupHandler(endpointGroupHandler)
+}
+
+// TODO: authorize the shit out of it
+func (handler *tokensHandler) relayMetadataResponse(c *gin.Context) {
+	var req metadataRelayRequest
+
+	err := c.Bind(&req)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	var metadataJson map[string]interface{}
+	err = services.HttpGet(req.Url, &metadataJson)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	dtos.JsonResponse(c, http.StatusOK, metadataJson, "")
 }
 
 // @Summary Get token by id and nonce
