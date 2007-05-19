@@ -131,12 +131,12 @@ func ListToken(args ListTokenArgs, blockchainProxy string, marketplaceAddress st
 			MetadataLink:     metadataLink,
 			CreatedAt:        args.Timestamp,
 			Attributes:       GetAttributesFromMetadata(metadataLink),
-			TokenName:        args.TokenName,
 			ImageLink:        args.FirstLink,
-			Hash:             args.Hash,
 		}
 	}
 
+	token.Hash = args.Hash
+	token.TokenName = args.TokenName
 	token.Status = entities.List
 	token.PriceString = args.Price
 	token.PriceNominal = priceNominal
