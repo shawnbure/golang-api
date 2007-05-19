@@ -10,6 +10,7 @@ type Collection struct {
 	TwitterLink   string
 	InstagramLink string
 	TelegramLink  string
+	CreatedAt     uint64
 
 	CreatorID uint64
 }

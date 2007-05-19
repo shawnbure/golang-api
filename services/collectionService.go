@@ -30,7 +30,7 @@ type CreateCollectionRequest struct {
 	TelegramLink  string `json:"telegramLink"`
 }
 
-type ElrondProxyRegisteredNFTsResponse struct {
+type ProxyRegisteredNFTsResponse struct {
 	Data struct {
 		Tokens []string `json:"tokens"`
 	} `json:"data"`
@@ -38,17 +38,17 @@ type ElrondProxyRegisteredNFTsResponse struct {
 	Code  string `json:"code"`
 }
 
-func CreateCollection(request *CreateCollectionRequest, elrondProxy string) error {
+func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) error {
 	err := checkValidInput(request)
 	if err != nil {
 		return err
 	}
 
-	tokenRegisteredByUser, err := getTokensRegisteredBy(request.UserAddress, elrondProxy)
+	tokensRegisteredByUser, err := getTokensRegisteredByUser(request.UserAddress, blockchainProxy)
 	if err != nil {
 		return err
 	}
-	if !contains(tokenRegisteredByUser, request.TokenId) {
+	if !contains(tokensRegisteredByUser, request.TokenId) {
 		return errors.New("token not owner by user")
 	}
 
@@ -78,6 +78,7 @@ func CreateCollection(request *CreateCollectionRequest, elrondProxy string) erro
 		InstagramLink: request.InstagramLink,
 		TelegramLink:  request.TelegramLink,
 		CreatorID:     account.ID,
+		CreatedAt:     uint64(time.Now().Unix()),
 	}
 
 	return storage.AddNewCollection(collection)
@@ -92,10 +93,10 @@ func contains(arr []string, str string) bool {
 	return false
 }
 
-func getTokensRegisteredBy(userAddress string, elrondProxy string) ([]string, error) {
-	var resp ElrondProxyRegisteredNFTsResponse
+func getTokensRegisteredByUser(userAddress string, blockchainProxy string) ([]string, error) {
+	var resp ProxyRegisteredNFTsResponse
 
-	url := fmt.Sprintf(RegisteredNFTsBaseFormat, elrondProxy, userAddress)
+	url := fmt.Sprintf(RegisteredNFTsBaseFormat, blockchainProxy, userAddress)
 	err := cache.GetCacher().Get(url, &resp)
 	if err == nil {
 		return resp.Data.Tokens, nil
