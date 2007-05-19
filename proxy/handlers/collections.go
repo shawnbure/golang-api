@@ -58,7 +58,7 @@ func NewCollectionsHandler(groupHandler *groupHandler, authCfg config.AuthConfig
 }
 
 // @Summary Gets collections.
-// @Description Retrieves a list of collections. Unsorted.
+// @Description Retrieves a list of collections. Sorted by priority.
 // @Tags collections
 // @Accept json
 // @Produce json
