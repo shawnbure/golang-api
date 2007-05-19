@@ -1,8 +1,9 @@
 package storage
 
 import (
-	"github.com/erdsea/erdsea-api/data/entities"
 	"gorm.io/gorm"
+
+	"github.com/erdsea/erdsea-api/data/entities"
 )
 
 func AddCollection(collection *entities.Collection) error {

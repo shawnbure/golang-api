@@ -1,8 +1,9 @@
 package process
 
 import (
-	"github.com/erdsea/erdsea-api/data/entities"
 	"testing"
+
+	"github.com/erdsea/erdsea-api/data/entities"
 )
 
 func TestEventProcessor_OnEvents(t *testing.T) {

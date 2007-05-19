@@ -1,9 +1,9 @@
 package storage
 
 import (
-	"github.com/erdsea/erdsea-api/data/entities"
 	"testing"
 
+	"github.com/erdsea/erdsea-api/data/entities"
 	"github.com/stretchr/testify/require"
 )
 

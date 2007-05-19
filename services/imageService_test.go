@@ -16,7 +16,7 @@ func Test_SetAccountCoverImageLarge(t *testing.T) {
 	require.Nil(t, err)
 
 	imgBase64 := base64.RawStdEncoding.EncodeToString(bytes)
-	err = SetAccountCoverImage("my_addr3", &imgBase64)
+	err = SetAccountCoverImage(1, &imgBase64)
 	require.Nil(t, err)
 }
 
@@ -28,6 +28,6 @@ func Test_SetAccountCoverImageTooLarge(t *testing.T) {
 	require.Nil(t, err)
 
 	imgBase64 := base64.RawStdEncoding.EncodeToString(bytes)
-	err = SetAccountCoverImage("my_addr2", &imgBase64)
+	err = SetAccountCoverImage(1, &imgBase64)
 	require.NotNil(t, err)
 }

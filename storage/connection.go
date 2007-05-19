@@ -3,13 +3,13 @@ package storage
 import (
 	"database/sql"
 	"errors"
-	"github.com/erdsea/erdsea-api/data/entities"
-	images2 "github.com/erdsea/erdsea-api/data/entities/images"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"sync"
 
 	"github.com/erdsea/erdsea-api/config"
+	"github.com/erdsea/erdsea-api/data/entities"
+	"github.com/erdsea/erdsea-api/data/entities/images"
 	_ "github.com/lib/pq"
 )
 
@@ -67,22 +67,22 @@ func TryMigrate() error {
 		return err
 	}
 
-	err = db.AutoMigrate(&images2.AccountCoverImage{})
+	err = db.AutoMigrate(&images.AccountCoverImage{})
 	if err != nil {
 		return err
 	}
 
-	err = db.AutoMigrate(&images2.AccountProfileImage{})
+	err = db.AutoMigrate(&images.AccountProfileImage{})
 	if err != nil {
 		return err
 	}
 
-	err = db.AutoMigrate(&images2.CollectionCoverImage{})
+	err = db.AutoMigrate(&images.CollectionCoverImage{})
 	if err != nil {
 		return err
 	}
 
-	err = db.AutoMigrate(&images2.CollectionProfileImage{})
+	err = db.AutoMigrate(&images.CollectionProfileImage{})
 	if err != nil {
 		return err
 	}

@@ -1,11 +1,11 @@
 package services
 
 import (
-	"github.com/erdsea/erdsea-api/data/entities"
 	"testing"
 
 	"github.com/erdsea/erdsea-api/cache"
 	"github.com/erdsea/erdsea-api/config"
+	"github.com/erdsea/erdsea-api/data/entities"
 	"github.com/erdsea/erdsea-api/storage"
 	"github.com/stretchr/testify/require"
 )
@@ -22,6 +22,7 @@ func Test_GetOrCreateAccount(t *testing.T) {
 	require.Equal(t, accountRead.Address, "address")
 }
 
+// TODO: deletable?
 func Test_AddOrUpdate(t *testing.T) {
 	connectToDb()
 

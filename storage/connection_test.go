@@ -1,10 +1,10 @@
 package storage
 
 import (
-	"github.com/erdsea/erdsea-api/data/entities"
 	"testing"
 
 	"github.com/erdsea/erdsea-api/config"
+	"github.com/erdsea/erdsea-api/data/entities"
 	_ "github.com/lib/pq"
 	"github.com/stretchr/testify/require"
 )

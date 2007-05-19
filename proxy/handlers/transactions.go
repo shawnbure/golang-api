@@ -1,11 +1,11 @@
 package handlers
 
 import (
-	"github.com/erdsea/erdsea-api/data/dtos"
 	"net/http"
 	"strconv"
 
 	"github.com/erdsea/erdsea-api/config"
+	"github.com/erdsea/erdsea-api/data/dtos"
 	"github.com/erdsea/erdsea-api/proxy/middleware"
 	"github.com/erdsea/erdsea-api/storage"
 	"github.com/gin-gonic/gin"

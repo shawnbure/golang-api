@@ -1,9 +1,10 @@
 package storage
 
 import (
-	"github.com/erdsea/erdsea-api/data/entities"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
+
+	"github.com/erdsea/erdsea-api/data/entities"
 )
 
 func AddAsset(asset *entities.Asset) error {

@@ -3,12 +3,12 @@ package services
 import (
 	"encoding/json"
 	"errors"
-	"github.com/erdsea/erdsea-api/data/entities"
 	"gorm.io/datatypes"
 	"math/big"
 	"strconv"
 
 	logger "github.com/ElrondNetwork/elrond-go-logger"
+	"github.com/erdsea/erdsea-api/data/entities"
 	"github.com/erdsea/erdsea-api/storage"
 )
 

@@ -1,10 +1,10 @@
 package handlers
 
 import (
-	"github.com/erdsea/erdsea-api/data/dtos"
 	"net/http"
 
 	"github.com/erdsea/erdsea-api/config"
+	"github.com/erdsea/erdsea-api/data/dtos"
 	"github.com/erdsea/erdsea-api/proxy/middleware"
 	"github.com/erdsea/erdsea-api/services"
 	"github.com/gin-gonic/gin"

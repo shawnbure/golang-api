@@ -1,7 +1,6 @@
 package services
 
 import (
-	"github.com/erdsea/erdsea-api/data/entities"
 	"gorm.io/datatypes"
 	"strconv"
 	"testing"
@@ -9,6 +8,7 @@ import (
 
 	"github.com/erdsea/erdsea-api/cache"
 	"github.com/erdsea/erdsea-api/config"
+	"github.com/erdsea/erdsea-api/data/entities"
 	"github.com/erdsea/erdsea-api/storage"
 	"github.com/stretchr/testify/require"
 )

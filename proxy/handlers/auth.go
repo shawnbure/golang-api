@@ -2,10 +2,10 @@ package handlers
 
 import (
 	"encoding/hex"
-	"github.com/erdsea/erdsea-api/data/dtos"
 	"net/http"
 
 	erdgoData "github.com/ElrondNetwork/elrond-sdk-erdgo/data"
+	"github.com/erdsea/erdsea-api/data/dtos"
 	"github.com/erdsea/erdsea-api/services"
 	"github.com/gin-gonic/gin"
 )
