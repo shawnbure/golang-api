@@ -1,13 +1,26 @@
 package services
 
 import (
+	"encoding/json"
 	"errors"
+	"gorm.io/datatypes"
 	"math/big"
+	"strconv"
 
 	logger "github.com/ElrondNetwork/elrond-go-logger"
 	"github.com/erdsea/erdsea-api/data"
 	"github.com/erdsea/erdsea-api/storage"
 )
+
+type AssetLinkResponse struct {
+	Image      string      `json:"image"`
+	Attributes []Attribute `json:"attributes"`
+}
+
+type Attribute struct {
+	Value     string `json:"value"`
+	TraitType string `json:"trait_type"`
+}
 
 var log = logger.GetOrCreate("services")
 
@@ -16,6 +29,8 @@ const (
 	minPercentUnit          = 1000
 	minPercentRoyaltiesUnit = 100
 	minPriceDecimals        = 15
+
+	maxAssetLinkResponseSize = 1024
 )
 
 var baseExp = big.NewInt(10)
@@ -54,11 +69,30 @@ func ListAsset(args ListAssetArgs) {
 	existingAsset, err := storage.GetAssetByTokenIdAndNonce(args.TokenId, args.Nonce)
 
 	var innerErr error
-	if err == nil {
-		asset.ID = existingAsset.ID
-		innerErr = storage.UpdateAsset(&asset)
-	} else {
+	if err != nil {
+		assetLinkWithNonce := GetAssetLinkWithNonce(&asset)
+		response, reqErr := HttpGetRaw(assetLinkWithNonce)
+		if reqErr != nil {
+			log.Debug("could not http get asset link response", "link", asset.Link)
+			response = ""
+		}
+		if len(response) > maxAssetLinkResponseSize {
+			log.Debug("response too long for asset link request", "link", asset.Link)
+			response = ""
+		}
+
+		//TODO: Can take other info from request as well. Do we want?
+		attributes, constructErr := ConstructAttributesJsonFromResponse(response)
+		if constructErr != nil {
+			log.Debug("could not construct attributes", "err", constructErr)
+		}
+
+		asset.Attributes = *attributes
 		innerErr = storage.AddAsset(&asset)
+	} else {
+		asset.ID = existingAsset.ID
+		asset.Attributes = existingAsset.Attributes
+		innerErr = storage.UpdateAsset(&asset)
 	}
 
 	if innerErr != nil {
@@ -172,6 +206,28 @@ func WithdrawAsset(args WithdrawAssetArgs) {
 	AddTransaction(&transaction)
 }
 
+func ConstructAttributesJsonFromResponse(response string) (*datatypes.JSON, error) {
+	var responseParsed AssetLinkResponse
+
+	err := json.Unmarshal([]byte(response), &responseParsed)
+	if err != nil {
+		return nil, err
+	}
+
+	attrsMap := make(map[string]string)
+	for _, element := range responseParsed.Attributes {
+		attrsMap[element.TraitType] = element.Value
+	}
+
+	attrsBytes, err := json.Marshal(attrsMap)
+	if err != nil {
+		return nil, err
+	}
+
+	attrsJson := datatypes.JSON(attrsBytes)
+	return &attrsJson, err
+}
+
 func GetPriceNominal(priceHex string) (float64, error) {
 	priceBigUint, success := big.NewInt(0).SetString(priceHex, 16)
 	if !success {
@@ -202,6 +258,10 @@ func GetPriceDenominated(price float64) *big.Int {
 
 func GetRoyaltiesPercentNominal(percent uint64) float64 {
 	return float64(percent) / minPercentRoyaltiesUnit
+}
+
+func GetAssetLinkWithNonce(asset *data.Asset) string {
+	return asset.Link + "/" + strconv.FormatUint(asset.Nonce, 10)
 }
 
 func AddTransaction(tx *data.Transaction) {

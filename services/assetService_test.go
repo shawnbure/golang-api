@@ -1,7 +1,10 @@
 package services
 
 import (
+	"encoding/json"
+	"gorm.io/datatypes"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/erdsea/erdsea-api/config"
@@ -199,6 +202,44 @@ func Test_GetPriceDenominated(T *testing.T) {
 
 	price = 0.0001
 	require.Equal(T, GetPriceDenominated(price).Text(10), "0")
+}
+
+func Test_GetAssetLinkResponse(t *testing.T) {
+	asset := data.Asset{
+		Nonce: 1,
+		Link:  "https://wow-prod-nftribe.s3.eu-west-2.amazonaws.com/t",
+	}
+
+	assetLinkWithNonce := GetAssetLinkWithNonce(&asset)
+	response, err := HttpGetRaw(assetLinkWithNonce)
+	require.Nil(t, err)
+
+	responseLen := len(response)
+	require.GreaterOrEqual(t, responseLen, 0)
+
+	attribute := "\"value\":\"Lightning Bolts\",\"trait_type\":\"Earrings\""
+	require.True(t, strings.Contains(response, attribute))
+
+	attrs, err := ConstructAttributesJsonFromResponse(response)
+	require.Nil(t, err)
+	connectToDb()
+
+	attrsMap := make(map[string]string)
+	err = json.Unmarshal(*attrs, &attrsMap)
+	require.Nil(t, err)
+	require.Equal(t, attrsMap["Earrings"], "Lightning Bolts")
+
+	asset.Attributes = *attrs
+	err = storage.AddAsset(&asset)
+	require.Nil(t, err)
+
+	db, err := storage.GetDBOrError()
+	require.Nil(t, err)
+
+	var assetRead data.Asset
+	txRead := db.First(&assetRead, datatypes.JSONQuery("attributes").Equals("Lightning Bolts", "Earrings"))
+	require.Nil(t, txRead.Error)
+	require.Equal(t, asset.Link, "https://wow-prod-nftribe.s3.eu-west-2.amazonaws.com/t")
 }
 
 func connectToDb() {

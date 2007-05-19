@@ -28,9 +28,9 @@ var doc = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/accounts/{userAddress}": {
+        "/accounts/find/{accountAddress}": {
             "get": {
-                "description": "Retrieves an account by an elrond user address (erd1...)",
+                "description": "Retrieves an account by address. Useful for login.",
                 "consumes": [
                     "application/json"
                 ],
@@ -40,12 +40,12 @@ var doc = `{
                 "tags": [
                     "accounts"
                 ],
-                "summary": "Get account by user address",
+                "summary": "Get account by address",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "user address",
-                        "name": "userAddress",
+                        "description": "account address",
+                        "name": "accountAddress",
                         "in": "path",
                         "required": true
                     }
@@ -55,6 +55,56 @@ var doc = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/data.Account"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/accounts/{accountId}": {
+            "get": {
+                "description": "Retrieves an account by id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "accounts"
+                ],
+                "summary": "Get account by account id",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "account id",
+                        "name": "accountId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/data.Account"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
                         }
                     },
                     "404": {
@@ -80,8 +130,8 @@ var doc = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "user address",
-                        "name": "userAddress",
+                        "description": "account id",
+                        "name": "accountId",
                         "in": "path",
                         "required": true
                     },
@@ -123,7 +173,7 @@ var doc = `{
                 }
             }
         },
-        "/accounts/{userAddress}/assets/{offset}/{limit}": {
+        "/accounts/{accountId}/assets/{offset}/{limit}": {
             "get": {
                 "description": "Retrieves a list of assets. Unsorted.",
                 "consumes": [
@@ -135,12 +185,12 @@ var doc = `{
                 "tags": [
                     "accounts"
                 ],
-                "summary": "Gets assets for a user address.",
+                "summary": "Gets assets for an account.",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "user address",
-                        "name": "userAddress",
+                        "type": "integer",
+                        "description": "account id",
+                        "name": "accountId",
                         "in": "path",
                         "required": true
                     },
@@ -184,7 +234,7 @@ var doc = `{
                 }
             }
         },
-        "/accounts/{userAddress}/cover": {
+        "/accounts/{accountId}/cover": {
             "get": {
                 "description": "Retrieves an account cover image. It will be sent as base64 encoding (sdt, raw) of its byte representation.",
                 "consumes": [
@@ -199,9 +249,9 @@ var doc = `{
                 "summary": "Get account cover image",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "user address",
-                        "name": "userAddress",
+                        "type": "integer",
+                        "description": "account id",
+                        "name": "accountId",
                         "in": "path",
                         "required": true
                     }
@@ -211,6 +261,12 @@ var doc = `{
                         "description": "OK",
                         "schema": {
                             "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
                         }
                     },
                     "404": {
@@ -235,9 +291,9 @@ var doc = `{
                 "summary": "Set account cover image",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "user address",
-                        "name": "userAddress",
+                        "type": "integer",
+                        "description": "account id",
+                        "name": "accountId",
                         "in": "path",
                         "required": true
                     },
@@ -279,7 +335,7 @@ var doc = `{
                 }
             }
         },
-        "/accounts/{userAddress}/profile": {
+        "/accounts/{accountId}/profile": {
             "get": {
                 "description": "Retrieves an account profile image. It will be sent as base64 encoding (sdt, raw) of its byte representation.",
                 "consumes": [
@@ -294,9 +350,9 @@ var doc = `{
                 "summary": "Get account profile image",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "user address",
-                        "name": "userAddress",
+                        "type": "integer",
+                        "description": "account id",
+                        "name": "accountId",
                         "in": "path",
                         "required": true
                     }
@@ -306,6 +362,12 @@ var doc = `{
                         "description": "OK",
                         "schema": {
                             "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
                         }
                     },
                     "404": {
@@ -330,9 +392,9 @@ var doc = `{
                 "summary": "Set account profile image",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "user address",
-                        "name": "userAddress",
+                        "type": "integer",
+                        "description": "account id",
+                        "name": "accountId",
                         "in": "path",
                         "required": true
                     },
@@ -351,6 +413,58 @@ var doc = `{
                         "description": "OK",
                         "schema": {
                             "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/accounts/{address}": {
+            "post": {
+                "description": "Creates an account",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "accounts"
+                ],
+                "summary": "Creates an account",
+                "parameters": [
+                    {
+                        "description": "account info",
+                        "name": "createAccountRequest",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/services.CreateAccountRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/data.Account"
                         }
                     },
                     "400": {
@@ -623,7 +737,7 @@ var doc = `{
                 }
             }
         },
-        "/collections/{collectionName}": {
+        "/collections/{collectionId}": {
             "get": {
                 "description": "Retrieves a collection by its name.",
                 "consumes": [
@@ -638,9 +752,9 @@ var doc = `{
                 "summary": "Gets collection by name.",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "collection name",
-                        "name": "collectionName",
+                        "type": "integer",
+                        "description": "collection id",
+                        "name": "collectionId",
                         "in": "path",
                         "required": true
                     }
@@ -650,6 +764,12 @@ var doc = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/data.Collection"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
                         }
                     },
                     "404": {
@@ -674,9 +794,9 @@ var doc = `{
                 "summary": "Set collection info.",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "collection name",
-                        "name": "collectionName",
+                        "type": "integer",
+                        "description": "collection id",
+                        "name": "collectionId",
                         "in": "path",
                         "required": true
                     },
@@ -718,7 +838,7 @@ var doc = `{
                 }
             }
         },
-        "/collections/{collectionName}/assets/{offset}/{limit}": {
+        "/collections/{collectionId}/assets/{offset}/{limit}": {
             "get": {
                 "description": "Retrieves the assets of a collection. Unsorted.",
                 "consumes": [
@@ -733,9 +853,9 @@ var doc = `{
                 "summary": "Get collection assets.",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "collection name",
-                        "name": "collectionName",
+                        "type": "integer",
+                        "description": "collection id",
+                        "name": "collectionId",
                         "in": "path",
                         "required": true
                     },
@@ -779,7 +899,7 @@ var doc = `{
                 }
             }
         },
-        "/collections/{collectionName}/cover": {
+        "/collections/{collectionId}/cover": {
             "get": {
                 "description": "Retrieves a collection cover image. It will be sent as base64 encoding (sdt, raw) of its byte representation.",
                 "consumes": [
@@ -794,9 +914,9 @@ var doc = `{
                 "summary": "Get collection cover image",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "collection name",
-                        "name": "collectionName",
+                        "type": "integer",
+                        "description": "collection id",
+                        "name": "collectionId",
                         "in": "path",
                         "required": true
                     }
@@ -806,6 +926,12 @@ var doc = `{
                         "description": "OK",
                         "schema": {
                             "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
                         }
                     },
                     "404": {
@@ -831,8 +957,8 @@ var doc = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "collection name",
-                        "name": "collectionName",
+                        "description": "collection id",
+                        "name": "collectionId",
                         "in": "path",
                         "required": true
                     },
@@ -859,6 +985,12 @@ var doc = `{
                             "$ref": "#/definitions/data.ApiResponse"
                         }
                     },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
@@ -868,7 +1000,7 @@ var doc = `{
                 }
             }
         },
-        "/collections/{collectionName}/profile": {
+        "/collections/{collectionId}/profile": {
             "get": {
                 "description": "Retrieves a collection cover image. It will be sent as base64 encoding (sdt, raw) of its byte representation.",
                 "consumes": [
@@ -883,9 +1015,9 @@ var doc = `{
                 "summary": "Get collection profile image",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "collection name",
-                        "name": "collectionName",
+                        "type": "integer",
+                        "description": "collection id",
+                        "name": "collectionId",
                         "in": "path",
                         "required": true
                     }
@@ -895,6 +1027,12 @@ var doc = `{
                         "description": "OK",
                         "schema": {
                             "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
                         }
                     },
                     "404": {
@@ -919,9 +1057,9 @@ var doc = `{
                 "summary": "Set collection profile image",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "collection name",
-                        "name": "collectionName",
+                        "type": "integer",
+                        "description": "collection id",
+                        "name": "collectionId",
                         "in": "path",
                         "required": true
                     },
@@ -957,9 +1095,9 @@ var doc = `{
                 }
             }
         },
-        "/collections/{collectionName}/statistics": {
+        "/collections/{collectionId}/statistics": {
             "post": {
-                "description": "Gets statistics for a collection. It will be cached for 10 minutes.",
+                "description": "Gets statistics for a collection. It will be cached for 15 minutes.",
                 "consumes": [
                     "application/json"
                 ],
@@ -972,9 +1110,9 @@ var doc = `{
                 "summary": "Gets collection statistics.",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "collection name",
-                        "name": "collectionName",
+                        "type": "integer",
+                        "description": "collection id",
+                        "name": "collectionId",
                         "in": "path",
                         "required": true
                     }
@@ -1150,9 +1288,9 @@ var doc = `{
                 }
             }
         },
-        "/transactions/address/{address}/{offset}/{limit}": {
+        "/transactions/account/{accountId}/{offset}/{limit}": {
             "get": {
-                "description": "Retrieves transactions for a user address. Unordered.",
+                "description": "Retrieves transactions for an account. Unordered.",
                 "consumes": [
                     "application/json"
                 ],
@@ -1162,12 +1300,12 @@ var doc = `{
                 "tags": [
                     "transactions"
                 ],
-                "summary": "Gets transaction for a user address.",
+                "summary": "Gets transaction for an account.",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "user address",
-                        "name": "userAddress",
+                        "description": "account id",
+                        "name": "accountId",
                         "in": "path",
                         "required": true
                     },
@@ -1211,7 +1349,7 @@ var doc = `{
                 }
             }
         },
-        "/transactions/asset/{tokenId}/{nonce}/{offset}/{limit}": {
+        "/transactions/asset/{assetId}/{offset}/{limit}": {
             "get": {
                 "description": "Retrieves transactions for an asset. Unordered.",
                 "consumes": [
@@ -1226,16 +1364,9 @@ var doc = `{
                 "summary": "Gets transaction for an asset.",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "token id",
-                        "name": "tokenId",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
                         "type": "integer",
-                        "description": "nonce",
-                        "name": "nonce",
+                        "description": "asset id",
+                        "name": "assetId",
                         "in": "path",
                         "required": true
                     },
@@ -1279,7 +1410,7 @@ var doc = `{
                 }
             }
         },
-        "/transactions/collection/{collectionName}/{offset}/{limit}": {
+        "/transactions/collection/{collectionId}/{offset}/{limit}": {
             "get": {
                 "description": "Retrieves transactions for a collection. Unordered.",
                 "consumes": [
@@ -1295,8 +1426,8 @@ var doc = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "collection name",
-                        "name": "collectionName",
+                        "description": "collection id",
+                        "name": "collectionId",
                         "in": "path",
                         "required": true
                     },
@@ -1607,6 +1738,12 @@ var doc = `{
         "data.Asset": {
             "type": "object",
             "properties": {
+                "attributes": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
                 "collectionID": {
                     "type": "integer"
                 },
@@ -1795,6 +1932,15 @@ var doc = `{
         "services.CollectionStatistics": {
             "type": "object",
             "properties": {
+                "attributes": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "integer"
+                        }
+                    }
+                },
                 "floorPrice": {
                     "type": "number"
                 },
@@ -1806,6 +1952,29 @@ var doc = `{
                 },
                 "volumeTraded": {
                     "type": "number"
+                }
+            }
+        },
+        "services.CreateAccountRequest": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "instagramLink": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "twitterLink": {
+                    "type": "string"
+                },
+                "website": {
+                    "type": "string"
                 }
             }
         },

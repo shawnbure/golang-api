@@ -46,10 +46,17 @@ type UpdateCollectionRequest struct {
 }
 
 type CollectionStatistics struct {
-	ItemsCount   uint64  `json:"itemsCount"`
-	OwnersCount  uint64  `json:"ownersCount"`
-	FloorPrice   float64 `json:"floorPrice"`
-	VolumeTraded float64 `json:"volumeTraded"`
+	ItemsCount   uint64                    `json:"itemsCount"`
+	OwnersCount  uint64                    `json:"ownersCount"`
+	FloorPrice   float64                   `json:"floorPrice"`
+	VolumeTraded float64                   `json:"volumeTraded"`
+	AttrStats    map[string]map[string]int `json:"attributes"`
+}
+
+type CollectionMetadata struct {
+	NumItems  uint64
+	Owners    map[uint64]bool
+	AttrStats map[string]map[string]int
 }
 
 type ProxyRegisteredNFTsResponse struct {
@@ -138,16 +145,6 @@ func GetStatisticsForCollection(collectionId uint64) (*CollectionStatistics, err
 		return &stats, nil
 	}
 
-	numItems, err := storage.CountListedAssetsByCollectionId(collectionId)
-	if err != nil {
-		return nil, err
-	}
-
-	numOwners, err := storage.CountUniqueOwnersWithListedAssetsByCollectionId(collectionId)
-	if err != nil {
-		return nil, err
-	}
-
 	//TODO: refactor this to something smarter. Min price is not good
 	minPrice, err := storage.GetMinBuyPriceForTransactionsWithCollectionId(collectionId)
 	if err != nil {
@@ -159,9 +156,14 @@ func GetStatisticsForCollection(collectionId uint64) (*CollectionStatistics, err
 		return nil, err
 	}
 
+	collectionMetadata, err := computeCollectionMetadata(collectionId)
+	if err != nil {
+		return nil, err
+	}
+
 	stats = CollectionStatistics{
-		ItemsCount:   numItems,
-		OwnersCount:  numOwners,
+		ItemsCount:   collectionMetadata.NumItems,
+		OwnersCount:  uint64(len(collectionMetadata.Owners)),
 		FloorPrice:   minPrice,
 		VolumeTraded: sumPrice,
 	}
@@ -200,6 +202,53 @@ func GetCollectionsWithNameAlike(name string, limit int) ([]data.Collection, err
 	}
 
 	return collectionArray, nil
+}
+
+func computeCollectionMetadata(collectionId uint64) (*CollectionMetadata, error) {
+	offset := 0
+	limit := 1_000
+	numItems := 0
+	ownersIDs := make(map[uint64]bool)
+	attrStats := make(map[string]map[string]int)
+
+	for {
+		assets, innerErr := storage.GetListedAssetsByCollectionIdWithOffsetLimit(collectionId, offset, limit)
+		if innerErr != nil {
+			return nil, innerErr
+		}
+		if len(assets) == 0 {
+			break
+		}
+
+		numItems = numItems + len(assets)
+		for _, asset := range assets {
+			assetAttrs := make(map[string]string)
+			ownersIDs[asset.OwnerId] = true
+
+			innerErr = json.Unmarshal(asset.Attributes, &assetAttrs)
+			if innerErr != nil {
+				continue
+			}
+
+			for attrName, attrValue := range assetAttrs {
+				if _, ok := attrStats[attrName]; ok {
+					attrStats[attrName][attrValue] += 1
+				} else {
+					attrStats[attrName] = map[string]int{attrValue: 1}
+				}
+			}
+		}
+
+		offset = limit
+		limit = limit + 1_000
+	}
+
+	result := CollectionMetadata{
+		NumItems:  uint64(numItems),
+		Owners:    ownersIDs,
+		AttrStats: attrStats,
+	}
+	return &result, nil
 }
 
 func contains(arr []string, str string) bool {

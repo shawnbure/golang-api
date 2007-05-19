@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
 
 	"github.com/erdsea/erdsea-api/data"
@@ -110,7 +111,7 @@ func GetAssetsByCollectionId(collectionId uint64) ([]data.Asset, error) {
 	return assets, nil
 }
 
-func GetAssetsByCollectionIdWithOffsetLimit(collectionId uint64, offset int, limit int) ([]data.Asset, error) {
+func GetAssetsByCollectionIdWithOffsetLimit(collectionId uint64, offset int, limit int, attributesFilters map[string]string) ([]data.Asset, error) {
 	var assets []data.Asset
 
 	database, err := GetDBOrError()
@@ -118,7 +119,28 @@ func GetAssetsByCollectionIdWithOffsetLimit(collectionId uint64, offset int, lim
 		return nil, err
 	}
 
-	txRead := database.Offset(offset).Limit(limit).Find(&assets, "collection_id = ?", collectionId)
+	txRead := database.Offset(offset).Limit(limit)
+	for k, v := range attributesFilters {
+		txRead.Where(datatypes.JSONQuery("attributes").Equals(v, k))
+	}
+
+	txRead.Find(&assets, "collection_id = ?", collectionId)
+	if txRead.Error != nil {
+		return nil, txRead.Error
+	}
+
+	return assets, nil
+}
+
+func GetListedAssetsByCollectionIdWithOffsetLimit(collectionId uint64, offset int, limit int) ([]data.Asset, error) {
+	var assets []data.Asset
+
+	database, err := GetDBOrError()
+	if err != nil {
+		return nil, err
+	}
+
+	txRead := database.Offset(offset).Limit(limit).Find(&assets, "listed = true AND collection_id = ?", collectionId)
 	if txRead.Error != nil {
 		return nil, txRead.Error
 	}
