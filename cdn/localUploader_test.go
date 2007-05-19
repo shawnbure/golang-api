@@ -2,10 +2,10 @@ package cdn
 
 import (
 	"encoding/base64"
-	"github.com/erdsea/erdsea-api/config"
 	"strings"
 	"testing"
 
+	"github.com/erdsea/erdsea-api/config"
 	"github.com/stretchr/testify/require"
 )
 
