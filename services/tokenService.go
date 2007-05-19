@@ -445,7 +445,7 @@ func GetAvailableTokens(args AvailableTokensRequest) AvailableTokensResponse {
 		}
 
 		tokenId := parts[0] + "-" + parts[1]
-		nonce, err := strconv.ParseUint(parts[2], 10, 64)
+		nonce, err := strconv.ParseUint(parts[2], 16, 64)
 		if err != nil {
 			continue
 		}
