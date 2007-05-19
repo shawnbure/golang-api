@@ -13,31 +13,32 @@ import (
 var log = logger.GetOrCreate("interaction")
 
 type BlockchainInteractor struct {
-	proxyUrl   string
-	chainID    string
-	proxy      blockchain.ProxyHandler
+	proxyUrl string
+	chainID  string
+	proxy    blockchain.ProxyHandler
 }
 
 var (
 	interactor *BlockchainInteractor
-	once sync.Once
+	once       sync.Once
 )
 
 func InitBlockchainInteractor(chainInfo config.BlockchainConfig) {
 	once.Do(func() {
 		proxy := blockchain.NewElrondProxy(chainInfo.ProxyUrl, &http.Client{})
 		interactor = &BlockchainInteractor{
-			proxyUrl:   chainInfo.ProxyUrl,
-			chainID:    chainInfo.ChainID,
-			proxy:      proxy,
+			proxyUrl: chainInfo.ProxyUrl,
+			chainID:  chainInfo.ChainID,
+			proxy:    proxy,
 		}
 	})
 }
 
-func (bi *BlockchainInteractor) DoSimpleVmQuery(contractAddress string, viewFuncName string) ([][]byte, error) {
+func (bi *BlockchainInteractor) DoVmQuery(contractAddress string, viewFuncName string, args []string) ([][]byte, error) {
 	request := data.VmValueRequest{
-		Address:    contractAddress,
-		FuncName:   viewFuncName,
+		Address:  contractAddress,
+		FuncName: viewFuncName,
+		Args:     args,
 	}
 
 	response, err := bi.proxy.ExecuteVMQuery(&request)

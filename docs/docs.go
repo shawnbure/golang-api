@@ -1000,6 +1000,44 @@ var doc = `{
                 }
             }
         },
+        "/deposits/{userAddress}": {
+            "get": {
+                "description": "Retrieves deposit amount for an address.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "deposits"
+                ],
+                "summary": "Gets the deposit (EGLD) located in the marketplace for an address.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "userAddress",
+                        "name": "userAddress",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/egld_price": {
             "get": {
                 "description": "Retrieves EGLD price in dollars. Price taken from Binance. Cached for 15 minutes.",
@@ -1039,7 +1077,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "tokens"
+                    "proffers"
                 ],
                 "summary": "Get proffers (offers and bids) for token",
                 "parameters": [
@@ -1090,6 +1128,82 @@ var doc = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/royalties/last/{userAddress}": {
+            "get": {
+                "description": "Gets last withdrawal epoch for a creator. Next withdraw needs to be calculated as (current_epoch - this_epoch) %30",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "royalties"
+                ],
+                "summary": "Gets last withdrawal epoch (EGLD) for an address.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "userAddress",
+                        "name": "userAddress",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/royalties/{userAddress}": {
+            "get": {
+                "description": "Retrieves royalties amount for an address.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "royalties"
+                ],
+                "summary": "Gets the royalties (EGLD) located in the marketplace for an address.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "userAddress",
+                        "name": "userAddress",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/dtos.ApiResponse"
                         }

@@ -36,7 +36,7 @@ func NewProfferHandler(groupHandler *groupHandler) {
 
 // @Summary Get proffers (offers and bids) for token
 // @Description Retrieves proffers for a token (identified by tokenId and nonce)
-// @Tags tokens
+// @Tags proffers
 // @Accept json
 // @Produce json
 // @Param tokenId path string true "token id"

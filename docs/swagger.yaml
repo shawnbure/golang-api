@@ -1017,6 +1017,31 @@ paths:
       summary: Get collection rankings
       tags:
       - collections
+  /deposits/{userAddress}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves deposit amount for an address.
+      parameters:
+      - description: userAddress
+        in: path
+        name: userAddress
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: number
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: Gets the deposit (EGLD) located in the marketplace for an address.
+      tags:
+      - deposits
   /egld_price:
     get:
       consumes:
@@ -1082,7 +1107,58 @@ paths:
             $ref: '#/definitions/dtos.ApiResponse'
       summary: Get proffers (offers and bids) for token
       tags:
-      - tokens
+      - proffers
+  /royalties/{userAddress}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves royalties amount for an address.
+      parameters:
+      - description: userAddress
+        in: path
+        name: userAddress
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: number
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: Gets the royalties (EGLD) located in the marketplace for an address.
+      tags:
+      - royalties
+  /royalties/last/{userAddress}:
+    get:
+      consumes:
+      - application/json
+      description: Gets last withdrawal epoch for a creator. Next withdraw needs to
+        be calculated as (current_epoch - this_epoch) %30
+      parameters:
+      - description: userAddress
+        in: path
+        name: userAddress
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: number
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: Gets last withdrawal epoch (EGLD) for an address.
+      tags:
+      - royalties
   /search/{searchString}:
     get:
       consumes:

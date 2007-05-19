@@ -411,7 +411,7 @@ func (e *EventProcessor) onEventUpdateDeposit(event entities.Event) {
 		log.Debug("onEventUpdateDeposit", string(eventJson))
 	}
 
-	_, err = services.UpdateDeposit(args)
+	err = services.UpdateDeposit(args)
 	if err != nil {
 		log.Error("could not upgrade deposit", err)
 	}

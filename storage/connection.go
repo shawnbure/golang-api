@@ -149,11 +149,6 @@ func TryMigrate() error {
 		return err
 	}
 
-	err = db.AutoMigrate(&entities.Deposit{})
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 
