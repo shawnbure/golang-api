@@ -54,3 +54,8 @@
 
 [Monitor]
     ObserverMonitorEnable = false
+
+[CDN]
+    Name = "cloud_name"
+    ApiKey = "cdn_api_key"
+    ApiSecret = "cdn_api_secret"

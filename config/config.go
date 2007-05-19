@@ -15,6 +15,7 @@ type GeneralConfig struct {
 	Swagger      SwaggerConfig
 	Bot          BotConfig
 	Monitor      MonitorConfig
+	CDN          CDNConfig
 }
 
 type ConnectorApiConfig struct {
@@ -74,6 +75,12 @@ type BotConfig struct {
 
 type MonitorConfig struct {
 	ObserverMonitorEnable bool
+}
+
+type CDNConfig struct {
+	Name      string
+	ApiKey    string
+	ApiSecret string
 }
 
 func (d DatabaseConfig) Url() string {

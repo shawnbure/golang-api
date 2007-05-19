@@ -4,77 +4,42 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
-	"fmt"
-	"github.com/cloudinary/cloudinary-go"
-	"github.com/cloudinary/cloudinary-go/api/uploader"
-	"image"
-	"image/jpeg"
-	"image/png"
 	"io"
 	"strings"
+
+	"github.com/cloudinary/cloudinary-go/api/uploader"
 )
 
-type Uploader struct {
-	cloudy *cloudinary.Cloudinary
-}
+const (
+	base64Separator = ","
+)
 
-func NewCdnUploader() *Uploader {
-	cloudName := "deaezbrer"
-	apiKey := "823855837497929"
-	apiSecret := "9UXeyr23mESzGtVEX_1ZML54fXk"
-
-	cloudy, err := cloudinary.NewFromParams(cloudName, apiKey, apiSecret)
+func UploadToCloudy(ctx context.Context, base64Img, imgID string) (*uploader.UploadResult, error) {
+	buf, err := base64ToReader(base64Img)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	return &Uploader{
-		cloudy: cloudy,
-	}
-}
-
-func (u *Uploader) Upload(img interface{}) {
-	res, err := u.cloudy.Upload.Upload(context.Background(), img, uploader.UploadParams{
-		PublicID: "penis",
+	res, err := cloudy.Upload.Upload(ctx, buf, uploader.UploadParams{
+		PublicID: imgID,
 	})
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	fmt.Println(res)
+	return res, nil
 }
 
-func decodeBase64Img(b64 string) image.Image {
-	idx := strings.Index(b64, ",")
+func base64ToReader(base64Img string) (io.Reader, error) {
+	suffixIdx := strings.Index(base64Img, base64Separator)
 
-	rawImage := b64[idx+1:]
-	decoded, _ := base64.StdEncoding.DecodeString(string(rawImage))
+	imgContent := base64Img[suffixIdx+1:]
 
-	buf := bytes.NewReader(decoded)
-
-	switch strings.TrimSuffix(b64[5:idx], ";base64") {
-	case "image/png":
-		pngI, err := png.Decode(buf)
-		if err != nil {
-			panic(err)
-		}
-		return pngI
-	case "image/jpeg":
-		jpgI, err := jpeg.Decode(buf)
-		if err != nil {
-			panic(err)
-		}
-		return jpgI
-	default:
-		return nil
+	decoded, err := base64.StdEncoding.DecodeString(imgContent)
+	if err != nil {
+		return nil, err
 	}
-}
 
-func base64ToReader(b64 string) io.Reader {
-	idx := strings.Index(b64, ",")
-
-	rawImage := b64[idx+1:]
-	decoded, _ := base64.StdEncoding.DecodeString(string(rawImage))
-
-	return bytes.NewReader(decoded)
+	buffReader := bytes.NewReader(decoded)
+	return buffReader, nil
 }
