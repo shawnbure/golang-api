@@ -17,6 +17,10 @@ var (
 )
 
 func UpdateDeposit(args DepositUpdateArgs) error {
+	if args.Owner == ZeroAddress {
+		return nil
+	}
+
 	localCacher := cache.GetLocalCacher()
 	key := fmt.Sprintf(DepositLocalCacheKeyFormat, args.Owner)
 

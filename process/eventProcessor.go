@@ -20,7 +20,7 @@ const (
 	acceptOfferEventName   = "accept_offer"
 	startAuctionEventName  = "start_auction"
 	placeBidEventName      = "place_bid"
-	endAuctionEventName    = "end_bid"
+	endAuctionEventName    = "end_auction"
 	updateDepositEventName = "deposit_update"
 	cancelOfferEventName   = "cancel_offer"
 

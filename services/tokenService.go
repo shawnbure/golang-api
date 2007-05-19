@@ -413,35 +413,16 @@ func GetExtendedTokenData(tokenId string, nonce uint64) (*dtos.ExtendedTokenDto,
 		return nil, err
 	}
 
-	collection, err := storage.GetCollectionById(token.CollectionID)
-	if err != nil {
-		return nil, err
-	}
-
 	owner, err := storage.GetAccountById(token.OwnerId)
 	if err != nil {
 		return nil, err
 	}
 
-	creator, err := storage.GetAccountById(collection.CreatorID)
-	if err != nil {
-		return nil, err
-	}
-
-	collStats, err := collstats.GetStatisticsForTokenId(tokenId)
-	if err != nil {
-		collStats = &dtos.CollectionStatistics{}
-	}
-
-	return dtos.CreateExtendedTokenDto(
-		*token,
-		*collection,
-		owner.Name,
-		owner.Address,
-		creator.Name,
-		creator.Address,
-		*collStats,
-	)
+	return &dtos.ExtendedTokenDto{
+		Token:              *token,
+		OwnerName:          owner.Name,
+		OwnerWalletAddress: owner.Address,
+	}, nil
 }
 
 func GetAttributesFromMetadata(link string) datatypes.JSON {

@@ -1352,7 +1352,7 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entities.Token"
+                            "$ref": "#/definitions/dtos.ExtendedTokenDto"
                         }
                     },
                     "400": {
@@ -2403,6 +2403,74 @@ var doc = `{
                 }
             }
         },
+        "dtos.ExtendedTokenDto": {
+            "type": "object",
+            "properties": {
+                "attributes": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "auctionDeadline": {
+                    "type": "integer"
+                },
+                "auctionStartTime": {
+                    "type": "integer"
+                },
+                "collectionId": {
+                    "type": "integer"
+                },
+                "createdAt": {
+                    "type": "integer"
+                },
+                "hash": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "imageLink": {
+                    "type": "string"
+                },
+                "lastBuyPriceNominal": {
+                    "type": "number"
+                },
+                "metadataLink": {
+                    "type": "string"
+                },
+                "nonce": {
+                    "type": "integer"
+                },
+                "ownerId": {
+                    "type": "integer"
+                },
+                "ownerName": {
+                    "type": "string"
+                },
+                "ownerWalletAddress": {
+                    "type": "string"
+                },
+                "priceNominal": {
+                    "type": "number"
+                },
+                "priceString": {
+                    "type": "string"
+                },
+                "royaltiesPercent": {
+                    "type": "number"
+                },
+                "state": {
+                    "type": "string"
+                },
+                "tokenId": {
+                    "type": "string"
+                },
+                "tokenName": {
+                    "type": "string"
+                }
+            }
+        },
         "dtos.OwnedTokenDto": {
             "type": "object",
             "properties": {
@@ -2806,6 +2874,9 @@ var doc = `{
                 "collection": {
                     "type": "object",
                     "properties": {
+                        "available": {
+                            "type": "boolean"
+                        },
                         "id": {
                             "type": "string"
                         },

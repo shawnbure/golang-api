@@ -13,7 +13,7 @@ import (
 
 func Test_MakeOffer(t *testing.T) {
 	connectToDb()
-	cache.InitCacher(cfg)
+	cache.InitCacher(cacheCfg)
 
 	nonce := uint64(time.Now().Unix())
 	token := entities.Token{
@@ -24,7 +24,7 @@ func Test_MakeOffer(t *testing.T) {
 	require.Nil(t, err)
 
 	address := "erd12" + fmt.Sprintf("%d", nonce)
-	deposit, err := UpdateDeposit(DepositUpdateArgs{
+	err = UpdateDeposit(DepositUpdateArgs{
 		Owner:  address,
 		Amount: "1000000000000000000",
 	})
@@ -39,12 +39,11 @@ func Test_MakeOffer(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, entities.ProfferType("Offer"), offer.Type)
 	require.Equal(t, token.ID, offer.TokenID)
-	require.Equal(t, deposit.OwnerId, offer.OfferorID)
 }
 
 func Test_MakeOfferAcceptOffer(t *testing.T) {
 	connectToDb()
-	cache.InitCacher(cfg)
+	cache.InitCacher(cacheCfg)
 
 	nonce := uint64(time.Now().Unix())
 	token := entities.Token{
@@ -55,7 +54,7 @@ func Test_MakeOfferAcceptOffer(t *testing.T) {
 	require.Nil(t, err)
 
 	address := "erd12" + fmt.Sprintf("%d", nonce)
-	deposit, err := UpdateDeposit(DepositUpdateArgs{
+	err = UpdateDeposit(DepositUpdateArgs{
 		Owner:  address,
 		Amount: "1000000000000000000",
 	})
@@ -76,7 +75,6 @@ func Test_MakeOfferAcceptOffer(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, entities.ProfferType("Offer"), offer.Type)
 	require.Equal(t, token.ID, offer.TokenID)
-	require.Equal(t, deposit.OwnerId, offer.OfferorID)
 
 	AcceptOffer(AcceptOfferArgs{
 		OwnerAddress:   address,
@@ -89,7 +87,7 @@ func Test_MakeOfferAcceptOffer(t *testing.T) {
 
 func Test_MakeOfferCancelOffer(t *testing.T) {
 	connectToDb()
-	cache.InitCacher(cfg)
+	cache.InitCacher(cacheCfg)
 
 	nonce := uint64(time.Now().Unix())
 	token := entities.Token{
@@ -100,7 +98,7 @@ func Test_MakeOfferCancelOffer(t *testing.T) {
 	require.Nil(t, err)
 
 	address := "erd12" + fmt.Sprintf("%d", nonce)
-	deposit, err := UpdateDeposit(DepositUpdateArgs{
+	err = UpdateDeposit(DepositUpdateArgs{
 		Owner:  address,
 		Amount: "1000000000000000000",
 	})
@@ -115,7 +113,6 @@ func Test_MakeOfferCancelOffer(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, entities.ProfferType("Offer"), offer.Type)
 	require.Equal(t, token.ID, offer.TokenID)
-	require.Equal(t, deposit.OwnerId, offer.OfferorID)
 
 	CancelOffer(CancelOfferArgs{
 		OfferorAddress: address,
@@ -127,7 +124,7 @@ func Test_MakeOfferCancelOffer(t *testing.T) {
 
 func Test_PlaceBid(t *testing.T) {
 	connectToDb()
-	cache.InitCacher(cfg)
+	cache.InitCacher(cacheCfg)
 
 	nonce := uint64(time.Now().Unix())
 	token := entities.Token{
@@ -138,7 +135,7 @@ func Test_PlaceBid(t *testing.T) {
 	require.Nil(t, err)
 
 	address := "erd12" + fmt.Sprintf("%d", nonce)
-	deposit, err := UpdateDeposit(DepositUpdateArgs{
+	err = UpdateDeposit(DepositUpdateArgs{
 		Owner:  address,
 		Amount: "1000000000000000000",
 	})
@@ -153,5 +150,4 @@ func Test_PlaceBid(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, entities.ProfferType("Bid"), offer.Type)
 	require.Equal(t, token.ID, offer.TokenID)
-	require.Equal(t, deposit.OwnerId, offer.OfferorID)
 }

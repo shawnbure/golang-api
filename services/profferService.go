@@ -35,6 +35,7 @@ func MakeOffer(args MakeOfferArgs) (*entities.Proffer, error) {
 		OfferorID:     accountCacheInfo.AccountId,
 	}
 
+	_ = storage.DeleteOfferByTokenIdAndAccountId(tokenCacheInfo.TokenDbId, accountCacheInfo.AccountId)
 	err = storage.AddProffer(&offer)
 	return &offer, nil
 }
@@ -121,12 +122,6 @@ func PlaceBid(args PlaceBidArgs) (*entities.Proffer, error) {
 }
 
 func CancelOffer(args CancelOfferArgs) {
-	amountNominal, err := GetPriceNominal(args.Amount)
-	if err != nil {
-		log.Debug("could not parse price", "err", err)
-		return
-	}
-
 	tokenCacheInfo, err := GetOrAddTokenCacheInfo(args.TokenId, args.Nonce)
 	if err != nil {
 		log.Debug("could not get token cache info", err)
@@ -139,7 +134,7 @@ func CancelOffer(args CancelOfferArgs) {
 		return
 	}
 
-	err = storage.DeleteOffersByTokenIdAccountIdAndAmount(tokenCacheInfo.TokenDbId, accountCacheInfo.AccountId, amountNominal)
+	err = storage.DeleteOfferByTokenIdAndAccountId(tokenCacheInfo.TokenDbId, accountCacheInfo.AccountId)
 	if err != nil {
 		log.Debug("could not delete from db", err)
 		return

@@ -234,7 +234,7 @@ func Test_GetTokenLinkResponse(t *testing.T) {
 
 func Test_ErdCompatibility(t *testing.T) {
 	connectToDb()
-	cache.InitCacher(cfg)
+	cache.InitCacher(cacheCfg)
 
 	nonce := uint64(69)
 	listArgs := ListTokenArgs{
@@ -293,7 +293,7 @@ func connectToDb() {
 
 func Test_StartAuction(t *testing.T) {
 	connectToDb()
-	cache.InitCacher(cfg)
+	cache.InitCacher(cacheCfg)
 
 	nonce := uint64(time.Now().Unix())
 	address := "erd12" + fmt.Sprintf("%d", nonce)
@@ -322,7 +322,7 @@ func Test_StartAuction(t *testing.T) {
 
 func Test_StartAuctionEndAuction(t *testing.T) {
 	connectToDb()
-	cache.InitCacher(cfg)
+	cache.InitCacher(cacheCfg)
 
 	nonce := uint64(time.Now().Unix())
 	address := "erd12" + fmt.Sprintf("%d", nonce)

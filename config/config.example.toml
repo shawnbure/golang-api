@@ -11,6 +11,7 @@
         "withdrawNft",
         "makeOffer",
         "acceptOffer",
+        "cancelOffer",
         "startAuction",
         "placeBid",
         "endAuction",

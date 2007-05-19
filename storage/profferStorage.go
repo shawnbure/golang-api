@@ -42,15 +42,15 @@ func DeleteProffersForTokenId(tokenDbId uint64) error {
 	return nil
 }
 
-func DeleteOffersByTokenIdAccountIdAndAmount(tokenDbId uint64, accountDbId uint64, amount float64) error {
-	var proffers []entities.Proffer
+func DeleteOfferByTokenIdAndAccountId(tokenDbId uint64, accountDbId uint64) error {
+	var proffer entities.Proffer
 
 	database, err := GetDBOrError()
 	if err != nil {
 		return err
 	}
 
-	txCreate := database.Delete(proffers, "type = ? AND token_id = ? AND offeror_id = ? AND amount_nominal = ?", entities.Offer, tokenDbId, accountDbId, amount)
+	txCreate := database.Delete(&proffer, "type = ? AND token_id = ? AND offeror_id = ?", entities.Offer, tokenDbId, accountDbId)
 	if txCreate.Error != nil {
 		return txCreate.Error
 	}
