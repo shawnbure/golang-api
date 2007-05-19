@@ -1,6 +1,7 @@
 package services
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -11,14 +12,16 @@ import (
 )
 
 const (
-	TokenIdMaxLen            = 15
-	MaxNameLen               = 20
-	MaxLinkLen               = 100
-	MaxDescLen               = 1000
-	RegisteredNFTsBaseFormat = "%s/address/%s/registered-nfts"
-	HttpResponseExpirePeriod = 10 * time.Minute
-	StatisticsCacheKeyFormat = "StatisticsForId%d"
-	StatisticsExpirePeriod   = 15 * time.Minute
+	TokenIdMaxLen                  = 15
+	MaxNameLen                     = 20
+	MaxLinkLen                     = 100
+	MaxDescLen                     = 1000
+	RegisteredNFTsBaseFormat       = "%s/address/%s/registered-nfts"
+	HttpResponseExpirePeriod       = 10 * time.Minute
+	StatisticsCacheKeyFormat       = "StatisticsForId:%d"
+	StatisticsExpirePeriod         = 15 * time.Minute
+	CollectionSearchCacheKeyFormat = "CollectionSearch:%s"
+	CollectionSearchExpirePeriod   = 20 * time.Minute
 )
 
 type CreateCollectionRequest struct {
@@ -140,14 +143,31 @@ func GetStatisticsForCollection(collectionId uint64) (*CollectionStatistics, err
 }
 
 func GetCollectionsWithNameAlike(name string, limit int) ([]data.Collection, error) {
-	//TODO: use cache here
+	var byteArray []byte
+	var collectionArray []data.Collection
+
+	cacheKey := fmt.Sprintf(CollectionSearchCacheKeyFormat, name)
+	err := cache.GetCacher().Get(cacheKey, byteArray)
+	if err == nil {
+		err = json.Unmarshal(byteArray, &collectionArray)
+		return collectionArray, err
+	}
+
 	searchName := "%" + name + "%"
-	accounts, err := storage.GetCollectionsWithNameAlikeWithLimit(searchName, limit)
+	collectionArray, err = storage.GetCollectionsWithNameAlikeWithLimit(searchName, limit)
 	if err != nil {
 		return nil, err
 	}
 
-	return accounts, nil
+	byteArray, err = json.Marshal(collectionArray)
+	if err == nil {
+		err = cache.GetCacher().Set(cacheKey, byteArray, CollectionSearchExpirePeriod)
+		if err != nil {
+			log.Debug("could not set cache", "err", err)
+		}
+	}
+
+	return collectionArray, nil
 }
 
 func contains(arr []string, str string) bool {
