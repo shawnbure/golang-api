@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/erdsea/erdsea-api/cache"
 	"net/http"
 	"os"
 	"os/signal"
@@ -108,6 +109,7 @@ func startProxy(ctx *cli.Context) error {
 		return err
 	}
 
+	cache.InitCacher(cfg.Cache)
 	storage.Connect(cfg.Database)
 
 	api, err := proxy.NewWebServer(cfg)
