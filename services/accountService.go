@@ -22,6 +22,7 @@ type CreateAccountRequest struct {
 }
 
 type SetAccountRequest struct {
+	Name          string `json:"name"`
 	Description   string `json:"description"`
 	Website       string `json:"website"`
 	TwitterLink   string `json:"twitterLink"`
@@ -96,6 +97,7 @@ func UpdateAccount(account *entities.Account, request *SetAccountRequest) error 
 		return err
 	}
 
+	account.Name = request.Name
 	account.Description = request.Description
 	account.InstagramLink = request.InstagramLink
 	account.TwitterLink = request.TwitterLink

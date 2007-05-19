@@ -98,6 +98,7 @@ func (handler *accountsHandler) set(c *gin.Context) {
 	var request services.SetAccountRequest
 	walletAddress := c.Param("walletAddress")
 
+	//TODO: SetOrCreate
 	err := c.Bind(&request)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, "cannot bind request")
