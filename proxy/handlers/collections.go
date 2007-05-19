@@ -37,30 +37,34 @@ func NewCollectionsHandler(groupHandler *groupHandler, authCfg config.AuthConfig
 	handler := &collectionsHandler{blockchainCfg: blockchainCfg}
 
 	endpoints := []EndpointHandler{
-		{Method: http.MethodGet, Path: collectionListEndpoint, HandlerFunc: handler.getList},
-		{Method: http.MethodGet, Path: collectionByNameEndpoint, HandlerFunc: handler.get},
 		{Method: http.MethodPost, Path: collectionByNameEndpoint, HandlerFunc: handler.set},
-
 		{Method: http.MethodPost, Path: collectionCreateEndpoint, HandlerFunc: handler.create},
-		{Method: http.MethodGet, Path: collectionTokensEndpoint, HandlerFunc: handler.getTokens},
-
-		{Method: http.MethodGet, Path: collectionProfileEndpoint, HandlerFunc: handler.getCollectionProfile},
 		{Method: http.MethodPost, Path: collectionProfileEndpoint, HandlerFunc: handler.setCollectionProfile},
-
-		{Method: http.MethodGet, Path: collectionCoverEndpoint, HandlerFunc: handler.getCollectionCover},
 		{Method: http.MethodPost, Path: collectionCoverEndpoint, HandlerFunc: handler.setCollectionCover},
-
-		{Method: http.MethodGet, Path: collectionMintInfoEndpoint, HandlerFunc: handler.getMintInfo},
 		{Method: http.MethodGet, Path: collectionRankingEndpoint, HandlerFunc: handler.getCollectionRankings},
 	}
-
 	endpointGroupHandler := EndpointGroupHandler{
 		Root:             baseCollectionsEndpoint,
 		Middlewares:      []gin.HandlerFunc{middleware.Authorization(authCfg.JwtSecret)},
 		EndpointHandlers: endpoints,
 	}
-
 	groupHandler.AddEndpointGroupHandler(endpointGroupHandler)
+
+	publicEndpoints := []EndpointHandler{
+		{Method: http.MethodGet, Path: collectionListEndpoint, HandlerFunc: handler.getList},
+		{Method: http.MethodGet, Path: collectionByNameEndpoint, HandlerFunc: handler.get},
+		{Method: http.MethodGet, Path: collectionTokensEndpoint, HandlerFunc: handler.getTokens},
+		{Method: http.MethodGet, Path: collectionProfileEndpoint, HandlerFunc: handler.getCollectionProfile},
+		{Method: http.MethodGet, Path: collectionCoverEndpoint, HandlerFunc: handler.getCollectionCover},
+		{Method: http.MethodGet, Path: collectionMintInfoEndpoint, HandlerFunc: handler.getMintInfo},
+		{Method: http.MethodGet, Path: collectionRankingEndpoint, HandlerFunc: handler.getCollectionRankings},
+	}
+	publicEndpointGroupHandler := EndpointGroupHandler{
+		Root:             baseCollectionsEndpoint,
+		Middlewares:      []gin.HandlerFunc{},
+		EndpointHandlers: publicEndpoints,
+	}
+	groupHandler.AddEndpointGroupHandler(publicEndpointGroupHandler)
 }
 
 // @Summary Gets collections.

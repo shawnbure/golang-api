@@ -28,26 +28,30 @@ func NewAccountsHandler(groupHandler *groupHandler, authCfg config.AuthConfig) {
 	handler := &accountsHandler{}
 
 	endpoints := []EndpointHandler{
-		{Method: http.MethodGet, Path: accountByIdEndpoint, HandlerFunc: handler.get},
 		{Method: http.MethodPost, Path: accountByIdEndpoint, HandlerFunc: handler.set},
-
-		{Method: http.MethodGet, Path: accountProfileEndpoint, HandlerFunc: handler.getAccountProfile},
 		{Method: http.MethodPost, Path: accountProfileEndpoint, HandlerFunc: handler.setAccountProfile},
-
-		{Method: http.MethodGet, Path: accountCoverEndpoint, HandlerFunc: handler.getAccountCover},
 		{Method: http.MethodPost, Path: accountCoverEndpoint, HandlerFunc: handler.setAccountCover},
-
 		{Method: http.MethodPost, Path: createAccountEndpoint, HandlerFunc: handler.create},
-		{Method: http.MethodGet, Path: accountTokensEndpoint, HandlerFunc: handler.getAccountTokens},
 	}
-
 	endpointGroupHandler := EndpointGroupHandler{
 		Root:             baseAccountsEndpoint,
 		Middlewares:      []gin.HandlerFunc{middleware.Authorization(authCfg.JwtSecret)},
 		EndpointHandlers: endpoints,
 	}
-
 	groupHandler.AddEndpointGroupHandler(endpointGroupHandler)
+
+	publicEndpoints := []EndpointHandler{
+		{Method: http.MethodGet, Path: accountByIdEndpoint, HandlerFunc: handler.get},
+		{Method: http.MethodGet, Path: accountProfileEndpoint, HandlerFunc: handler.getAccountProfile},
+		{Method: http.MethodGet, Path: accountCoverEndpoint, HandlerFunc: handler.getAccountCover},
+		{Method: http.MethodGet, Path: accountTokensEndpoint, HandlerFunc: handler.getAccountTokens},
+	}
+	publicEndpointGroupHandler := EndpointGroupHandler{
+		Root:             baseAccountsEndpoint,
+		Middlewares:      []gin.HandlerFunc{middleware.Authorization(authCfg.JwtSecret)},
+		EndpointHandlers: publicEndpoints,
+	}
+	groupHandler.AddEndpointGroupHandler(publicEndpointGroupHandler)
 }
 
 // @Summary Get account by account walletAddress

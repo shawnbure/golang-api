@@ -4,9 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/erdsea/erdsea-api/config"
 	"github.com/erdsea/erdsea-api/data/dtos"
-	"github.com/erdsea/erdsea-api/proxy/middleware"
 	"github.com/erdsea/erdsea-api/services"
 	"github.com/gin-gonic/gin"
 )
@@ -19,7 +17,7 @@ const (
 type tokensHandler struct {
 }
 
-func NewTokensHandler(groupHandler *groupHandler, authCfg config.AuthConfig) {
+func NewTokensHandler(groupHandler *groupHandler) {
 	handler := &tokensHandler{}
 
 	endpoints := []EndpointHandler{
@@ -28,7 +26,7 @@ func NewTokensHandler(groupHandler *groupHandler, authCfg config.AuthConfig) {
 
 	endpointGroupHandler := EndpointGroupHandler{
 		Root:             baseTokensEndpoint,
-		Middlewares:      []gin.HandlerFunc{middleware.Authorization(authCfg.JwtSecret)},
+		Middlewares:      []gin.HandlerFunc{},
 		EndpointHandlers: endpoints,
 	}
 
