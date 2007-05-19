@@ -22,6 +22,23 @@ func AddNewAccount(account *data.Account) error {
 	return nil
 }
 
+func UpdateAccount(account *data.Account) error {
+	database, err := GetDBOrError()
+	if err != nil {
+		return err
+	}
+
+	txCreate := database.Save(&account)
+	if txCreate.Error != nil {
+		return txCreate.Error
+	}
+	if txCreate.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+
+	return nil
+}
+
 func GetAccountById(id uint64) (*data.Account, error) {
 	var account data.Account
 
