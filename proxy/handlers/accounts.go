@@ -1,20 +1,22 @@
 package handlers
 
 import (
+	"net/http"
+	"time"
+
 	"github.com/erdsea/erdsea-api/config"
 	"github.com/erdsea/erdsea-api/data"
 	"github.com/erdsea/erdsea-api/proxy/middleware"
 	"github.com/erdsea/erdsea-api/services"
 	"github.com/erdsea/erdsea-api/storage"
 	"github.com/gin-gonic/gin"
-	"net/http"
-	"time"
 )
 
 const (
-	baseAccountsEndpoint = "/accounts"
-	getAccountEndpoint   = "/get/:userAddress"
-	setAccountEndpoint   = "/set/:userAddress"
+	baseAccountsEndpoint         = "/accounts"
+	accountByUserAddressEndpoint = "/:userAddress"
+	accountProfileEndpoint       = "/:userAddress/profile"
+	accountCoverEndpoint         = "/:userAddress/cover"
 )
 
 type accountsHandler struct {
@@ -24,8 +26,14 @@ func NewAccountsHandler(groupHandler *groupHandler, authCfg config.AuthConfig) {
 	handler := &accountsHandler{}
 
 	endpoints := []EndpointHandler{
-		{Method: http.MethodGet, Path: getAccountEndpoint, HandlerFunc: handler.get},
-		{Method: http.MethodPost, Path: setAccountEndpoint, HandlerFunc: handler.set},
+		{Method: http.MethodGet, Path: accountByUserAddressEndpoint, HandlerFunc: handler.get},
+		{Method: http.MethodPost, Path: accountByUserAddressEndpoint, HandlerFunc: handler.set},
+
+		{Method: http.MethodGet, Path: accountProfileEndpoint, HandlerFunc: handler.getAccountProfile},
+		{Method: http.MethodPost, Path: accountProfileEndpoint, HandlerFunc: handler.setAccountProfile},
+
+		{Method: http.MethodGet, Path: accountCoverEndpoint, HandlerFunc: handler.getAccountCover},
+		{Method: http.MethodPost, Path: accountCoverEndpoint, HandlerFunc: handler.setAccountCover},
 	}
 
 	endpointGroupHandler := EndpointGroupHandler{
@@ -77,6 +85,80 @@ func (handler *accountsHandler) set(c *gin.Context) {
 	err = services.AddOrUpdateAccount(&account)
 	if err != nil {
 		data.JsonResponse(c, http.StatusInternalServerError, nil, "could not get price")
+		return
+	}
+
+	data.JsonResponse(c, http.StatusOK, account, "")
+}
+
+func (handler *accountsHandler) getAccountProfile(c *gin.Context) {
+	userAddress := c.Param("userAddress")
+
+	image, err := services.GetAccountProfileImage(userAddress)
+	if err != nil {
+		data.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		return
+	}
+
+	data.JsonResponse(c, http.StatusOK, &image, "")
+}
+
+func (handler *accountsHandler) setAccountProfile(c *gin.Context) {
+	var imageBase64 string
+	userAddress := c.Param("userAddress")
+
+	err := c.Bind(&imageBase64)
+	if err != nil {
+		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	jwtAddress := c.GetString(middleware.AddressKey)
+	if jwtAddress != userAddress {
+		data.JsonResponse(c, http.StatusUnauthorized, nil, "")
+		return
+	}
+
+	err = services.SetAccountProfileImage(userAddress, &imageBase64)
+	if err != nil {
+		data.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		return
+	}
+
+	data.JsonResponse(c, http.StatusOK, "", "")
+}
+
+func (handler *accountsHandler) getAccountCover(c *gin.Context) {
+	userAddress := c.Param("userAddress")
+
+	image, err := services.GetAccountCoverImage(userAddress)
+	if err != nil {
+		data.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		return
+	}
+
+	data.JsonResponse(c, http.StatusOK, &image, "")
+}
+
+func (handler *accountsHandler) setAccountCover(c *gin.Context) {
+	var imageBase64 string
+	userAddress := c.Param("userAddress")
+
+	err := c.Bind(&imageBase64)
+	if err != nil {
+		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	jwtAddress := c.GetString(middleware.AddressKey)
+	if jwtAddress != userAddress {
+		data.JsonResponse(c, http.StatusUnauthorized, nil, "")
+		return
+	}
+
+	err = services.SetAccountCoverImage(userAddress, &imageBase64)
+	if err != nil {
+		data.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
 	}
 

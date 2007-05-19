@@ -1,11 +1,12 @@
 package storage
 
 import (
+	"testing"
+
 	"github.com/erdsea/erdsea-api/config"
 	"github.com/erdsea/erdsea-api/data"
 	_ "github.com/lib/pq"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func Test_Connection(t *testing.T) {

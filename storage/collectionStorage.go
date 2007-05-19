@@ -1,8 +1,9 @@
 package storage
 
 import (
-	"github.com/erdsea/erdsea-api/data"
 	"gorm.io/gorm"
+
+	"github.com/erdsea/erdsea-api/data"
 )
 
 func AddCollection(collection *data.Collection) error {
@@ -12,6 +13,23 @@ func AddCollection(collection *data.Collection) error {
 	}
 
 	txCreate := database.Create(&collection)
+	if txCreate.Error != nil {
+		return txCreate.Error
+	}
+	if txCreate.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+
+	return nil
+}
+
+func UpdateCollection(collection *data.Collection) error {
+	database, err := GetDBOrError()
+	if err != nil {
+		return err
+	}
+
+	txCreate := database.Save(&collection)
 	if txCreate.Error != nil {
 		return txCreate.Error
 	}

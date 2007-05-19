@@ -96,7 +96,7 @@ func GetCollectionCoverImage(collectionName string) (*string, error) {
 	return &image.ImageBase64, nil
 }
 
-func SetCollectionCoverImage(collectionName string, image *string, authorizedAddress string) error {
+func SetCollectionCoverImage(collectionName string, image *string, requestSourceAddress string) error {
 	imageSize := getByteArrayLenOfBase64EncodedImage(image)
 	if imageSize > maxCoverImageSize {
 		return errorCoverTooBig
@@ -111,7 +111,7 @@ func SetCollectionCoverImage(collectionName string, image *string, authorizedAdd
 	if err != nil {
 		return err
 	}
-	if creatorAccount.Address != authorizedAddress {
+	if creatorAccount.Address != requestSourceAddress {
 		return errorNotAuthorized
 	}
 
@@ -136,7 +136,7 @@ func GetCollectionProfileImage(collectionName string) (*string, error) {
 	return &image.ImageBase64, nil
 }
 
-func SetCollectionProfileImage(collectionName string, image *string, authorizedAddress string) error {
+func SetCollectionProfileImage(collectionName string, image *string, requestSourceAddress string) error {
 	imageSize := getByteArrayLenOfBase64EncodedImage(image)
 	if imageSize > maxProfileImageSize {
 		return errorCoverTooBig
@@ -151,7 +151,7 @@ func SetCollectionProfileImage(collectionName string, image *string, authorizedA
 	if err != nil {
 		return err
 	}
-	if creatorAccount.Address != authorizedAddress {
+	if creatorAccount.Address != requestSourceAddress {
 		return errorNotAuthorized
 	}
 

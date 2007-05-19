@@ -2,11 +2,12 @@ package formatter
 
 import (
 	"encoding/hex"
+	"strings"
+	"testing"
+
 	"github.com/ElrondNetwork/elrond-sdk-erdgo/data"
 	"github.com/erdsea/erdsea-api/config"
 	"github.com/stretchr/testify/require"
-	"strings"
-	"testing"
 )
 
 func Test_DecodeAddress(t *testing.T) {

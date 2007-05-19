@@ -13,11 +13,14 @@ import (
 )
 
 const (
-	baseCollectionsEndpoint         = "/collections"
-	getCollectionsEndpoint          = "/:offset/:limit"
-	getCollectionByNameEndpoint     = "/by-name/:collectionName"
-	createCollectionEndpoint        = "/create"
-	getCollectionStatisticsEndpoint = "/statistics/:collectionName"
+	baseCollectionsEndpoint      = "/collections"
+	collectionByNameEndpoint     = "/:collectionName"
+	collectionListEndpoint       = "/list/:offset/:limit"
+	collectionCreateEndpoint     = "/create"
+	collectionStatisticsEndpoint = "/:collectionName/statistics"
+	collectionAssetsEndpoint     = "/:collectionName/assets/:offset/:limit"
+	collectionProfileEndpoint    = "/:collectionName/profile/"
+	collectionCoverEndpoint      = "/:collectionName/cover"
 )
 
 type collectionsHandler struct {
@@ -28,10 +31,19 @@ func NewCollectionsHandler(groupHandler *groupHandler, authCfg config.AuthConfig
 	handler := &collectionsHandler{blockchainCfg: blockchainCfg}
 
 	endpoints := []EndpointHandler{
-		{Method: http.MethodGet, Path: getCollectionsEndpoint, HandlerFunc: handler.get},
-		{Method: http.MethodGet, Path: getCollectionByNameEndpoint, HandlerFunc: handler.getByName},
-		{Method: http.MethodGet, Path: getCollectionStatisticsEndpoint, HandlerFunc: handler.getStatisticsForCollectionWithName},
-		{Method: http.MethodPost, Path: createCollectionEndpoint, HandlerFunc: handler.create},
+		{Method: http.MethodGet, Path: collectionListEndpoint, HandlerFunc: handler.getList},
+		{Method: http.MethodGet, Path: collectionByNameEndpoint, HandlerFunc: handler.get},
+		{Method: http.MethodPost, Path: collectionByNameEndpoint, HandlerFunc: handler.set},
+
+		{Method: http.MethodGet, Path: collectionStatisticsEndpoint, HandlerFunc: handler.getStatisticsForCollectionWithName},
+		{Method: http.MethodPost, Path: collectionCreateEndpoint, HandlerFunc: handler.create},
+		{Method: http.MethodGet, Path: collectionAssetsEndpoint, HandlerFunc: handler.getAssetsForCollectionWithName},
+
+		{Method: http.MethodGet, Path: collectionProfileEndpoint, HandlerFunc: handler.getCollectionProfile},
+		{Method: http.MethodPost, Path: collectionProfileEndpoint, HandlerFunc: handler.setCollectionProfile},
+
+		{Method: http.MethodGet, Path: collectionCoverEndpoint, HandlerFunc: handler.getCollectionCover},
+		{Method: http.MethodPost, Path: collectionCoverEndpoint, HandlerFunc: handler.setCollectionCover},
 	}
 
 	endpointGroupHandler := EndpointGroupHandler{
@@ -43,7 +55,7 @@ func NewCollectionsHandler(groupHandler *groupHandler, authCfg config.AuthConfig
 	groupHandler.AddEndpointGroupHandler(endpointGroupHandler)
 }
 
-func (ch *collectionsHandler) get(c *gin.Context) {
+func (handler *collectionsHandler) getList(c *gin.Context) {
 	offsetStr := c.Param("offset")
 	limitStr := c.Param("limit")
 
@@ -68,7 +80,7 @@ func (ch *collectionsHandler) get(c *gin.Context) {
 	data.JsonResponse(c, http.StatusOK, collections, "")
 }
 
-func (ch *collectionsHandler) getByName(c *gin.Context) {
+func (handler *collectionsHandler) get(c *gin.Context) {
 	collectionName := c.Param("collectionName")
 
 	collection, err := storage.GetCollectionByName(collectionName)
@@ -80,7 +92,21 @@ func (ch *collectionsHandler) getByName(c *gin.Context) {
 	data.JsonResponse(c, http.StatusOK, collection, "")
 }
 
-func (ch *collectionsHandler) getStatisticsForCollectionWithName(c *gin.Context) {
+func (handler *collectionsHandler) set(c *gin.Context) {
+	collectionName := c.Param("collectionName")
+	var request services.UpdateCollectionRequest
+
+	jwtAddress := c.GetString(middleware.AddressKey)
+	collection, err := services.UpdateCollection(collectionName, &request, jwtAddress)
+	if err != nil {
+		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	data.JsonResponse(c, http.StatusOK, collection, "")
+}
+
+func (handler *collectionsHandler) getStatisticsForCollectionWithName(c *gin.Context) {
 	collectionName := c.Param("collectionName")
 
 	collection, err := storage.GetCollectionByName(collectionName)
@@ -98,7 +124,7 @@ func (ch *collectionsHandler) getStatisticsForCollectionWithName(c *gin.Context)
 	data.JsonResponse(c, http.StatusOK, stats, "")
 }
 
-func (ch *collectionsHandler) create(c *gin.Context) {
+func (handler *collectionsHandler) create(c *gin.Context) {
 	var request services.CreateCollectionRequest
 
 	err := c.Bind(&request)
@@ -107,17 +133,109 @@ func (ch *collectionsHandler) create(c *gin.Context) {
 		return
 	}
 
-	jwtAddress, exists := c.Get(middleware.AddressKey)
-	if !exists {
-		data.JsonResponse(c, http.StatusInternalServerError, nil, "could not get address from context")
-		return
-	}
+	jwtAddress := c.GetString(middleware.AddressKey)
 	if jwtAddress != request.UserAddress {
 		data.JsonResponse(c, http.StatusUnauthorized, nil, "jwt and request addresses differ")
 		return
 	}
 
-	err = services.CreateCollection(&request, ch.blockchainCfg.ProxyUrl)
+	collection, err := services.CreateCollection(&request, handler.blockchainCfg.ProxyUrl)
+	if err != nil {
+		data.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		return
+	}
+
+	data.JsonResponse(c, http.StatusOK, collection, "")
+}
+
+func (handler *collectionsHandler) getAssetsForCollectionWithName(c *gin.Context) {
+	collectionName := c.Param("collectionName")
+	offsetStr := c.Param("offset")
+	limitStr := c.Param("limit")
+
+	offset, err := strconv.Atoi(offsetStr)
+	if err != nil {
+		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil {
+		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	collection, err := storage.GetCollectionByName(collectionName)
+	if err != nil {
+		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	assets, err := storage.GetAssetsByCollectionIdWithOffsetLimit(collection.ID, offset, limit)
+	if err != nil {
+		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	data.JsonResponse(c, http.StatusOK, assets, "")
+}
+
+func (handler *collectionsHandler) getCollectionProfile(c *gin.Context) {
+	collectionName := c.Param("collectionName")
+
+	image, err := services.GetCollectionProfileImage(collectionName)
+	if err != nil {
+		data.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		return
+	}
+
+	data.JsonResponse(c, http.StatusOK, &image, "")
+}
+
+func (handler *collectionsHandler) setCollectionProfile(c *gin.Context) {
+	var imageBase64 string
+	collectionName := c.Param("collectionName")
+
+	err := c.Bind(&imageBase64)
+	if err != nil {
+		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	jwtAddress := c.GetString(middleware.AddressKey)
+	err = services.SetCollectionProfileImage(collectionName, &imageBase64, jwtAddress)
+	if err != nil {
+		data.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		return
+	}
+
+	data.JsonResponse(c, http.StatusOK, "", "")
+}
+
+func (handler *collectionsHandler) getCollectionCover(c *gin.Context) {
+	collectionName := c.Param("collectionName")
+
+	image, err := services.GetCollectionCoverImage(collectionName)
+	if err != nil {
+		data.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		return
+	}
+
+	data.JsonResponse(c, http.StatusOK, &image, "")
+}
+
+func (handler *collectionsHandler) setCollectionCover(c *gin.Context) {
+	var imageBase64 string
+	collectionName := c.Param("collectionName")
+
+	err := c.Bind(&imageBase64)
+	if err != nil {
+		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	jwtAddress := c.GetString(middleware.AddressKey)
+	err = services.SetCollectionCoverImage(collectionName, &imageBase64, jwtAddress)
 	if err != nil {
 		data.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return

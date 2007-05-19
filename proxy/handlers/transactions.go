@@ -1,21 +1,21 @@
 package handlers
 
 import (
+	"net/http"
+	"strconv"
+
 	"github.com/erdsea/erdsea-api/config"
 	"github.com/erdsea/erdsea-api/data"
 	"github.com/erdsea/erdsea-api/proxy/middleware"
 	"github.com/erdsea/erdsea-api/storage"
-	"net/http"
-	"strconv"
-
 	"github.com/gin-gonic/gin"
 )
 
 const (
-	baseTransactionsEndpoint         = "/transactions"
-	getTransactionsEndpoint          = "/:offset/:limit"
-	getTransactionsByAssetEndpoint   = "/by-asset/:tokenId/:nonce/:offset/:limit"
-	getTransactionsByAddressEndpoint = "/by-address/:address/:offset/:limit"
+	baseTransactionsEndpoint      = "/transactions"
+	transactionsListEndpoint      = "/list/:offset/:limit"
+	transactionsByAssetEndpoint   = "/asset/:tokenId/:nonce/:offset/:limit"
+	transactionsByAddressEndpoint = "/address/:address/:offset/:limit"
 )
 
 type transactionsHandler struct {
@@ -25,9 +25,9 @@ func NewTransactionsHandler(groupHandler *groupHandler, authCfg config.AuthConfi
 	handler := &transactionsHandler{}
 
 	endpoints := []EndpointHandler{
-		{Method: http.MethodGet, Path: getTransactionsEndpoint, HandlerFunc: handler.get},
-		{Method: http.MethodGet, Path: getTransactionsByAddressEndpoint, HandlerFunc: handler.getByAddress},
-		{Method: http.MethodGet, Path: getTransactionsByAssetEndpoint, HandlerFunc: handler.getByAsset},
+		{Method: http.MethodGet, Path: transactionsListEndpoint, HandlerFunc: handler.getList},
+		{Method: http.MethodGet, Path: transactionsByAssetEndpoint, HandlerFunc: handler.getByAddress},
+		{Method: http.MethodGet, Path: transactionsByAddressEndpoint, HandlerFunc: handler.getByAsset},
 	}
 
 	endpointGroupHandler := EndpointGroupHandler{
@@ -39,7 +39,7 @@ func NewTransactionsHandler(groupHandler *groupHandler, authCfg config.AuthConfi
 	groupHandler.AddEndpointGroupHandler(endpointGroupHandler)
 }
 
-func (handler *transactionsHandler) get(c *gin.Context) {
+func (handler *transactionsHandler) getList(c *gin.Context) {
 	offsetStr := c.Param("offset")
 	limitStr := c.Param("limit")
 
