@@ -53,8 +53,6 @@ func NewCollectionsHandler(groupHandler *groupHandler, authCfg config.AuthConfig
 		{Method: http.MethodGet, Path: collectionListEndpoint, HandlerFunc: handler.getList},
 		{Method: http.MethodGet, Path: collectionByNameEndpoint, HandlerFunc: handler.get},
 		{Method: http.MethodGet, Path: collectionTokensEndpoint, HandlerFunc: handler.getTokens},
-		{Method: http.MethodGet, Path: collectionProfileEndpoint, HandlerFunc: handler.getCollectionProfile},
-		{Method: http.MethodGet, Path: collectionCoverEndpoint, HandlerFunc: handler.getCollectionCover},
 		{Method: http.MethodGet, Path: collectionMintInfoEndpoint, HandlerFunc: handler.getMintInfo},
 		{Method: http.MethodGet, Path: collectionRankingEndpoint, HandlerFunc: handler.getCollectionRankings},
 	}
@@ -293,36 +291,8 @@ func (handler *collectionsHandler) getTokens(c *gin.Context) {
 	dtos.JsonResponse(c, http.StatusOK, tokens, "")
 }
 
-// @Summary Get collection profile image
-// @Description Retrieves a collection cover image. It will be sent as base64 encoding (sdt, raw) of its byte representation.
-// @Tags collections
-// @Accept json
-// @Produce json
-// @Param collectionId path string true "collection id"
-// @Success 200 {object} string
-// @Failure 400 {object} dtos.ApiResponse
-// @Failure 404 {object} dtos.ApiResponse
-// @Router /collections/{collectionId}/profile [get]
-func (handler *collectionsHandler) getCollectionProfile(c *gin.Context) {
-	tokenId := c.Param("collectionId")
-
-	cacheInfo, err := collstats.GetOrAddCollectionCacheInfo(tokenId)
-	if err != nil {
-		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
-		return
-	}
-
-	image, err := storage.GetCollectionProfileImageByCollectionId(cacheInfo.CollectionId)
-	if err != nil {
-		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
-		return
-	}
-
-	dtos.JsonResponse(c, http.StatusOK, &image, "")
-}
-
 // @Summary Set collection profile image
-// @Description Expects base64 encoding (sdt, raw) of the image representation. Returns empty string. Max size of byte array is 1MB.
+// @Description Expects base64 std encoding of the image representation. Returns empty string. Max size of byte array is 1MB.
 // @Tags collections
 // @Accept json
 // @Produce json
@@ -366,7 +336,7 @@ func (handler *collectionsHandler) setCollectionProfile(c *gin.Context) {
 		return
 	}
 
-	err = services.SetCollectionProfileImage(cacheInfo.CollectionId, &imageBase64)
+	err = services.SetCollectionProfileImage(tokenId, cacheInfo.CollectionId, &imageBase64)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
@@ -375,36 +345,8 @@ func (handler *collectionsHandler) setCollectionProfile(c *gin.Context) {
 	dtos.JsonResponse(c, http.StatusOK, "", "")
 }
 
-// @Summary Get collection cover image
-// @Description Retrieves a collection cover image. It will be sent as base64 encoding (sdt, raw) of its byte representation.
-// @Tags collections
-// @Accept json
-// @Produce json
-// @Param collectionId path string true "collection id"
-// @Success 200 {object} string
-// @Failure 400 {object} dtos.ApiResponse
-// @Failure 404 {object} dtos.ApiResponse
-// @Router /collections/{collectionId}/cover [get]
-func (handler *collectionsHandler) getCollectionCover(c *gin.Context) {
-	tokenId := c.Param("collectionId")
-
-	cacheInfo, err := collstats.GetOrAddCollectionCacheInfo(tokenId)
-	if err != nil {
-		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
-		return
-	}
-
-	image, err := storage.GetCollectionCoverImageByCollectionId(cacheInfo.CollectionId)
-	if err != nil {
-		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
-		return
-	}
-
-	dtos.JsonResponse(c, http.StatusOK, &image, "")
-}
-
 // @Summary Set collection cover image
-// @Description Expects base64 encoding (sdt, raw) of the image representation. Returns empty string. Max size of byte array is 1MB.
+// @Description Expects base64 std encoding of the image representation. Returns empty string. Max size of byte array is 1MB.
 // @Tags collections
 // @Accept json
 // @Produce json
@@ -449,7 +391,7 @@ func (handler *collectionsHandler) setCollectionCover(c *gin.Context) {
 		return
 	}
 
-	err = services.SetCollectionCoverImage(cacheInfo.CollectionId, &imageBase64)
+	err = services.SetCollectionCoverImage(tokenId, cacheInfo.CollectionId, &imageBase64)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return

@@ -243,50 +243,8 @@ var doc = `{
             }
         },
         "/accounts/{walletAddress}/cover": {
-            "get": {
-                "description": "Retrieves an account cover image. It will be sent as base64 encoding (sdt, raw) of its byte representation.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "accounts"
-                ],
-                "summary": "Get account cover image",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "wallet address",
-                        "name": "walletAddress",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/dtos.ApiResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/dtos.ApiResponse"
-                        }
-                    }
-                }
-            },
             "post": {
-                "description": "Expects base64 encoding (sdt, raw) of the image representation. Returns empty string. Max size of byte array is 1MB.",
+                "description": "Expects base64 std encoding of the image representation. Returns empty string. Max size of byte array is 1MB.",
                 "consumes": [
                     "application/json"
                 ],
@@ -344,50 +302,8 @@ var doc = `{
             }
         },
         "/accounts/{walletAddress}/profile": {
-            "get": {
-                "description": "Retrieves an account profile image. It will be sent as base64 encoding (sdt, raw) of its byte representation.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "accounts"
-                ],
-                "summary": "Get account profile image",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "wallet address",
-                        "name": "walletAddress",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/dtos.ApiResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/dtos.ApiResponse"
-                        }
-                    }
-                }
-            },
             "post": {
-                "description": "Expects base64 encoding (sdt, raw) of the image representation. Returns empty string. Max size of byte array is 512KB.",
+                "description": "Expects base64 std encoding of the image representation. Returns empty string. Max size of byte array is 512KB.",
                 "consumes": [
                     "application/json"
                 ],
@@ -862,50 +778,8 @@ var doc = `{
             }
         },
         "/collections/{collectionId}/cover": {
-            "get": {
-                "description": "Retrieves a collection cover image. It will be sent as base64 encoding (sdt, raw) of its byte representation.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "collections"
-                ],
-                "summary": "Get collection cover image",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "collection id",
-                        "name": "collectionId",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/dtos.ApiResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/dtos.ApiResponse"
-                        }
-                    }
-                }
-            },
             "post": {
-                "description": "Expects base64 encoding (sdt, raw) of the image representation. Returns empty string. Max size of byte array is 1MB.",
+                "description": "Expects base64 std encoding of the image representation. Returns empty string. Max size of byte array is 1MB.",
                 "consumes": [
                     "application/json"
                 ],
@@ -1013,50 +887,8 @@ var doc = `{
             }
         },
         "/collections/{collectionId}/profile": {
-            "get": {
-                "description": "Retrieves a collection cover image. It will be sent as base64 encoding (sdt, raw) of its byte representation.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "collections"
-                ],
-                "summary": "Get collection profile image",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "collection id",
-                        "name": "collectionId",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/dtos.ApiResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/dtos.ApiResponse"
-                        }
-                    }
-                }
-            },
             "post": {
-                "description": "Expects base64 encoding (sdt, raw) of the image representation. Returns empty string. Max size of byte array is 1MB.",
+                "description": "Expects base64 std encoding of the image representation. Returns empty string. Max size of byte array is 1MB.",
                 "consumes": [
                     "application/json"
                 ],
@@ -1944,6 +1776,9 @@ var doc = `{
                 "address": {
                     "type": "string"
                 },
+                "coverImageLink": {
+                    "type": "string"
+                },
                 "createdAt": {
                     "type": "integer"
                 },
@@ -1959,6 +1794,9 @@ var doc = `{
                 "name": {
                     "type": "string"
                 },
+                "profileImageLink": {
+                    "type": "string"
+                },
                 "twitterLink": {
                     "type": "string"
                 },
@@ -1971,6 +1809,9 @@ var doc = `{
             "type": "object",
             "properties": {
                 "contractAddress": {
+                    "type": "string"
+                },
+                "coverImageLink": {
                     "type": "string"
                 },
                 "createdAt": {
@@ -2008,6 +1849,9 @@ var doc = `{
                 },
                 "priority": {
                     "type": "integer"
+                },
+                "profileImageLink": {
+                    "type": "string"
                 },
                 "telegramLink": {
                     "type": "string"

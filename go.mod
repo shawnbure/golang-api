@@ -7,7 +7,7 @@ require (
 	github.com/ElrondNetwork/elrond-go-logger v1.0.4
 	github.com/ElrondNetwork/elrond-sdk-erdgo v1.0.0
 	github.com/boltdb/bolt v1.3.1
-	github.com/cpuguy83/go-md2man/v2 v2.0.1 // indirect
+	github.com/cloudinary/cloudinary-go v1.3.0
 	github.com/dgraph-io/ristretto v0.1.0
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gin-contrib/cors v0.0.0-20190301062745-f9e10995c85a

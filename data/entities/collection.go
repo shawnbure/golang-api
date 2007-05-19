@@ -18,6 +18,8 @@ type Collection struct {
 	MintPricePerTokenString  string         `json:"mintPricePerTokenString"`
 	MintPricePerTokenNominal float64        `json:"mintPricePerTokenNominal"`
 	Flags                    datatypes.JSON `json:"flags"`
+	ProfileImageLink         string         `json:"profileImageLink"`
+	CoverImageLink           string         `json:"coverImageLink"`
 
 	CreatorID uint64 `json:"creatorId"`
 }
