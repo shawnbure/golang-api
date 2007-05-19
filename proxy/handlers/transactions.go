@@ -27,8 +27,8 @@ func NewTransactionsHandler(groupHandler *groupHandler, authCfg config.AuthConfi
 
 	endpoints := []EndpointHandler{
 		{Method: http.MethodGet, Path: transactionsListEndpoint, HandlerFunc: handler.getList},
-		{Method: http.MethodGet, Path: transactionsByAssetEndpoint, HandlerFunc: handler.getByAddress},
-		{Method: http.MethodGet, Path: transactionsByAddressEndpoint, HandlerFunc: handler.getByAsset},
+		{Method: http.MethodGet, Path: transactionsByAssetEndpoint, HandlerFunc: handler.getByAsset},
+		{Method: http.MethodGet, Path: transactionsByAddressEndpoint, HandlerFunc: handler.getByAddress},
 		{Method: http.MethodGet, Path: transactionsByCollectionEndpoint, HandlerFunc: handler.getByCollection},
 	}
 
