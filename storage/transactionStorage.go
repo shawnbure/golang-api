@@ -171,3 +171,35 @@ func GetTransactionsWithOffsetLimit(offset int, limit int) ([]data.Transaction, 
 
 	return transactions, nil
 }
+
+func GetMinBuyPriceForTransactionsWithCollectionId(collectionId uint64) (float64, error) {
+	var price float64
+
+	database, err := GetDBOrError()
+	if err != nil {
+		return float64(0), err
+	}
+
+	txRead := database.Select("MIN(price_nominal)").Where("type = 'Buy' AND collection_id = ?", collectionId).Table("transactions").Find(&price)
+	if txRead.Error != nil {
+		return float64(0), txRead.Error
+	}
+
+	return price, nil
+}
+
+func GetSumBuyPriceForTransactionsWithCollectionId(collectionId uint64) (float64, error) {
+	var price float64
+
+	database, err := GetDBOrError()
+	if err != nil {
+		return float64(0), err
+	}
+
+	txRead := database.Select("SUM(price_nominal)").Where("type = 'Buy' AND collection_id = ?", collectionId).Table("transactions").Find(&price)
+	if txRead.Error != nil {
+		return float64(0), txRead.Error
+	}
+
+	return price, nil
+}

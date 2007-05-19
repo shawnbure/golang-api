@@ -64,6 +64,7 @@ func ListAsset(args ListAssetArgs) {
 		SellerID:     ownerAccount.ID,
 		BuyerID:      0,
 		AssetID:      asset.ID,
+		CollectionID: collection.ID,
 	}
 
 	addNewTransaction(&transaction)
@@ -112,6 +113,7 @@ func BuyAsset(args BuyAssetArgs) {
 		SellerID:     ownerAccount.ID,
 		BuyerID:      buyerAccount.ID,
 		AssetID:      asset.ID,
+		CollectionID: asset.CollectionID,
 	}
 
 	addNewTransaction(&transaction)
@@ -154,6 +156,7 @@ func WithdrawAsset(args WithdrawAssetArgs) {
 		SellerID:     0,
 		BuyerID:      ownerAccount.ID,
 		AssetID:      asset.ID,
+		CollectionID: asset.CollectionID,
 	}
 
 	addNewTransaction(&transaction)

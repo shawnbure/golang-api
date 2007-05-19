@@ -124,3 +124,35 @@ func GetAssetsByCollectionIdWithOffsetLimit(collectionId uint64, offset int, lim
 
 	return assets, nil
 }
+
+func CountListedAssetsByCollectionId(collectionId uint64) (uint64, error) {
+	count := int64(0)
+
+	database, err := GetDBOrError()
+	if err != nil {
+		return 0, err
+	}
+
+	txRead := database.Model(&data.Asset{}).Where("listed = true AND collection_id = ?", collectionId).Count(&count)
+	if txRead.Error != nil {
+		return 0, txRead.Error
+	}
+
+	return uint64(count), nil
+}
+
+func CountUniqueOwnersWithListedAssetsByCollectionId(collectionId uint64) (uint64, error) {
+	count := int64(0)
+
+	database, err := GetDBOrError()
+	if err != nil {
+		return 0, err
+	}
+
+	txRead := database.Model(&data.Asset{}).Where("listed = true AND collection_id = ?", collectionId).Distinct("owner_id").Count(&count)
+	if txRead.Error != nil {
+		return 0, txRead.Error
+	}
+
+	return uint64(count), nil
+}

@@ -7,9 +7,10 @@ type Transaction struct {
 	PriceNominal float64
 	Timestamp    uint64
 
-	SellerID uint64
-	BuyerID  uint64
-	AssetID  uint64
+	SellerID     uint64
+	BuyerID      uint64
+	AssetID      uint64
+	CollectionID uint64
 }
 
 type TxType string

@@ -40,3 +40,20 @@ func Test_CreateCollection(T *testing.T) {
 	_, err = storage.GetCollectionByName("this name is unique")
 	require.Nil(T, err)
 }
+
+func Test_GetCollectionStatistics(T *testing.T) {
+	connectToDb()
+	cache.InitCacher(config.CacheConfig{Url: "redis://localhost:6379"})
+
+	stats, err := GetStatisticsForCollection(1)
+	require.Nil(T, err)
+	require.GreaterOrEqual(T, stats.FloorPrice, float64(1))
+	require.GreaterOrEqual(T, stats.ItemsCount, uint64(1))
+	require.GreaterOrEqual(T, stats.OwnersCount, uint64(1))
+	require.GreaterOrEqual(T, stats.VolumeTraded, float64(1))
+
+	stats, err = GetStatisticsForCollection(1)
+	require.Nil(T, err)
+	hits := cache.GetCacher().GetStats().Hits
+	require.GreaterOrEqual(T, hits.Load(), int64(1))
+}

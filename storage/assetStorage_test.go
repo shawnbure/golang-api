@@ -107,6 +107,38 @@ func Test_GetAssetsByCollectionId(t *testing.T) {
 	}
 }
 
+func Test_CountListedAssetsByCollectionId(t *testing.T) {
+	connectToTestDb()
+
+	asset := defaultAsset()
+	err := AddNewAsset(&asset)
+	require.Nil(t, err)
+
+	otherAsset := defaultAsset()
+	err = AddNewAsset(&otherAsset)
+	require.Nil(t, err)
+
+	count, err := CountListedAssetsByCollectionId(1)
+	require.Nil(t, err)
+	require.GreaterOrEqual(t, count, uint64(2))
+}
+
+func Test_CountUniqueOwnersWithListedAssetsByCollectionId(t *testing.T) {
+	connectToTestDb()
+
+	asset := defaultAsset()
+	err := AddNewAsset(&asset)
+	require.Nil(t, err)
+
+	otherAsset := defaultAsset()
+	err = AddNewAsset(&otherAsset)
+	require.Nil(t, err)
+
+	count, err := CountUniqueOwnersWithListedAssetsByCollectionId(1)
+	require.Nil(t, err)
+	require.Equal(t, count, uint64(1))
+}
+
 func defaultAsset() data.Asset {
 	return data.Asset{
 		TokenID:      "my_token",
