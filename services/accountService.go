@@ -62,6 +62,11 @@ func GetOrCreateAccount(address string) (*entities.Account, error) {
 }
 
 func CreateAccount(request *CreateAccountRequest) (*entities.Account, error) {
+	err := checkValidCreateAccountRequest(request)
+	if err != nil {
+		return nil, err
+	}
+
 	account := entities.Account{
 		Address:       request.Address,
 		Name:          request.Name,
@@ -72,7 +77,7 @@ func CreateAccount(request *CreateAccountRequest) (*entities.Account, error) {
 		CreatedAt:     uint64(time.Now().Unix()),
 	}
 
-	err := storage.AddAccount(&account)
+	err = storage.AddAccount(&account)
 	if err != nil {
 		return nil, err
 	}
@@ -86,10 +91,16 @@ func CreateAccount(request *CreateAccountRequest) (*entities.Account, error) {
 }
 
 func UpdateAccount(account *entities.Account, request *SetAccountRequest) error {
+	err := checkValidSetAccountRequest(request)
+	if err != nil {
+		return err
+	}
+
 	account.Description = request.Description
 	account.InstagramLink = request.InstagramLink
 	account.TwitterLink = request.TwitterLink
 	account.Website = request.Website
+
 	return storage.UpdateAccount(account)
 }
 
@@ -187,4 +198,52 @@ func GetOrAddAccountCacheInfo(walletAddress string) (*AccountCacheInfo, error) {
 	}
 
 	return cacheInfo, nil
+}
+
+func checkValidCreateAccountRequest(request *CreateAccountRequest) error {
+	if len(request.Name) == 0 {
+		return errors.New("empty name")
+	}
+
+	if len(request.Name) > MaxNameLen {
+		return errors.New("name too long")
+	}
+
+	if len(request.Description) > MaxDescLen {
+		return errors.New("description too long")
+	}
+
+	if len(request.Website) > MaxLinkLen {
+		return errors.New("website too long")
+	}
+
+	if len(request.TwitterLink) > MaxLinkLen {
+		return errors.New("twitter link too long")
+	}
+
+	if len(request.InstagramLink) > MaxLinkLen {
+		return errors.New("instagram link too long")
+	}
+
+	return nil
+}
+
+func checkValidSetAccountRequest(request *SetAccountRequest) error {
+	if len(request.Description) > MaxDescLen {
+		return errors.New("description too long")
+	}
+
+	if len(request.Website) > MaxLinkLen {
+		return errors.New("website too long")
+	}
+
+	if len(request.TwitterLink) > MaxLinkLen {
+		return errors.New("twitter link too long")
+	}
+
+	if len(request.InstagramLink) > MaxLinkLen {
+		return errors.New("instagram link too long")
+	}
+
+	return nil
 }
