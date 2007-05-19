@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"net/http"
 	"strconv"
 
@@ -18,6 +19,7 @@ const (
 	availableTokensEndpoint          = "/available"
 	offersForTokenIdAndNonceEndpoint = "/:tokenId/:nonce/offers/:offset/:limit"
 	bidsForTokenIdAndNonceEndpoint   = "/:tokenId/:nonce/bids/:offset/:limit"
+	refreshTokenMetadataEndpoint     = "/:tokenId/:nonce/refresh"
 	tokenMetadataRelayEndpoint       = "/metadata/relay"
 )
 
@@ -25,7 +27,7 @@ type tokensHandler struct {
 	blockchainConfig config.BlockchainConfig
 }
 
-func NewTokensHandler(groupHandler *groupHandler, cfg config.BlockchainConfig) {
+func NewTokensHandler(groupHandler *groupHandler, authCfg config.AuthConfig, cfg config.BlockchainConfig) {
 	handler := &tokensHandler{
 		blockchainConfig: cfg,
 	}
@@ -35,7 +37,7 @@ func NewTokensHandler(groupHandler *groupHandler, cfg config.BlockchainConfig) {
 		{Method: http.MethodPost, Path: availableTokensEndpoint, HandlerFunc: handler.getAvailableTokens},
 		{Method: http.MethodGet, Path: offersForTokenIdAndNonceEndpoint, HandlerFunc: handler.getOffers},
 		{Method: http.MethodGet, Path: bidsForTokenIdAndNonceEndpoint, HandlerFunc: handler.getBids},
-		{Method: http.MethodPost, Path: tokenMetadataRelayEndpoint, HandlerFunc: handler.relayMetadataResponse},
+		{Method: http.MethodGet, Path: tokenMetadataRelayEndpoint, HandlerFunc: handler.relayMetadataResponse},
 	}
 
 	endpointGroupHandler := EndpointGroupHandler{
@@ -45,6 +47,18 @@ func NewTokensHandler(groupHandler *groupHandler, cfg config.BlockchainConfig) {
 	}
 
 	groupHandler.AddEndpointGroupHandler(endpointGroupHandler)
+
+	privateEndpoints := []EndpointHandler{
+		{Method: http.MethodPost, Path: refreshTokenMetadataEndpoint, HandlerFunc: handler.refreshMetadata},
+	}
+
+	privateEndpointGroupHandler := EndpointGroupHandler{
+		Root:             baseTokensEndpoint,
+		Middlewares:      []gin.HandlerFunc{middleware.Authorization(authCfg.JwtSecret)},
+		EndpointHandlers: privateEndpoints,
+	}
+
+	groupHandler.AddEndpointGroupHandler(privateEndpointGroupHandler)
 }
 
 // @Summary Get token by id and nonce
@@ -222,24 +236,47 @@ func (handler *tokensHandler) getBids(c *gin.Context) {
 	dtos.JsonResponse(c, http.StatusOK, bidsDtos, "")
 }
 
+// @Summary Gets metadata link response. Cached.
+// @Description Make request with ?url=link
+// @Tags tokens
+// @Accept json
+// @Produce json
+// @Param payload body services.MetadataRelayRequest true "the url"
+// @Success 200 {object} string
+// @Failure 400 {object} dtos.ApiResponse
+// @Failure 404 {object} dtos.ApiResponse
+// @Router /tokens/metadata/relay [get]
 func (handler *tokensHandler) relayMetadataResponse(c *gin.Context) {
-	var req services.MetadataRelayRequest
+	url := c.Query("url")
 
-	err := c.Bind(&req)
-	if err != nil {
-		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
-		return
-	}
-
-	responseBytes, err := services.TryGetResponseCached(req.Url)
+	responseBytes, err := services.TryGetResponseCached(url)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
-	dtos.JsonResponse(c, http.StatusOK, responseBytes, "")
+	var metadata dtos.MetadataLinkResponse
+	err = json.Unmarshal([]byte(responseBytes), &metadata)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	dtos.JsonResponse(c, http.StatusOK, metadata, "")
 }
 
+// @Summary Tries to refresh token metadata link and attributes.
+// @Description Returns attributes directly stored inside token (not OS format). Check then before and after. If modified, reload the page maybe?
+// @Tags tokens
+// @Accept json
+// @Produce json
+// @Param tokenId path string true "token id"
+// @Param nonce path int true "token nonce"
+// @Success 200 {object} string
+// @Failure 400 {object} dtos.ApiResponse
+// @Failure 404 {object} dtos.ApiResponse
+// @Failure 501 {object} dtos.ApiResponse
+// @Router /tokens/{tokenId}/{nonce}/refresh [post]
 func (handler *tokensHandler) refreshMetadata(c *gin.Context) {
 	tokenId := c.Param("tokenId")
 	nonceString := c.Param("nonce")
