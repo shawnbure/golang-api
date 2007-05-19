@@ -81,7 +81,8 @@ func BuyAsset(args BuyAssetArgs) {
 	}
 
 	asset.Listed = false
-	// TODO: is this intended ?
+	// This was to be reset since the asset will no longer be on the marketplace.
+	// Could have been kept like this, but bugs may appear when trying when querying.
 	asset.OwnerId = 0
 	err = storage.UpdateAsset(asset)
 	if err != nil {
@@ -116,7 +117,8 @@ func WithdrawAsset(args WithdrawAssetArgs) {
 	}
 
 	asset.Listed = false
-	// TODO: is this intended ?
+	// This was to be reset since the asset will no longer be on the marketplace.
+	// Could have been kept like this, but bugs may appear when trying when querying.
 	asset.OwnerId = 0
 	err = storage.UpdateAsset(asset)
 	if err != nil {
