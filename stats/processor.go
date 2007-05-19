@@ -49,7 +49,7 @@ func ComputeCollectionMetadata(collectionId uint64) (*CollectionMetadata, error)
 	attrStats := make(map[string]map[string]int)
 
 	for {
-		assets, innerErr := storage.GetListedAssetsByCollectionIdWithOffsetLimit(collectionId, offset, limit)
+		assets, innerErr := storage.GetListedTokensByCollectionIdWithOffsetLimit(collectionId, offset, limit)
 		if innerErr != nil {
 			return nil, innerErr
 		}

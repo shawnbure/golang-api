@@ -1,7 +1,6 @@
 package services
 
 import (
-	stats2 "github.com/erdsea/erdsea-api/stats"
 	"gorm.io/datatypes"
 	"strconv"
 	"testing"
@@ -10,6 +9,7 @@ import (
 	"github.com/erdsea/erdsea-api/cache"
 	"github.com/erdsea/erdsea-api/config"
 	"github.com/erdsea/erdsea-api/data/entities"
+	"github.com/erdsea/erdsea-api/stats"
 	"github.com/erdsea/erdsea-api/storage"
 	"github.com/stretchr/testify/require"
 )
@@ -50,12 +50,12 @@ func Test_GetCollectionStatistics(T *testing.T) {
 	connectToDb()
 	cache.InitCacher(config.CacheConfig{Url: "redis://localhost:6379"})
 
-	stats, err := stats2.ComputeStatisticsForCollection(1)
+	collectionStats, err := stats.ComputeStatisticsForCollection(1)
 	require.Nil(T, err)
-	require.GreaterOrEqual(T, stats.FloorPrice, float64(1))
-	require.GreaterOrEqual(T, stats.ItemsTotal, uint64(1))
-	require.GreaterOrEqual(T, stats.OwnersTotal, uint64(1))
-	require.GreaterOrEqual(T, stats.VolumeTraded, float64(1))
+	require.GreaterOrEqual(T, collectionStats.FloorPrice, float64(1))
+	require.GreaterOrEqual(T, collectionStats.ItemsTotal, uint64(1))
+	require.GreaterOrEqual(T, collectionStats.OwnersTotal, uint64(1))
+	require.GreaterOrEqual(T, collectionStats.VolumeTraded, float64(1))
 }
 
 func Test_SearchCollection(T *testing.T) {
@@ -211,10 +211,10 @@ func Test_GetCollectionMetadata(t *testing.T) {
 	err = storage.AddToken(&token10)
 	require.Nil(t, err)
 
-	collStats, err := stats2.ComputeCollectionMetadata(coll.ID)
+	collStats, err := stats.ComputeCollectionMetadata(coll.ID)
 	require.Nil(t, err)
 
-	expected := stats2.CollectionMetadata{
+	expected := stats.CollectionMetadata{
 		NumItems: 10,
 		Owners:   map[uint64]bool{1: true},
 		AttrStats: map[string]map[string]int{
