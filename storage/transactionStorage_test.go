@@ -1,0 +1,137 @@
+package storage
+
+import (
+	"github.com/erdsea/erdsea-api/data"
+	"github.com/stretchr/testify/require"
+	"testing"
+)
+
+func Test_AddNewTransaction(t *testing.T) {
+	connectToDb(t)
+
+	transaction := defaultTransaction()
+	err := AddNewTransaction(&transaction)
+	require.Nil(t, err)
+
+	var transactionRead data.Transaction
+	txRead := GetDB().Last(&transactionRead)
+
+	require.Nil(t, txRead.Error)
+	require.Equal(t, transactionRead, transaction)
+}
+
+func Test_GetTransactionById(t *testing.T) {
+	connectToDb(t)
+
+	transaction := defaultTransaction()
+	err := AddNewTransaction(&transaction)
+	require.Nil(t, err)
+
+	transactionRead, err := GetTransactionById(transaction.ID)
+	require.Nil(t, err)
+	require.Equal(t, transactionRead, &transaction)
+}
+
+func Test_GetTransactionsByBuyerId(t *testing.T) {
+	connectToDb(t)
+
+	transaction := defaultTransaction()
+	err := AddNewTransaction(&transaction)
+	require.Nil(t, err)
+
+	otherTransaction := defaultTransaction()
+	err = AddNewTransaction(&otherTransaction)
+	require.Nil(t, err)
+
+	transactionsRead, err := GetTransactionsByBuyerId(transaction.BuyerID)
+	require.Nil(t, err)
+	require.GreaterOrEqual(t, len(transactionsRead), 2)
+
+	for _, transactionRead := range transactionsRead {
+		require.Equal(t, transactionRead.BuyerID, transaction.BuyerID)
+	}
+}
+
+func Test_GetTransactionsBySellerId(t *testing.T) {
+	connectToDb(t)
+
+	transaction := defaultTransaction()
+	err := AddNewTransaction(&transaction)
+	require.Nil(t, err)
+
+	otherTransaction := defaultTransaction()
+	err = AddNewTransaction(&otherTransaction)
+	require.Nil(t, err)
+
+	transactionsRead, err := GetTransactionsByBuyerId(transaction.SellerID)
+	require.Nil(t, err)
+	require.GreaterOrEqual(t, len(transactionsRead), 2)
+
+	for _, transactionRead := range transactionsRead {
+		require.Equal(t, transactionRead.SellerID, transaction.SellerID)
+	}
+}
+
+func Test_GetTransactionsByBuyerOrSellerId(t *testing.T) {
+	connectToDb(t)
+
+	transaction := defaultTransaction()
+	err := AddNewTransaction(&transaction)
+	require.Nil(t, err)
+
+	otherTransaction := defaultTransaction()
+	err = AddNewTransaction(&otherTransaction)
+	require.Nil(t, err)
+
+	transactionsRead, err := GetTransactionsBySellerId(transaction.SellerID)
+	require.Nil(t, err)
+	require.GreaterOrEqual(t, len(transactionsRead), 2)
+
+	for _, transactionRead := range transactionsRead {
+		sameSeller := transactionRead.SellerID == transaction.SellerID
+		sameBuyer := transactionRead.BuyerID == transaction.BuyerID
+		require.Equal(t, sameBuyer || sameSeller, true)
+	}
+}
+
+func Test_GetTransactionsByAssetId(t *testing.T) {
+	connectToDb(t)
+
+	transaction := defaultTransaction()
+	err := AddNewTransaction(&transaction)
+	require.Nil(t, err)
+
+	otherTransaction := defaultTransaction()
+	err = AddNewTransaction(&otherTransaction)
+	require.Nil(t, err)
+
+	transactionsRead, err := GetTransactionsByAssetId(transaction.AssetID)
+	require.Nil(t, err)
+	require.GreaterOrEqual(t, len(transactionsRead), 2)
+
+	for _, transactionRead := range transactionsRead {
+		require.Equal(t, transactionRead.AssetID, transaction.AssetID)
+	}
+}
+
+func Test_GetTransactionsByHash(t *testing.T) {
+	connectToDb(t)
+
+	transaction := defaultTransaction()
+	transaction.Hash = "my_unique_hash"
+	err := AddNewTransaction(&transaction)
+	require.Nil(t, err)
+
+	transactionRead, err := GetTransactionByHash(transaction.Hash)
+	require.Nil(t, err)
+	require.Equal(t, transactionRead.Hash, transaction.Hash)
+}
+
+func defaultTransaction() data.Transaction {
+	return data.Transaction{
+		Hash:     "hash",
+		SellerID: 1,
+		BuyerID:  2,
+		AssetID:  3,
+	}
+}

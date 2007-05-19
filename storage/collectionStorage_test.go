@@ -2,7 +2,6 @@ package storage
 
 import (
 	"github.com/erdsea/erdsea-api/data"
-	"github.com/magiconair/properties/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -18,7 +17,7 @@ func Test_AddNewCollection(t *testing.T) {
 	txRead := GetDB().Last(&collectionRead)
 
 	require.Nil(t, txRead.Error)
-	assert.Equal(t, collectionRead, collection)
+	require.Equal(t, collectionRead, collection)
 }
 
 func Test_GetCollectionById(t *testing.T) {
@@ -30,7 +29,7 @@ func Test_GetCollectionById(t *testing.T) {
 
 	collectionRead, err := GetCollectionById(collection.ID)
 	require.Nil(t, err)
-	assert.Equal(t, collectionRead.ID, collection.ID)
+	require.Equal(t, collectionRead, &collection)
 }
 
 func Test_GetCollectionsCreatedById(t *testing.T) {
@@ -44,23 +43,26 @@ func Test_GetCollectionsCreatedById(t *testing.T) {
 	err = AddNewCollection(&otherCollection)
 	require.Nil(t, err)
 
-	collections, err := GetCollectionsCreatedBy(collection.CreatorID)
+	collectionsRead, err := GetCollectionsCreatedBy(collection.CreatorID)
 	require.Nil(t, err)
-	require.GreaterOrEqual(t, len(collections), 2)
+	require.GreaterOrEqual(t, len(collectionsRead), 2)
+
+	for _, collectionRead := range collectionsRead {
+		require.Equal(t, collectionRead.CreatorID, collection.CreatorID)
+	}
 }
 
 func Test_GetCollectionByName(t *testing.T) {
 	connectToDb(t)
 
-	collectionName := "insane_unique_name"
 	collection := defaultCollection()
-	collection.Name = collectionName
+	collection.Name = "insane_unique_name"
 	err := AddNewCollection(&collection)
 	require.Nil(t, err)
 
-	retrievedCollection, err := GetCollectionByName(collectionName)
+	retrievedCollection, err := GetCollectionByName(collection.Name)
 	require.Nil(t, err)
-	require.GreaterOrEqual(t, retrievedCollection.Name, collectionName)
+	require.Equal(t, retrievedCollection.Name, collection.Name)
 }
 
 func defaultCollection() data.Collection {

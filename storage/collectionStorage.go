@@ -5,12 +5,12 @@ import (
 )
 
 func AddNewCollection(collection *data.Collection) error {
-	database := GetDB()
-	if database == nil {
-		return NoDBError
+	database, err := GetDBOrError()
+	if err != nil {
+		return err
 	}
 
-	txCreate := GetDB().Create(&collection)
+	txCreate := database.Create(&collection)
 	if txCreate.Error != nil {
 		return txCreate.Error
 	}
@@ -21,12 +21,12 @@ func AddNewCollection(collection *data.Collection) error {
 func GetCollectionById(id uint64) (*data.Collection, error) {
 	var collection data.Collection
 
-	database := GetDB()
-	if database == nil {
-		return nil, NoDBError
+	database, err := GetDBOrError()
+	if err != nil {
+		return nil, err
 	}
 
-	txRead := GetDB().Find(&collection, id)
+	txRead := database.Find(&collection, id)
 	if txRead.Error != nil {
 		return nil, txRead.Error
 	}
@@ -37,12 +37,12 @@ func GetCollectionById(id uint64) (*data.Collection, error) {
 func GetCollectionsCreatedBy(id uint64) ([]data.Collection, error) {
 	var collections []data.Collection
 
-	database := GetDB()
-	if database == nil {
-		return nil, NoDBError
+	database, err := GetDBOrError()
+	if err != nil {
+		return nil, err
 	}
 
-	txRead := GetDB().Find(&collections, "creator_id = ?", id)
+	txRead := database.Find(&collections, "creator_id = ?", id)
 	if txRead.Error != nil {
 		return nil, txRead.Error
 	}
@@ -53,12 +53,12 @@ func GetCollectionsCreatedBy(id uint64) ([]data.Collection, error) {
 func GetCollectionByName(name string) (*data.Collection, error) {
 	var collection data.Collection
 
-	database := GetDB()
-	if database == nil {
-		return nil, NoDBError
+	database, err := GetDBOrError()
+	if err != nil {
+		return nil, err
 	}
 
-	txRead := GetDB().Find(&collection, "name = ?", name)
+	txRead := database.Find(&collection, "name = ?", name)
 	if txRead.Error != nil {
 		return nil, txRead.Error
 	}

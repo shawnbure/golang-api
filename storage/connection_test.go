@@ -4,7 +4,6 @@ import (
 	"github.com/erdsea/erdsea-api/config"
 	"github.com/erdsea/erdsea-api/data"
 	_ "github.com/lib/pq"
-	"github.com/magiconair/properties/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -34,7 +33,7 @@ func Test_BasicWriteRead(t *testing.T) {
 	txRead := GetDB().Last(&collectionRead)
 
 	require.Nil(t, txRead.Error)
-	assert.Equal(t, collectionRead, collection)
+	require.Equal(t, collectionRead, collection)
 }
 
 func connectToDb(t *testing.T) {

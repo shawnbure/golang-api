@@ -2,7 +2,6 @@ package storage
 
 import (
 	"github.com/erdsea/erdsea-api/data"
-	"github.com/magiconair/properties/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -14,11 +13,11 @@ func Test_AddNewAccount(t *testing.T) {
 	err := AddNewAccount(&account)
 	require.Nil(t, err)
 
-	var accountRead data.Collection
+	var accountRead data.Account
 	txRead := GetDB().Last(&accountRead)
 
 	require.Nil(t, txRead.Error)
-	assert.Equal(t, accountRead, account)
+	require.Equal(t, accountRead, account)
 }
 
 func Test_GetAccountById(t *testing.T) {
@@ -30,21 +29,20 @@ func Test_GetAccountById(t *testing.T) {
 
 	accountRead, err := GetAccountById(account.ID)
 	require.Nil(t, err)
-	assert.Equal(t, accountRead.ID, account.ID)
+	require.Equal(t, accountRead, &account)
 }
 
 func Test_GetAccountByAddress(t *testing.T) {
 	connectToDb(t)
 
-	address := "unique_erd_addr"
 	account := defaultAccount()
-	account.Address = address
+	account.Address = "unique_erd_addr"
 	err := AddNewAccount(&account)
 	require.Nil(t, err)
 
-	retrievedAccount, err := GetAccountByAddress(address)
+	retrievedAccount, err := GetAccountByAddress(account.Address)
 	require.Nil(t, err)
-	require.GreaterOrEqual(t, retrievedAccount.Address, address)
+	require.GreaterOrEqual(t, retrievedAccount.Address, account.Address)
 }
 
 func defaultAccount() data.Account {
