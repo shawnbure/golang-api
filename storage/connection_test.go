@@ -35,6 +35,24 @@ func Test_BasicWriteRead(t *testing.T) {
 	require.Equal(t, collectionRead, collection)
 }
 
+func Test_InitDb(t *testing.T) {
+	connectToTestDb()
+
+	account := entities.Account{
+		ID: 0,
+	}
+	tx := GetDB().Find(&account)
+	require.Nil(t, tx.Error)
+	require.Equal(t, tx.RowsAffected, int64(1))
+
+	collection := entities.Collection{
+		ID: 0,
+	}
+	tx = GetDB().Find(&collection)
+	require.Nil(t, tx.Error)
+	require.Equal(t, tx.RowsAffected, int64(1))
+}
+
 func connectToTestDb() {
 	Connect(config.DatabaseConfig{
 		Dialect:       "postgres",
