@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"context"
 	"crypto/rand"
-	"github.com/go-redis/redis/v8"
-	"go.uber.org/atomic"
 	"math/big"
 	"os"
 	"os/signal"
@@ -14,7 +12,9 @@ import (
 	"time"
 
 	"github.com/erdsea/erdsea-api/config"
+	"github.com/go-redis/redis/v8"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/atomic"
 )
 
 var ctx = context.Background()
