@@ -14,6 +14,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+var corsHeaders = []string{
+	"Origin",
+	"Content-Length",
+	"Content-Type",
+	"Authorization",
+}
+
 type webServer struct {
 	router        *gin.Engine
 	generalConfig *config.GeneralConfig
@@ -29,7 +36,10 @@ type webServer struct {
 // @host localhost:5000
 func NewWebServer(cfg *config.GeneralConfig) (*webServer, error) {
 	router := gin.Default()
-	router.Use(cors.Default())
+	corsCfg := cors.DefaultConfig()
+	corsCfg.AllowHeaders = corsHeaders
+	corsCfg.AllowAllOrigins = true
+	router.Use(cors.New(corsCfg))
 
 	groupHandler := handlers.NewGroupHandler()
 
