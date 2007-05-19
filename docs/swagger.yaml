@@ -227,6 +227,13 @@ definitions:
       website:
         type: string
     type: object
+  services.MintInfo:
+    properties:
+      maxSupply:
+        type: integer
+      totalSold:
+        type: integer
+    type: object
   services.SetAccountRequest:
     properties:
       description:
@@ -741,6 +748,40 @@ paths:
           schema:
             $ref: '#/definitions/dtos.ApiResponse'
       summary: Set collection cover image
+      tags:
+      - collections
+  /collections/{collectionId}/mintInfo:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves max supply and total sold for a collection. Cached for
+        6 seconds.
+      parameters:
+      - description: collection id
+        in: path
+        name: collectionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/services.MintInfo'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: Gets mint info about a collection.
       tags:
       - collections
   /collections/{collectionId}/profile:

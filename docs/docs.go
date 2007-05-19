@@ -850,6 +850,56 @@ var doc = `{
                 }
             }
         },
+        "/collections/{collectionId}/mintInfo": {
+            "get": {
+                "description": "Retrieves max supply and total sold for a collection. Cached for 6 seconds.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "collections"
+                ],
+                "summary": "Gets mint info about a collection.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "collection id",
+                        "name": "collectionId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/services.MintInfo"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/collections/{collectionId}/profile": {
             "get": {
                 "description": "Retrieves a collection cover image. It will be sent as base64 encoding (sdt, raw) of its byte representation.",
@@ -2018,6 +2068,17 @@ var doc = `{
                 },
                 "website": {
                     "type": "string"
+                }
+            }
+        },
+        "services.MintInfo": {
+            "type": "object",
+            "properties": {
+                "maxSupply": {
+                    "type": "integer"
+                },
+                "totalSold": {
+                    "type": "integer"
                 }
             }
         },

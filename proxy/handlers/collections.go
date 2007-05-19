@@ -16,13 +16,14 @@ import (
 )
 
 const (
-	baseCollectionsEndpoint   = "/collections"
-	collectionByNameEndpoint  = "/:collectionId"
-	collectionListEndpoint    = "/list/:offset/:limit"
-	collectionCreateEndpoint  = "/create"
-	collectionTokensEndpoint  = "/:collectionId/tokens/:offset/:limit"
-	collectionProfileEndpoint = "/:collectionId/profile/"
-	collectionCoverEndpoint   = "/:collectionId/cover"
+	baseCollectionsEndpoint    = "/collections"
+	collectionByNameEndpoint   = "/:collectionId"
+	collectionListEndpoint     = "/list/:offset/:limit"
+	collectionCreateEndpoint   = "/create"
+	collectionTokensEndpoint   = "/:collectionId/tokens/:offset/:limit"
+	collectionProfileEndpoint  = "/:collectionId/profile/"
+	collectionCoverEndpoint    = "/:collectionId/cover"
+	collectionMintInfoEndpoint = "/:collectionId/mintInfo"
 )
 
 type collectionsHandler struct {
@@ -45,6 +46,8 @@ func NewCollectionsHandler(groupHandler *groupHandler, authCfg config.AuthConfig
 
 		{Method: http.MethodGet, Path: collectionCoverEndpoint, HandlerFunc: handler.getCollectionCover},
 		{Method: http.MethodPost, Path: collectionCoverEndpoint, HandlerFunc: handler.setCollectionCover},
+
+		{Method: http.MethodGet, Path: collectionMintInfoEndpoint, HandlerFunc: handler.getMintInfo},
 	}
 
 	endpointGroupHandler := EndpointGroupHandler{
@@ -437,6 +440,46 @@ func (handler *collectionsHandler) setCollectionCover(c *gin.Context) {
 	}
 
 	dtos.JsonResponse(c, http.StatusOK, "", "")
+}
+
+// @Summary Gets mint info about a collection.
+// @Description Retrieves max supply and total sold for a collection. Cached for 6 seconds.
+// @Tags collections
+// @Accept json
+// @Produce json
+// @Param collectionId path string true "collection id"
+// @Success 200 {object} services.MintInfo
+// @Failure 400 {object} dtos.ApiResponse
+// @Failure 404 {object} dtos.ApiResponse
+// @Failure 500 {object} dtos.ApiResponse
+// @Router /collections/{collectionId}/mintInfo [get]
+func (handler *collectionsHandler) getMintInfo(c *gin.Context) {
+	tokenId := c.Param("collectionId")
+
+	cacheInfo, err := collstats.GetOrAddCollectionCacheInfo(tokenId)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	collection, err := storage.GetCollectionById(cacheInfo.CollectionId)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	if len(collection.ContractAddress) == 0 {
+		dtos.JsonResponse(c, http.StatusNotFound, nil, "no contract address")
+		return
+	}
+
+	mintInfo, err := services.GetMintInfoForContract(collection.ContractAddress)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		return
+	}
+
+	dtos.JsonResponse(c, http.StatusOK, mintInfo, "")
 }
 
 func testInputSortParams(sortParams map[string]string) error {
