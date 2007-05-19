@@ -100,7 +100,7 @@ func BuyAsset(
 
 	transaction := data.Transaction{
 		Hash:     txHash,
-		Type:     "Sell",
+		Type:     "Buy",
 		Price:    price,
 		SellerID: ownerAccount.ID,
 		BuyerID:  buyerAccount.ID,
