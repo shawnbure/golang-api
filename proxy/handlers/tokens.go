@@ -42,9 +42,9 @@ func NewTokensHandler(groupHandler *groupHandler, authCfg config.AuthConfig) {
 // @Produce json
 // @Param tokenId path string true "token id"
 // @Param nonce path int true "token nonce"
-// @Success 200 {object} data.Token
-// @Failure 400 {object} data.ApiResponse
-// @Failure 404 {object} data.ApiResponse
+// @Success 200 {object} entities.Token
+// @Failure 400 {object} dtos.ApiResponse
+// @Failure 404 {object} dtos.ApiResponse
 // @Router /tokens/{tokenId}/{nonce} [get]
 func (handler *tokensHandler) getByTokenIdAndNonce(c *gin.Context) {
 	tokenId := c.Param("tokenId")

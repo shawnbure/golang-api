@@ -39,7 +39,7 @@ func NewPriceHandler(groupHandler *groupHandler, authCfg config.AuthConfig) {
 // @Accept json
 // @Produce json
 // @Success 200 {object} float64
-// @Failure 500 {object} data.ApiResponse
+// @Failure 500 {object} dtos.ApiResponse
 // @Router /egld_price [get]
 func (handler *eEGLDPriceHandler) get(c *gin.Context) {
 	price, err := services.GetEGLDPrice()

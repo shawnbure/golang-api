@@ -54,19 +54,19 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/data.Account"
+                            "$ref": "#/definitions/entities.Account"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     }
                 }
@@ -98,19 +98,19 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/data.Account"
+                            "$ref": "#/definitions/entities.Account"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     }
                 }
@@ -149,86 +149,25 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/data.Account"
+                            "$ref": "#/definitions/entities.Account"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/accounts/{accountId}/assets/{offset}/{limit}": {
-            "get": {
-                "description": "Retrieves a list of assets. Unsorted.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "accounts"
-                ],
-                "summary": "Gets assets for an account.",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "account id",
-                        "name": "accountId",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "offset",
-                        "name": "offset",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "limit",
-                        "name": "limit",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/data.Asset"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     }
                 }
@@ -266,13 +205,13 @@ var doc = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     }
                 }
@@ -317,19 +256,19 @@ var doc = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     }
                 }
@@ -367,13 +306,13 @@ var doc = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     }
                 }
@@ -418,19 +357,80 @@ var doc = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/accounts/{accountId}/tokens/{offset}/{limit}": {
+            "get": {
+                "description": "Retrieves a list of tokens. Unsorted.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "accounts"
+                ],
+                "summary": "Gets tokens for an account.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "account id",
+                        "name": "accountId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "offset",
+                        "name": "offset",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "limit",
+                        "name": "limit",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entities.Token"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     }
                 }
@@ -464,76 +464,25 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/data.Account"
+                            "$ref": "#/definitions/entities.Account"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/assets/{tokenId}/{nonce}": {
-            "get": {
-                "description": "Retrieves an asset by tokenId and nonce",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "assets"
-                ],
-                "summary": "Get asset by token by id and nonce",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "token id",
-                        "name": "tokenId",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "token nonce",
-                        "name": "nonce",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/data.Asset"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     }
                 }
@@ -573,13 +522,13 @@ var doc = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     }
                 }
@@ -619,13 +568,13 @@ var doc = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     }
                 }
@@ -659,25 +608,25 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/data.Collection"
+                            "$ref": "#/definitions/entities.Collection"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     }
                 }
@@ -718,20 +667,20 @@ var doc = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/data.Collection"
+                                "$ref": "#/definitions/entities.Collection"
                             }
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     }
                 }
@@ -763,19 +712,19 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/data.Collection"
+                            "$ref": "#/definitions/entities.Collection"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     }
                 }
@@ -814,86 +763,25 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/data.Collection"
+                            "$ref": "#/definitions/entities.Collection"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/collections/{collectionId}/assets/{offset}/{limit}": {
-            "get": {
-                "description": "Retrieves the assets of a collection. Unsorted.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "collections"
-                ],
-                "summary": "Get collection assets.",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "collection id",
-                        "name": "collectionId",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "offset",
-                        "name": "offset",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "limit",
-                        "name": "limit",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/data.Asset"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     }
                 }
@@ -931,13 +819,13 @@ var doc = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     }
                 }
@@ -982,19 +870,19 @@ var doc = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     }
                 }
@@ -1032,13 +920,13 @@ var doc = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     }
                 }
@@ -1083,13 +971,13 @@ var doc = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     }
                 }
@@ -1121,19 +1009,80 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/services.CollectionStatistics"
+                            "$ref": "#/definitions/dtos.CollectionStatistics"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/collections/{collectionId}/tokens/{offset}/{limit}": {
+            "get": {
+                "description": "Retrieves the tokens of a collection. Unsorted.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "collections"
+                ],
+                "summary": "Get collection tokens.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "collection id",
+                        "name": "collectionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "offset",
+                        "name": "offset",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "limit",
+                        "name": "limit",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entities.Token"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     }
                 }
@@ -1162,7 +1111,7 @@ var doc = `{
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     }
                 }
@@ -1196,14 +1145,14 @@ var doc = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/data.Account"
+                                "$ref": "#/definitions/entities.Account"
                             }
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     }
                 }
@@ -1237,14 +1186,14 @@ var doc = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/data.Collection"
+                                "$ref": "#/definitions/entities.Collection"
                             }
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     }
                 }
@@ -1282,7 +1231,58 @@ var doc = `{
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/tokens/{tokenId}/{nonce}": {
+            "get": {
+                "description": "Retrieves a token by tokenId and nonce",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tokens"
+                ],
+                "summary": "Get token by id and nonce",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "token id",
+                        "name": "tokenId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "token nonce",
+                        "name": "nonce",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/entities.Token"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     }
                 }
@@ -1330,81 +1330,20 @@ var doc = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/data.Transaction"
+                                "$ref": "#/definitions/entities.Transaction"
                             }
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/transactions/asset/{assetId}/{offset}/{limit}": {
-            "get": {
-                "description": "Retrieves transactions for an asset. Unordered.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "transactions"
-                ],
-                "summary": "Gets transaction for an asset.",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "asset id",
-                        "name": "assetId",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "offset",
-                        "name": "offset",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "limit",
-                        "name": "limit",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/data.Transaction"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     }
                 }
@@ -1452,20 +1391,20 @@ var doc = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/data.Transaction"
+                                "$ref": "#/definitions/entities.Transaction"
                             }
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     }
                 }
@@ -1506,20 +1445,81 @@ var doc = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/data.Transaction"
+                                "$ref": "#/definitions/entities.Transaction"
                             }
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/transactions/token/{tokenId}/{offset}/{limit}": {
+            "get": {
+                "description": "Retrieves transactions for an token. Unordered.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "transactions"
+                ],
+                "summary": "Gets transaction for an token.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "token id",
+                        "name": "tokenId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "offset",
+                        "name": "offset",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "limit",
+                        "name": "limit",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entities.Transaction"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     }
                 }
@@ -1578,7 +1578,7 @@ var doc = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     }
                 }
@@ -1637,7 +1637,7 @@ var doc = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     }
                 }
@@ -1689,7 +1689,7 @@ var doc = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/data.ApiResponse"
+                            "$ref": "#/definitions/dtos.ApiResponse"
                         }
                     }
                 }
@@ -1697,7 +1697,42 @@ var doc = `{
         }
     },
     "definitions": {
-        "data.Account": {
+        "dtos.ApiResponse": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "error": {
+                    "type": "string"
+                }
+            }
+        },
+        "dtos.CollectionStatistics": {
+            "type": "object",
+            "properties": {
+                "attributes": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "integer"
+                        }
+                    }
+                },
+                "floorPrice": {
+                    "type": "number"
+                },
+                "itemsCount": {
+                    "type": "integer"
+                },
+                "ownersCount": {
+                    "type": "integer"
+                },
+                "volumeTraded": {
+                    "type": "number"
+                }
+            }
+        },
+        "entities.Account": {
             "type": "object",
             "properties": {
                 "address": {
@@ -1726,57 +1761,7 @@ var doc = `{
                 }
             }
         },
-        "data.ApiResponse": {
-            "type": "object",
-            "properties": {
-                "data": {},
-                "error": {
-                    "type": "string"
-                }
-            }
-        },
-        "data.Asset": {
-            "type": "object",
-            "properties": {
-                "attributes": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "collectionID": {
-                    "type": "integer"
-                },
-                "createdAt": {
-                    "type": "integer"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "link": {
-                    "type": "string"
-                },
-                "listed": {
-                    "type": "boolean"
-                },
-                "nonce": {
-                    "type": "integer"
-                },
-                "ownerId": {
-                    "type": "integer"
-                },
-                "priceNominal": {
-                    "type": "number"
-                },
-                "royaltiesPercent": {
-                    "type": "number"
-                },
-                "tokenID": {
-                    "type": "string"
-                }
-            }
-        },
-        "data.Collection": {
+        "entities.Collection": {
             "type": "object",
             "properties": {
                 "createdAt": {
@@ -1817,12 +1802,59 @@ var doc = `{
                 }
             }
         },
-        "data.Transaction": {
+        "entities.Token": {
             "type": "object",
             "properties": {
-                "assetID": {
+                "attributes": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "collectionID": {
                     "type": "integer"
                 },
+                "createdAt": {
+                    "type": "integer"
+                },
+                "hash": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "imageLink": {
+                    "type": "string"
+                },
+                "listed": {
+                    "type": "boolean"
+                },
+                "metadataLink": {
+                    "type": "string"
+                },
+                "nonce": {
+                    "type": "integer"
+                },
+                "ownerId": {
+                    "type": "integer"
+                },
+                "priceNominal": {
+                    "type": "number"
+                },
+                "royaltiesPercent": {
+                    "type": "number"
+                },
+                "tokenID": {
+                    "type": "string"
+                },
+                "tokenName": {
+                    "type": "string"
+                }
+            }
+        },
+        "entities.Transaction": {
+            "type": "object",
+            "properties": {
                 "buyerID": {
                     "type": "integer"
                 },
@@ -1842,6 +1874,9 @@ var doc = `{
                     "type": "integer"
                 },
                 "timestamp": {
+                    "type": "integer"
+                },
+                "tokenID": {
                     "type": "integer"
                 },
                 "type": {
@@ -1893,13 +1928,13 @@ var doc = `{
                 "accounts": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/data.Account"
+                        "$ref": "#/definitions/entities.Account"
                     }
                 },
                 "collections": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/data.Collection"
+                        "$ref": "#/definitions/entities.Collection"
                     }
                 }
             }
@@ -1926,32 +1961,6 @@ var doc = `{
                 },
                 "refreshToken": {
                     "type": "string"
-                }
-            }
-        },
-        "services.CollectionStatistics": {
-            "type": "object",
-            "properties": {
-                "attributes": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "object",
-                        "additionalProperties": {
-                            "type": "integer"
-                        }
-                    }
-                },
-                "floorPrice": {
-                    "type": "number"
-                },
-                "itemsCount": {
-                    "type": "integer"
-                },
-                "ownersCount": {
-                    "type": "integer"
-                },
-                "volumeTraded": {
-                    "type": "number"
                 }
             }
         },

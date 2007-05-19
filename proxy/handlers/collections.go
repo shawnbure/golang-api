@@ -63,9 +63,9 @@ func NewCollectionsHandler(groupHandler *groupHandler, authCfg config.AuthConfig
 // @Produce json
 // @Param offset path int true "offset"
 // @Param limit path int true "limit"
-// @Success 200 {object} []data.Collection
-// @Failure 400 {object} data.ApiResponse
-// @Failure 404 {object} data.ApiResponse
+// @Success 200 {object} []entities.Collection
+// @Failure 400 {object} dtos.ApiResponse
+// @Failure 404 {object} dtos.ApiResponse
 // @Router /collections/list/{offset}/{limit} [get]
 func (handler *collectionsHandler) getList(c *gin.Context) {
 	offsetStr := c.Param("offset")
@@ -98,9 +98,9 @@ func (handler *collectionsHandler) getList(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param collectionId path uint64 true "collection id"
-// @Success 200 {object} data.Collection
-// @Failure 400 {object} data.ApiResponse
-// @Failure 404 {object} data.ApiResponse
+// @Success 200 {object} entities.Collection
+// @Failure 400 {object} dtos.ApiResponse
+// @Failure 404 {object} dtos.ApiResponse
 // @Router /collections/{collectionId} [get]
 func (handler *collectionsHandler) get(c *gin.Context) {
 	collectionIdString := c.Param("collectionId")
@@ -127,10 +127,10 @@ func (handler *collectionsHandler) get(c *gin.Context) {
 // @Produce json
 // @Param collectionId path uint64 true "collection id"
 // @Param updateCollectionRequest body services.UpdateCollectionRequest true "collection info"
-// @Success 200 {object} data.Collection
-// @Failure 401 {object} data.ApiResponse
-// @Failure 404 {object} data.ApiResponse
-// @Failure 500 {object} data.ApiResponse
+// @Success 200 {object} entities.Collection
+// @Failure 401 {object} dtos.ApiResponse
+// @Failure 404 {object} dtos.ApiResponse
+// @Failure 500 {object} dtos.ApiResponse
 // @Router /collections/{collectionId} [post]
 func (handler *collectionsHandler) set(c *gin.Context) {
 	var request services.UpdateCollectionRequest
@@ -181,9 +181,9 @@ func (handler *collectionsHandler) set(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param collectionId path uint64 true "collection id"
-// @Success 200 {object} services.CollectionStatistics
-// @Failure 404 {object} data.ApiResponse
-// @Failure 500 {object} data.ApiResponse
+// @Success 200 {object} dtos.CollectionStatistics
+// @Failure 404 {object} dtos.ApiResponse
+// @Failure 500 {object} dtos.ApiResponse
 // @Router /collections/{collectionId}/statistics [post]
 func (handler *collectionsHandler) getStatistics(c *gin.Context) {
 	collectionIdString := c.Param("collectionId")
@@ -209,10 +209,10 @@ func (handler *collectionsHandler) getStatistics(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param createCollectionRequest body services.CreateCollectionRequest true "collection info"
-// @Success 200 {object} data.Collection
-// @Failure 400 {object} data.ApiResponse
-// @Failure 401 {object} data.ApiResponse
-// @Failure 500 {object} data.ApiResponse
+// @Success 200 {object} entities.Collection
+// @Failure 400 {object} dtos.ApiResponse
+// @Failure 401 {object} dtos.ApiResponse
+// @Failure 500 {object} dtos.ApiResponse
 // @Router /collections/create [post]
 func (handler *collectionsHandler) create(c *gin.Context) {
 	var request services.CreateCollectionRequest
@@ -246,9 +246,9 @@ func (handler *collectionsHandler) create(c *gin.Context) {
 // @Param collectionId path uint64 true "collection id"
 // @Param offset path int true "offset"
 // @Param limit path int true "limit"
-// @Success 200 {object} []data.Token
-// @Failure 400 {object} data.ApiResponse
-// @Failure 404 {object} data.ApiResponse
+// @Success 200 {object} []entities.Token
+// @Failure 400 {object} dtos.ApiResponse
+// @Failure 404 {object} dtos.ApiResponse
 // @Router /collections/{collectionId}/tokens/{offset}/{limit} [get]
 func (handler *collectionsHandler) getTokens(c *gin.Context) {
 	collectionIdString := c.Param("collectionId")
@@ -290,8 +290,8 @@ func (handler *collectionsHandler) getTokens(c *gin.Context) {
 // @Produce json
 // @Param collectionId path uint64 true "collection id"
 // @Success 200 {object} string
-// @Failure 400 {object} data.ApiResponse
-// @Failure 404 {object} data.ApiResponse
+// @Failure 400 {object} dtos.ApiResponse
+// @Failure 404 {object} dtos.ApiResponse
 // @Router /collections/{collectionId}/profile [get]
 func (handler *collectionsHandler) getCollectionProfile(c *gin.Context) {
 	collectionIdString := c.Param("collectionId")
@@ -319,8 +319,8 @@ func (handler *collectionsHandler) getCollectionProfile(c *gin.Context) {
 // @Param collectionId path uint64 true "collection id"
 // @Param image body string true "base64 encoded image"
 // @Success 200 {object} string
-// @Failure 400 {object} data.ApiResponse
-// @Failure 500 {object} data.ApiResponse
+// @Failure 400 {object} dtos.ApiResponse
+// @Failure 500 {object} dtos.ApiResponse
 // @Router /collections/{collectionId}/profile [post]
 func (handler *collectionsHandler) setCollectionProfile(c *gin.Context) {
 	var imageBase64 string
@@ -372,8 +372,8 @@ func (handler *collectionsHandler) setCollectionProfile(c *gin.Context) {
 // @Produce json
 // @Param collectionId path uint64 true "collection id"
 // @Success 200 {object} string
-// @Failure 400 {object} data.ApiResponse
-// @Failure 404 {object} data.ApiResponse
+// @Failure 400 {object} dtos.ApiResponse
+// @Failure 404 {object} dtos.ApiResponse
 // @Router /collections/{collectionId}/cover [get]
 func (handler *collectionsHandler) getCollectionCover(c *gin.Context) {
 	collectionIdString := c.Param("collectionId")
@@ -401,9 +401,9 @@ func (handler *collectionsHandler) getCollectionCover(c *gin.Context) {
 // @Param collectionId path string true "collection id"
 // @Param image body string true "base64 encoded image"
 // @Success 200 {object} string
-// @Failure 400 {object} data.ApiResponse
-// @Failure 401 {object} data.ApiResponse
-// @Failure 500 {object} data.ApiResponse
+// @Failure 400 {object} dtos.ApiResponse
+// @Failure 401 {object} dtos.ApiResponse
+// @Failure 500 {object} dtos.ApiResponse
 // @Router /collections/{collectionId}/cover [post]
 func (handler *collectionsHandler) setCollectionCover(c *gin.Context) {
 	var imageBase64 string
