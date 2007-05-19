@@ -6,6 +6,7 @@ require (
 	github.com/ElrondNetwork/elrond-go-core v1.0.1-0.20210721164025-65cf7f169349
 	github.com/ElrondNetwork/elrond-go-logger v1.0.4
 	github.com/ElrondNetwork/elrond-sdk-erdgo v1.0.0
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gin-contrib/cors v0.0.0-20190301062745-f9e10995c85a
 	github.com/gin-gonic/gin v1.7.2
 	github.com/lib/pq v1.6.0
