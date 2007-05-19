@@ -58,9 +58,6 @@ func (h *eventsHandler) pushEvents(c *gin.Context) {
 		return
 	}
 
-	log.Println("received events at:", time.Now().Unix())
-	log.Println("batch events hash:", blockEvents.Hash)
-
 	if blockEvents.Events != nil {
 		h.processor.OnEvents(blockEvents)
 	}

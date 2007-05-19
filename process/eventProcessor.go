@@ -2,6 +2,8 @@ package process
 
 import (
 	"encoding/json"
+	"github.com/erdsea/erdsea-api/cache"
+	"time"
 
 	logger "github.com/ElrondNetwork/elrond-go-logger"
 	"github.com/erdsea/erdsea-api/data/entities"
@@ -21,10 +23,17 @@ const (
 type EventProcessor struct {
 	addressSet     map[string]bool
 	identifiersSet map[string]bool
-	eventsPool     chan []entities.Event
+
+	eventsPool chan []entities.Event
+
+	localCacher *cache.LocalCacher
 }
 
-func NewEventProcessor(addresses []string, identifiers []string) *EventProcessor {
+func NewEventProcessor(
+	addresses []string,
+	identifiers []string,
+	localCacher *cache.LocalCacher,
+) *EventProcessor {
 	addrSet := map[string]bool{}
 	idSet := map[string]bool{}
 
@@ -40,6 +49,7 @@ func NewEventProcessor(addresses []string, identifiers []string) *EventProcessor
 		addressSet:     addrSet,
 		identifiersSet: idSet,
 		eventsPool:     make(chan []entities.Event),
+		localCacher:    localCacher,
 	}
 
 	go processor.PoolWorker()
@@ -72,7 +82,18 @@ func (e *EventProcessor) OnEvents(blockEvents entities.BlockEvents) {
 	}
 
 	if len(filterableEvents) > 0 {
-		e.eventsPool <- filterableEvents
+		// TODO: move to const | config
+		ttl := 5 * time.Minute
+		err := e.localCacher.SetWithTTLSync(blockEvents.Hash, blockEvents.Events, ttl)
+		if err != nil {
+			log.Error(
+				"could not store events at block",
+				"headerHash", blockEvents.Hash,
+				"err", err.Error(),
+			)
+		}
+
+		//e.eventsPool <- filterableEvents
 	}
 }
 

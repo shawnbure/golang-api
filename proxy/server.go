@@ -1,6 +1,7 @@
 package proxy
 
 import (
+	"github.com/erdsea/erdsea-api/cache"
 	"net/http"
 	"strings"
 
@@ -42,12 +43,18 @@ func NewWebServer(cfg *config.GeneralConfig) (*webServer, error) {
 
 	groupHandler := handlers.NewGroupHandler()
 
+	localCacher, err := cache.NewLocalCacher()
+	if err != nil {
+		return nil, err
+	}
+
 	processor := process.NewEventProcessor(
 		cfg.ConnectorApi.Addresses,
 		cfg.ConnectorApi.Identifiers,
+		localCacher,
 	)
 
-	err := handlers.NewEventsHandler(
+	err = handlers.NewEventsHandler(
 		groupHandler,
 		processor,
 		cfg.ConnectorApi,
