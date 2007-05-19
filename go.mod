@@ -12,7 +12,6 @@ require (
 	github.com/go-redis/cache/v8 v8.4.2 // indirect
 	github.com/go-redis/redis/v8 v8.11.3 // indirect
 	github.com/lib/pq v1.6.0
-	github.com/magiconair/properties v1.8.0
 	github.com/stretchr/testify v1.7.0
 	github.com/urfave/cli v1.22.5
 	gorm.io/driver/postgres v1.1.0

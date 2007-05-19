@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"context"
 	"time"
 
 	"github.com/go-redis/cache/v8"
@@ -8,7 +9,9 @@ import (
 )
 
 type BaseCacher struct {
-	cacher *cache.Cache
+	cache *cache.Cache
+
+	ctx context.Context
 }
 
 func NewBaseCacher() *BaseCacher {
@@ -22,6 +25,22 @@ func NewBaseCacher() *BaseCacher {
 	})
 
 	return &BaseCacher{
-		cacher: cacher,
+		cache: cacher,
+		ctx:   context.Background(),
 	}
+}
+
+func (c *BaseCacher) Set(k string, v interface{}, ttl time.Duration) error {
+	return c.cache.Set(&cache.Item{
+		Ctx:   c.ctx,
+		Key:   k,
+		Value: v,
+		TTL:   ttl,
+	})
+}
+
+func (c *BaseCacher) Get(k string, v interface{}) (interface{}, error) {
+	err := c.cache.Get(c.ctx, k, &v)
+
+	return v, err
 }
