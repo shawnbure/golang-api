@@ -642,6 +642,57 @@ var doc = `{
                 }
             }
         },
+        "/collections/rankings/{offset}/{limit}": {
+            "get": {
+                "description": "Acts as a leaderboard. Optionally provide ?sort[criteria]=volumeTraded\u0026sort[mode]=asc",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "collections"
+                ],
+                "summary": "Get collection rankings",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "offset",
+                        "name": "offset",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "limit",
+                        "name": "limit",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.RankingEntry"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/collections/{collectionId}": {
             "get": {
                 "description": "Retrieves a collection by id.",
@@ -1988,6 +2039,29 @@ var doc = `{
                     "items": {
                         "$ref": "#/definitions/entities.Collection"
                     }
+                }
+            }
+        },
+        "handlers.RankingEntry": {
+            "type": "object",
+            "properties": {
+                "CollectionId": {
+                    "type": "string"
+                },
+                "CollectionName": {
+                    "type": "string"
+                },
+                "floorPrice": {
+                    "type": "number"
+                },
+                "itemsTotal": {
+                    "type": "integer"
+                },
+                "ownersTotal": {
+                    "type": "integer"
+                },
+                "volumeTraded": {
+                    "type": "number"
                 }
             }
         },
