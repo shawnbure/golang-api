@@ -2019,7 +2019,7 @@ var doc = `{
                 }
             }
         },
-        "/tx-template/mint-tokens/{userAddress}/{collectionId}/{numberOfTokens}": {
+        "/tx-template/mint-tokens/{userAddress}/{tokenId}/{numberOfTokens}": {
             "get": {
                 "description": "Retrieves tx-template for mint tokens. Only account nonce and signature must be added afterwards.",
                 "consumes": [
@@ -2306,7 +2306,7 @@ var doc = `{
                 }
             }
         },
-        "/tx-template/withdraw/{userAddress}": {
+        "/tx-template/withdraw/{userAddress}/{amount}": {
             "get": {
                 "description": "Retrieves tx-template for withdraw transaction.",
                 "consumes": [
@@ -2938,6 +2938,12 @@ var doc = `{
                 "discordLink": {
                     "type": "string"
                 },
+                "flags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "instagramLink": {
                     "type": "string"
                 },
@@ -2997,6 +3003,12 @@ var doc = `{
                 },
                 "discordLink": {
                     "type": "string"
+                },
+                "flags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "instagramLink": {
                     "type": "string"

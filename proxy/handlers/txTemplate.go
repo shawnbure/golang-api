@@ -24,7 +24,8 @@ const (
 	placeBidFormatEndpoint                 = "/place-bid/:userAddress/:tokenId/:nonce/:payment/:bidAmount"
 	endAuctionFormatEndpoint               = "/end-auction/:userAddress/:tokenId/:nonce"
 	depositFormatEndpoint                  = "/deposit/:userAddress/:amount"
-	withdrawFormatEndpoint                 = "/withdraw/:userAddress"
+	mintTokensFormatEndpoint               = "/mint-tokens/:userAddress/:tokenId/:numberOfTokens"
+	withdrawFormatEndpoint                 = "/withdraw/:userAddress/:amount"
 	withdrawCreatorRoyaltiesFormatEndpoint = "/withdraw-creator-royalties/:userAddress"
 )
 
@@ -49,6 +50,7 @@ func NewTxTemplateHandler(groupHandler *groupHandler, blockchainConfig config.Bl
 		{Method: http.MethodGet, Path: endAuctionFormatEndpoint, HandlerFunc: handler.getEndAuctionTemplate},
 		{Method: http.MethodGet, Path: depositFormatEndpoint, HandlerFunc: handler.getDepositTemplate},
 		{Method: http.MethodGet, Path: withdrawFormatEndpoint, HandlerFunc: handler.getWithdrawTemplate},
+		{Method: http.MethodGet, Path: mintTokensFormatEndpoint, HandlerFunc: handler.getMintNftTxTemplate},
 		{Method: http.MethodGet, Path: withdrawCreatorRoyaltiesFormatEndpoint, HandlerFunc: handler.getWithdrawCreatorRoyalties},
 	}
 
@@ -415,11 +417,18 @@ func (handler *txTemplateHandler) getDepositTemplate(c *gin.Context) {
 // @Produce json
 // @Param userAddress path int true "user address"
 // @Success 200 {object} formatter.Transaction
-// @Router /tx-template/withdraw/{userAddress} [get]
+// @Router /tx-template/withdraw/{userAddress}/{amount} [get]
 func (handler *txTemplateHandler) getWithdrawTemplate(c *gin.Context) {
 	userAddress := c.Param("userAddress")
+	amountStr := c.Param("amount")
 
-	template := handler.txFormatter.WithdrawTxTemplate(userAddress)
+	amount, err := strconv.ParseFloat(amountStr, 64)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	template := handler.txFormatter.WithdrawTxTemplate(userAddress, amount)
 	dtos.JsonResponse(c, http.StatusOK, template, "")
 }
 
@@ -449,10 +458,10 @@ func (handler *txTemplateHandler) getWithdrawCreatorRoyalties(c *gin.Context) {
 // @Success 200 {object} formatter.Transaction
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 500 {object} dtos.ApiResponse
-// @Router /tx-template/mint-tokens/{userAddress}/{collectionId}/{numberOfTokens} [get]
+// @Router /tx-template/mint-tokens/{userAddress}/{tokenId}/{numberOfTokens} [get]
 func (handler *txTemplateHandler) getMintNftTxTemplate(c *gin.Context) {
 	userAddress := c.Param("userAddress")
-	tokenId := c.Param("collectionId")
+	tokenId := c.Param("tokenId")
 	numberOfTokensStr := c.Param("numberOfTokens")
 
 	numberOfTokens, err := strconv.ParseUint(numberOfTokensStr, 10, 64)
@@ -478,16 +487,10 @@ func (handler *txTemplateHandler) getMintNftTxTemplate(c *gin.Context) {
 		return
 	}
 
-	pricePerTokenNominal, err := strconv.ParseFloat(collection.MintPricePerTokenString, 64)
-	if err != nil {
-		dtos.JsonResponse(c, http.StatusInternalServerError, nil, "no contract address")
-		return
-	}
-
 	template := handler.txFormatter.NewMintNftsTxTemplate(
 		userAddress,
 		collection.ContractAddress,
-		pricePerTokenNominal,
+		collection.MintPricePerTokenNominal,
 		numberOfTokens,
 	)
 	dtos.JsonResponse(c, http.StatusOK, template, "")

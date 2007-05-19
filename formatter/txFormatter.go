@@ -280,8 +280,11 @@ func (f *TxFormatter) DepositTxTemplate(senderAddr string, payment string) Trans
 	}
 }
 
-func (f *TxFormatter) WithdrawTxTemplate(senderAddr string) Transaction {
+func (f *TxFormatter) WithdrawTxTemplate(senderAddr string, amount float64) Transaction {
 	txData := withdrawEndpointName
+	if amount != 0 {
+		txData += "@" + hex.EncodeToString(services.GetPriceDenominated(amount).Bytes())
+	}
 
 	return Transaction{
 		Nonce:     0,

@@ -391,6 +391,10 @@ definitions:
         type: string
       discordLink:
         type: string
+      flags:
+        items:
+          type: string
+        type: array
       instagramLink:
         type: string
       telegramLink:
@@ -430,6 +434,10 @@ definitions:
         type: string
       discordLink:
         type: string
+      flags:
+        items:
+          type: string
+        type: array
       instagramLink:
         type: string
       telegramLink:
@@ -1787,7 +1795,7 @@ paths:
       summary: Make offer for an NFT - tx template.
       tags:
       - tx-template
-  /tx-template/mint-tokens/{userAddress}/{collectionId}/{numberOfTokens}:
+  /tx-template/mint-tokens/{userAddress}/{tokenId}/{numberOfTokens}:
     get:
       consumes:
       - application/json
@@ -1983,7 +1991,7 @@ paths:
       summary: Gets tx-template for NFT withdraw.
       tags:
       - tx-template
-  /tx-template/withdraw/{userAddress}:
+  /tx-template/withdraw/{userAddress}/{amount}:
     get:
       consumes:
       - application/json
