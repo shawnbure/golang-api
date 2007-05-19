@@ -8,6 +8,7 @@ import (
 
 	"github.com/erdsea/erdsea-api/cache"
 	"github.com/erdsea/erdsea-api/data/entities"
+	"github.com/erdsea/erdsea-api/stats/collstats"
 	"github.com/erdsea/erdsea-api/storage"
 )
 
@@ -97,6 +98,11 @@ func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) 
 	err = storage.AddCollection(collection)
 	if err != nil {
 		return nil, err
+	}
+
+	err = collstats.AddCollection(collection.ID, collection.Name, collection.TokenID)
+	if err != nil {
+		log.Debug("could not add to coll stats")
 	}
 
 	return collection, nil
