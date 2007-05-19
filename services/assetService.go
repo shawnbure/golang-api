@@ -1,42 +1,122 @@
 package services
 
 import (
+	"fmt"
 	"github.com/erdsea/erdsea-api/data"
 	"github.com/erdsea/erdsea-api/storage"
 )
 
-func ListAsset(
-	ownerAddress string,
-	tokenId string,
-	nonce uint64,
-	uri string,
-	collectionName string,
-	price string,
-	txHash string) {
+type ListAssetArgs struct {
+	OwnerAddress   string
+	TokenId        string
+	Nonce          uint64
+	Uri            string
+	CollectionName string
+	Price          string
+	TxHash         string
+}
 
-	ownerAccount, err := GetOrCreateAccount(ownerAddress)
+func (args *ListAssetArgs) ToString() string {
+	return fmt.Sprintf(""+
+		"OwnerAddress = %s\n"+
+		"TokenId = %s\n"+
+		"Nonce = %d\n"+
+		"Uri = %s\n"+
+		"CollectionName = %s\n"+
+		"Price = %s\n"+
+		"TxHash = %s\n",
+		args.OwnerAddress,
+		args.TokenId,
+		args.Nonce,
+		args.Uri,
+		args.CollectionName,
+		args.Price,
+		args.TxHash)
+}
+
+type BuyAssetArgs struct {
+	OwnerAddress   string
+	BuyerAddress   string
+	TokenId        string
+	Nonce          uint64
+	Uri            string
+	CollectionName string
+	Price          string
+	TxHash         string
+}
+
+func (args *BuyAssetArgs) ToString() string {
+	return fmt.Sprintf(""+
+		"OwnerAddress = %s\n"+
+		"BuyerAddress = %s\n"+
+		"TokenId = %s\n"+
+		"Nonce = %d\n"+
+		"Uri = %s\n"+
+		"CollectionName = %s\n"+
+		"Price = %s\n"+
+		"TxHash = %s\n",
+		args.OwnerAddress,
+		args.BuyerAddress,
+		args.TokenId,
+		args.Nonce,
+		args.Uri,
+		args.CollectionName,
+		args.Price,
+		args.TxHash)
+}
+
+type WithdrawAssetArgs struct {
+	OwnerAddress   string
+	TokenId        string
+	Nonce          uint64
+	Uri            string
+	CollectionName string
+	Price          string
+	TxHash         string
+}
+
+func (args *WithdrawAssetArgs) ToString() string {
+	return fmt.Sprintf(""+
+		"OwnerAddress = %s\n"+
+		"TokenId = %s\n"+
+		"Nonce = %d\n"+
+		"Uri = %s\n"+
+		"CollectionName = %s\n"+
+		"Price = %s\n"+
+		"TxHash = %s\n",
+		args.OwnerAddress,
+		args.TokenId,
+		args.Nonce,
+		args.Uri,
+		args.CollectionName,
+		args.Price,
+		args.TxHash)
+}
+
+func ListAsset(args ListAssetArgs) {
+	ownerAccount, err := GetOrCreateAccount(args.OwnerAddress)
 	if err != nil {
 		printError(err)
 		return
 	}
 
-	collection, err := storage.GetCollectionByName(collectionName)
+	collection, err := storage.GetCollectionByName(args.CollectionName)
 	if err != nil {
 		printError(err)
 		return
 	}
 
 	asset := data.Asset{
-		TokenID:      tokenId,
-		Nonce:        nonce,
-		Price:        price,
-		Link:         uri,
+		TokenID:      args.TokenId,
+		Nonce:        args.Nonce,
+		Price:        args.Price,
+		Link:         args.Uri,
 		Listed:       true,
 		OwnerId:      ownerAccount.ID,
 		CollectionID: collection.ID,
 	}
 
-	existingAsset, err := storage.GetAssetByTokenIdAndNonce(tokenId, nonce)
+	existingAsset, err := storage.GetAssetByTokenIdAndNonce(args.TokenId, args.Nonce)
 	if err == nil {
 		asset.ID = existingAsset.ID
 		err = storage.UpdateAsset(&asset)
@@ -49,9 +129,9 @@ func ListAsset(
 	}
 
 	transaction := data.Transaction{
-		Hash:     txHash,
+		Hash:     args.TxHash,
 		Type:     "List",
-		Price:    price,
+		Price:    args.Price,
 		SellerID: ownerAccount.ID,
 		BuyerID:  0,
 		AssetID:  asset.ID,
@@ -64,27 +144,20 @@ func ListAsset(
 	}
 }
 
-func BuyAsset(
-	ownerAddress string,
-	buyerAddress string,
-	tokenId string,
-	nonce uint64,
-	price string,
-	txHash string) {
-
-	ownerAccount, err := storage.GetAccountByAddress(ownerAddress)
+func BuyAsset(args BuyAssetArgs) {
+	ownerAccount, err := storage.GetAccountByAddress(args.OwnerAddress)
 	if err != nil {
 		printError(err)
 		return
 	}
 
-	buyerAccount, err := GetOrCreateAccount(buyerAddress)
+	buyerAccount, err := GetOrCreateAccount(args.BuyerAddress)
 	if err != nil {
 		printError(err)
 		return
 	}
 
-	asset, err := storage.GetAssetByTokenIdAndNonce(tokenId, nonce)
+	asset, err := storage.GetAssetByTokenIdAndNonce(args.TokenId, args.Nonce)
 	if err != nil {
 		printError(err)
 		return
@@ -99,9 +172,9 @@ func BuyAsset(
 	}
 
 	transaction := data.Transaction{
-		Hash:     txHash,
+		Hash:     args.TxHash,
 		Type:     "Buy",
-		Price:    price,
+		Price:    args.Price,
 		SellerID: ownerAccount.ID,
 		BuyerID:  buyerAccount.ID,
 		AssetID:  asset.ID,
@@ -114,20 +187,14 @@ func BuyAsset(
 	}
 }
 
-func WithdrawAsset(
-	ownerAddress string,
-	tokenId string,
-	nonce uint64,
-	price string,
-	txHash string) {
-
-	ownerAccount, err := storage.GetAccountByAddress(ownerAddress)
+func WithdrawAsset(args WithdrawAssetArgs) {
+	ownerAccount, err := storage.GetAccountByAddress(args.OwnerAddress)
 	if err != nil {
 		printError(err)
 		return
 	}
 
-	asset, err := storage.GetAssetByTokenIdAndNonce(tokenId, nonce)
+	asset, err := storage.GetAssetByTokenIdAndNonce(args.TokenId, args.Nonce)
 	if err != nil {
 		printError(err)
 		return
@@ -142,9 +209,9 @@ func WithdrawAsset(
 	}
 
 	transaction := data.Transaction{
-		Hash:     txHash,
+		Hash:     args.TxHash,
 		Type:     "Withdraw",
-		Price:    price,
+		Price:    args.Price,
 		SellerID: 0,
 		BuyerID:  ownerAccount.ID,
 		AssetID:  asset.ID,

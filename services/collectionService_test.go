@@ -12,7 +12,13 @@ const ConfigTestFilePath = "../config/config_test.toml"
 func Test_CreateNewCollection(t *testing.T) {
 	connectToDb(t)
 
-	CreateNewCollection("ownerAddress", "tokenId", "collectionName", "collectionDescription")
+	args := CreateNewCollectionArgs{
+		OwnerAddress:          "ownerAddress",
+		TokenId:               "tokenId",
+		CollectionName:        "collectionName",
+		CollectionDescription: "collectionDescription",
+	}
+	CreateNewCollection(args)
 
 	_, err := storage.GetAccountByAddress("ownerAddress")
 	require.Nil(t, err)

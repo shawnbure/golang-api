@@ -11,6 +11,7 @@ type GeneralConfig struct {
 	Blockchain   BlockchainConfig
 	Database     DatabaseConfig
 	Auth         AuthConfig
+	Cache        CacheConfig
 }
 
 type ConnectorApiConfig struct {
@@ -46,6 +47,10 @@ type AuthConfig struct {
 	JwtIssuer     string
 	JwtKeySeedHex string
 	JwtExpiryMins int
+}
+
+type CacheConfig struct {
+	Url string
 }
 
 func (d DatabaseConfig) Url() string {

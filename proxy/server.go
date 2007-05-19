@@ -2,9 +2,10 @@ package proxy
 
 import (
 	"fmt"
-	"github.com/erdsea/erdsea-api/process"
 	"net/http"
 	"strings"
+
+	"github.com/erdsea/erdsea-api/process"
 
 	"github.com/erdsea/erdsea-api/config"
 	"github.com/erdsea/erdsea-api/proxy/handlers"
@@ -38,6 +39,8 @@ func NewWebServer(cfg *config.GeneralConfig) (*webServer, error) {
 	}
 
 	handlers.NewAssetsHandler(groupHandler, cfg.Auth)
+	handlers.NewCollectionsHandler(groupHandler)
+	handlers.NewTransactionsHandler(groupHandler)
 
 	groupHandler.RegisterEndpoints(router)
 

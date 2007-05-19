@@ -18,7 +18,16 @@ func Test_ListAsset(t *testing.T) {
 	}
 	_ = storage.AddNewCollection(&collection)
 
-	ListAsset("ownerAddress", "tokenId", 13, "uri", "col", "1000", "txHash")
+	args := ListAssetArgs{
+		OwnerAddress:   "ownerAddress",
+		TokenId:        "tokenId",
+		Nonce:          13,
+		Uri:            "uri",
+		CollectionName: "col",
+		Price:          "1000",
+		TxHash:         "txHash",
+	}
+	ListAsset(args)
 
 	ownerAccount, err := storage.GetAccountByAddress("ownerAddress")
 	require.Nil(t, err)
@@ -55,8 +64,28 @@ func Test_SellAsset(t *testing.T) {
 	}
 	_ = storage.AddNewCollection(&collection)
 
-	ListAsset("ownerAddress", "tokenId", 13, "uri", "col", "1000", "txHash")
-	BuyAsset("ownerAddress", "buyerAddress", "tokenId", 13 , "1000", "txHashBuy")
+	listArgs := ListAssetArgs{
+		OwnerAddress:   "ownerAddress",
+		TokenId:        "tokenId",
+		Nonce:          13,
+		Uri:            "uri",
+		CollectionName: "col",
+		Price:          "1000",
+		TxHash:         "txHash",
+	}
+	ListAsset(listArgs)
+
+	buyArgs := BuyAssetArgs{
+		OwnerAddress:   "ownerAddress",
+		BuyerAddress:   "buyerAddress",
+		TokenId:        "tokenId",
+		Nonce:          13,
+		Uri:            "col",
+		CollectionName: "col",
+		Price:          "1000",
+		TxHash:         "txHashBuy",
+	}
+	BuyAsset(buyArgs)
 
 	ownerAccount, err := storage.GetAccountByAddress("ownerAddress")
 	require.Nil(t, err)
@@ -97,8 +126,27 @@ func Test_WithdrawAsset(t *testing.T) {
 	}
 	_ = storage.AddNewCollection(&collection)
 
-	ListAsset("ownerAddress", "tokenId", 13, "uri", "col", "1000", "txHash")
-	WithdrawAsset("ownerAddress", "tokenId", 13 , "1000", "txHashWithdraw")
+	listArgs := ListAssetArgs{
+		OwnerAddress:   "ownerAddress",
+		TokenId:        "tokenId",
+		Nonce:          13,
+		Uri:            "uri",
+		CollectionName: "col",
+		Price:          "1000",
+		TxHash:         "txHash",
+	}
+	ListAsset(listArgs)
+
+	withdrawArgs := WithdrawAssetArgs{
+		OwnerAddress:   "ownerAddress",
+		TokenId:        "tokenId",
+		Nonce:          13,
+		Uri:            "col",
+		CollectionName: "col",
+		Price:          "1000",
+		TxHash:         "txHashWithdraw",
+	}
+	WithdrawAsset(withdrawArgs)
 
 	ownerAccount, err := storage.GetAccountByAddress("ownerAddress")
 	require.Nil(t, err)
