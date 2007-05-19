@@ -336,13 +336,13 @@ func (handler *collectionsHandler) setCollectionProfile(c *gin.Context) {
 		return
 	}
 
-	err = services.SetCollectionProfileImage(tokenId, cacheInfo.CollectionId, &imageBase64)
+	link, err := services.SetCollectionProfileImage(tokenId, cacheInfo.CollectionId, &imageBase64)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
 	}
 
-	dtos.JsonResponse(c, http.StatusOK, "", "")
+	dtos.JsonResponse(c, http.StatusOK, link, "")
 }
 
 // @Summary Set collection cover image
@@ -391,13 +391,13 @@ func (handler *collectionsHandler) setCollectionCover(c *gin.Context) {
 		return
 	}
 
-	err = services.SetCollectionCoverImage(tokenId, cacheInfo.CollectionId, &imageBase64)
+	link, err := services.SetCollectionCoverImage(tokenId, cacheInfo.CollectionId, &imageBase64)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
 	}
 
-	dtos.JsonResponse(c, http.StatusOK, "", "")
+	dtos.JsonResponse(c, http.StatusOK, link, "")
 }
 
 // @Summary Gets mint info about a collection.

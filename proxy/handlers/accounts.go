@@ -206,13 +206,13 @@ func (handler *accountsHandler) setAccountProfile(c *gin.Context) {
 		return
 	}
 
-	err = services.SetAccountProfileImage(walletAddress, cacheInfo.AccountId, &imageBase64)
+	link, err := services.SetAccountProfileImage(walletAddress, cacheInfo.AccountId, &imageBase64)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
 	}
 
-	dtos.JsonResponse(c, http.StatusOK, "", "")
+	dtos.JsonResponse(c, http.StatusOK, link, "")
 }
 
 
@@ -250,13 +250,13 @@ func (handler *accountsHandler) setAccountCover(c *gin.Context) {
 		return
 	}
 
-	err = services.SetAccountCoverImage(walletAddress, cacheInfo.AccountId, &imageBase64)
+	link, err := services.SetAccountCoverImage(walletAddress, cacheInfo.AccountId, &imageBase64)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
 	}
 
-	dtos.JsonResponse(c, http.StatusOK, "", "")
+	dtos.JsonResponse(c, http.StatusOK, link, "")
 }
 
 // @Summary Gets tokens for an account.
