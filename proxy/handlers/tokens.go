@@ -15,27 +15,6 @@ const (
 	availableTokensEndpoint        = "/available"
 )
 
-type AvailableTokensRequest struct {
-	Tokens []string `json:"tokens"`
-}
-
-type AvailableToken struct {
-	Collection struct {
-		Id   string `json:"id"`
-		Name string `json:"name"`
-	} `json:"collection"`
-	Token struct {
-		Id        string `json:"id"`
-		Nonce     uint64 `json:"nonce"`
-		Name      string `json:"name"`
-		Available bool   `json:"available"`
-	}
-}
-
-type AvailableTokensResponse struct {
-	Tokens map[string]AvailableToken `json:"tokens"`
-}
-
 type tokensHandler struct {
 }
 
@@ -96,7 +75,7 @@ func (handler *tokensHandler) getByTokenIdAndNonce(c *gin.Context) {
 // @Failure 400 {object} dtos.ApiResponse
 // @Router /tokens/available [get]
 func (handler *tokensHandler) getAvailableTokens(c *gin.Context) {
-	var request AvailableTokensRequest
+	var request services.AvailableTokensRequest
 
 	err := c.Bind(&request)
 	if err != nil {

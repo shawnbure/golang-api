@@ -14,10 +14,30 @@ import (
 	"github.com/erdsea/erdsea-api/cache"
 	"github.com/erdsea/erdsea-api/data/dtos"
 	"github.com/erdsea/erdsea-api/data/entities"
-	"github.com/erdsea/erdsea-api/proxy/handlers"
 	"github.com/erdsea/erdsea-api/stats/collstats"
 	"github.com/erdsea/erdsea-api/storage"
 )
+
+type AvailableTokensRequest struct {
+	Tokens []string `json:"tokens"`
+}
+
+type AvailableToken struct {
+	Collection struct {
+		Id   string `json:"id"`
+		Name string `json:"name"`
+	} `json:"collection"`
+	Token struct {
+		Id        string `json:"id"`
+		Nonce     uint64 `json:"nonce"`
+		Name      string `json:"name"`
+		Available bool   `json:"available"`
+	}
+}
+
+type AvailableTokensResponse struct {
+	Tokens map[string]AvailableToken `json:"tokens"`
+}
 
 type TokenLinkResponse struct {
 	Name       string           `json:"name"`
@@ -414,8 +434,8 @@ func GetOrAddTokenCacheInfo(tokenId string, nonce uint64) (*TokenCacheInfo, erro
 	return cacheInfo, nil
 }
 
-func GetAvailableTokens(args handlers.AvailableTokensRequest) handlers.AvailableTokensResponse {
-	var response handlers.AvailableTokensResponse
+func GetAvailableTokens(args AvailableTokensRequest) AvailableTokensResponse {
+	var response AvailableTokensResponse
 
 	for _, token := range args.Tokens {
 		parts := strings.Split(token, "-")
@@ -443,7 +463,7 @@ func GetAvailableTokens(args handlers.AvailableTokensRequest) handlers.Available
 			collectionName = collectionCacheInfo.CollectionName
 		}
 
-		response.Tokens[token] = handlers.AvailableToken{
+		response.Tokens[token] = AvailableToken{
 			Collection: struct {
 				Id   string `json:"id"`
 				Name string `json:"name"`
