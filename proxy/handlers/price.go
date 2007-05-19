@@ -10,21 +10,21 @@ import (
 )
 
 const (
-	basePriceEndpoint = "/price"
+	baseEGLDPriceEndpoint = "/egld_price"
 )
 
-type priceHandler struct {
+type eEGLDPriceHandler struct {
 }
 
 func NewPriceHandler(groupHandler *groupHandler, authCfg config.AuthConfig) {
-	handler := &priceHandler{}
+	handler := &eEGLDPriceHandler{}
 
 	endpoints := []EndpointHandler{
 		{Method: http.MethodGet, Path: "", HandlerFunc: handler.get},
 	}
 
 	endpointGroupHandler := EndpointGroupHandler{
-		Root:             basePriceEndpoint,
+		Root:             baseEGLDPriceEndpoint,
 		Middlewares:      []gin.HandlerFunc{middleware.Authorization(authCfg.JwtSecret)},
 		EndpointHandlers: endpoints,
 	}
@@ -32,7 +32,7 @@ func NewPriceHandler(groupHandler *groupHandler, authCfg config.AuthConfig) {
 	groupHandler.AddEndpointGroupHandler(endpointGroupHandler)
 }
 
-func (handler *priceHandler) get(c *gin.Context) {
+func (handler *eEGLDPriceHandler) get(c *gin.Context) {
 	price, err := services.GetEGLDPrice()
 	if err != nil {
 		data.JsonResponse(c, http.StatusInternalServerError, nil, "could not get price")
