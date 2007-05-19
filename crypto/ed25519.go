@@ -6,7 +6,7 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/ElrondNetwork/elrond-go/hashing/keccak"
+	"github.com/ElrondNetwork/elrond-go-core/hashing/keccak"
 )
 
 const ElrondSignPrefix = "\x17Elrond Signed Message:\n"
@@ -36,7 +36,7 @@ func VerifySignature(publicKey, message, signature []byte) error {
 
 func ComputeElrondSignableMessage(message []byte) []byte {
 	payloadForHash := fmt.Sprintf("%s%v%s", ElrondSignPrefix, len(message), message)
-	return keccak.Keccak{}.Compute(payloadForHash)
+	return keccak.NewKeccak().Compute(payloadForHash)
 }
 
 func SignPayload(privKey, message []byte) ([]byte, error) {
