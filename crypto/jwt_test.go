@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	secret = "sehr_secret"
+	secret = "bitcoin-to-1-milly"
 	issuer = "api.erdsea.io"
 
 	addr = "erd111"

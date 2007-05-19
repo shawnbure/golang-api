@@ -17,25 +17,33 @@ type webServer struct {
 	generalConfig *config.GeneralConfig
 }
 
-func NewWebServer(generalConfig *config.GeneralConfig) (*webServer, error) {
+func NewWebServer(cfg *config.GeneralConfig) (*webServer, error) {
 	router := gin.Default()
 	router.Use(cors.Default())
 
 	groupHandler := handlers.NewGroupHandler()
 
-	processor := process.NewEventProcessor(generalConfig.ConnectorApi.Addresses, generalConfig.ConnectorApi.Identifiers)
-	err := handlers.NewEventsHandler(groupHandler, processor, generalConfig.ConnectorApi)
+	processor := process.NewEventProcessor(
+		cfg.ConnectorApi.Addresses,
+		cfg.ConnectorApi.Identifiers,
+	)
+
+	err := handlers.NewEventsHandler(
+		groupHandler,
+		processor,
+		cfg.ConnectorApi,
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	handlers.NewAssetsHandler(groupHandler)
+	handlers.NewAssetsHandler(groupHandler, cfg.Auth)
 
 	groupHandler.RegisterEndpoints(router)
 
 	return &webServer{
 		router:        router,
-		generalConfig: generalConfig,
+		generalConfig: cfg,
 	}, nil
 }
 
