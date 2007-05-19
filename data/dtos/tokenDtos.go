@@ -15,7 +15,7 @@ type CollectionStatistics struct {
 }
 
 type ExtendedTokenDto struct {
-	entities.Asset
+	entities.Token
 
 	AttributesMap  map[string]string
 	CollectionID   string
@@ -28,7 +28,7 @@ type ExtendedTokenDto struct {
 }
 
 func CreateExtendedTokenDto(
-	asset entities.Asset,
+	token entities.Token,
 	collectionID string,
 	collectionName string,
 	ownerName string,
@@ -36,7 +36,7 @@ func CreateExtendedTokenDto(
 	collStats CollectionStatistics,
 ) (*ExtendedTokenDto, error) {
 	e := &ExtendedTokenDto{
-		Asset:              asset,
+		Token:              token,
 		CollectionID:       collectionID,
 		CollectionName:     collectionName,
 		OwnerName:          ownerName,

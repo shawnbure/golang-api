@@ -57,8 +57,8 @@ func NewAuthHandler(groupHandler *groupHandler, authService services.AuthService
 // @Produce json
 // @Param tokenRequest body createTokenRequest true "create credentials request"
 // @Success 200 {object} tokenPayload
-// @Failure 400 {object} data.ApiResponse
-// @Failure 500 {object} data.ApiResponse
+// @Failure 400 {object} dtos.ApiResponse
+// @Failure 500 {object} dtos.ApiResponse
 // @Router /auth/access [post]
 func (h *authHandler) createAccessToken(c *gin.Context) {
 	req := createTokenRequest{}
@@ -106,8 +106,8 @@ func (h *authHandler) createAccessToken(c *gin.Context) {
 // @Produce json
 // @Param refreshRequest body tokenPayload true "refresh credentials request"
 // @Success 200 {object} tokenPayload
-// @Failure 400 {object} data.ApiResponse
-// @Failure 500 {object} data.ApiResponse
+// @Failure 400 {object} dtos.ApiResponse
+// @Failure 500 {object} dtos.ApiResponse
 // @Router /auth/refresh [post]
 func (h *authHandler) refreshAccessToken(c *gin.Context) {
 	req := tokenPayload{}

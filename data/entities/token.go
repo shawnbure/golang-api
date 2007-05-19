@@ -2,7 +2,7 @@ package entities
 
 import "gorm.io/datatypes"
 
-type Asset struct {
+type Token struct {
 	ID               uint64 `gorm:"primaryKey"`
 	TokenID          string
 	Nonce            uint64

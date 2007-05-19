@@ -2,6 +2,7 @@ package process
 
 import (
 	"encoding/json"
+
 	logger "github.com/ElrondNetwork/elrond-go-logger"
 	"github.com/erdsea/erdsea-api/data/entities"
 	"github.com/erdsea/erdsea-api/services"
@@ -74,7 +75,7 @@ func (e *EventProcessor) isEventAccepted(ev entities.Event) bool {
 }
 
 func (e *EventProcessor) onEventPutNftForSale(event entities.Event) {
-	args := services.ListAssetArgs{
+	args := services.ListTokenArgs{
 		OwnerAddress:     decodeAddressFromTopic(event.Topics[0]),
 		TokenId:          decodeStringFromTopic(event.Topics[1]),
 		Nonce:            decodeU64FromTopic(event.Topics[2]),
@@ -94,11 +95,11 @@ func (e *EventProcessor) onEventPutNftForSale(event entities.Event) {
 		log.Debug("onEventPutNftForSale", string(eventJson))
 	}
 
-	services.ListAsset(args)
+	services.ListToken(args)
 }
 
 func (e *EventProcessor) onEventBuyNft(event entities.Event) {
-	args := services.BuyAssetArgs{
+	args := services.BuyTokenArgs{
 		OwnerAddress: decodeAddressFromTopic(event.Topics[0]),
 		BuyerAddress: decodeAddressFromTopic(event.Topics[1]),
 		TokenId:      decodeStringFromTopic(event.Topics[2]),
@@ -113,11 +114,11 @@ func (e *EventProcessor) onEventBuyNft(event entities.Event) {
 		log.Debug("onEventBuyNft", string(eventJson))
 	}
 
-	services.BuyAsset(args)
+	services.BuyToken(args)
 }
 
 func (e *EventProcessor) onEventWithdrawNft(event entities.Event) {
-	args := services.WithdrawAssetArgs{
+	args := services.WithdrawTokenArgs{
 		OwnerAddress: decodeAddressFromTopic(event.Topics[0]),
 		TokenId:      decodeStringFromTopic(event.Topics[1]),
 		Nonce:        decodeU64FromTopic(event.Topics[2]),
@@ -131,5 +132,5 @@ func (e *EventProcessor) onEventWithdrawNft(event entities.Event) {
 		log.Debug("onEventWithdrawNft", string(eventJson))
 	}
 
-	services.WithdrawAsset(args)
+	services.WithdrawToken(args)
 }

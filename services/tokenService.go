@@ -7,6 +7,9 @@ import (
 	"math/big"
 	"strconv"
 
+	"github.com/erdsea/erdsea-api/data/dtos"
+	"gorm.io/datatypes"
+
 	logger "github.com/ElrondNetwork/elrond-go-logger"
 	"github.com/erdsea/erdsea-api/data/dtos"
 	"github.com/erdsea/erdsea-api/data/entities"
@@ -14,7 +17,7 @@ import (
 	"github.com/erdsea/erdsea-api/storage"
 )
 
-type AssetLinkResponse struct {
+type TokenLinkResponse struct {
 	Name       string      `json:"name"`
 	Image      string      `json:"image"`
 	Attributes []Attribute `json:"attributes"`
@@ -33,12 +36,12 @@ const (
 	minPercentRoyaltiesUnit = 100
 	minPriceDecimals        = 15
 
-	maxAssetLinkResponseSize = 1024
+	maxTokenLinkResponseSize = 1024
 )
 
 var baseExp = big.NewInt(10)
 
-func ListAsset(args ListAssetArgs) {
+func ListToken(args ListTokenArgs) {
 	priceNominal, err := GetPriceNominal(args.Price)
 	if err != nil {
 		log.Debug("could not parse price", "err", err)
@@ -57,45 +60,45 @@ func ListAsset(args ListAssetArgs) {
 		collectionId = collection.ID
 	}
 
-	asset, err := storage.GetAssetByTokenIdAndNonce(args.TokenId, args.Nonce)
+	token, err := storage.GetTokenByTokenIdAndNonce(args.TokenId, args.Nonce)
 
 	var innerErr error
 	if err != nil {
-		newAsset := ConstructNewAssetFromListArgs(args)
-		asset = &newAsset
-		asset.Listed = true
-		asset.PriceNominal = priceNominal
-		asset.OwnerId = ownerAccount.ID
-		asset.CollectionID = collectionId
-		innerErr = storage.AddAsset(asset)
+		newToken := ConstructNewTokenFromListArgs(args)
+		token = &newToken
+		token.Listed = true
+		token.PriceNominal = priceNominal
+		token.OwnerId = ownerAccount.ID
+		token.CollectionID = collectionId
+		innerErr = storage.AddToken(token)
 	} else {
-		asset.Listed = true
-		asset.PriceNominal = priceNominal
-		asset.OwnerId = ownerAccount.ID
-		asset.CollectionID = collectionId
-		innerErr = storage.UpdateAsset(asset)
+		token.Listed = true
+		token.PriceNominal = priceNominal
+		token.OwnerId = ownerAccount.ID
+		token.CollectionID = collectionId
+		innerErr = storage.UpdateToken(token)
 	}
 
 	if innerErr != nil {
-		log.Debug("could not create or update asset", "err", innerErr)
+		log.Debug("could not create or update token", "err", innerErr)
 		return
 	}
 
 	transaction := entities.Transaction{
 		Hash:         args.TxHash,
-		Type:         entities.ListAsset,
+		Type:         entities.ListToken,
 		PriceNominal: priceNominal,
 		Timestamp:    args.Timestamp,
 		SellerID:     ownerAccount.ID,
 		BuyerID:      0,
-		AssetID:      asset.ID,
+		TokenID:      token.ID,
 		CollectionID: collectionId,
 	}
 
 	AddTransaction(&transaction)
 }
 
-func BuyAsset(args BuyAssetArgs) {
+func BuyToken(args BuyTokenArgs) {
 	priceNominal, err := GetPriceNominal(args.Price)
 	if err != nil {
 		log.Debug("could not parse price", "err", err)
@@ -114,37 +117,37 @@ func BuyAsset(args BuyAssetArgs) {
 		return
 	}
 
-	asset, err := storage.GetAssetByTokenIdAndNonce(args.TokenId, args.Nonce)
+	token, err := storage.GetTokenByTokenIdAndNonce(args.TokenId, args.Nonce)
 	if err != nil {
-		log.Debug("could not get asset", "err", err)
+		log.Debug("could not get token", "err", err)
 		return
 	}
 
-	asset.Listed = false
-	// This was to be reset since the asset will no longer be on the marketplace.
+	token.Listed = false
+	// This was to be reset since the token will no longer be on the marketplace.
 	// Could have been kept like this, but bugs may appear when trying when querying.
-	asset.OwnerId = 0
-	err = storage.UpdateAsset(asset)
+	token.OwnerId = 0
+	err = storage.UpdateToken(token)
 	if err != nil {
-		log.Debug("could not update asset", "err", err)
+		log.Debug("could not update token", "err", err)
 		return
 	}
 
 	transaction := entities.Transaction{
 		Hash:         args.TxHash,
-		Type:         entities.BuyAsset,
+		Type:         entities.BuyToken,
 		PriceNominal: priceNominal,
 		Timestamp:    args.Timestamp,
 		SellerID:     ownerAccount.ID,
 		BuyerID:      buyerAccount.ID,
-		AssetID:      asset.ID,
-		CollectionID: asset.CollectionID,
+		TokenID:      token.ID,
+		CollectionID: token.CollectionID,
 	}
 
 	AddTransaction(&transaction)
 }
 
-func WithdrawAsset(args WithdrawAssetArgs) {
+func WithdrawToken(args WithdrawTokenArgs) {
 	priceNominal, err := GetPriceNominal(args.Price)
 	if err != nil {
 		log.Debug("could not parse price", "err", err)
@@ -157,38 +160,38 @@ func WithdrawAsset(args WithdrawAssetArgs) {
 		return
 	}
 
-	asset, err := storage.GetAssetByTokenIdAndNonce(args.TokenId, args.Nonce)
+	token, err := storage.GetTokenByTokenIdAndNonce(args.TokenId, args.Nonce)
 	if err != nil {
-		log.Debug("could not get asset", "err", err)
+		log.Debug("could not get token", "err", err)
 		return
 	}
 
-	asset.Listed = false
-	// This was to be reset since the asset will no longer be on the marketplace.
+	token.Listed = false
+	// This was to be reset since the token will no longer be on the marketplace.
 	// Could have been kept like this, but bugs may appear when trying when querying.
-	asset.OwnerId = 0
-	err = storage.UpdateAsset(asset)
+	token.OwnerId = 0
+	err = storage.UpdateToken(token)
 	if err != nil {
-		log.Debug("could not update asset", "err", err)
+		log.Debug("could not update token", "err", err)
 		return
 	}
 
 	transaction := entities.Transaction{
 		Hash:         args.TxHash,
-		Type:         entities.WithdrawAsset,
+		Type:         entities.WithdrawToken,
 		PriceNominal: priceNominal,
 		Timestamp:    args.Timestamp,
 		SellerID:     0,
 		BuyerID:      ownerAccount.ID,
-		AssetID:      asset.ID,
-		CollectionID: asset.CollectionID,
+		TokenID:      token.ID,
+		CollectionID: token.CollectionID,
 	}
 
 	AddTransaction(&transaction)
 }
 
 func GetExtendedTokenData(tokenId string, nonce uint64) (*dtos.ExtendedTokenDto, error) {
-	token, err := storage.GetAssetByTokenIdAndNonce(tokenId, nonce)
+	token, err := storage.GetTokenByTokenIdAndNonce(tokenId, nonce)
 	if err != nil {
 		return nil, err
 	}
@@ -224,8 +227,8 @@ func GetExtendedTokenData(tokenId string, nonce uint64) (*dtos.ExtendedTokenDto,
 	)
 }
 
-func ConstructNewAssetFromListArgs(args ListAssetArgs) entities.Asset {
-	asset := entities.Asset{
+func ConstructNewTokenFromListArgs(args ListTokenArgs) entities.Token {
+	token := entities.Token{
 		TokenID:          args.TokenId,
 		Nonce:            args.Nonce,
 		RoyaltiesPercent: GetRoyaltiesPercentNominal(args.RoyaltiesPercent),
@@ -238,36 +241,36 @@ func ConstructNewAssetFromListArgs(args ListAssetArgs) entities.Asset {
 		Hash:             args.Hash,
 	}
 
-	osResponse, err := GetOSMetadataForAsset(args.LastLink, args.Nonce)
+	osResponse, err := GetOSMetadataForToken(args.LastLink, args.Nonce)
 	if err == nil {
-		asset.MetadataLink = args.LastLink
-		asset.TokenName = osResponse.Name
-		asset.ImageLink = osResponse.Image
+		token.MetadataLink = args.LastLink
+		token.TokenName = osResponse.Name
+		token.ImageLink = osResponse.Image
 
 		attributesJson, innerErr := ConstructAttributesJsonFromResponse(osResponse)
 		if innerErr != nil {
 			log.Debug("could not parse os response for attributes", "link", args.LastLink)
 		} else {
-			asset.Attributes = *attributesJson
+			token.Attributes = *attributesJson
 		}
 	} else {
-		asset.TokenName = args.TokenName
-		asset.ImageLink = args.FirstLink
-		asset.Attributes = datatypes.JSON(args.Attributes)
+		token.TokenName = args.TokenName
+		token.ImageLink = args.FirstLink
+		token.Attributes = datatypes.JSON(args.Attributes)
 	}
 
-	return asset
+	return token
 }
 
-func GetOSMetadataForAsset(link string, nonce uint64) (*AssetLinkResponse, error) {
-	var response AssetLinkResponse
+func GetOSMetadataForToken(link string, nonce uint64) (*TokenLinkResponse, error) {
+	var response TokenLinkResponse
 
 	link = link + "/" + strconv.FormatUint(nonce, 10)
 	responseRaw, err := HttpGetRaw(link)
 	if err != nil {
 		return nil, err
 	}
-	if len(responseRaw) > maxAssetLinkResponseSize {
+	if len(responseRaw) > maxTokenLinkResponseSize {
 		return nil, errors.New("response too long")
 	}
 
@@ -279,7 +282,7 @@ func GetOSMetadataForAsset(link string, nonce uint64) (*AssetLinkResponse, error
 	return &response, nil
 }
 
-func ConstructAttributesJsonFromResponse(response *AssetLinkResponse) (*datatypes.JSON, error) {
+func ConstructAttributesJsonFromResponse(response *TokenLinkResponse) (*datatypes.JSON, error) {
 	attrsMap := make(map[string]string)
 	for _, element := range response.Attributes {
 		attrsMap[element.TraitType] = element.Value
