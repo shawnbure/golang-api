@@ -43,27 +43,27 @@ func Test_GetStats(t *testing.T) {
 	err = AddCollection(collection.ID, collection.Name, collection.TokenID)
 	require.Nil(t, err)
 
-	asset := entities.Asset{
+	token := entities.Token{
 		TokenID:      collection.TokenID,
 		CollectionID: collection.ID,
 		PriceNominal: float64(11),
 		OwnerId:      0,
 	}
-	err = storage.AddAsset(&asset)
+	err = storage.AddToken(&token)
 	require.Nil(t, err)
 
 	tx := entities.Transaction{
-		AssetID:      asset.ID,
+		TokenID:      token.ID,
 		CollectionID: collection.ID,
-		PriceNominal: asset.PriceNominal,
-		Type:         entities.BuyAsset,
+		PriceNominal: token.PriceNominal,
+		Type:         entities.BuyToken,
 	}
 	err = storage.AddTransaction(&tx)
 	require.Nil(t, err)
 
 	stats, err := GetStatisticsForTokenId(collection.TokenID)
 	require.Nil(t, err)
-	require.Equal(t, stats.FloorPrice, asset.PriceNominal)
+	require.Equal(t, stats.FloorPrice, token.PriceNominal)
 }
 
 func connectToDb() {
