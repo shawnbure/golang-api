@@ -76,3 +76,19 @@ func GetAccountByAddress(name string) (*data.Account, error) {
 
 	return &account, nil
 }
+
+func GetAccountsWithNameAlikeWithLimit(name string, limit int) ([]data.Account, error) {
+	var accounts []data.Account
+
+	database, err := GetDBOrError()
+	if err != nil {
+		return nil, err
+	}
+
+	txRead := database.Limit(limit).Where("name LIKE ?", name).Find(&accounts)
+	if txRead.Error != nil {
+		return nil, txRead.Error
+	}
+
+	return accounts, nil
+}

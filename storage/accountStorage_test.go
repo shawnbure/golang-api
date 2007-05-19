@@ -45,8 +45,24 @@ func Test_GetAccountByAddress(t *testing.T) {
 	require.GreaterOrEqual(t, retrievedAccount.Address, account.Address)
 }
 
+func Test_GetAccountsWithNameAlikeWithLimit(t *testing.T) {
+	connectToTestDb()
+
+	account := defaultAccount()
+	_ = AddNewAccount(&account)
+	account.ID = 0
+	_ = AddNewAccount(&account)
+
+	retrievedAccounts, err := GetAccountsWithNameAlikeWithLimit("default", 5)
+	require.Nil(t, err)
+	require.GreaterOrEqual(t, len(retrievedAccounts), 2)
+	require.Equal(t, retrievedAccounts[0].Name, "default")
+	require.Equal(t, retrievedAccounts[1].Name, "default")
+}
+
 func defaultAccount() data.Account {
 	return data.Account{
 		Address: "erd123",
+		Name:    "default",
 	}
 }

@@ -1,6 +1,9 @@
 package services
 
 import (
+	"encoding/json"
+	"fmt"
+	"github.com/erdsea/erdsea-api/cache"
 	"github.com/erdsea/erdsea-api/data"
 	"github.com/erdsea/erdsea-api/storage"
 	"time"
@@ -13,6 +16,11 @@ type SetAccountRequest struct {
 	TwitterLink   string `json:"twitterLink"`
 	InstagramLink string `json:"instagramLink"`
 }
+
+var (
+	AccountSearchCacheKeyFormat = "AccountSearch:%s"
+	AccountSearchExpirePeriod   = 20 * time.Minute
+)
 
 func GetOrCreateAccount(address string) (*data.Account, error) {
 	account, err := storage.GetAccountByAddress(address)
@@ -44,5 +52,33 @@ func AddOrUpdateAccount(account *data.Account) error {
 		err = storage.UpdateAccount(account)
 	}
 
-	return nil
+	return err
+}
+
+func GetAccountsWithNameAlike(name string, limit int) ([]data.Account, error) {
+	var byteArray []byte
+	var accountArray []data.Account
+
+	cacheKey := fmt.Sprintf(AccountSearchCacheKeyFormat, name)
+	err := cache.GetCacher().Get(cacheKey, &byteArray)
+	if err == nil {
+		err = json.Unmarshal(byteArray, &accountArray)
+		return accountArray, err
+	}
+
+	searchName := "%" + name + "%"
+	accountArray, err = storage.GetAccountsWithNameAlikeWithLimit(searchName, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	byteArray, err = json.Marshal(accountArray)
+	if err == nil {
+		err = cache.GetCacher().Set(cacheKey, byteArray, AccountSearchExpirePeriod)
+		if err != nil {
+			log.Debug("could not set cache", "err", err)
+		}
+	}
+
+	return accountArray, nil
 }
