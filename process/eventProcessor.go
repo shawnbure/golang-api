@@ -249,7 +249,7 @@ func (e *EventProcessor) onEventMakeOffer(event entities.Event) {
 		log.Debug("onEventMakeOffer", string(eventJson))
 	}
 
-	services.MakeOffer(args)
+	_, _ = services.MakeOffer(args)
 }
 
 func (e *EventProcessor) onEventAcceptOffer(event entities.Event) {
@@ -363,7 +363,7 @@ func (e *EventProcessor) onEventUpdateDeposit(event entities.Event) {
 		log.Debug("onEventUpdateDeposit", string(eventJson))
 	}
 
-	services.UpdateDeposit(args)
+	_, _ = services.UpdateDeposit(args)
 }
 
 func getEventName(event *entities.Event) string {
