@@ -901,6 +901,56 @@ var doc = `{
                 }
             }
         },
+        "/collections/{collectionId}/mintInfo": {
+            "get": {
+                "description": "Retrieves max supply and total sold for a collection. Cached for 6 seconds.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "collections"
+                ],
+                "summary": "Gets mint info about a collection.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "collection id",
+                        "name": "collectionId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/services.MintInfo"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/collections/{collectionId}/profile": {
             "get": {
                 "description": "Retrieves a collection cover image. It will be sent as base64 encoding (sdt, raw) of its byte representation.",
@@ -1612,6 +1662,64 @@ var doc = `{
                 }
             }
         },
+        "/tx-template/mint-tokens/{userAddress}/{collectionId}/{numberOfTokens}": {
+            "get": {
+                "description": "Retrieves tx-template for mint tokens. Only account nonce and signature must be added afterwards.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tx-template"
+                ],
+                "summary": "Gets tx-template for mint tokens.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "user address",
+                        "name": "userAddress",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "collection id",
+                        "name": "collectionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "number of tokens",
+                        "name": "numberOfTokens",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/formatter.Transaction"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/tx-template/withdraw-nft/{userAddress}/{tokenId}/{nonce}": {
             "get": {
                 "description": "Retrieves tx-template for NFT withdraw. Only account nonce and signature must be added afterwards.",
@@ -1744,6 +1852,9 @@ var doc = `{
         "entities.Collection": {
             "type": "object",
             "properties": {
+                "contractAddress": {
+                    "type": "string"
+                },
                 "createdAt": {
                     "type": "integer"
                 },
@@ -1756,10 +1867,19 @@ var doc = `{
                 "discordLink": {
                     "type": "string"
                 },
+                "flags": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
                 "id": {
                     "type": "integer"
                 },
                 "instagramLink": {
+                    "type": "string"
+                },
+                "mintPricePerTokenString": {
                     "type": "string"
                 },
                 "name": {
@@ -2022,6 +2142,17 @@ var doc = `{
                 },
                 "website": {
                     "type": "string"
+                }
+            }
+        },
+        "services.MintInfo": {
+            "type": "object",
+            "properties": {
+                "maxSupply": {
+                    "type": "integer"
+                },
+                "totalSold": {
+                    "type": "integer"
                 }
             }
         },

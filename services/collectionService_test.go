@@ -9,6 +9,7 @@ import (
 	"github.com/erdsea/erdsea-api/cache"
 	"github.com/erdsea/erdsea-api/config"
 	"github.com/erdsea/erdsea-api/data/entities"
+	"github.com/erdsea/erdsea-api/interaction"
 	"github.com/erdsea/erdsea-api/stats"
 	"github.com/erdsea/erdsea-api/storage"
 	"github.com/stretchr/testify/require"
@@ -234,4 +235,28 @@ func Test_GetCollectionMetadata(t *testing.T) {
 		},
 	}
 	require.Equal(t, expected, *collStats)
+}
+
+func Test_GetMintInfoFromContract(t *testing.T) {
+	cache.InitCacher(config.CacheConfig{Url: "redis://localhost:6379"})
+	defer cache.CloseCacher()
+
+	cfg := config.BlockchainConfig{
+		ProxyUrl:            "https://devnet-gateway.elrond.com",
+		ChainID:             "D",
+	}
+
+	interaction.InitBlockchainInteractor(cfg)
+	bi := interaction.GetBlockchainInteractor()
+	require.NotNil(t, bi)
+
+	info, err := GetMintInfoForContract("erd1qqqqqqqqqqqqqpgq3uvfynvpvcs8aldhuyrseuyepmp0cj7at9usgefv56")
+	require.Nil(t, err)
+	require.True(t, info.MaxSupply > 0)
+	require.True(t, info.TotalSold > 0)
+
+	info, err = GetMintInfoForContract("erd1qqqqqqqqqqqqqpgq3uvfynvpvcs8aldhuyrseuyepmp0cj7at9usgefv56")
+	require.Nil(t, err)
+	require.True(t, info.MaxSupply > 0)
+	require.True(t, info.TotalSold > 0)
 }

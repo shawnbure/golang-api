@@ -2,6 +2,7 @@ package formatter
 
 import (
 	"encoding/hex"
+	"fmt"
 	"math/big"
 
 	"github.com/ElrondNetwork/elrond-sdk-erdgo/data"
@@ -14,6 +15,7 @@ var (
 	buyNftEndpointName          = "buyNft"
 	withdrawNftEndpointName     = "withdrawNft"
 	ESDTNFTTransferEndpointName = "ESDTNFTTransfer"
+	mintTokensEndpointName      = "mintTokens"
 )
 
 type Transaction struct {
@@ -101,6 +103,32 @@ func (f *TxFormatter) NewWithdrawNftTxTemplate(senderAddr string, tokenId string
 		SndAddr:   senderAddr,
 		GasPrice:  f.config.GasPrice,
 		GasLimit:  f.config.WithdrawNftGasLimit,
+		Data:      txData,
+		Signature: "",
+		ChainID:   f.config.ChainID,
+		Version:   1,
+		Options:   0,
+	}
+}
+
+func (f *TxFormatter) NewMintNftsTxTemplate(
+	walletAddress string,
+	contractAddress string,
+	mintPricePerToken float64,
+	numberOfTokens uint64,
+) Transaction {
+	gasLimit := f.config.MintTokenGasLimit * numberOfTokens
+	totalPrice := fmt.Sprintf("%f", mintPricePerToken * float64(numberOfTokens))
+	txData := mintTokensEndpointName +
+		"@" + hex.EncodeToString(big.NewInt(int64(numberOfTokens)).Bytes())
+
+	return Transaction{
+		Nonce:     0,
+		Value:	   totalPrice,
+		RcvAddr:   contractAddress,
+		SndAddr:   walletAddress,
+		GasPrice:  f.config.GasPrice,
+		GasLimit:  gasLimit,
 		Data:      txData,
 		Signature: "",
 		ChainID:   f.config.ChainID,
