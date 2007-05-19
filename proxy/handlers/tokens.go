@@ -23,7 +23,7 @@ func NewTokensHandler(groupHandler *groupHandler) {
 
 	endpoints := []EndpointHandler{
 		{Method: http.MethodGet, Path: tokenByTokenIdAndNonceEndpoint, HandlerFunc: handler.getByTokenIdAndNonce},
-		{Method: http.MethodGet, Path: availableTokensEndpoint, HandlerFunc: handler.getAvailableTokens},
+		{Method: http.MethodPost, Path: availableTokensEndpoint, HandlerFunc: handler.getAvailableTokens},
 	}
 
 	endpointGroupHandler := EndpointGroupHandler{
@@ -83,6 +83,7 @@ func (handler *tokensHandler) getAvailableTokens(c *gin.Context) {
 		return
 	}
 
+	//TODO: add limit for token number
 	response := services.GetAvailableTokens(request)
 	dtos.JsonResponse(c, http.StatusOK, response, "")
 }
