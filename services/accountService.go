@@ -27,7 +27,7 @@ type AccountCacheInfo struct {
 
 var (
 	AccountSearchCacheKeyFormat     = "AccountSearch:%s"
-	AccountSearchExpirePeriod       = 20 * time.Minute
+	AccountSearchExpirePeriod       = 5 * time.Minute
 	WalletAddressToAccountCacheInfo = []byte("walletToAcc")
 )
 
