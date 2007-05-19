@@ -99,7 +99,7 @@ func GetTransactionsByBuyerOrSellerIdWithOffsetLimit(id uint64, offset int, limi
 		return nil, err
 	}
 
-	txRead := database.Offset(offset).Limit(limit).Find(&transactions, "seller_id = ? OR buyer_id = ?", id, id)
+	txRead := database.Offset(offset).Limit(limit).Order("id desc").Find(&transactions, "seller_id = ? OR buyer_id = ?", id, id)
 	if txRead.Error != nil {
 		return nil, txRead.Error
 	}
@@ -131,7 +131,7 @@ func GetTransactionsByTokenIdWithOffsetLimit(id uint64, offset int, limit int) (
 		return nil, err
 	}
 
-	txRead := database.Offset(offset).Limit(limit).Find(&transactions, "token_id = ?", id)
+	txRead := database.Offset(offset).Limit(limit).Order("id desc").Find(&transactions, "token_id = ?", id)
 	if txRead.Error != nil {
 		return nil, txRead.Error
 	}
@@ -147,7 +147,7 @@ func GetTransactionsByCollectionIdWithOffsetLimit(id uint64, offset int, limit i
 		return nil, err
 	}
 
-	txRead := database.Offset(offset).Limit(limit).Find(&transactions, "collection_id = ?", id)
+	txRead := database.Offset(offset).Limit(limit).Order("id desc").Find(&transactions, "collection_id = ?", id)
 	if txRead.Error != nil {
 		return nil, txRead.Error
 	}
@@ -182,7 +182,7 @@ func GetTransactionsWithOffsetLimit(offset int, limit int) ([]entities.Transacti
 		return nil, err
 	}
 
-	txRead := database.Offset(offset).Limit(limit).Find(&transactions)
+	txRead := database.Offset(offset).Limit(limit).Order("id desc").Find(&transactions)
 	if txRead.Error != nil {
 		return nil, txRead.Error
 	}
