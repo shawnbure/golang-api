@@ -46,6 +46,8 @@ postgres_setup() {
   sudo bash -c "echo -e \"\n$PSQL_CLIENT_CONNECT_OPT\" >>/etc/postgresql/12/main/pg_hba.conf"
 
   sudo ufw allow from any to any port 5432 proto tcp
+
+  sudo systemctl restart postgresql.service
 }
 
 redis-install() {
