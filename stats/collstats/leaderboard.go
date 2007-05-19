@@ -84,7 +84,7 @@ func GetLeaderboardEntries(table string, start int, stop int, rev bool) ([]Leade
 
 	entries := make([]LeaderboardEntry, len(tokenIds))
 	for index, tokenId := range tokenIds {
-		collCacheInfo, innerErr := getCollectionFromBolt(tokenId)
+		collCacheInfo, innerErr := GetOrAddCollectionCacheInfo(tokenId)
 		if innerErr != nil {
 			log.Debug("could not get from bolt")
 			continue

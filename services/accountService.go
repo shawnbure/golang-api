@@ -165,3 +165,20 @@ func GetAccountCacheInfo(walletAddress string) (*AccountCacheInfo, error) {
 
 	return &cacheInfo, nil
 }
+
+func GetOrAddAccountCacheInfo(walletAddress string) (*AccountCacheInfo, error) {
+	cacheInfo, err := GetAccountCacheInfo(walletAddress)
+	if err != nil {
+		account, innerErr := storage.GetAccountByAddress(walletAddress)
+		if innerErr != nil {
+			return nil, err
+		}
+
+		cacheInfo, innerErr = AddAccountToCache(walletAddress, account.ID, account.Name)
+		if innerErr != nil {
+			return nil, err
+		}
+	}
+
+	return cacheInfo, nil
+}

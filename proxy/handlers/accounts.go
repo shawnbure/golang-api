@@ -63,7 +63,7 @@ func NewAccountsHandler(groupHandler *groupHandler, authCfg config.AuthConfig) {
 func (handler *accountsHandler) get(c *gin.Context) {
 	walletAddress := c.Param("walletAddress")
 
-	cacheInfo, err := services.GetAccountCacheInfo(walletAddress)
+	cacheInfo, err := services.GetOrAddAccountCacheInfo(walletAddress)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
@@ -100,7 +100,7 @@ func (handler *accountsHandler) set(c *gin.Context) {
 		return
 	}
 
-	cacheInfo, err := services.GetAccountCacheInfo(walletAddress)
+	cacheInfo, err := services.GetOrAddAccountCacheInfo(walletAddress)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
@@ -181,7 +181,7 @@ func (handler *accountsHandler) create(c *gin.Context) {
 func (handler *accountsHandler) getAccountProfile(c *gin.Context) {
 	walletAddress := c.Param("walletAddress")
 
-	cacheInfo, err := services.GetAccountCacheInfo(walletAddress)
+	cacheInfo, err := services.GetOrAddAccountCacheInfo(walletAddress)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
@@ -224,7 +224,7 @@ func (handler *accountsHandler) setAccountProfile(c *gin.Context) {
 		return
 	}
 
-	cacheInfo, err := services.GetAccountCacheInfo(walletAddress)
+	cacheInfo, err := services.GetOrAddAccountCacheInfo(walletAddress)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
@@ -252,7 +252,7 @@ func (handler *accountsHandler) setAccountProfile(c *gin.Context) {
 func (handler *accountsHandler) getAccountCover(c *gin.Context) {
 	walletAddress := c.Param("walletAddress")
 
-	cacheInfo, err := services.GetAccountCacheInfo(walletAddress)
+	cacheInfo, err := services.GetOrAddAccountCacheInfo(walletAddress)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
@@ -295,7 +295,7 @@ func (handler *accountsHandler) setAccountCover(c *gin.Context) {
 		return
 	}
 
-	cacheInfo, err := services.GetAccountCacheInfo(walletAddress)
+	cacheInfo, err := services.GetOrAddAccountCacheInfo(walletAddress)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
@@ -327,7 +327,7 @@ func (handler *accountsHandler) getAccountTokens(c *gin.Context) {
 	limitStr := c.Param("limit")
 	walletAddress := c.Param("walletAddress")
 
-	cacheInfo, err := services.GetAccountCacheInfo(walletAddress)
+	cacheInfo, err := services.GetOrAddAccountCacheInfo(walletAddress)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
