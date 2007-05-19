@@ -1,7 +1,6 @@
 package proxy
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -81,12 +80,12 @@ func NewWebServer(cfg *config.GeneralConfig) (*webServer, error) {
 }
 
 func (w *webServer) Run() *http.Server {
-	port := w.generalConfig.ConnectorApi.Port
-	if !strings.Contains(port, ":") {
-		port = fmt.Sprintf(":%s", port)
+	address := w.generalConfig.ConnectorApi.Address
+	if !strings.Contains(address, ":") {
+		panic("bad address")
 	}
 	server := &http.Server{
-		Addr:    port,
+		Addr:    address,
 		Handler: w.router,
 	}
 

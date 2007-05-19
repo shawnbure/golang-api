@@ -16,7 +16,7 @@ type GeneralConfig struct {
 }
 
 type ConnectorApiConfig struct {
-	Port        string
+	Address     string
 	Username    string
 	Password    string
 	Addresses   []string
