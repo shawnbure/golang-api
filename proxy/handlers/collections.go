@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"github.com/erdsea/erdsea-api/config"
 	"github.com/erdsea/erdsea-api/data"
+	"github.com/erdsea/erdsea-api/proxy/middleware"
 	"github.com/erdsea/erdsea-api/storage"
 	"net/http"
 	"strconv"
@@ -18,7 +20,7 @@ const (
 type collectionsHandler struct {
 }
 
-func NewCollectionsHandler(groupHandler *groupHandler) {
+func NewCollectionsHandler(groupHandler *groupHandler, authCfg config.AuthConfig) {
 	handler := &collectionsHandler{}
 
 	endpoints := []EndpointHandler{
@@ -28,7 +30,7 @@ func NewCollectionsHandler(groupHandler *groupHandler) {
 
 	endpointGroupHandler := EndpointGroupHandler{
 		Root:             baseCollectionsEndpoint,
-		Middlewares:      []gin.HandlerFunc{},
+		Middlewares:      []gin.HandlerFunc{middleware.Authorization(authCfg.JwtSecret)},
 		EndpointHandlers: endpoints,
 	}
 

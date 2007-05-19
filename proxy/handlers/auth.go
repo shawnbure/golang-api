@@ -31,7 +31,7 @@ type authHandler struct {
 	service services.AuthService
 }
 
-func RegisterAuthHandler(authService services.AuthService, groupHandler *groupHandler) {
+func NewAuthHandler(groupHandler *groupHandler, authService services.AuthService) {
 	h := authHandler{
 		service: authService,
 	}
