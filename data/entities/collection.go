@@ -16,6 +16,7 @@ type Collection struct {
 	Priority                 uint64         `json:"priority"`
 	ContractAddress          string         `json:"contractAddress"`
 	MintPricePerTokenString  string         `json:"mintPricePerTokenString"`
+	MintPricePerTokenNominal float64        `json:"mintPricePerTokenNominal"`
 	Flags                    datatypes.JSON `json:"flags"`
 
 	CreatorID uint64 `json:"creatorId"`
