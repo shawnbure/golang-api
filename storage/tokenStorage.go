@@ -193,3 +193,29 @@ func CountUniqueOwnersWithListedTokensByCollectionId(collectionId uint64) (uint6
 
 	return uint64(count), nil
 }
+
+func GetTokensWithOffsetLimit(
+	offset int,
+	limit int,
+	sortRules map[string]string,
+) ([]entities.Token, error) {
+	var tokens []entities.Token
+
+	database, err := GetDBOrError()
+	if err != nil {
+		return nil, err
+	}
+
+	txRead := database.Offset(offset).Limit(limit)
+	if len(sortRules) == 2 {
+		query := fmt.Sprintf("%s %s", sortRules["criteria"], sortRules["mode"])
+		txRead.Order(query)
+	}
+
+	txRead.Find(&tokens)
+	if txRead.Error != nil {
+		return nil, txRead.Error
+	}
+
+	return tokens, nil
+}

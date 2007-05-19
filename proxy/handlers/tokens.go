@@ -22,7 +22,12 @@ const (
 	bidsForTokenIdAndNonceEndpoint   = "/:tokenId/:nonce/bids/:offset/:limit"
 	refreshTokenMetadataEndpoint     = "/:tokenId/:nonce/refresh"
 	tokenMetadataRelayEndpoint       = "/metadata/relay"
+	tokensListMetadataEndpoint       = "/list/:offset/:limit"
 )
+
+type TokenListQueryBody struct {
+	SortRules map[string]string `json:"sortRules"`
+}
 
 type tokensHandler struct {
 	blockchainConfig config.BlockchainConfig
@@ -40,6 +45,7 @@ func NewTokensHandler(groupHandler *groupHandler, cfg config.BlockchainConfig) {
 		{Method: http.MethodGet, Path: bidsForTokenIdAndNonceEndpoint, HandlerFunc: handler.getBids},
 		{Method: http.MethodGet, Path: tokenMetadataRelayEndpoint, HandlerFunc: handler.relayMetadataResponse},
 		{Method: http.MethodPost, Path: refreshTokenMetadataEndpoint, HandlerFunc: handler.refresh},
+		{Method: http.MethodPost, Path: tokensListMetadataEndpoint, HandlerFunc: handler.getList},
 	}
 
 	endpointGroupHandler := EndpointGroupHandler{
@@ -292,4 +298,70 @@ func (handler *tokensHandler) refresh(c *gin.Context) {
 	}
 
 	dtos.JsonResponse(c, http.StatusOK, metadata, "")
+}
+
+// @Summary Gets tokens.
+// @Description Retrieves a list of tokens.
+// @Tags tokens
+// @Accept json
+// @Produce json
+// @Param offset path uint true "offset"
+// @Param limit path uint true "limit"
+// @Param query body TokenListQueryBody true "sort rules"
+// @Success 200 {object} []entities.Token
+// @Failure 400 {object} dtos.ApiResponse
+// @Failure 404 {object} dtos.ApiResponse
+// @Router /tokens/list/{offset}/{limit} [post]
+func (handler *tokensHandler) getList(c *gin.Context) {
+	offsetStr := c.Param("offset")
+	limitStr := c.Param("limit")
+
+	var queries TokenListQueryBody
+	err := c.BindJSON(&queries)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+	sortRules := queries.SortRules
+
+	offset, err := strconv.ParseUint(offsetStr, 10, 0)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	limit, err := strconv.ParseUint(limitStr, 10, 0)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	err = ValidateLimit(limit)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	if sortRules == nil {
+		sortRules = make(map[string]string, 2)
+	}
+	if len(sortRules) == 0 {
+		sortRules["criteria"] = "created_at"
+		sortRules["mode"] = "desc"
+	}
+
+	acceptedCriteria := map[string]bool{"price_nominal": true, "created_at": true}
+	err = testInputSortParams(sortRules, acceptedCriteria)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	tokens, err := storage.GetTokensWithOffsetLimit(int(offset), int(limit), sortRules)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	dtos.JsonResponse(c, http.StatusOK, tokens, "")
 }
