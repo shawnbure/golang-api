@@ -1,8 +1,6 @@
 package dtos
 
 import (
-	"encoding/json"
-
 	"github.com/erdsea/erdsea-api/data/entities"
 )
 
@@ -15,38 +13,28 @@ type CollectionStatistics struct {
 }
 
 type ExtendedTokenDto struct {
-	entities.Token
+	entities.Token      `json:"token"`
+	entities.Collection `json:"collection"`
 
-	AttributesMap  map[string]string
-	CollectionID   string
-	CollectionName string
+	OwnerName          string `json:"ownerName"`
+	OwnerWalletAddress string `json:"ownerWalletAddress"`
 
-	OwnerName          string
-	OwnerWalletAddress string
-
-	Stats CollectionStatistics
+	CollectionStats CollectionStatistics `json:"collectionStats"`
 }
 
 func CreateExtendedTokenDto(
 	token entities.Token,
-	collectionID string,
-	collectionName string,
+	collection entities.Collection,
 	ownerName string,
 	ownerWalletAddress string,
 	collStats CollectionStatistics,
 ) (*ExtendedTokenDto, error) {
 	e := &ExtendedTokenDto{
 		Token:              token,
-		CollectionID:       collectionID,
-		CollectionName:     collectionName,
+		Collection:         collection,
 		OwnerName:          ownerName,
 		OwnerWalletAddress: ownerWalletAddress,
-		Stats:              collStats,
-	}
-
-	err := json.Unmarshal(e.Attributes, &e.AttributesMap)
-	if err != nil {
-		return nil, err
+		CollectionStats:    collStats,
 	}
 
 	return e, nil
