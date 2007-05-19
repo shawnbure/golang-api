@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/erdsea/erdsea-api/alerts/tg"
-	"github.com/erdsea/erdsea-api/cache"
 	"github.com/erdsea/erdsea-api/config"
 	_ "github.com/erdsea/erdsea-api/docs"
 	"github.com/erdsea/erdsea-api/process"
@@ -47,11 +46,6 @@ func NewWebServer(cfg *config.GeneralConfig) (*webServer, error) {
 
 	groupHandler := handlers.NewGroupHandler()
 
-	localCacher, err := cache.NewLocalCacher()
-	if err != nil {
-		return nil, err
-	}
-
 	bot, err := makeBot(cfg.Bot)
 	if err != nil {
 		return nil, err
@@ -66,7 +60,6 @@ func NewWebServer(cfg *config.GeneralConfig) (*webServer, error) {
 	processor := process.NewEventProcessor(
 		cfg.ConnectorApi.Addresses,
 		cfg.ConnectorApi.Identifiers,
-		localCacher,
 		observerMonitor,
 	)
 
