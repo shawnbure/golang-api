@@ -16,6 +16,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var blockchainCfg = config.BlockchainConfig{
+	ProxyUrl:           "https://devnet-gateway.elrond.com",
+	MarketplaceAddress: "erd1qqqqqqqqqqqqqpgqm4dmwyxc5fsj49z3jcu9h08azjrcf60kt9uspxs483",
+}
+
 func Test_ListToken(t *testing.T) {
 	connectToDb()
 
@@ -34,7 +39,7 @@ func Test_ListToken(t *testing.T) {
 		Price:        "3635C9ADC5DEA00000",
 		TxHash:       "txHash",
 	}
-	ListToken(args)
+	ListToken(args, blockchainCfg.ProxyUrl, blockchainCfg.MarketplaceAddress)
 
 	ownerAccount, err := storage.GetAccountByAddress("ownerAddress")
 	require.Nil(t, err)
@@ -77,7 +82,7 @@ func Test_SellToken(t *testing.T) {
 		Price:        "3635C9ADC5DEA00000",
 		TxHash:       "txHash",
 	}
-	ListToken(listArgs)
+	ListToken(listArgs, blockchainCfg.ProxyUrl, blockchainCfg.MarketplaceAddress)
 
 	buyArgs := BuyTokenArgs{
 		OwnerAddress: "ownerAddress",
@@ -134,7 +139,7 @@ func Test_WithdrawToken(t *testing.T) {
 		Price:        "3635C9ADC5DEA00000",
 		TxHash:       "txHash",
 	}
-	ListToken(listArgs)
+	ListToken(listArgs, blockchainCfg.ProxyUrl, blockchainCfg.MarketplaceAddress)
 
 	withdrawArgs := WithdrawTokenArgs{
 		OwnerAddress: "ownerAddress",
@@ -242,7 +247,7 @@ func Test_ErdCompatibility(t *testing.T) {
 		FirstLink:    "some_link",
 		SecondLink:   "https://wow-prod-nftribe.s3.eu-west-2.amazonaws.com/t/69",
 	}
-	ListToken(listArgs)
+	ListToken(listArgs, blockchainCfg.ProxyUrl, blockchainCfg.MarketplaceAddress)
 
 	token, err := storage.GetTokenByTokenIdAndNonce("tokenId", nonce)
 	require.Nil(t, err)
@@ -262,7 +267,7 @@ func Test_ErdCompatibility(t *testing.T) {
 		FirstLink:    "https://wow-prod-nftribe.s3.eu-west-2.amazonaws.com/t/70",
 		SecondLink:   "some_link",
 	}
-	ListToken(listArgs)
+	ListToken(listArgs, blockchainCfg.ProxyUrl, blockchainCfg.MarketplaceAddress)
 
 	token, err = storage.GetTokenByTokenIdAndNonce("tokenId", nonce)
 	require.Nil(t, err)
@@ -300,7 +305,7 @@ func Test_StartAuction(t *testing.T) {
 		StartTime:        10,
 		Deadline:         110,
 		RoyaltiesPercent: 10,
-	})
+	}, blockchainCfg.ProxyUrl, blockchainCfg.MarketplaceAddress)
 	require.Nil(t, err)
 	require.NotEqual(t, uint64(0), token.ID)
 
@@ -329,7 +334,7 @@ func Test_StartAuctionEndAuction(t *testing.T) {
 		StartTime:        10,
 		Deadline:         110,
 		RoyaltiesPercent: 10,
-	})
+	}, blockchainCfg.ProxyUrl, blockchainCfg.MarketplaceAddress)
 	require.Nil(t, err)
 	require.NotEqual(t, uint64(0), token.ID)
 
@@ -344,10 +349,10 @@ func Test_StartAuctionEndAuction(t *testing.T) {
 	require.Equal(t, owner.ID, token.OwnerId)
 
 	EndAuction(EndAuctionArgs{
-		TokenId:   token.TokenID,
-		Nonce:     nonce,
-		Winner:    address,
-		Amount:    "1000000000000000000",
+		TokenId: token.TokenID,
+		Nonce:   nonce,
+		Winner:  address,
+		Amount:  "1000000000000000000",
 	})
 
 	tokenAfterEnd, err := storage.GetTokenByTokenIdAndNonce(token.TokenID, token.Nonce)

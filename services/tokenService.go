@@ -305,7 +305,7 @@ func StartAuction(args StartAuctionArgs, blockchainProxy string, marketplaceAddr
 			TokenID:          args.TokenId,
 			Nonce:            args.Nonce,
 			RoyaltiesPercent: GetRoyaltiesPercentNominal(args.RoyaltiesPercent),
-			MetadataLink:     args.SecondLink,
+			MetadataLink:     metadataLink,
 			CreatedAt:        args.Timestamp,
 			Attributes:       GetAttributesFromMetadata(metadataLink),
 			TokenName:        args.TokenName,
