@@ -60,7 +60,7 @@ func connectToTestDb() {
 		Port:          5432,
 		DbName:        "erdsea_db_test",
 		User:          "postgres",
-		Password:      "boop",
+		Password:      "root",
 		SslMode:       "disable",
 		MaxOpenConns:  50,
 		MaxIdleConns:  10,

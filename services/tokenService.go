@@ -57,6 +57,8 @@ const (
 	minPriceDecimals        = 15
 
 	maxTokenLinkResponseSize = 1024
+
+	ZeroAddress = "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu"
 )
 
 var (
@@ -90,9 +92,18 @@ func ListToken(args ListTokenArgs) {
 
 	var innerErr error
 	if err != nil {
-		newToken := ConstructNewTokenFromListArgs(args)
+		newToken := ConstructNewToken(ConstructTokenArgs{
+			TokenId:          args.TokenId,
+			Nonce:            args.Nonce,
+			TokenName:        args.TokenName,
+			RoyaltiesPercent: args.RoyaltiesPercent,
+			Timestamp:        args.Timestamp,
+			Hash:             args.Hash,
+			LastLink:         args.LastLink,
+			FirstLink:        args.FirstLink,
+		})
 		token = &newToken
-		token.Listed = true
+		token.Status = entities.List
 		token.PriceString = args.Price
 		token.PriceNominal = priceNominal
 		token.OwnerId = ownerAccount.ID
@@ -104,7 +115,7 @@ func ListToken(args ListTokenArgs) {
 			log.Error("could not add token to cache")
 		}
 	} else {
-		token.Listed = true
+		token.Status = entities.List
 		token.PriceString = args.Price
 		token.PriceNominal = priceNominal
 		token.OwnerId = ownerAccount.ID
@@ -159,7 +170,7 @@ func BuyToken(args BuyTokenArgs) {
 	// Owner ID was to be reset since the token will no longer be on the marketplace.
 	// Could have been kept like this, but bugs may appear when querying.
 	token.OwnerId = 0
-	token.Listed = false
+	token.Status = entities.None
 	token.LastBuyPriceNominal = priceNominal
 	err = storage.UpdateToken(token)
 	if err != nil {
@@ -200,10 +211,10 @@ func WithdrawToken(args WithdrawTokenArgs) {
 		return
 	}
 
-	token.Listed = false
 	// This was to be reset since the token will no longer be on the marketplace.
 	// Could have been kept like this, but bugs may appear when trying when querying.
 	token.OwnerId = 0
+	token.Status = entities.None
 	err = storage.UpdateToken(token)
 	if err != nil {
 		log.Debug("could not update token", "err", err)
@@ -217,6 +228,146 @@ func WithdrawToken(args WithdrawTokenArgs) {
 		Timestamp:    args.Timestamp,
 		SellerID:     0,
 		BuyerID:      ownerAccount.ID,
+		TokenID:      token.ID,
+		CollectionID: token.CollectionID,
+	}
+
+	AddTransaction(&transaction)
+}
+
+func StartAuction(args StartAuctionArgs) (*entities.Token, error) {
+	amountNominal, err := GetPriceNominal(args.MinBid)
+	if err != nil {
+		log.Debug("could not parse price", "err", err)
+		return nil, err
+	}
+
+	accountID := uint64(0)
+	accountCacheInfo, err := GetOrAddAccountCacheInfo(args.OwnerAddress)
+	if err != nil {
+		log.Debug("could not get or add acc cache info", err)
+
+		account, innerErr := GetOrCreateAccount(args.OwnerAddress)
+		if innerErr != nil {
+			log.Debug("could not get or add acc", err)
+		} else {
+			accountID = account.ID
+		}
+	} else {
+		accountID = accountCacheInfo.AccountId
+	}
+
+	collectionId := uint64(0)
+	collectionInfoCache, err := collstats.GetOrAddCollectionCacheInfo(args.TokenId)
+	if err == nil {
+		collectionId = collectionInfoCache.CollectionId
+	}
+
+	token, err := storage.GetTokenByTokenIdAndNonce(args.TokenId, args.Nonce)
+
+	var innerErr error
+	if err != nil {
+		newToken := ConstructNewToken(ConstructTokenArgs{
+			TokenId:          args.TokenId,
+			Nonce:            args.Nonce,
+			TokenName:        args.TokenName,
+			RoyaltiesPercent: args.RoyaltiesPercent,
+			Timestamp:        args.Timestamp,
+			Hash:             args.Hash,
+			LastLink:         args.LastLink,
+			FirstLink:        args.FirstLink,
+		})
+		token = &newToken
+		token.Status = entities.Auction
+		token.PriceString = args.MinBid
+		token.PriceNominal = amountNominal
+		token.OwnerId = accountID
+		token.CollectionID = collectionId
+		token.AuctionStartTime = args.StartTime
+		token.AuctionDeadline = args.Deadline
+		innerErr = storage.AddToken(token)
+
+		_, cacheErr := AddTokenToCache(token.TokenID, token.Nonce, token.TokenName, token.ID)
+		if cacheErr != nil {
+			log.Error("could not add token to cache")
+		}
+	} else {
+		token.Status = entities.Auction
+		token.PriceString = args.MinBid
+		token.PriceNominal = amountNominal
+		token.OwnerId = accountID
+		token.CollectionID = collectionId
+		token.AuctionStartTime = args.StartTime
+		token.AuctionDeadline = args.Deadline
+		innerErr = storage.UpdateToken(token)
+	}
+
+	if innerErr != nil {
+		log.Debug("could not create or update token", "err", innerErr)
+		return nil, err
+	}
+
+	transaction := entities.Transaction{
+		Hash:         args.TxHash,
+		Type:         entities.AuctionToken,
+		PriceNominal: amountNominal,
+		Timestamp:    args.Timestamp,
+		SellerID:     accountID,
+		BuyerID:      0,
+		TokenID:      token.ID,
+		CollectionID: collectionId,
+	}
+
+	AddTransaction(&transaction)
+	return token, nil
+}
+
+func EndAuction(args EndAuctionArgs) {
+	if args.Winner == ZeroAddress {
+		return
+	}
+
+	amountNominal, err := GetPriceNominal(args.Amount)
+	if err != nil {
+		log.Debug("could not parse price", "err", err)
+		return
+	}
+
+	buyer, err := GetOrAddAccountCacheInfo(args.Winner)
+	if err != nil {
+		log.Debug("could not parse price", "err", err)
+		return
+	}
+
+	token, err := storage.GetTokenByTokenIdAndNonce(args.TokenId, args.Nonce)
+	if err != nil {
+		log.Debug("could not get token", "err", err)
+		return
+	}
+
+	sellerId := token.OwnerId
+	token.OwnerId = 0
+	token.Status = entities.None
+	token.LastBuyPriceNominal = amountNominal
+	err = storage.UpdateToken(token)
+	if err != nil {
+		log.Debug("could not update token", "err", err)
+		return
+	}
+
+	err = storage.DeleteProffersForTokenId(token.ID)
+	if err != nil {
+		log.Debug("could not delete proffers for token", "err", err)
+		return
+	}
+
+	transaction := entities.Transaction{
+		Hash:         args.TxHash,
+		Type:         entities.BuyToken,
+		PriceNominal: amountNominal,
+		Timestamp:    args.Timestamp,
+		SellerID:     sellerId,
+		BuyerID:      buyer.AccountId,
 		TokenID:      token.ID,
 		CollectionID: token.CollectionID,
 	}
@@ -261,14 +412,24 @@ func GetExtendedTokenData(tokenId string, nonce uint64) (*dtos.ExtendedTokenDto,
 	)
 }
 
-func ConstructNewTokenFromListArgs(args ListTokenArgs) entities.Token {
+type ConstructTokenArgs struct {
+	TokenId          string
+	Nonce            uint64
+	TokenName        string
+	RoyaltiesPercent uint64
+	Timestamp        uint64
+	Hash             string
+	LastLink         string
+	FirstLink        string
+}
+
+func ConstructNewToken(args ConstructTokenArgs) entities.Token {
 	token := entities.Token{
 		TokenID:          args.TokenId,
 		Nonce:            args.Nonce,
 		RoyaltiesPercent: GetRoyaltiesPercentNominal(args.RoyaltiesPercent),
 		MetadataLink:     "",
 		CreatedAt:        args.Timestamp,
-		Listed:           true,
 		Attributes:       datatypes.JSON(""),
 		TokenName:        "",
 		ImageLink:        "",

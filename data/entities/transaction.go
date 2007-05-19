@@ -19,4 +19,5 @@ const (
 	ListToken     TxType = "List"
 	BuyToken             = "Buy"
 	WithdrawToken        = "Withdraw"
+	AuctionToken         = "Auction"
 )

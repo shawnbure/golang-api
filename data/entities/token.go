@@ -11,13 +11,23 @@ type Token struct {
 	RoyaltiesPercent    float64        `json:"royaltiesPercent"`
 	MetadataLink        string         `json:"metadataLink"`
 	CreatedAt           uint64         `json:"createdAt"`
-	Listed              bool           `json:"listed"`
+	Status              TokenStatus    `json:"state"`
 	Attributes          datatypes.JSON `json:"attributes"`
 	TokenName           string         `json:"tokenName"`
 	ImageLink           string         `json:"imageLink"`
 	Hash                string         `json:"hash"`
-	LastBuyPriceNominal float64        `json:lastBuyPriceNominal`
+	LastBuyPriceNominal float64        `json:"lastBuyPriceNominal"`
+	AuctionStartTime    uint64         `json:"auctionStartTime"`
+	AuctionDeadline     uint64         `json:"auctionDeadline"`
 
 	OwnerId      uint64 `json:"ownerId"`
 	CollectionID uint64 `json:"collectionId"`
 }
+
+type TokenStatus string
+
+const (
+	List    TokenStatus = "List"
+	Auction             = "Auction"
+	None                = "None"
+)

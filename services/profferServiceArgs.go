@@ -29,14 +29,20 @@ type AcceptOfferArgs struct {
 }
 
 type StartAuctionArgs struct {
-	OwnerAddress string
-	TokenId      string
-	Nonce        uint64
-	MinBid       string
-	StartTime    uint64
-	Deadline     uint64
-	Timestamp    uint64
-	TxHash       string
+	OwnerAddress     string
+	TokenId          string
+	Nonce            uint64
+	TokenName        string
+	FirstLink        string
+	LastLink         string
+	Hash             string
+	Attributes       string
+	MinBid           string
+	StartTime        uint64
+	Deadline         uint64
+	RoyaltiesPercent uint64
+	Timestamp        uint64
+	TxHash           string
 }
 
 type PlaceBidArgs struct {

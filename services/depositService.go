@@ -33,7 +33,7 @@ func UpdateDeposit(args DepositUpdateArgs) (*entities.Deposit, error){
 		OwnerId:       accountID,
 	}
 
-	err = storage.UpdateDeposit(&deposit)
+	err = storage.UpdateDepositByOwnerId(&deposit, deposit.OwnerId)
 	if err != nil {
 		innerErr := storage.AddDeposit(&deposit)
 		if innerErr != nil {

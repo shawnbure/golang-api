@@ -2,10 +2,13 @@ package services
 
 import (
 	"encoding/json"
+	"fmt"
+	"github.com/erdsea/erdsea-api/cache"
 	"gorm.io/datatypes"
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/erdsea/erdsea-api/config"
 	"github.com/erdsea/erdsea-api/data/entities"
@@ -49,7 +52,7 @@ func Test_ListToken(t *testing.T) {
 		TokenID:      "tokenId",
 		Nonce:        13,
 		PriceNominal: 1_000,
-		Listed:       true,
+		Status:       entities.List,
 		OwnerId:      ownerAccount.ID,
 		CollectionID: token.CollectionID,
 	}
@@ -106,7 +109,7 @@ func Test_SellToken(t *testing.T) {
 		TokenID:      "tokenId",
 		Nonce:        13,
 		PriceNominal: 1_000,
-		Listed:       false,
+		Status:       entities.List,
 		OwnerId:      0,
 		CollectionID: token.CollectionID,
 	}
@@ -158,7 +161,7 @@ func Test_WithdrawToken(t *testing.T) {
 		TokenID:      "tokenId",
 		Nonce:        13,
 		PriceNominal: 1_000,
-		Listed:       false,
+		Status:       entities.List,
 		OwnerId:      0,
 		CollectionID: token.CollectionID,
 	}
@@ -284,4 +287,75 @@ func connectToDb() {
 		MaxIdleConns:  10,
 		ShouldMigrate: true,
 	})
+}
+
+func Test_StartAuction(t *testing.T) {
+	connectToDb()
+	cache.InitCacher(cfg)
+
+	nonce := uint64(time.Now().Unix())
+	address := "erd12" + fmt.Sprintf("%d", nonce)
+	token, err := StartAuction(StartAuctionArgs{
+		OwnerAddress:     address,
+		Nonce:            nonce,
+		FirstLink:        "abcdef",
+		MinBid:           "1000000000000000000",
+		StartTime:        10,
+		Deadline:         110,
+		RoyaltiesPercent: 10,
+	})
+	require.Nil(t, err)
+	require.NotEqual(t, uint64(0), token.ID)
+
+	owner, err := storage.GetAccountByAddress(address)
+	require.Nil(t, err)
+	require.NotEqual(t, uint64(0), owner.ID)
+
+	require.Equal(t, nonce, token.Nonce)
+	require.Equal(t, "abcdef", token.ImageLink)
+	require.Equal(t, "1000000000000000000", token.PriceString)
+	require.Equal(t, entities.TokenStatus(entities.Auction), token.Status)
+	require.Equal(t, owner.ID, token.OwnerId)
+}
+
+func Test_StartAuctionEndAuction(t *testing.T) {
+	connectToDb()
+	cache.InitCacher(cfg)
+
+	nonce := uint64(time.Now().Unix())
+	address := "erd12" + fmt.Sprintf("%d", nonce)
+	token, err := StartAuction(StartAuctionArgs{
+		OwnerAddress:     address,
+		Nonce:            nonce,
+		FirstLink:        "abcdef",
+		MinBid:           "1000000000000000000",
+		StartTime:        10,
+		Deadline:         110,
+		RoyaltiesPercent: 10,
+	})
+	require.Nil(t, err)
+	require.NotEqual(t, uint64(0), token.ID)
+
+	owner, err := storage.GetAccountByAddress(address)
+	require.Nil(t, err)
+	require.NotEqual(t, uint64(0), owner.ID)
+
+	require.Equal(t, nonce, token.Nonce)
+	require.Equal(t, "abcdef", token.ImageLink)
+	require.Equal(t, "1000000000000000000", token.PriceString)
+	require.Equal(t, entities.TokenStatus(entities.Auction), token.Status)
+	require.Equal(t, owner.ID, token.OwnerId)
+
+	EndAuction(EndAuctionArgs{
+		TokenId:   token.TokenID,
+		Nonce:     nonce,
+		Winner:    address,
+		Amount:    "1000000000000000000",
+	})
+
+	tokenAfterEnd, err := storage.GetTokenByTokenIdAndNonce(token.TokenID, token.Nonce)
+	require.Nil(t, err)
+	require.Equal(t, uint64(0), tokenAfterEnd.OwnerId)
+	require.Equal(t, 4722.366, tokenAfterEnd.LastBuyPriceNominal)
+	require.Equal(t, entities.TokenStatus(entities.None), tokenAfterEnd.Status)
 }

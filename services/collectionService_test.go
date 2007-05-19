@@ -125,7 +125,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 
 	token1 := entities.Token{
 		CollectionID: coll.ID,
-		Listed:       true,
+		Status:       entities.List,
 		OwnerId:      1,
 		Attributes:   datatypes.JSON(`[{"trait_type": "hair", "value": "red"}, {"trait_type": "background", "value": "dark"}]`),
 	}
@@ -134,7 +134,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 
 	token2 := entities.Token{
 		CollectionID: coll.ID,
-		Listed:       true,
+		Status:       entities.List,
 		OwnerId:      1,
 		Attributes:   datatypes.JSON(`[{"trait_type": "hair", "value": "green"}, {"trait_type": "background", "value": "dark"}]`),
 	}
@@ -143,7 +143,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 
 	token3 := entities.Token{
 		CollectionID: coll.ID,
-		Listed:       true,
+		Status:       entities.List,
 		OwnerId:      1,
 		Attributes:   datatypes.JSON(`[{"trait_type": "hair", "value": "blue"}, {"trait_type": "background", "value": "dark"}]`),
 	}
@@ -152,7 +152,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 
 	token4 := entities.Token{
 		CollectionID: coll.ID,
-		Listed:       true,
+		Status:       entities.List,
 		OwnerId:      1,
 		Attributes:   datatypes.JSON(`[]`),
 	}
@@ -161,7 +161,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 
 	token5 := entities.Token{
 		CollectionID: coll.ID,
-		Listed:       true,
+		Status:       entities.List,
 		OwnerId:      1,
 		Attributes:   datatypes.JSON(`[{"trait_type": "hair", "value": "green"}, {"trait_type": "background", "value": "dark"}]`),
 	}
@@ -170,7 +170,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 
 	token6 := entities.Token{
 		CollectionID: coll.ID,
-		Listed:       true,
+		Status:       entities.List,
 		OwnerId:      1,
 		Attributes:   datatypes.JSON(`[{"trait_type": "background", "value": "dark"}]`),
 	}
@@ -179,7 +179,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 
 	token7 := entities.Token{
 		CollectionID: coll.ID,
-		Listed:       true,
+		Status:       entities.List,
 		OwnerId:      1,
 		Attributes:   datatypes.JSON(`[{"trait_type": "hair", "value": "yellow"}, {"trait_type": "background", "value": "dark"}]`),
 	}
@@ -188,7 +188,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 
 	token8 := entities.Token{
 		CollectionID: coll.ID,
-		Listed:       true,
+		Status:       entities.List,
 		OwnerId:      1,
 		Attributes:   datatypes.JSON(`[{"trait_type": "hair", "value": "white"}, {"trait_type": "background", "value": "dark"}]`),
 	}
@@ -197,7 +197,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 
 	token9 := entities.Token{
 		CollectionID: coll.ID,
-		Listed:       true,
+		Status:       entities.List,
 		OwnerId:      1,
 		Attributes:   datatypes.JSON(`[{"trait_type": "hair", "value": "white"}, {"trait_type": "background", "value": "dark"}]`),
 	}
@@ -206,7 +206,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 
 	token10 := entities.Token{
 		CollectionID: coll.ID,
-		Listed:       true,
+		Status:       entities.List,
 		OwnerId:      1,
 		Attributes:   datatypes.JSON(`[{"trait_type": "something_else", "value": "yea"}]`),
 	}

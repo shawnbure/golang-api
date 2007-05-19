@@ -22,13 +22,14 @@ func AddDeposit(deposit *entities.Deposit) error {
 	return nil
 }
 
-func UpdateDeposit(deposit *entities.Deposit) error {
+func UpdateDepositByOwnerId(deposit *entities.Deposit, ownerId uint64) error {
 	database, err := GetDBOrError()
 	if err != nil {
 		return err
 	}
 
-	txCreate := database.Save(&deposit)
+	txCreate := database.Table("deposits").Where("owner_id = ?", ownerId)
+	txCreate.Update("amount_nominal", deposit.AmountNominal).Update("amount_string", deposit.AmountString)
 	if txCreate.Error != nil {
 		return txCreate.Error
 	}
