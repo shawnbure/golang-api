@@ -2,10 +2,11 @@ package services
 
 import (
 	"errors"
+	"math/big"
+
 	logger "github.com/ElrondNetwork/elrond-go-logger"
 	"github.com/erdsea/erdsea-api/data"
 	"github.com/erdsea/erdsea-api/storage"
-	"math/big"
 )
 
 var log = logger.GetOrCreate("services")
@@ -13,7 +14,7 @@ var log = logger.GetOrCreate("services")
 const (
 	minPriceUnit     = 1000
 	minPercentUnit   = 1000
-	numPriceDecimals = 15
+	minPriceDecimals = 15
 )
 
 var baseExp = big.NewInt(10)
@@ -176,7 +177,7 @@ func GetPriceNominal(priceHex string) (float64, error) {
 		return 0, errors.New("could not parse price")
 	}
 
-	denominatorBigUint := big.NewInt(0).Exp(baseExp, big.NewInt(numPriceDecimals), nil)
+	denominatorBigUint := big.NewInt(0).Exp(baseExp, big.NewInt(minPriceDecimals), nil)
 	priceNominalInt := big.NewInt(0).Div(priceBigUint, denominatorBigUint).Int64()
 	priceNominal := float64(priceNominalInt) / minPercentUnit
 	return priceNominal, nil
@@ -192,7 +193,7 @@ func GetPriceDenominated(price float64) *big.Int {
 		)
 	}
 
-	denominatorBigUint := big.NewInt(0).Exp(baseExp, big.NewInt(numPriceDecimals), nil)
+	denominatorBigUint := big.NewInt(0).Exp(baseExp, big.NewInt(minPriceDecimals), nil)
 
 	priceBigUint := big.NewInt(0).Mul(big.NewInt(priceInt), denominatorBigUint)
 	return priceBigUint
