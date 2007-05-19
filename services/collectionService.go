@@ -34,8 +34,8 @@ type CreateCollectionRequest struct {
 }
 
 type CollectionStatistics struct {
-	ItemsCount   uint64 `json:"itemsCount"`
-	OwnersCount  uint64 `json:"ownersCount"`
+	ItemsCount   uint64  `json:"itemsCount"`
+	OwnersCount  uint64  `json:"ownersCount"`
 	FloorPrice   float64 `json:"floorPrice"`
 	VolumeTraded float64 `json:"volumeTraded"`
 }
