@@ -24,11 +24,11 @@ func TestTxFormatter_NewListNftTxTemplate(t *testing.T) {
 	formatter := NewTxFormatter(defaultConfig())
 
 	tx, err := formatter.NewListNftTxTemplate(
-			"erd17s2pz8qrds6ake3qwheezgy48wzf7dr5nhdpuu2h4rr4mt5rt9ussj7xzh",
-			"LKMEX-85ea13",
-			2,
-			"4096",
-		)
+		"erd17s2pz8qrds6ake3qwheezgy48wzf7dr5nhdpuu2h4rr4mt5rt9ussj7xzh",
+		"LKMEX-85ea13",
+		2,
+		"4096",
+	)
 
 	require.Nil(t, err)
 	require.True(t, strings.EqualFold(string(tx.Data), "ESDTNFTTransfer@4C4B4D45582D383565613133@02@01@000000000000000005008D8E525546959427D05CA3172B611065D92BF3535979@7075744E6674466F7253616C65@1000"))

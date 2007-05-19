@@ -3,7 +3,6 @@ package services
 import (
 	"encoding/json"
 	"errors"
-	logger "github.com/ElrondNetwork/elrond-go-logger"
 	"github.com/erdsea/erdsea-api/cache"
 	"io/ioutil"
 	"net/http"
@@ -21,8 +20,6 @@ type BinancePriceRequest struct {
 	Symbol string `json:"symbol"`
 	Price  string `json:"price"`
 }
-
-var log = logger.GetOrCreate("priceService")
 
 func GetEGLDPrice() (float64, error) {
 	var price float64
@@ -46,13 +43,12 @@ func GetEGLDPrice() (float64, error) {
 	price, err = StrToFloat64(bpr.Price)
 	if err != nil {
 		log.Debug("could not parse price")
+		return -1, errors.New("invalid response")
 	}
 
-	if err == nil {
-		errSet := cache.GetCacher().Set(EGLDPriceCacheKey, price, binanceResponseExpirePeriod)
-		if errSet != nil {
-			log.Debug("could not cache result", errSet)
-		}
+	errSet := cache.GetCacher().Set(EGLDPriceCacheKey, price, binanceResponseExpirePeriod)
+	if errSet != nil {
+		log.Debug("could not cache result", errSet)
 	}
 
 	return price, err

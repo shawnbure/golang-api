@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-const ConfigTestFilePath = "../config/config_test.toml"
+const ConfigFilePath = "../config/config.toml"
 
 func Test_ListAsset(t *testing.T) {
 	connectToDb(t)
@@ -176,7 +176,7 @@ func Test_WithdrawAsset(t *testing.T) {
 }
 
 func connectToDb(t *testing.T) {
-	cfg, err := config.LoadConfig(ConfigTestFilePath)
+	cfg, err := config.LoadConfig(ConfigFilePath)
 	require.Nil(t, err)
 	storage.Connect(cfg.Database)
 }

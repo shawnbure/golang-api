@@ -10,17 +10,17 @@ import (
 )
 
 var (
-	listNftEndpointName            = "putNftForSale"
-	buyNftEndpointName             = "buyNft"
-	withdrawNftEndpointName        = "withdrawNft"
-	ESDTNFTTransferEndpointName    = "ESDTNFTTransfer"
+	listNftEndpointName         = "putNftForSale"
+	buyNftEndpointName          = "buyNft"
+	withdrawNftEndpointName     = "withdrawNft"
+	ESDTNFTTransferEndpointName = "ESDTNFTTransfer"
 )
 
 type TxFormatter struct {
 	config config.BlockchainConfig
 }
 
-func NewTxFormatter(cfg config.BlockchainConfig, ) TxFormatter {
+func NewTxFormatter(cfg config.BlockchainConfig) TxFormatter {
 	return TxFormatter{config: cfg}
 }
 

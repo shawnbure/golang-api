@@ -11,10 +11,10 @@ import (
 )
 
 const (
-	baseFormatEndpoint               = "/template"
-	listNftFormatEndpoint            = "/list-nft/:userAddress/:tokenId/:nonce/:price"
-	buyNftFormatEndpoint             = "/buy-nft/:userAddress/:tokenId/:nonce/:price"
-	withdrawNftFormatEndpoint        = "/withdraw-nft/:userAddress/:tokenId/:nonce"
+	baseFormatEndpoint        = "/template"
+	listNftFormatEndpoint     = "/list-nft/:userAddress/:tokenId/:nonce/:price"
+	buyNftFormatEndpoint      = "/buy-nft/:userAddress/:tokenId/:nonce/:price"
+	withdrawNftFormatEndpoint = "/withdraw-nft/:userAddress/:tokenId/:nonce"
 )
 
 type txTemplateHandler struct {

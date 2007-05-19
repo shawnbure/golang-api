@@ -46,7 +46,7 @@ func NewWebServer(cfg *config.GeneralConfig) (*webServer, error) {
 
 	handlers.NewAuthHandler(groupHandler, *authService)
 	handlers.NewAssetsHandler(groupHandler, cfg.Auth)
-	handlers.NewCollectionsHandler(groupHandler, cfg.Auth)
+	handlers.NewCollectionsHandler(groupHandler, cfg.Auth, cfg.Blockchain)
 	handlers.NewTransactionsHandler(groupHandler, cfg.Auth)
 	handlers.NewTxTemplateHandler(groupHandler, cfg.Auth, cfg.Blockchain)
 	handlers.NewPriceHandler(groupHandler, cfg.Auth)
