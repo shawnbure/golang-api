@@ -1,11 +1,19 @@
 package crypto
 
 import (
+	libed25519 "crypto/ed25519"
 	"encoding/base64"
+	"encoding/hex"
+	"github.com/stretchr/testify/require"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
+
+func TestGenerateSeed(t *testing.T) {
+	key := generateSeed()
+	t.Log(key)
+}
 
 func TestVerifyForCorrectSignature_ShouldPass(t *testing.T) {
 	t.Parallel()
@@ -44,4 +52,21 @@ func TestVerifyForIncorrectSig_ShouldErr(t *testing.T) {
 
 	err := VerifySignature(pubKeyBytes, msg, sigBytes)
 	assert.Equal(t, ErrInvalidSignature, err)
+}
+
+func TestGibKeySir_KeySignatureWillBeVerified(t *testing.T) {
+	t.Parallel()
+
+	seed := "202d2274940909b4f3c23691c857d7d3352a0574cfb96efbf1ef90cbc66e2cbc"
+	msg := []byte("all your tokens are belong to us, kind ser")
+
+	seedBytes, _ := hex.DecodeString(seed)
+
+	sk := GibKeySir(seedBytes)
+	pk := sk[libed25519.PublicKeySize:]
+
+	sig, _ := SignPayload(sk, msg)
+
+	verifyErr := VerifySignature(pk, msg, sig)
+	require.Nil(t, verifyErr)
 }

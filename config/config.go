@@ -10,6 +10,7 @@ type GeneralConfig struct {
 	ConnectorApi ConnectorApiConfig
 	Blockchain   BlockchainConfig
 	Database     DatabaseConfig
+	Auth         AuthConfig
 }
 
 type ConnectorApiConfig struct {
@@ -38,6 +39,12 @@ type DatabaseConfig struct {
 	MaxOpenConns  int
 	MaxIdleConns  int
 	ShouldMigrate bool
+}
+
+type AuthConfig struct {
+	JwtSecret     string
+	JwtKeySeedHex string
+	JwtExpiryMins int
 }
 
 func (d DatabaseConfig) Url() string {
