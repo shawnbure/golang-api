@@ -14,7 +14,7 @@ import (
 
 const (
 	baseAssetsEndpoint                = "/assets"
-	getAssetByTokenIdAndNonceEndpoint = "/by-token-id-nonce/:tokenId/:nonce"
+	getAssetByTokenIdAndNonceEndpoint = "/token/:tokenId/nonce/:nonce"
 	getAssetsByCollectionEndpoint     = "/by-collection/:collectionName/:offset/:limit"
 )
 
@@ -38,6 +38,17 @@ func NewAssetsHandler(groupHandler *groupHandler, authCfg config.AuthConfig) {
 	groupHandler.AddEndpointGroupHandler(endpointGroupHandler)
 }
 
+// @Summary get asset by token by id and nonce
+// @Description retrieves an asset by tokenId and nonce
+// @Tags assets
+// @Accept  json
+// @Produce  json
+// @Param tokenId path string true "token id"
+// @Param nonce path int true "token nonce"
+// @Success 200 {object} data.Asset
+// @Failure 400 {object} data.ApiResponse
+// @Failure 500 {object} data.ApiResponse
+// @Router /assets/token/{tokenId}/nonce/{nonce} [get]
 func (handler *assetsHandler) getByTokenIdAndNonce(c *gin.Context) {
 	tokenId := c.Param("tokenId")
 	nonceString := c.Param("nonce")

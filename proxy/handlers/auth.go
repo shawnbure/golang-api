@@ -52,6 +52,7 @@ func NewAuthHandler(groupHandler *groupHandler, authService services.AuthService
 
 // @Summary access credentials
 // @Description creates an access credentials
+// @Tags auth
 // @Accept  json
 // @Produce  json
 // @Param tokenRequest body createTokenRequest true "create credentials request"
@@ -99,13 +100,14 @@ func (h *authHandler) createAccessToken(c *gin.Context) {
 
 // @Summary refresh credentials
 // @Description refreshes the access credentials
+// @Tags auth
 // @Accept  json
 // @Produce  json
 // @Param refreshRequest body tokenPayload true "refresh credentials request"
 // @Success 200 {object} tokenPayload
 // @Failure 400 {object} data.ApiResponse
 // @Failure 500 {object} data.ApiResponse
-// @Router /auth/access [post]
+// @Router /auth/refresh [post]
 func (h *authHandler) refreshAccessToken(c *gin.Context) {
 	req := tokenPayload{}
 

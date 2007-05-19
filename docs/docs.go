@@ -28,24 +28,124 @@ var doc = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/auth/access": {
-            "post": {
-                "description": "creates an access token",
+        "/assets/token/{tokenId}/nonce/{nonce}": {
+            "get": {
+                "description": "retrieves an asset by tokenId and nonce",
                 "consumes": [
                     "application/json"
                 ],
                 "produces": [
                     "application/json"
                 ],
-                "summary": "access token",
+                "tags": [
+                    "assets"
+                ],
+                "summary": "get asset by token by id and nonce",
                 "parameters": [
                     {
-                        "description": "token creation request",
+                        "type": "string",
+                        "description": "token id",
+                        "name": "tokenId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "token nonce",
+                        "name": "nonce",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/data.Asset"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/access": {
+            "post": {
+                "description": "creates an access credentials",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "access credentials",
+                "parameters": [
+                    {
+                        "description": "create credentials request",
                         "name": "tokenRequest",
                         "in": "body",
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/handlers.createTokenRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.tokenPayload"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/refresh": {
+            "post": {
+                "description": "refreshes the access credentials",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "refresh credentials",
+                "parameters": [
+                    {
+                        "description": "refresh credentials request",
+                        "name": "refreshRequest",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.tokenPayload"
                         }
                     }
                 ],
@@ -78,6 +178,41 @@ var doc = `{
             "properties": {
                 "data": {},
                 "error": {
+                    "type": "string"
+                }
+            }
+        },
+        "data.Asset": {
+            "type": "object",
+            "properties": {
+                "collectionID": {
+                    "type": "integer"
+                },
+                "createdAt": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "link": {
+                    "type": "string"
+                },
+                "listed": {
+                    "type": "boolean"
+                },
+                "nonce": {
+                    "type": "integer"
+                },
+                "ownerId": {
+                    "type": "integer"
+                },
+                "priceNominal": {
+                    "type": "number"
+                },
+                "royaltiesPercent": {
+                    "type": "number"
+                },
+                "tokenID": {
                     "type": "string"
                 }
             }
