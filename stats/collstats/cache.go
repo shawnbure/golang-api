@@ -2,6 +2,7 @@ package collstats
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -39,7 +40,12 @@ func GetStatisticsForTokenId(tokenId string) (*dtos.CollectionStatistics, error)
 
 	shouldComputeStats := ok == true && err == nil
 	if shouldComputeStats {
-		return setStatisticsRaw(tokenId)
+		statistics, innerErr := setStatisticsRaw(tokenId)
+		if innerErr != nil {
+			_, _ = redis.Del(redisCtx, redisExpireKey).Result()
+			return nil, innerErr
+		}
+		return statistics, nil
 	} else {
 		return getStatisticsRaw(tokenId)
 	}
@@ -59,12 +65,12 @@ func AddCollectionToCache(collectionId uint64, collectionName string, tokenId st
 	}
 
 	err = db.Update(func(tx *bolt.Tx) error {
-		_, innerErr := tx.CreateBucketIfNotExists(tokenIdToCollectionCacheInfo)
+		bucket, innerErr := tx.CreateBucketIfNotExists(tokenIdToCollectionCacheInfo)
 		if innerErr != nil {
 			return innerErr
 		}
 
-		innerErr = tx.Bucket(tokenIdToCollectionCacheInfo).Put([]byte(tokenId), entryBytes)
+		innerErr = bucket.Put([]byte(tokenId), entryBytes)
 		return innerErr
 	})
 
@@ -76,12 +82,12 @@ func GetCollectionCacheInfo(tokenId string) (*CacheInfo, error) {
 
 	var bytes []byte
 	err := db.View(func(tx *bolt.Tx) error {
-		_, innerErr := tx.CreateBucketIfNotExists(tokenIdToCollectionCacheInfo)
-		if innerErr != nil {
-			return innerErr
+		bucket := tx.Bucket(tokenIdToCollectionCacheInfo)
+		if bucket == nil {
+			return errors.New("no bucket for collection cache")
 		}
 
-		bytes = tx.Bucket(tokenIdToCollectionCacheInfo).Get([]byte(tokenId))
+		bytes = bucket.Get([]byte(tokenId))
 		return nil
 	})
 	if err != nil {
@@ -102,12 +108,12 @@ func GetOrAddCollectionCacheInfo(tokenId string) (*CacheInfo, error) {
 	if err != nil {
 		coll, innerErr := storage.GetCollectionByTokenId(tokenId)
 		if innerErr != nil {
-			return nil, err
+			return nil, innerErr
 		}
 
 		cacheInfo, innerErr = AddCollectionToCache(coll.ID, coll.Name, coll.TokenID)
 		if innerErr != nil {
-			return nil, err
+			return nil, innerErr
 		}
 	}
 

@@ -2,6 +2,7 @@ package services
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -133,12 +134,12 @@ func AddAccountToCache(walletAddress string, accountId uint64, accountName strin
 	}
 
 	err = db.Update(func(tx *bolt.Tx) error {
-		_, innerErr := tx.CreateBucketIfNotExists(WalletAddressToAccountCacheInfo)
+		bucket, innerErr := tx.CreateBucketIfNotExists(WalletAddressToAccountCacheInfo)
 		if innerErr != nil {
 			return innerErr
 		}
 
-		innerErr = tx.Bucket(WalletAddressToAccountCacheInfo).Put([]byte(walletAddress), entryBytes)
+		innerErr = bucket.Put([]byte(walletAddress), entryBytes)
 		return innerErr
 	})
 
@@ -150,12 +151,12 @@ func GetAccountCacheInfo(walletAddress string) (*AccountCacheInfo, error) {
 
 	var bytes []byte
 	err := db.View(func(tx *bolt.Tx) error {
-		_, innerErr := tx.CreateBucketIfNotExists(WalletAddressToAccountCacheInfo)
-		if innerErr != nil {
-			return innerErr
+		bucket := tx.Bucket(WalletAddressToAccountCacheInfo)
+		if bucket == nil {
+			return errors.New("no bucket for account cache")
 		}
 
-		bytes = tx.Bucket(WalletAddressToAccountCacheInfo).Get([]byte(walletAddress))
+		bytes = bucket.Get([]byte(walletAddress))
 		return nil
 	})
 	if err != nil {
@@ -176,12 +177,12 @@ func GetOrAddAccountCacheInfo(walletAddress string) (*AccountCacheInfo, error) {
 	if err != nil {
 		account, innerErr := storage.GetAccountByAddress(walletAddress)
 		if innerErr != nil {
-			return nil, err
+			return nil, innerErr
 		}
 
 		cacheInfo, innerErr = AddAccountToCache(walletAddress, account.ID, account.Name)
 		if innerErr != nil {
-			return nil, err
+			return nil, innerErr
 		}
 	}
 
