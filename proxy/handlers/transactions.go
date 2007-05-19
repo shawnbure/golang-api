@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"errors"
+	"github.com/erdsea/erdsea-api/services"
+	"github.com/erdsea/erdsea-api/stats/collstats"
 	"net/http"
 	"strconv"
 
@@ -13,8 +15,8 @@ import (
 const (
 	baseTransactionsEndpoint         = "/transactions"
 	transactionsListEndpoint         = "/list/:offset/:limit"
-	transactionsByTokenEndpoint      = "/token/:tokenId/:offset/:limit"
-	transactionsByAccountEndpoint    = "/account/:accountId/:offset/:limit"
+	transactionsByTokenEndpoint      = "/token/:tokenId/:nonce/:offset/:limit"
+	transactionsByAccountEndpoint    = "/account/:userAddress/:offset/:limit"
 	transactionsByCollectionEndpoint = "/collection/:collectionId/:offset/:limit"
 )
 
@@ -90,18 +92,20 @@ func (handler *transactionsHandler) getList(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param tokenId path string true "token id"
+// @Param nonce path int true "nonce"
 // @Param offset path uint true "offset"
 // @Param limit path uint true "limit"
 // @Success 200 {object} []entities.Transaction
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 404 {object} dtos.ApiResponse
-// @Router /transactions/token/{tokenId}/{offset}/{limit} [get]
+// @Router /transactions/token/{tokenId}/{nonce}/{offset}/{limit} [get]
 func (handler *transactionsHandler) getByToken(c *gin.Context) {
-	tokenIdString := c.Param("tokenId")
+	tokenId := c.Param("tokenId")
+	nonceStr := c.Param("nonce")
 	offsetStr := c.Param("offset")
 	limitStr := c.Param("limit")
 
-	tokenId, err := strconv.ParseUint(tokenIdString, 10, 64)
+	nonce, err := strconv.ParseUint(nonceStr, 10, 64)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
@@ -125,7 +129,13 @@ func (handler *transactionsHandler) getByToken(c *gin.Context) {
 		return
 	}
 
-	transactions, err := storage.GetTransactionsByTokenIdWithOffsetLimit(tokenId, int(offset), int(limit))
+	cacheInfo, err := services.GetOrAddTokenCacheInfo(tokenId, nonce)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	transactions, err := storage.GetTransactionsByTokenIdWithOffsetLimit(cacheInfo.TokenDbId, int(offset), int(limit))
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
@@ -139,23 +149,17 @@ func (handler *transactionsHandler) getByToken(c *gin.Context) {
 // @Tags transactions
 // @Accept json
 // @Produce json
-// @Param accountId path uint64 true "account id"
+// @Param userAddress path string true "user wallet address"
 // @Param offset path uint true "offset"
 // @Param limit path uint true "limit"
 // @Success 200 {object} []entities.Transaction
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 404 {object} dtos.ApiResponse
-// @Router /transactions/account/{accountId}/{offset}/{limit} [get]
+// @Router /transactions/account/{userAddress}/{offset}/{limit} [get]
 func (handler *transactionsHandler) getByAccount(c *gin.Context) {
-	accountIdString := c.Param("accountId")
+	userAddress := c.Param("userAddress")
 	offsetStr := c.Param("offset")
 	limitStr := c.Param("limit")
-
-	accountId, err := strconv.ParseUint(accountIdString, 10, 64)
-	if err != nil {
-		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
-		return
-	}
 
 	offset, err := strconv.ParseUint(offsetStr, 10, 0)
 	if err != nil {
@@ -175,7 +179,13 @@ func (handler *transactionsHandler) getByAccount(c *gin.Context) {
 		return
 	}
 
-	transactions, err := storage.GetTransactionsByBuyerOrSellerIdWithOffsetLimit(accountId, int(offset), int(limit))
+	cacheInfo, err := services.GetOrAddAccountCacheInfo(userAddress)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	transactions, err := storage.GetTransactionsByBuyerOrSellerIdWithOffsetLimit(cacheInfo.AccountId, int(offset), int(limit))
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
@@ -189,7 +199,7 @@ func (handler *transactionsHandler) getByAccount(c *gin.Context) {
 // @Tags transactions
 // @Accept json
 // @Produce json
-// @Param collectionId path uint64 true "collection id"
+// @Param collectionId path string true "collection id"
 // @Param offset path uint true "offset"
 // @Param limit path uint true "limit"
 // @Success 200 {object} []entities.Transaction
@@ -197,15 +207,9 @@ func (handler *transactionsHandler) getByAccount(c *gin.Context) {
 // @Failure 404 {object} dtos.ApiResponse
 // @Router /transactions/collection/{collectionId}/{offset}/{limit} [get]
 func (handler *transactionsHandler) getByCollection(c *gin.Context) {
-	collectionIdString := c.Param("collectionId")
+	tokenId := c.Param("collectionId")
 	offsetStr := c.Param("offset")
 	limitStr := c.Param("limit")
-
-	collectionId, err := strconv.ParseUint(collectionIdString, 10, 64)
-	if err != nil {
-		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
-		return
-	}
 
 	offset, err := strconv.ParseUint(offsetStr, 10, 0)
 	if err != nil {
@@ -225,7 +229,13 @@ func (handler *transactionsHandler) getByCollection(c *gin.Context) {
 		return
 	}
 
-	transactions, err := storage.GetTransactionsByCollectionIdWithOffsetLimit(collectionId, int(offset), int(limit))
+	cacheInfo, err := collstats.GetOrAddCollectionCacheInfo(tokenId)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	transactions, err := storage.GetTransactionsByCollectionIdWithOffsetLimit(cacheInfo.CollectionId, int(offset), int(limit))
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
