@@ -4,13 +4,13 @@ import (
 	"github.com/erdsea/erdsea-api/data"
 )
 
-func addNewAccount(account *data.Account) error {
-	db := GetDB()
-	if db == nil {
-		return NoDBError
+func AddNewAccount(account *data.Account) error {
+	database, err := GetDBOrError()
+	if err != nil {
+		return err
 	}
 
-	txCreate := GetDB().Create(&account)
+	txCreate := database.Create(&account)
 	if txCreate.Error != nil {
 		return txCreate.Error
 	}
@@ -18,15 +18,15 @@ func addNewAccount(account *data.Account) error {
 	return nil
 }
 
-func getAccountById(id uint64) (*data.Account, error) {
+func GetAccountById(id uint64) (*data.Account, error) {
 	var account data.Account
 
-	db := GetDB()
-	if db == nil {
-		return nil, NoDBError
+	database, err := GetDBOrError()
+	if err != nil {
+		return nil, err
 	}
 
-	txRead := GetDB().Find(&account, id)
+	txRead := database.Find(&account, id)
 	if txRead.Error != nil {
 		return nil, txRead.Error
 	}
@@ -34,15 +34,15 @@ func getAccountById(id uint64) (*data.Account, error) {
 	return &account, nil
 }
 
-func getAccountByAddress(name string) (*data.Account, error) {
+func GetAccountByAddress(name string) (*data.Account, error) {
 	var account data.Account
 
-	db := GetDB()
-	if db == nil {
-		return nil, NoDBError
+	database, err := GetDBOrError()
+	if err != nil {
+		return nil, err
 	}
 
-	txRead := GetDB().Find(&account, "address = ?", name)
+	txRead := database.Find(&account, "address = ?", name)
 	if txRead.Error != nil {
 		return nil, txRead.Error
 	}

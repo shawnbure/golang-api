@@ -11,8 +11,8 @@ func Test_AddNewAccount(t *testing.T) {
 	connectToDb(t)
 
 	account := defaultAccount()
-	error := addNewAccount(&account)
-	require.Nil(t, error)
+	err := AddNewAccount(&account)
+	require.Nil(t, err)
 
 	var accountRead data.Collection
 	txRead := GetDB().Last(&accountRead)
@@ -25,10 +25,10 @@ func Test_GetAccountById(t *testing.T) {
 	connectToDb(t)
 
 	account := defaultAccount()
-	error := addNewAccount(&account)
-	require.Nil(t, error)
+	err := AddNewAccount(&account)
+	require.Nil(t, err)
 
-	accountRead, err := getAccountById(account.ID)
+	accountRead, err := GetAccountById(account.ID)
 	require.Nil(t, err)
 	assert.Equal(t, accountRead.ID, account.ID)
 }
@@ -39,11 +39,11 @@ func Test_GetAccountByAddress(t *testing.T) {
 	address := "unique_erd_addr"
 	account := defaultAccount()
 	account.Address = address
-	error := addNewAccount(&account)
-	require.Nil(t, error)
+	err := AddNewAccount(&account)
+	require.Nil(t, err)
 
-	retrievedAccount, error := getAccountByAddress(address)
-	require.Nil(t, error)
+	retrievedAccount, err := GetAccountByAddress(address)
+	require.Nil(t, err)
 	require.GreaterOrEqual(t, retrievedAccount.Address, address)
 }
 

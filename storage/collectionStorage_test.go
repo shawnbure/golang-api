@@ -11,8 +11,8 @@ func Test_AddNewCollection(t *testing.T) {
 	connectToDb(t)
 
 	collection := defaultCollection()
-	error := addNewCollection(&collection)
-	require.Nil(t, error)
+	err := AddNewCollection(&collection)
+	require.Nil(t, err)
 
 	var collectionRead data.Collection
 	txRead := GetDB().Last(&collectionRead)
@@ -25,10 +25,10 @@ func Test_GetCollectionById(t *testing.T) {
 	connectToDb(t)
 
 	collection := defaultCollection()
-	error := addNewCollection(&collection)
-	require.Nil(t, error)
+	err := AddNewCollection(&collection)
+	require.Nil(t, err)
 
-	collectionRead, err := getCollectionById(collection.ID)
+	collectionRead, err := GetCollectionById(collection.ID)
 	require.Nil(t, err)
 	assert.Equal(t, collectionRead.ID, collection.ID)
 }
@@ -37,15 +37,15 @@ func Test_GetCollectionsCreatedById(t *testing.T) {
 	connectToDb(t)
 
 	collection := defaultCollection()
-	error := addNewCollection(&collection)
-	require.Nil(t, error)
+	err := AddNewCollection(&collection)
+	require.Nil(t, err)
 
 	otherCollection := defaultCollection()
-	error = addNewCollection(&otherCollection)
-	require.Nil(t, error)
+	err = AddNewCollection(&otherCollection)
+	require.Nil(t, err)
 
-	collections, error := getCollectionsCreatedBy(collection.CreatorID)
-	require.Nil(t, error)
+	collections, err := GetCollectionsCreatedBy(collection.CreatorID)
+	require.Nil(t, err)
 	require.GreaterOrEqual(t, len(collections), 2)
 }
 
@@ -55,11 +55,11 @@ func Test_GetCollectionByName(t *testing.T) {
 	collectionName := "insane_unique_name"
 	collection := defaultCollection()
 	collection.Name = collectionName
-	error := addNewCollection(&collection)
-	require.Nil(t, error)
+	err := AddNewCollection(&collection)
+	require.Nil(t, err)
 
-	retrievedCollection, error := getCollectionByName(collectionName)
-	require.Nil(t, error)
+	retrievedCollection, err := GetCollectionByName(collectionName)
+	require.Nil(t, err)
 	require.GreaterOrEqual(t, retrievedCollection.Name, collectionName)
 }
 

@@ -1,15 +1,12 @@
 package storage
 
 import (
-	"errors"
 	"github.com/erdsea/erdsea-api/data"
 )
 
-var NoDBError = errors.New("no DB Connection")
-
-func addNewCollection(collection *data.Collection) error {
-	db := GetDB()
-	if db == nil {
+func AddNewCollection(collection *data.Collection) error {
+	database := GetDB()
+	if database == nil {
 		return NoDBError
 	}
 
@@ -21,11 +18,11 @@ func addNewCollection(collection *data.Collection) error {
 	return nil
 }
 
-func getCollectionById(id uint64) (*data.Collection, error) {
+func GetCollectionById(id uint64) (*data.Collection, error) {
 	var collection data.Collection
 
-	db := GetDB()
-	if db == nil {
+	database := GetDB()
+	if database == nil {
 		return nil, NoDBError
 	}
 
@@ -37,11 +34,11 @@ func getCollectionById(id uint64) (*data.Collection, error) {
 	return &collection, nil
 }
 
-func getCollectionsCreatedBy(id uint64) ([]data.Collection, error) {
+func GetCollectionsCreatedBy(id uint64) ([]data.Collection, error) {
 	var collections []data.Collection
 
-	db := GetDB()
-	if db == nil {
+	database := GetDB()
+	if database == nil {
 		return nil, NoDBError
 	}
 
@@ -53,11 +50,11 @@ func getCollectionsCreatedBy(id uint64) ([]data.Collection, error) {
 	return collections, nil
 }
 
-func getCollectionByName(name string) (*data.Collection, error) {
+func GetCollectionByName(name string) (*data.Collection, error) {
 	var collection data.Collection
 
-	db := GetDB()
-	if db == nil {
+	database := GetDB()
+	if database == nil {
 		return nil, NoDBError
 	}
 
