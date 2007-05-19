@@ -31,6 +31,16 @@ func Test_UpdateDeposit(t *testing.T) {
 	require.Nil(t, err)
 	require.NotZero(t, account.ID)
 	require.Equal(t, 4722.366, deposit.AmountNominal)
+	require.Equal(t, "1000000000000000000", deposit.AmountString)
+	require.True(t, account.ID == deposit.OwnerId)
 
+	deposit, err = UpdateDeposit(DepositUpdateArgs{
+		Owner:  address,
+		Amount: "1111111111111111111",
+	})
+	require.Nil(t, err)
+	require.NotZero(t, account.ID)
+	require.Equal(t, 5037.19, deposit.AmountNominal)
+	require.Equal(t, "1111111111111111111", deposit.AmountString)
 	require.True(t, account.ID == deposit.OwnerId)
 }

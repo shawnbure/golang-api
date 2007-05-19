@@ -30,7 +30,7 @@ func UpdateDepositByOwnerId(deposit *entities.Deposit, ownerId uint64) error {
 	}
 
 	txCreate := database.Table("deposits").Where("owner_id = ?", ownerId)
-	txCreate.Update("amount_nominal", deposit.AmountNominal).Update("amount_string", deposit.AmountString)
+	txCreate.Updates(map[string]interface{}{"amount_nominal": deposit.AmountNominal, "amount_string": deposit.AmountString})
 	if txCreate.Error != nil {
 		return txCreate.Error
 	}
