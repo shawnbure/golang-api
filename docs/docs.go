@@ -1034,9 +1034,9 @@ var doc = `{
                 }
             }
         },
-        "/collections/{collectionName}/statistics": {
+        "/collections/{collectionId}/statistics": {
             "post": {
-                "description": "Gets statistics for a collection. It will be cached for 10 minutes.",
+                "description": "Gets statistics for a collection. It will be cached for 15 minutes.",
                 "consumes": [
                     "application/json"
                 ],
@@ -1049,9 +1049,9 @@ var doc = `{
                 "summary": "Gets collection statistics.",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "collection name",
-                        "name": "collectionName",
+                        "type": "integer",
+                        "description": "collection id",
+                        "name": "collectionId",
                         "in": "path",
                         "required": true
                     }

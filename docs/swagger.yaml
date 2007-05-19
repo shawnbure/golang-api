@@ -846,17 +846,17 @@ paths:
       summary: Set collection profile image
       tags:
       - collections
-  /collections/{collectionName}/statistics:
+  /collections/{collectionId}/statistics:
     post:
       consumes:
       - application/json
-      description: Gets statistics for a collection. It will be cached for 10 minutes.
+      description: Gets statistics for a collection. It will be cached for 15 minutes.
       parameters:
-      - description: collection name
+      - description: collection id
         in: path
-        name: collectionName
+        name: collectionId
         required: true
-        type: string
+        type: integer
       produces:
       - application/json
       responses:

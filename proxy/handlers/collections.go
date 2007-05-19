@@ -175,15 +175,15 @@ func (handler *collectionsHandler) set(c *gin.Context) {
 }
 
 // @Summary Gets collection statistics.
-// @Description Gets statistics for a collection. It will be cached for 10 minutes.
+// @Description Gets statistics for a collection. It will be cached for 15 minutes.
 // @Tags collections
 // @Accept json
 // @Produce json
-// @Param collectionName path string true "collection name"
+// @Param collectionId path uint64 true "collection id"
 // @Success 200 {object} services.CollectionStatistics
 // @Failure 404 {object} data.ApiResponse
 // @Failure 500 {object} data.ApiResponse
-// @Router /collections/{collectionName}/statistics [post]
+// @Router /collections/{collectionId}/statistics [post]
 func (handler *collectionsHandler) getStatistics(c *gin.Context) {
 	collectionIdString := c.Param("collectionId")
 
