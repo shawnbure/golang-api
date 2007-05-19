@@ -24,7 +24,7 @@ const (
 	collectionListEndpoint     = "/list/:offset/:limit"
 	collectionCreateEndpoint   = "/create"
 	collectionTokensEndpoint   = "/:collectionId/tokens/:offset/:limit"
-	collectionProfileEndpoint  = "/:collectionId/profile/"
+	collectionProfileEndpoint  = "/:collectionId/profile"
 	collectionCoverEndpoint    = "/:collectionId/cover"
 	collectionMintInfoEndpoint = "/:collectionId/mintInfo"
 	collectionRankingEndpoint  = "/rankings/:offset/:limit"
