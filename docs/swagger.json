@@ -1321,7 +1321,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.AvailableTokensRequest"
+                            "$ref": "#/definitions/services.AvailableTokensRequest"
                         }
                     }
                 ],
@@ -1329,7 +1329,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/handlers.AvailableTokensResponse"
+                            "$ref": "#/definitions/services.AvailableTokensResponse"
                         }
                     },
                     "400": {
@@ -1868,16 +1868,27 @@
                 }
             }
         },
+        "dtos.AttributeStat": {
+            "type": "object",
+            "properties": {
+                "total": {
+                    "type": "integer"
+                },
+                "trait_type": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
         "dtos.CollectionStatistics": {
             "type": "object",
             "properties": {
                 "attributes": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "object",
-                        "additionalProperties": {
-                            "type": "integer"
-                        }
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dtos.AttributeStat"
                     }
                 },
                 "floorPrice": {
@@ -1970,6 +1981,9 @@
                 "instagramLink": {
                     "type": "string"
                 },
+                "mintPricePerTokenNominal": {
+                    "type": "number"
+                },
                 "mintPricePerTokenString": {
                     "type": "string"
                 },
@@ -2002,6 +2016,12 @@
                         "type": "integer"
                     }
                 },
+                "auctionDeadline": {
+                    "type": "integer"
+                },
+                "auctionStartTime": {
+                    "type": "integer"
+                },
                 "collectionId": {
                     "type": "integer"
                 },
@@ -2017,8 +2037,8 @@
                 "imageLink": {
                     "type": "string"
                 },
-                "listed": {
-                    "type": "boolean"
+                "lastBuyPriceNominal": {
+                    "type": "number"
                 },
                 "metadataLink": {
                     "type": "string"
@@ -2037,6 +2057,9 @@
                 },
                 "royaltiesPercent": {
                     "type": "number"
+                },
+                "state": {
+                    "type": "string"
                 },
                 "tokenId": {
                     "type": "string"
@@ -2116,61 +2139,6 @@
                 }
             }
         },
-        "handlers.AvailableToken": {
-            "type": "object",
-            "properties": {
-                "collection": {
-                    "type": "object",
-                    "properties": {
-                        "id": {
-                            "type": "string"
-                        },
-                        "name": {
-                            "type": "string"
-                        }
-                    }
-                },
-                "token": {
-                    "type": "object",
-                    "properties": {
-                        "available": {
-                            "type": "boolean"
-                        },
-                        "id": {
-                            "type": "string"
-                        },
-                        "name": {
-                            "type": "string"
-                        },
-                        "nonce": {
-                            "type": "integer"
-                        }
-                    }
-                }
-            }
-        },
-        "handlers.AvailableTokensRequest": {
-            "type": "object",
-            "properties": {
-                "tokens": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "handlers.AvailableTokensResponse": {
-            "type": "object",
-            "properties": {
-                "tokens": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "$ref": "#/definitions/handlers.AvailableToken"
-                    }
-                }
-            }
-        },
         "handlers.GeneralSearchResponse": {
             "type": "object",
             "properties": {
@@ -2233,6 +2201,61 @@
                 },
                 "refreshToken": {
                     "type": "string"
+                }
+            }
+        },
+        "services.AvailableToken": {
+            "type": "object",
+            "properties": {
+                "collection": {
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "string"
+                        },
+                        "name": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "token": {
+                    "type": "object",
+                    "properties": {
+                        "available": {
+                            "type": "boolean"
+                        },
+                        "id": {
+                            "type": "string"
+                        },
+                        "name": {
+                            "type": "string"
+                        },
+                        "nonce": {
+                            "type": "integer"
+                        }
+                    }
+                }
+            }
+        },
+        "services.AvailableTokensRequest": {
+            "type": "object",
+            "properties": {
+                "tokens": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "services.AvailableTokensResponse": {
+            "type": "object",
+            "properties": {
+                "tokens": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/services.AvailableToken"
+                    }
                 }
             }
         },

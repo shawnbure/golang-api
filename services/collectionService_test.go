@@ -127,7 +127,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 		CollectionID: coll.ID,
 		Status:       entities.List,
 		OwnerId:      1,
-		Attributes:   datatypes.JSON(`[{"trait_type": "hair", "value": "red"}, {"trait_type": "background", "value": "dark"}]`),
+		Attributes:   datatypes.JSON(`{"hair": "red", "background": "dark"}`),
 	}
 	err = storage.AddToken(&token1)
 	require.Nil(t, err)
@@ -136,7 +136,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 		CollectionID: coll.ID,
 		Status:       entities.List,
 		OwnerId:      1,
-		Attributes:   datatypes.JSON(`[{"trait_type": "hair", "value": "green"}, {"trait_type": "background", "value": "dark"}]`),
+		Attributes:   datatypes.JSON(`{"hair": "green", "background": "dark"}`),
 	}
 	err = storage.AddToken(&token2)
 	require.Nil(t, err)
@@ -145,7 +145,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 		CollectionID: coll.ID,
 		Status:       entities.List,
 		OwnerId:      1,
-		Attributes:   datatypes.JSON(`[{"trait_type": "hair", "value": "blue"}, {"trait_type": "background", "value": "dark"}]`),
+		Attributes:   datatypes.JSON(`{"hair": "blue", "background": "dark"}`),
 	}
 	err = storage.AddToken(&token3)
 	require.Nil(t, err)
@@ -154,7 +154,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 		CollectionID: coll.ID,
 		Status:       entities.List,
 		OwnerId:      1,
-		Attributes:   datatypes.JSON(`[]`),
+		Attributes:   datatypes.JSON(`{}`),
 	}
 	err = storage.AddToken(&token4)
 	require.Nil(t, err)
@@ -163,7 +163,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 		CollectionID: coll.ID,
 		Status:       entities.List,
 		OwnerId:      1,
-		Attributes:   datatypes.JSON(`[{"trait_type": "hair", "value": "green"}, {"trait_type": "background", "value": "dark"}]`),
+		Attributes:   datatypes.JSON(`{"hair": "green", "background": "dark"}`),
 	}
 	err = storage.AddToken(&token5)
 	require.Nil(t, err)
@@ -172,7 +172,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 		CollectionID: coll.ID,
 		Status:       entities.List,
 		OwnerId:      1,
-		Attributes:   datatypes.JSON(`[{"trait_type": "background", "value": "dark"}]`),
+		Attributes:   datatypes.JSON(`{"background": "dark"}`),
 	}
 	err = storage.AddToken(&token6)
 	require.Nil(t, err)
@@ -181,7 +181,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 		CollectionID: coll.ID,
 		Status:       entities.List,
 		OwnerId:      1,
-		Attributes:   datatypes.JSON(`[{"trait_type": "hair", "value": "yellow"}, {"trait_type": "background", "value": "dark"}]`),
+		Attributes:   datatypes.JSON(`{"hair": "yellow", "background": "dark"}`),
 	}
 	err = storage.AddToken(&token7)
 	require.Nil(t, err)
@@ -190,7 +190,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 		CollectionID: coll.ID,
 		Status:       entities.List,
 		OwnerId:      1,
-		Attributes:   datatypes.JSON(`[{"trait_type": "hair", "value": "white"}, {"trait_type": "background", "value": "dark"}]`),
+		Attributes:   datatypes.JSON(`{"hair": "white", "background": "dark"}`),
 	}
 	err = storage.AddToken(&token8)
 	require.Nil(t, err)
@@ -199,7 +199,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 		CollectionID: coll.ID,
 		Status:       entities.List,
 		OwnerId:      1,
-		Attributes:   datatypes.JSON(`[{"trait_type": "hair", "value": "white"}, {"trait_type": "background", "value": "dark"}]`),
+		Attributes:   datatypes.JSON(`{"hair": "white", "background": "dark"}`),
 	}
 	err = storage.AddToken(&token9)
 	require.Nil(t, err)
@@ -208,7 +208,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 		CollectionID: coll.ID,
 		Status:       entities.List,
 		OwnerId:      1,
-		Attributes:   datatypes.JSON(`[{"trait_type": "something_else", "value": "yea"}]`),
+		Attributes:   datatypes.JSON(`{"something_else": "yea"}`),
 	}
 	err = storage.AddToken(&token10)
 	require.Nil(t, err)

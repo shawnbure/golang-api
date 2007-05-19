@@ -202,22 +202,19 @@ func Test_GetPriceDenominated(T *testing.T) {
 func Test_GetTokenLinkResponse(t *testing.T) {
 	token := entities.Token{
 		Nonce:        1,
-		MetadataLink: "https://wow-prod-nftribe.s3.eu-west-2.amazonaws.com/t",
+		MetadataLink: "https://wow-prod-nftribe.s3.eu-west-2.amazonaws.com/t/1",
 	}
 
-	osResponse, err := GetOSMetadataForToken(token.MetadataLink, token.Nonce)
-	require.Nil(t, err)
-
-	attrs, err := ConstructAttributesJsonFromResponse(osResponse)
-	require.Nil(t, err)
-	connectToDb()
+	attrs := GetAttributesFromMetadata(token.MetadataLink)
+	require.NotZero(t, len(attrs))
 
 	attrsMap := make(map[string]string)
-	err = json.Unmarshal(*attrs, &attrsMap)
+	err := json.Unmarshal(attrs, &attrsMap)
 	require.Nil(t, err)
 	require.Equal(t, attrsMap["Earrings"], "Lightning Bolts")
 
-	token.Attributes = *attrs
+	connectToDb()
+	token.Attributes = attrs
 	err = storage.AddToken(&token)
 	require.Nil(t, err)
 
@@ -227,11 +224,12 @@ func Test_GetTokenLinkResponse(t *testing.T) {
 	var tokenRead entities.Token
 	txRead := db.First(&tokenRead, datatypes.JSONQuery("attributes").Equals("Lightning Bolts", "Earrings"))
 	require.Nil(t, txRead.Error)
-	require.Equal(t, token.MetadataLink, "https://wow-prod-nftribe.s3.eu-west-2.amazonaws.com/t")
+	require.Equal(t, "https://wow-prod-nftribe.s3.eu-west-2.amazonaws.com/t/1", token.MetadataLink)
 }
 
 func Test_ErdCompatibility(t *testing.T) {
 	connectToDb()
+	cache.InitCacher(cfg)
 
 	nonce := uint64(69)
 	listArgs := ListTokenArgs{
@@ -242,16 +240,16 @@ func Test_ErdCompatibility(t *testing.T) {
 		Price:        "3635C9ADC5DEA00000",
 		Attributes:   "some_attrs",
 		FirstLink:    "some_link",
-		LastLink:     "https://wow-prod-nftribe.s3.eu-west-2.amazonaws.com/t",
+		SecondLink:   "https://wow-prod-nftribe.s3.eu-west-2.amazonaws.com/t/69",
 	}
 	ListToken(listArgs)
 
 	token, err := storage.GetTokenByTokenIdAndNonce("tokenId", nonce)
 	require.Nil(t, err)
-	require.True(t, strings.Contains(token.ImageLink, "ipfs://"))
-	require.Equal(t, token.MetadataLink, "https://wow-prod-nftribe.s3.eu-west-2.amazonaws.com/t")
+	require.Equal(t, "some_link", token.ImageLink)
+	require.Equal(t, token.MetadataLink, "https://wow-prod-nftribe.s3.eu-west-2.amazonaws.com/t/69")
 	require.True(t, strings.Contains(string(token.Attributes), "Lips"))
-	require.True(t, strings.Contains(token.TokenName, "Woman"))
+	require.Equal(t, "some_name", token.TokenName)
 
 	nonce = nonce + 1
 	listArgs = ListTokenArgs{
@@ -261,16 +259,15 @@ func Test_ErdCompatibility(t *testing.T) {
 		TokenName:    "some_name",
 		Price:        "3635C9ADC5DEA00000",
 		Attributes:   `{"ceva": "ceva"}`,
-		FirstLink:    "https://wow-prod-nftribe.s3.eu-west-2.amazonaws.com/t",
-		LastLink:     "some_link",
+		FirstLink:    "https://wow-prod-nftribe.s3.eu-west-2.amazonaws.com/t/70",
+		SecondLink:   "some_link",
 	}
 	ListToken(listArgs)
 
 	token, err = storage.GetTokenByTokenIdAndNonce("tokenId", nonce)
 	require.Nil(t, err)
-	require.Equal(t, token.ImageLink, "https://wow-prod-nftribe.s3.eu-west-2.amazonaws.com/t")
-	require.Equal(t, token.MetadataLink, "")
-	require.Equal(t, string(token.Attributes), `{"ceva": "ceva"}`)
+	require.Equal(t, token.ImageLink, "https://wow-prod-nftribe.s3.eu-west-2.amazonaws.com/t/70")
+	require.Equal(t, token.MetadataLink, "some_link")
 	require.Equal(t, token.TokenName, "some_name")
 }
 

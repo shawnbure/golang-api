@@ -154,18 +154,18 @@ func Test_GetTokensByCollectionIdWithOffsetLimit(t *testing.T) {
 	require.Nil(t, err)
 
 	token1 := entities.Token{
-		CollectionID: coll.ID,
-		Status:       entities.List,
-		OwnerId:      1,
+		CollectionID:       coll.ID,
+		Status:             entities.List,
+		OwnerId:            1,
 		Attributes:   datatypes.JSON(`{"hair": "red", "background": "dark"}`),
 	}
 	err = AddToken(&token1)
 	require.Nil(t, err)
 
 	token2 := entities.Token{
-		CollectionID: coll.ID,
-		Status:       entities.List,
-		OwnerId:      1,
+		CollectionID:       coll.ID,
+		Status:             entities.List,
+		OwnerId:            1,
 		Attributes:   datatypes.JSON(`{"hair": "green", "background": "dark"}`),
 	}
 	err = AddToken(&token2)

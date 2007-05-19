@@ -6,7 +6,7 @@ type ListTokenArgs struct {
 	Nonce            uint64
 	TokenName        string
 	FirstLink        string
-	LastLink         string
+	SecondLink       string
 	Hash             string
 	Attributes       string
 	Price            string
