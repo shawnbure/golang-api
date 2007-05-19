@@ -7,7 +7,7 @@ import (
 )
 
 func Test_AddNewAsset(t *testing.T) {
-	connectToDb(t)
+	connectToTestDb()
 
 	asset := defaultAsset()
 	err := AddNewAsset(&asset)
@@ -21,7 +21,7 @@ func Test_AddNewAsset(t *testing.T) {
 }
 
 func Test_UpdateAsset(t *testing.T) {
-	connectToDb(t)
+	connectToTestDb()
 
 	asset := defaultAsset()
 	err := AddNewAsset(&asset)
@@ -38,7 +38,7 @@ func Test_UpdateAsset(t *testing.T) {
 }
 
 func Test_GetAssetById(t *testing.T) {
-	connectToDb(t)
+	connectToTestDb()
 
 	asset := defaultAsset()
 	err := AddNewAsset(&asset)
@@ -50,7 +50,7 @@ func Test_GetAssetById(t *testing.T) {
 }
 
 func Test_GetAssetByTokenIdAndNonce(t *testing.T) {
-	connectToDb(t)
+	connectToTestDb()
 
 	asset := defaultAsset()
 	asset.TokenID = "unique_token_id"
@@ -66,7 +66,7 @@ func Test_GetAssetByTokenIdAndNonce(t *testing.T) {
 }
 
 func Test_GetAssetsOwnedBy(t *testing.T) {
-	connectToDb(t)
+	connectToTestDb()
 	ownerId := uint64(1)
 
 	asset := defaultAsset()
@@ -87,7 +87,7 @@ func Test_GetAssetsOwnedBy(t *testing.T) {
 }
 
 func Test_GetAssetsByCollectionId(t *testing.T) {
-	connectToDb(t)
+	connectToTestDb()
 	collectionId := uint64(1)
 
 	asset := defaultAsset()

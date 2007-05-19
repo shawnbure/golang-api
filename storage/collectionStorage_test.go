@@ -7,7 +7,7 @@ import (
 )
 
 func Test_AddNewCollection(t *testing.T) {
-	connectToDb(t)
+	connectToTestDb()
 
 	collection := defaultCollection()
 	err := AddNewCollection(&collection)
@@ -21,7 +21,7 @@ func Test_AddNewCollection(t *testing.T) {
 }
 
 func Test_GetCollectionById(t *testing.T) {
-	connectToDb(t)
+	connectToTestDb()
 
 	collection := defaultCollection()
 	err := AddNewCollection(&collection)
@@ -33,7 +33,7 @@ func Test_GetCollectionById(t *testing.T) {
 }
 
 func Test_GetCollectionsCreatedById(t *testing.T) {
-	connectToDb(t)
+	connectToTestDb()
 
 	collection := defaultCollection()
 	err := AddNewCollection(&collection)
@@ -53,7 +53,7 @@ func Test_GetCollectionsCreatedById(t *testing.T) {
 }
 
 func Test_GetCollectionByName(t *testing.T) {
-	connectToDb(t)
+	connectToTestDb()
 
 	collection := defaultCollection()
 	collection.Name = "insane_unique_name"

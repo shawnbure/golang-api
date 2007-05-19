@@ -7,7 +7,7 @@ import (
 )
 
 func Test_AddNewTransaction(t *testing.T) {
-	connectToDb(t)
+	connectToTestDb()
 
 	transaction := defaultTransaction()
 	err := AddNewTransaction(&transaction)
@@ -21,7 +21,7 @@ func Test_AddNewTransaction(t *testing.T) {
 }
 
 func Test_GetTransactionById(t *testing.T) {
-	connectToDb(t)
+	connectToTestDb()
 
 	transaction := defaultTransaction()
 	err := AddNewTransaction(&transaction)
@@ -33,7 +33,7 @@ func Test_GetTransactionById(t *testing.T) {
 }
 
 func Test_GetTransactionsByBuyerId(t *testing.T) {
-	connectToDb(t)
+	connectToTestDb()
 
 	transaction := defaultTransaction()
 	err := AddNewTransaction(&transaction)
@@ -53,7 +53,7 @@ func Test_GetTransactionsByBuyerId(t *testing.T) {
 }
 
 func Test_GetTransactionsBySellerId(t *testing.T) {
-	connectToDb(t)
+	connectToTestDb()
 
 	transaction := defaultTransaction()
 	err := AddNewTransaction(&transaction)
@@ -73,7 +73,7 @@ func Test_GetTransactionsBySellerId(t *testing.T) {
 }
 
 func Test_GetTransactionsByBuyerOrSellerId(t *testing.T) {
-	connectToDb(t)
+	connectToTestDb()
 
 	transaction := defaultTransaction()
 	err := AddNewTransaction(&transaction)
@@ -95,7 +95,7 @@ func Test_GetTransactionsByBuyerOrSellerId(t *testing.T) {
 }
 
 func Test_GetTransactionsByAssetId(t *testing.T) {
-	connectToDb(t)
+	connectToTestDb()
 
 	transaction := defaultTransaction()
 	err := AddNewTransaction(&transaction)
@@ -115,7 +115,7 @@ func Test_GetTransactionsByAssetId(t *testing.T) {
 }
 
 func Test_GetTransactionsByHash(t *testing.T) {
-	connectToDb(t)
+	connectToTestDb()
 
 	transaction := defaultTransaction()
 	transaction.Hash = "my_unique_hash"
