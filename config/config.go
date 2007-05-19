@@ -13,6 +13,8 @@ type GeneralConfig struct {
 	Auth         AuthConfig
 	Cache        CacheConfig
 	Swagger      SwaggerConfig
+	Bot          BotConfig
+	Monitor      MonitorConfig
 }
 
 type ConnectorApiConfig struct {
@@ -62,6 +64,16 @@ type CacheConfig struct {
 type SwaggerConfig struct {
 	LocalDocRoute string
 	Enabled       bool
+}
+
+type BotConfig struct {
+	Token  string
+	RecID  string
+	Enable bool
+}
+
+type MonitorConfig struct {
+	ObserverMonitorEnable bool
 }
 
 func (d DatabaseConfig) Url() string {
