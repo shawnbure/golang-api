@@ -3,9 +3,10 @@ package storage
 import (
 	"github.com/erdsea/erdsea-api/data/images"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
-func GetAccountProfileImageByUserId(userId uint64) (*images.AccountProfileImage, error) {
+func GetAccountProfileImageByAccountId(accountId uint64) (*images.AccountProfileImage, error) {
 	var image images.AccountProfileImage
 
 	database, err := GetDBOrError()
@@ -13,7 +14,7 @@ func GetAccountProfileImageByUserId(userId uint64) (*images.AccountProfileImage,
 		return nil, err
 	}
 
-	txRead := database.Find(&image, "user_id = ?", userId)
+	txRead := database.Find(&image, "account_id = ?", accountId)
 	if txRead.Error != nil {
 		return nil, txRead.Error
 	}
@@ -21,13 +22,16 @@ func GetAccountProfileImageByUserId(userId uint64) (*images.AccountProfileImage,
 	return &image, nil
 }
 
-func AddNewAccountProfileImageByUserId(image *images.AccountProfileImage) error {
+func AddOrUpdateAccountProfileImage(image *images.AccountProfileImage) error {
 	database, err := GetDBOrError()
 	if err != nil {
 		return err
 	}
 
-	txCreate := database.Create(image)
+	txCreate := database.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "account_id"}},
+		DoUpdates: clause.AssignmentColumns([]string{"image_base64"}),
+	}).Create(image)
 	if txCreate.Error != nil {
 		return txCreate.Error
 	}
@@ -38,7 +42,7 @@ func AddNewAccountProfileImageByUserId(image *images.AccountProfileImage) error 
 	return nil
 }
 
-func GetAccountCoverImageByUserId(userId uint64) (*images.AccountCoverImage, error) {
+func GetAccountCoverImageByAccountId(accountId uint64) (*images.AccountCoverImage, error) {
 	var image images.AccountCoverImage
 
 	database, err := GetDBOrError()
@@ -46,7 +50,7 @@ func GetAccountCoverImageByUserId(userId uint64) (*images.AccountCoverImage, err
 		return nil, err
 	}
 
-	txRead := database.Find(&image, "user_id = ?", userId)
+	txRead := database.Find(&image, "account_id = ?", accountId)
 	if txRead.Error != nil {
 		return nil, txRead.Error
 	}
@@ -54,13 +58,16 @@ func GetAccountCoverImageByUserId(userId uint64) (*images.AccountCoverImage, err
 	return &image, nil
 }
 
-func AddNewAccountCoverImageByUserId(image *images.AccountCoverImage) error {
+func AddOrUpdateAccountCoverImage(image *images.AccountCoverImage) error {
 	database, err := GetDBOrError()
 	if err != nil {
 		return err
 	}
 
-	txCreate := database.Create(image)
+	txCreate := database.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "account_id"}},
+		DoUpdates: clause.AssignmentColumns([]string{"image_base64"}),
+	}).Create(image)
 	if txCreate.Error != nil {
 		return txCreate.Error
 	}
@@ -71,7 +78,7 @@ func AddNewAccountCoverImageByUserId(image *images.AccountCoverImage) error {
 	return nil
 }
 
-func GetCollectionProfileImageByUserId(userId uint64) (*images.CollectionProfileImage, error) {
+func GetCollectionProfileImageByCollectionId(collectionId uint64) (*images.CollectionProfileImage, error) {
 	var image images.CollectionProfileImage
 
 	database, err := GetDBOrError()
@@ -79,7 +86,7 @@ func GetCollectionProfileImageByUserId(userId uint64) (*images.CollectionProfile
 		return nil, err
 	}
 
-	txRead := database.Find(&image, "user_id = ?", userId)
+	txRead := database.Find(&image, "collection_id = ?", collectionId)
 	if txRead.Error != nil {
 		return nil, txRead.Error
 	}
@@ -87,13 +94,16 @@ func GetCollectionProfileImageByUserId(userId uint64) (*images.CollectionProfile
 	return &image, nil
 }
 
-func AddNewCollectionProfileImageByUserId(image *images.CollectionProfileImage) error {
+func AddOrUpdateCollectionProfileImage(image *images.CollectionProfileImage) error {
 	database, err := GetDBOrError()
 	if err != nil {
 		return err
 	}
 
-	txCreate := database.Create(image)
+	txCreate := database.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "collection_id"}},
+		DoUpdates: clause.AssignmentColumns([]string{"image_base64"}),
+	}).Create(image)
 	if txCreate.Error != nil {
 		return txCreate.Error
 	}
@@ -104,7 +114,7 @@ func AddNewCollectionProfileImageByUserId(image *images.CollectionProfileImage) 
 	return nil
 }
 
-func GetCollectionCoverImageByUserId(userId uint64) (*images.CollectionCoverImage, error) {
+func GetCollectionCoverImageByCollectionId(collectionId uint64) (*images.CollectionCoverImage, error) {
 	var image images.CollectionCoverImage
 
 	database, err := GetDBOrError()
@@ -112,7 +122,7 @@ func GetCollectionCoverImageByUserId(userId uint64) (*images.CollectionCoverImag
 		return nil, err
 	}
 
-	txRead := database.Find(&image, "user_id = ?", userId)
+	txRead := database.Find(&image, "collection_id = ?", collectionId)
 	if txRead.Error != nil {
 		return nil, txRead.Error
 	}
@@ -120,13 +130,16 @@ func GetCollectionCoverImageByUserId(userId uint64) (*images.CollectionCoverImag
 	return &image, nil
 }
 
-func AddNewCollectionCoverImageByUserId(image *images.CollectionCoverImage) error {
+func AddOrUpdateCollectionCoverImage(image *images.CollectionCoverImage) error {
 	database, err := GetDBOrError()
 	if err != nil {
 		return err
 	}
 
-	txCreate := database.Create(image)
+	txCreate := database.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "collection_id"}},
+		DoUpdates: clause.AssignmentColumns([]string{"image_base64"}),
+	}).Create(image)
 	if txCreate.Error != nil {
 		return txCreate.Error
 	}

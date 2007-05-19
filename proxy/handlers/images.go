@@ -10,13 +10,13 @@ import (
 )
 
 const (
-	baseImagesEndpoint           = "/images"
+	baseImagesEndpoint = "/images"
 
-	getAccountProfileEndpoint    = "/get/account/profile/:userAddress"
-	getAccountCoverEndpoint      = "/get/account/cover/:userAddress"
+	getAccountProfileEndpoint = "/get/account/profile/:userAddress"
+	getAccountCoverEndpoint   = "/get/account/cover/:userAddress"
 
-	setAccountProfileEndpoint    = "/set/account/profile/:userAddress"
-	setAccountCoverEndpoint      = "/set/account/cover/:userAddress"
+	setAccountProfileEndpoint = "/set/account/profile/:userAddress"
+	setAccountCoverEndpoint   = "/set/account/cover/:userAddress"
 
 	getCollectionProfileEndpoint = "/get/collection/profile/:collectionName"
 	getCollectionCoverEndpoint   = "/get/collection/cover/:collectionName"
@@ -35,14 +35,11 @@ func NewImageHandler(groupHandler *groupHandler, authCfg config.AuthConfig) {
 		{Method: http.MethodGet, Path: getAccountProfileEndpoint, HandlerFunc: handler.getAccountProfile},
 		{Method: http.MethodPost, Path: setAccountProfileEndpoint, HandlerFunc: handler.setAccountProfile},
 
-
 		{Method: http.MethodGet, Path: getAccountCoverEndpoint, HandlerFunc: handler.getAccountCover},
 		{Method: http.MethodPost, Path: setAccountCoverEndpoint, HandlerFunc: handler.setAccountCover},
 
-
 		{Method: http.MethodGet, Path: getCollectionProfileEndpoint, HandlerFunc: handler.getCollectionProfile},
 		{Method: http.MethodPost, Path: setCollectionProfileEndpoint, HandlerFunc: handler.setCollectionProfile},
-
 
 		{Method: http.MethodGet, Path: getCollectionCoverEndpoint, HandlerFunc: handler.getCollectionCover},
 		{Method: http.MethodPost, Path: setCollectionCoverEndpoint, HandlerFunc: handler.setCollectionCover},
@@ -79,8 +76,8 @@ func (handler *imageHandler) setAccountProfile(c *gin.Context) {
 		return
 	}
 
-	jwtAddress, exists := c.Get(middleware.AddressKey)
-	if !exists || jwtAddress != userAddress {
+	jwtAddress := c.GetString(middleware.AddressKey)
+	if jwtAddress != userAddress {
 		data.JsonResponse(c, http.StatusUnauthorized, nil, "")
 		return
 	}
@@ -116,8 +113,8 @@ func (handler *imageHandler) setAccountCover(c *gin.Context) {
 		return
 	}
 
-	jwtAddress, exists := c.Get(middleware.AddressKey)
-	if !exists || jwtAddress != userAddress {
+	jwtAddress := c.GetString(middleware.AddressKey)
+	if jwtAddress != userAddress {
 		data.JsonResponse(c, http.StatusUnauthorized, nil, "")
 		return
 	}
@@ -132,17 +129,65 @@ func (handler *imageHandler) setAccountCover(c *gin.Context) {
 }
 
 func (handler *imageHandler) getCollectionProfile(c *gin.Context) {
+	collectionName := c.Param("collectionName")
 
+	image, err := services.GetCollectionProfileImage(collectionName)
+	if err != nil {
+		data.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		return
+	}
+
+	data.JsonResponse(c, http.StatusOK, &image, "")
 }
 
 func (handler *imageHandler) setCollectionProfile(c *gin.Context) {
+	var imageBase64 string
+	collectionName := c.Param("collectionName")
 
+	err := c.Bind(&imageBase64)
+	if err != nil {
+		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	jwtAddress := c.GetString(middleware.AddressKey)
+	err = services.SetCollectionProfileImage(collectionName, &imageBase64, jwtAddress)
+	if err != nil {
+		data.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		return
+	}
+
+	data.JsonResponse(c, http.StatusOK, "", "")
 }
 
 func (handler *imageHandler) getCollectionCover(c *gin.Context) {
+	collectionName := c.Param("collectionName")
 
+	image, err := services.GetCollectionCoverImage(collectionName)
+	if err != nil {
+		data.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		return
+	}
+
+	data.JsonResponse(c, http.StatusOK, &image, "")
 }
 
 func (handler *imageHandler) setCollectionCover(c *gin.Context) {
+	var imageBase64 string
+	collectionName := c.Param("collectionName")
 
+	err := c.Bind(&imageBase64)
+	if err != nil {
+		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	jwtAddress := c.GetString(middleware.AddressKey)
+	err = services.SetCollectionCoverImage(collectionName, &imageBase64, jwtAddress)
+	if err != nil {
+		data.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		return
+	}
+
+	data.JsonResponse(c, http.StatusOK, "", "")
 }

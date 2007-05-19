@@ -5,7 +5,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func AddNewTransaction(transaction *data.Transaction) error {
+func AddTransaction(transaction *data.Transaction) error {
 	database, err := GetDBOrError()
 	if err != nil {
 		return err

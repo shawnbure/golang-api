@@ -6,11 +6,11 @@ import (
 	"testing"
 )
 
-func Test_AddNewCollection(t *testing.T) {
+func Test_AddCollection(t *testing.T) {
 	connectToTestDb()
 
 	collection := defaultCollection()
-	err := AddNewCollection(&collection)
+	err := AddCollection(&collection)
 	require.Nil(t, err)
 
 	var collectionRead data.Collection
@@ -24,7 +24,7 @@ func Test_GetCollectionById(t *testing.T) {
 	connectToTestDb()
 
 	collection := defaultCollection()
-	err := AddNewCollection(&collection)
+	err := AddCollection(&collection)
 	require.Nil(t, err)
 
 	collectionRead, err := GetCollectionById(collection.ID)
@@ -36,11 +36,11 @@ func Test_GetCollectionsCreatedById(t *testing.T) {
 	connectToTestDb()
 
 	collection := defaultCollection()
-	err := AddNewCollection(&collection)
+	err := AddCollection(&collection)
 	require.Nil(t, err)
 
 	otherCollection := defaultCollection()
-	err = AddNewCollection(&otherCollection)
+	err = AddCollection(&otherCollection)
 	require.Nil(t, err)
 
 	collectionsRead, err := GetCollectionsCreatedBy(collection.CreatorID)
@@ -57,7 +57,7 @@ func Test_GetCollectionByName(t *testing.T) {
 
 	collection := defaultCollection()
 	collection.Name = "insane_unique_name"
-	err := AddNewCollection(&collection)
+	err := AddCollection(&collection)
 	require.Nil(t, err)
 
 	retrievedCollection, err := GetCollectionByName(collection.Name)
