@@ -1,8 +1,10 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/erdsea/erdsea-api/data/dtos"
 
@@ -58,7 +60,7 @@ func NewCollectionsHandler(groupHandler *groupHandler, authCfg config.AuthConfig
 }
 
 // @Summary Gets collections.
-// @Description Retrieves a list of collections. Unsorted.
+// @Description Retrieves a list of collections. Sorted by priority.
 // @Tags collections
 // @Accept json
 // @Produce json
@@ -263,6 +265,13 @@ func (handler *collectionsHandler) getTokens(c *gin.Context) {
 	offsetStr := c.Param("offset")
 	limitStr := c.Param("limit")
 	filters := c.QueryMap("filters")
+	sortRules := c.QueryMap("sort")
+
+	err := testInputSortParams(sortRules)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
 
 	collectionId, err := strconv.ParseUint(collectionIdString, 10, 16)
 	if err != nil {
@@ -282,7 +291,7 @@ func (handler *collectionsHandler) getTokens(c *gin.Context) {
 		return
 	}
 
-	tokens, err := storage.GetTokensByCollectionIdWithOffsetLimit(collectionId, offset, limit, filters)
+	tokens, err := storage.GetTokensByCollectionIdWithOffsetLimit(collectionId, offset, limit, filters, sortRules)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
@@ -454,4 +463,30 @@ func (handler *collectionsHandler) setCollectionCover(c *gin.Context) {
 	}
 
 	dtos.JsonResponse(c, http.StatusOK, "", "")
+}
+
+func testInputSortParams(sortParams map[string]string) error {
+	if len(sortParams) == 0 {
+		return nil
+	}
+
+	if len(sortParams) != 2 {
+		return errors.New("bad sorting input")
+	}
+
+	if v, ok := sortParams["mode"]; ok {
+		vLower := strings.ToLower(v)
+		if vLower != "asc" && vLower != "desc" {
+			return errors.New("bad sorting mode")
+		}
+	}
+
+	if v, ok := sortParams["criteria"]; ok {
+		vLower := strings.ToLower(v)
+		if vLower != "price_nominal" && vLower != "created_at" {
+			return errors.New("bad sorting criteria")
+		}
+	}
+
+	return nil
 }

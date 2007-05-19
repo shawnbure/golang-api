@@ -634,7 +634,7 @@ var doc = `{
         },
         "/collections/list/{offset}/{limit}": {
             "get": {
-                "description": "Retrieves a list of collections. Unsorted.",
+                "description": "Retrieves a list of collections. Sorted by priority.",
                 "consumes": [
                     "application/json"
                 ],

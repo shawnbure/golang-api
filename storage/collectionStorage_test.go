@@ -81,10 +81,42 @@ func Test_GetCollectionsWithNameAlikeWithLimit(t *testing.T) {
 	require.Equal(t, retrievedCollection[1].Name, "default")
 }
 
+func Test_GetCollectionsSorted(t *testing.T) {
+	connectToTestDb()
+
+	addCollectionsWithPriority()
+
+	colls, err := GetCollectionsWithOffsetLimit(0, 2)
+	require.Nil(t, err)
+	require.True(t, colls[0].Priority > colls[1].Priority)
+}
+
 func defaultCollection() entities.Collection {
 	return entities.Collection{
 		Name:      "default",
 		TokenID:   "my_token",
 		CreatorID: 0,
+	}
+}
+
+func addCollectionsWithPriority() {
+	collections := collectionsWithPriority()
+
+	_ = AddCollection(&collections[0])
+	_ = AddCollection(&collections[1])
+}
+
+func collectionsWithPriority() []entities.Collection {
+	return []entities.Collection{
+		{
+			Name:     "first_coll",
+			TokenID:  "first_token_id",
+			Priority: 100,
+		},
+		{
+			Name:     "second_coll",
+			TokenID:  "second_token_id",
+			Priority: 50,
+		},
 	}
 }

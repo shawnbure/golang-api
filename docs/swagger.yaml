@@ -926,7 +926,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: Retrieves a list of collections. Unsorted.
+      description: Retrieves a list of collections. Sorted by priority.
       parameters:
       - description: offset
         in: path
