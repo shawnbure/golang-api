@@ -205,25 +205,25 @@ func computeCollectionMetadata(collectionId uint64) (*CollectionMetadata, error)
 	attrStats := make(map[string]map[string]int)
 
 	for {
-		assets, innerErr := storage.GetListedTokensByCollectionIdWithOffsetLimit(collectionId, offset, limit)
+		tokens, innerErr := storage.GetListedTokensByCollectionIdWithOffsetLimit(collectionId, offset, limit)
 		if innerErr != nil {
 			return nil, innerErr
 		}
-		if len(assets) == 0 {
+		if len(tokens) == 0 {
 			break
 		}
 
-		numItems = numItems + len(assets)
-		for _, asset := range assets {
-			assetAttrs := make(map[string]string)
-			ownersIDs[asset.OwnerId] = true
+		numItems = numItems + len(tokens)
+		for _, token := range tokens {
+			tokenAttrs := make(map[string]string)
+			ownersIDs[token.OwnerId] = true
 
-			innerErr = json.Unmarshal(asset.Attributes, &assetAttrs)
+			innerErr = json.Unmarshal(token.Attributes, &tokenAttrs)
 			if innerErr != nil {
 				continue
 			}
 
-			for attrName, attrValue := range assetAttrs {
+			for attrName, attrValue := range tokenAttrs {
 				if _, ok := attrStats[attrName]; ok {
 					attrStats[attrName][attrValue] += 1
 				} else {

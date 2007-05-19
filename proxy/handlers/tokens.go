@@ -35,9 +35,9 @@ func NewTokensHandler(groupHandler *groupHandler, authCfg config.AuthConfig) {
 	groupHandler.AddEndpointGroupHandler(endpointGroupHandler)
 }
 
-// @Summary Get asset by token by id and nonce
-// @Description Retrieves an asset by tokenId and nonce
-// @Tags assets
+// @Summary Get token by id and nonce
+// @Description Retrieves a token by tokenId and nonce
+// @Tags tokens
 // @Accept json
 // @Produce json
 // @Param tokenId path string true "token id"
@@ -45,7 +45,7 @@ func NewTokensHandler(groupHandler *groupHandler, authCfg config.AuthConfig) {
 // @Success 200 {object} data.Token
 // @Failure 400 {object} data.ApiResponse
 // @Failure 404 {object} data.ApiResponse
-// @Router /assets/{tokenId}/{nonce} [get]
+// @Router /tokens/{tokenId}/{nonce} [get]
 func (handler *tokensHandler) getByTokenIdAndNonce(c *gin.Context) {
 	tokenId := c.Param("tokenId")
 	nonceString := c.Param("nonce")

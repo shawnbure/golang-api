@@ -106,7 +106,7 @@ func GetTransactionsByBuyerOrSellerIdWithOffsetLimit(id uint64, offset int, limi
 	return transactions, nil
 }
 
-func GetTransactionsByAssetId(id uint64) ([]entities.Transaction, error) {
+func GetTransactionsByTokenId(id uint64) ([]entities.Transaction, error) {
 	var transactions []entities.Transaction
 
 	database, err := GetDBOrError()
@@ -114,7 +114,7 @@ func GetTransactionsByAssetId(id uint64) ([]entities.Transaction, error) {
 		return nil, err
 	}
 
-	txRead := database.Find(&transactions, "asset_id = ?", id)
+	txRead := database.Find(&transactions, "token_id = ?", id)
 	if txRead.Error != nil {
 		return nil, txRead.Error
 	}
@@ -122,7 +122,7 @@ func GetTransactionsByAssetId(id uint64) ([]entities.Transaction, error) {
 	return transactions, nil
 }
 
-func GetTransactionsByAssetIdWithOffsetLimit(id uint64, offset int, limit int) ([]entities.Transaction, error) {
+func GetTransactionsByTokenIdWithOffsetLimit(id uint64, offset int, limit int) ([]entities.Transaction, error) {
 	var transactions []entities.Transaction
 
 	database, err := GetDBOrError()
@@ -130,7 +130,7 @@ func GetTransactionsByAssetIdWithOffsetLimit(id uint64, offset int, limit int) (
 		return nil, err
 	}
 
-	txRead := database.Offset(offset).Limit(limit).Find(&transactions, "asset_id = ?", id)
+	txRead := database.Offset(offset).Limit(limit).Find(&transactions, "token_id = ?", id)
 	if txRead.Error != nil {
 		return nil, txRead.Error
 	}

@@ -19,7 +19,7 @@ const (
 	collectionListEndpoint       = "/list/:offset/:limit"
 	collectionCreateEndpoint     = "/create"
 	collectionStatisticsEndpoint = "/:collectionId/statistics"
-	collectionAssetsEndpoint     = "/:collectionId/assets/:offset/:limit"
+	collectionTokensEndpoint     = "/:collectionId/tokens/:offset/:limit"
 	collectionProfileEndpoint    = "/:collectionId/profile/"
 	collectionCoverEndpoint      = "/:collectionId/cover"
 )
@@ -38,7 +38,7 @@ func NewCollectionsHandler(groupHandler *groupHandler, authCfg config.AuthConfig
 
 		{Method: http.MethodGet, Path: collectionStatisticsEndpoint, HandlerFunc: handler.getStatistics},
 		{Method: http.MethodPost, Path: collectionCreateEndpoint, HandlerFunc: handler.create},
-		{Method: http.MethodGet, Path: collectionAssetsEndpoint, HandlerFunc: handler.getAssets},
+		{Method: http.MethodGet, Path: collectionTokensEndpoint, HandlerFunc: handler.getTokens},
 
 		{Method: http.MethodGet, Path: collectionProfileEndpoint, HandlerFunc: handler.getCollectionProfile},
 		{Method: http.MethodPost, Path: collectionProfileEndpoint, HandlerFunc: handler.setCollectionProfile},
@@ -238,8 +238,8 @@ func (handler *collectionsHandler) create(c *gin.Context) {
 	dtos.JsonResponse(c, http.StatusOK, collection, "")
 }
 
-// @Summary Get collection assets.
-// @Description Retrieves the assets of a collection. Unsorted.
+// @Summary Get collection tokens.
+// @Description Retrieves the tokens of a collection. Unsorted.
 // @Tags collections
 // @Accept json
 // @Produce json
@@ -249,8 +249,8 @@ func (handler *collectionsHandler) create(c *gin.Context) {
 // @Success 200 {object} []data.Token
 // @Failure 400 {object} data.ApiResponse
 // @Failure 404 {object} data.ApiResponse
-// @Router /collections/{collectionId}/assets/{offset}/{limit} [get]
-func (handler *collectionsHandler) getAssets(c *gin.Context) {
+// @Router /collections/{collectionId}/tokens/{offset}/{limit} [get]
+func (handler *collectionsHandler) getTokens(c *gin.Context) {
 	collectionIdString := c.Param("collectionId")
 	offsetStr := c.Param("offset")
 	limitStr := c.Param("limit")
@@ -274,13 +274,13 @@ func (handler *collectionsHandler) getAssets(c *gin.Context) {
 		return
 	}
 
-	assets, err := storage.GetTokensByCollectionIdWithOffsetLimit(collectionId, offset, limit, filters)
+	tokens, err := storage.GetTokensByCollectionIdWithOffsetLimit(collectionId, offset, limit, filters)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
-	dtos.JsonResponse(c, http.StatusOK, assets, "")
+	dtos.JsonResponse(c, http.StatusOK, tokens, "")
 }
 
 // @Summary Get collection profile image

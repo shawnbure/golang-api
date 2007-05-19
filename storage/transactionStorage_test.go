@@ -95,7 +95,7 @@ func Test_GetTransactionsByBuyerOrSellerId(t *testing.T) {
 	}
 }
 
-func Test_GetTransactionsByAssetId(t *testing.T) {
+func Test_GetTransactionsByTokenId(t *testing.T) {
 	connectToTestDb()
 
 	transaction := defaultTransaction()
@@ -106,7 +106,7 @@ func Test_GetTransactionsByAssetId(t *testing.T) {
 	err = AddTransaction(&otherTransaction)
 	require.Nil(t, err)
 
-	transactionsRead, err := GetTransactionsByAssetId(transaction.TokenID)
+	transactionsRead, err := GetTransactionsByTokenId(transaction.TokenID)
 	require.Nil(t, err)
 	require.GreaterOrEqual(t, len(transactionsRead), 2)
 

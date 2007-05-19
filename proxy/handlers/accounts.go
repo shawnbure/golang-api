@@ -345,8 +345,8 @@ func (handler *accountsHandler) setAccountCover(c *gin.Context) {
 	dtos.JsonResponse(c, http.StatusOK, "", "")
 }
 
-// @Summary Gets assets for an account.
-// @Description Retrieves a list of assets. Unsorted.
+// @Summary Gets tokens for an account.
+// @Description Retrieves a list of tokens. Unsorted.
 // @Tags accounts
 // @Accept json
 // @Produce json
@@ -356,7 +356,7 @@ func (handler *accountsHandler) setAccountCover(c *gin.Context) {
 // @Success 200 {object} []data.Token
 // @Failure 400 {object} data.ApiResponse
 // @Failure 404 {object} data.ApiResponse
-// @Router /accounts/{accountId}/assets/{offset}/{limit} [get]
+// @Router /accounts/{accountId}/tokens/{offset}/{limit} [get]
 func (handler *accountsHandler) getAccountTokens(c *gin.Context) {
 	accountIdString := c.Param("accountId")
 	offsetStr := c.Param("offset")
@@ -380,11 +380,11 @@ func (handler *accountsHandler) getAccountTokens(c *gin.Context) {
 		return
 	}
 
-	assets, err := storage.GetTokensByOwnerIdWithOffsetLimit(accountId, offset, limit)
+	tokens, err := storage.GetTokensByOwnerIdWithOffsetLimit(accountId, offset, limit)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
-	dtos.JsonResponse(c, http.StatusOK, assets, "")
+	dtos.JsonResponse(c, http.StatusOK, tokens, "")
 }
