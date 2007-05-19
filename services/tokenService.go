@@ -25,8 +25,9 @@ type AvailableTokensRequest struct {
 
 type AvailableToken struct {
 	Collection struct {
-		Id   string `json:"id"`
-		Name string `json:"name"`
+		Id        string `json:"id"`
+		Name      string `json:"name"`
+		Available bool   `json:"available"`
 	} `json:"collection"`
 	Token struct {
 		Id        string `json:"id"`
@@ -613,18 +614,22 @@ func GetAvailableTokens(args AvailableTokensRequest) AvailableTokensResponse {
 		}
 
 		collectionName := ""
+		collectionAvailable := false
 		collectionCacheInfo, err := collstats.GetOrAddCollectionCacheInfo(tokenId)
 		if err == nil {
+			collectionAvailable = true
 			collectionName = collectionCacheInfo.CollectionName
 		}
 
 		response.Tokens[token] = AvailableToken{
 			Collection: struct {
-				Id   string `json:"id"`
-				Name string `json:"name"`
+				Id        string `json:"id"`
+				Name      string `json:"name"`
+				Available bool   `json:"available"`
 			}{
-				Id:   tokenId,
-				Name: collectionName,
+				Id:        tokenId,
+				Name:      collectionName,
+				Available: collectionAvailable,
 			},
 			Token: struct {
 				Id        string `json:"id"`
