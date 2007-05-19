@@ -1,6 +1,7 @@
 package services
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -35,14 +36,18 @@ type AvailableToken struct {
 	} `json:"token"`
 }
 
-type AvailableTokensResponse struct {
-	Tokens map[string]AvailableToken `json:"tokens"`
+type NftProxyResponse struct {
+	Data struct {
+		TokenData struct {
+			Uris []string `json:"uris"`
+		} `json:"tokenData"`
+	} `json:"data"`
+	Error string `json:"error"`
+	Code  string `json:"code"`
 }
 
-type TokenLinkResponse struct {
-	Name       string           `json:"name"`
-	Image      string           `json:"image"`
-	Attributes []dtos.Attribute `json:"attributes"`
+type AvailableTokensResponse struct {
+	Tokens map[string]AvailableToken `json:"tokens"`
 }
 
 type TokenCacheInfo struct {
@@ -57,6 +62,9 @@ const (
 	minPriceDecimals        = 15
 
 	maxTokenLinkResponseSize = 1024
+
+	ZeroAddress           = "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu"
+	NftProxyRequestFormat = "%s/address/%s/nft/%s/nonce/%d"
 )
 
 var (
@@ -67,7 +75,7 @@ var (
 	log = logger.GetOrCreate("services")
 )
 
-func ListToken(args ListTokenArgs) {
+func ListToken(args ListTokenArgs, blockchainProxy string, marketplaceAddress string) {
 	priceNominal, err := GetPriceNominal(args.Price)
 	if err != nil {
 		log.Debug("could not parse price", "err", err)
@@ -87,28 +95,45 @@ func ListToken(args ListTokenArgs) {
 	}
 
 	token, err := storage.GetTokenByTokenIdAndNonce(args.TokenId, args.Nonce)
+	if err != nil {
+		metadataLink := args.SecondLink
+		if len(metadataLink) == 0 {
+			var innerErr error
+			metadataLink, innerErr = TryGetMetadataLink(blockchainProxy, marketplaceAddress, args.TokenId, args.Nonce)
+			if innerErr != nil {
+				log.Debug("could not get metadata link", innerErr)
+			}
+		}
+
+		token = &entities.Token{
+			TokenID:          args.TokenId,
+			Nonce:            args.Nonce,
+			RoyaltiesPercent: GetRoyaltiesPercentNominal(args.RoyaltiesPercent),
+			MetadataLink:     metadataLink,
+			CreatedAt:        args.Timestamp,
+			Attributes:       GetAttributesFromMetadata(args.SecondLink),
+			TokenName:        args.TokenName,
+			ImageLink:        args.FirstLink,
+			Hash:             args.Hash,
+		}
+	}
+
+	token.Status = entities.List
+	token.PriceString = args.Price
+	token.PriceNominal = priceNominal
+	token.OwnerId = ownerAccount.ID
+	token.CollectionID = collectionId
 
 	var innerErr error
 	if err != nil {
-		newToken := ConstructNewTokenFromListArgs(args)
-		token = &newToken
-		token.Listed = true
-		token.PriceString = args.Price
-		token.PriceNominal = priceNominal
-		token.OwnerId = ownerAccount.ID
-		token.CollectionID = collectionId
 		innerErr = storage.AddToken(token)
-
-		_, cacheErr := AddTokenToCache(token.TokenID, token.Nonce, token.TokenName, token.ID)
-		if cacheErr != nil {
-			log.Error("could not add token to cache")
+		if innerErr == nil {
+			_, cacheErr := AddTokenToCache(token.TokenID, token.Nonce, token.TokenName, token.ID)
+			if cacheErr != nil {
+				log.Error("could not add token to cache")
+			}
 		}
 	} else {
-		token.Listed = true
-		token.PriceString = args.Price
-		token.PriceNominal = priceNominal
-		token.OwnerId = ownerAccount.ID
-		token.CollectionID = collectionId
 		innerErr = storage.UpdateToken(token)
 	}
 
@@ -156,14 +181,20 @@ func BuyToken(args BuyTokenArgs) {
 		return
 	}
 
-	token.Listed = false
-	// This was to be reset since the token will no longer be on the marketplace.
+	// Owner ID was to be reset since the token will no longer be on the marketplace.
 	// Could have been kept like this, but bugs may appear when querying.
 	token.OwnerId = 0
+	token.Status = entities.None
+	token.LastBuyPriceNominal = priceNominal
 	err = storage.UpdateToken(token)
 	if err != nil {
 		log.Debug("could not update token", "err", err)
 		return
+	}
+
+	err = storage.DeleteProffersForTokenId(token.ID)
+	if err != nil {
+		log.Debug("could not delete proffers for token", "err", err)
 	}
 
 	transaction := entities.Transaction{
@@ -199,14 +230,19 @@ func WithdrawToken(args WithdrawTokenArgs) {
 		return
 	}
 
-	token.Listed = false
 	// This was to be reset since the token will no longer be on the marketplace.
 	// Could have been kept like this, but bugs may appear when trying when querying.
 	token.OwnerId = 0
+	token.Status = entities.None
 	err = storage.UpdateToken(token)
 	if err != nil {
 		log.Debug("could not update token", "err", err)
 		return
+	}
+
+	err = storage.DeleteProffersForTokenId(token.ID)
+	if err != nil {
+		log.Debug("could not delete proffers for token", "err", err)
 	}
 
 	transaction := entities.Transaction{
@@ -216,6 +252,151 @@ func WithdrawToken(args WithdrawTokenArgs) {
 		Timestamp:    args.Timestamp,
 		SellerID:     0,
 		BuyerID:      ownerAccount.ID,
+		TokenID:      token.ID,
+		CollectionID: token.CollectionID,
+	}
+
+	AddTransaction(&transaction)
+}
+
+func StartAuction(args StartAuctionArgs, blockchainProxy string, marketplaceAddress string) (*entities.Token, error) {
+	amountNominal, err := GetPriceNominal(args.MinBid)
+	if err != nil {
+		log.Debug("could not parse price", "err", err)
+		return nil, err
+	}
+
+	accountID := uint64(0)
+	accountCacheInfo, err := GetOrAddAccountCacheInfo(args.OwnerAddress)
+	if err != nil {
+		log.Debug("could not get or add acc cache info", err)
+
+		account, innerErr := GetOrCreateAccount(args.OwnerAddress)
+		if innerErr != nil {
+			log.Debug("could not get or add acc", err)
+		} else {
+			accountID = account.ID
+		}
+	} else {
+		accountID = accountCacheInfo.AccountId
+	}
+
+	collectionId := uint64(0)
+	collectionInfoCache, err := collstats.GetOrAddCollectionCacheInfo(args.TokenId)
+	if err == nil {
+		collectionId = collectionInfoCache.CollectionId
+	}
+
+	token, err := storage.GetTokenByTokenIdAndNonce(args.TokenId, args.Nonce)
+	if err != nil {
+		metadataLink := args.SecondLink
+		if len(metadataLink) == 0 {
+			var innerErr error
+			metadataLink, innerErr = TryGetMetadataLink(blockchainProxy, marketplaceAddress, args.TokenId, args.Nonce)
+			if innerErr != nil {
+				log.Debug("could not get metadata link", innerErr)
+			}
+		}
+
+		token = &entities.Token{
+			TokenID:          args.TokenId,
+			Nonce:            args.Nonce,
+			RoyaltiesPercent: GetRoyaltiesPercentNominal(args.RoyaltiesPercent),
+			MetadataLink:     args.SecondLink,
+			CreatedAt:        args.Timestamp,
+			Attributes:       GetAttributesFromMetadata(args.SecondLink),
+			TokenName:        args.TokenName,
+			ImageLink:        args.FirstLink,
+			Hash:             args.Hash,
+		}
+	}
+
+	token.Status = entities.Auction
+	token.PriceString = args.MinBid
+	token.PriceNominal = amountNominal
+	token.OwnerId = accountID
+	token.CollectionID = collectionId
+	token.AuctionStartTime = args.StartTime
+	token.AuctionDeadline = args.Deadline
+
+	var innerErr error
+	if err != nil {
+		innerErr = storage.AddToken(token)
+		if innerErr == nil {
+			_, cacheErr := AddTokenToCache(token.TokenID, token.Nonce, token.TokenName, token.ID)
+			if cacheErr != nil {
+				log.Error("could not add token to cache")
+			}
+		}
+	} else {
+		innerErr = storage.UpdateToken(token)
+	}
+
+	if innerErr != nil {
+		log.Debug("could not create or update token", "err", innerErr)
+		return nil, err
+	}
+
+	transaction := entities.Transaction{
+		Hash:         args.TxHash,
+		Type:         entities.AuctionToken,
+		PriceNominal: amountNominal,
+		Timestamp:    args.Timestamp,
+		SellerID:     accountID,
+		BuyerID:      0,
+		TokenID:      token.ID,
+		CollectionID: collectionId,
+	}
+
+	AddTransaction(&transaction)
+	return token, nil
+}
+
+func EndAuction(args EndAuctionArgs) {
+	if args.Winner == ZeroAddress {
+		return
+	}
+
+	amountNominal, err := GetPriceNominal(args.Amount)
+	if err != nil {
+		log.Debug("could not parse price", "err", err)
+		return
+	}
+
+	buyer, err := GetOrAddAccountCacheInfo(args.Winner)
+	if err != nil {
+		log.Debug("could not parse price", "err", err)
+		return
+	}
+
+	token, err := storage.GetTokenByTokenIdAndNonce(args.TokenId, args.Nonce)
+	if err != nil {
+		log.Debug("could not get token", "err", err)
+		return
+	}
+
+	sellerId := token.OwnerId
+	token.OwnerId = 0
+	token.Status = entities.None
+	token.LastBuyPriceNominal = amountNominal
+	err = storage.UpdateToken(token)
+	if err != nil {
+		log.Debug("could not update token", "err", err)
+		return
+	}
+
+	err = storage.DeleteProffersForTokenId(token.ID)
+	if err != nil {
+		log.Debug("could not delete proffers for token", "err", err)
+	}
+
+	transaction := entities.Transaction{
+		Hash:         args.TxHash,
+		Type:         entities.BuyToken,
+		PriceNominal: amountNominal,
+		Timestamp:    args.Timestamp,
+		SellerID:     sellerId,
+		BuyerID:      buyer.AccountId,
 		TokenID:      token.ID,
 		CollectionID: token.CollectionID,
 	}
@@ -260,68 +441,41 @@ func GetExtendedTokenData(tokenId string, nonce uint64) (*dtos.ExtendedTokenDto,
 	)
 }
 
-func ConstructNewTokenFromListArgs(args ListTokenArgs) entities.Token {
-	token := entities.Token{
-		TokenID:          args.TokenId,
-		Nonce:            args.Nonce,
-		RoyaltiesPercent: GetRoyaltiesPercentNominal(args.RoyaltiesPercent),
-		MetadataLink:     "",
-		CreatedAt:        args.Timestamp,
-		Listed:           true,
-		Attributes:       datatypes.JSON(""),
-		TokenName:        "",
-		ImageLink:        "",
-		Hash:             args.Hash,
+func GetAttributesFromMetadata(link string) datatypes.JSON {
+	emptyResponse := datatypes.JSON("")
+	if len(link) == 0 {
+		return emptyResponse
 	}
 
-	osResponse, err := GetOSMetadataForToken(args.LastLink, args.Nonce)
-	if err == nil {
-		token.MetadataLink = args.LastLink
-		token.TokenName = osResponse.Name
-		token.ImageLink = osResponse.Image
-
-		attributesJson, innerErr := ConstructAttributesJsonFromResponse(osResponse)
-		if innerErr != nil {
-			log.Debug("could not parse os response for attributes", "link", args.LastLink)
-		} else {
-			token.Attributes = *attributesJson
-		}
-	} else {
-		token.TokenName = args.TokenName
-		token.ImageLink = args.FirstLink
-	}
-
-	return token
-}
-
-func GetOSMetadataForToken(link string, nonce uint64) (*TokenLinkResponse, error) {
-	var response TokenLinkResponse
-
-	link = link + "/" + strconv.FormatUint(nonce, 10)
 	responseRaw, err := HttpGetRaw(link)
 	if err != nil {
-		return nil, err
+		log.Debug("could not get metadata response", "link", link, "err", err)
+		return emptyResponse
 	}
 	if len(responseRaw) > maxTokenLinkResponseSize {
-		return nil, errors.New("response too long")
+		log.Debug("response too long for link", "link", link)
+		return emptyResponse
 	}
 
+	var response dtos.MetadataLinkResponse
 	err = json.Unmarshal([]byte(responseRaw), &response)
 	if err != nil {
-		return nil, err
+		log.Debug("could not unmarshal", "link", link, "err", err)
+		return emptyResponse
 	}
 
-	return &response, nil
-}
+	attributes := make(map[string]string)
+	for _, key := range response.Attributes {
+		attributes[key.TraitType] = key.Value
+	}
 
-func ConstructAttributesJsonFromResponse(response *TokenLinkResponse) (*datatypes.JSON, error) {
-	attrsBytes, err := json.Marshal(response.Attributes)
+	bytes, err := json.Marshal(attributes)
 	if err != nil {
-		return nil, err
+		log.Debug("could not marshal", "link", link, "err", err)
+		return emptyResponse
 	}
 
-	attrsJson := datatypes.JSON(attrsBytes)
-	return &attrsJson, err
+	return bytes
 }
 
 func GetPriceNominal(priceHex string) (float64, error) {
@@ -487,4 +641,47 @@ func GetAvailableTokens(args AvailableTokensRequest) AvailableTokensResponse {
 	}
 
 	return response
+}
+
+func TryGetMetadataLink(blockchainProxy string, address string, tokenId string, nonce uint64) (string, error) {
+	proxyRequest := fmt.Sprintf(NftProxyRequestFormat, blockchainProxy, address, tokenId, nonce)
+
+	var proxyResponse NftProxyResponse
+	err := HttpGet(proxyRequest, &proxyResponse)
+	if err != nil {
+		log.Debug("binance request failed")
+		return "", err
+	}
+	if len(proxyResponse.Data.TokenData.Uris) < 2 {
+		return "", nil
+	}
+
+	link, err := base64.StdEncoding.DecodeString(proxyResponse.Data.TokenData.Uris[1])
+	return string(link), err
+}
+
+func ConstructOwnedTokensFromTokens(tokens []entities.Token) []dtos.OwnedTokenDto {
+	tokenIds := make(map[string]bool)
+	for _, token := range tokens {
+		tokenIds[token.TokenID] = true
+	}
+
+	collections := make(map[string]dtos.CollectionCacheInfo)
+	for tokenId := range tokenIds {
+		info, innerErr := collstats.GetOrAddCollectionCacheInfo(tokenId)
+		if innerErr == nil {
+			collections[tokenId] = *info
+		}
+	}
+
+	ownedTokens := make([]dtos.OwnedTokenDto, len(tokens))
+	for index, token := range tokens {
+		ownedToken := dtos.OwnedTokenDto{
+			Token:               token,
+			CollectionCacheInfo: collections[token.TokenID],
+		}
+		ownedTokens[index] = ownedToken
+	}
+
+	return ownedTokens
 }

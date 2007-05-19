@@ -141,7 +141,7 @@ func Test_CountUniqueOwnersWithListedTokensByCollectionId(t *testing.T) {
 
 	count, err := CountUniqueOwnersWithListedTokensByCollectionId(1)
 	require.Nil(t, err)
-	require.Equal(t, count, uint64(1))
+	require.Equal(t, uint64(1), count)
 }
 
 func Test_GetTokensByCollectionIdWithOffsetLimit(t *testing.T) {
@@ -154,18 +154,18 @@ func Test_GetTokensByCollectionIdWithOffsetLimit(t *testing.T) {
 	require.Nil(t, err)
 
 	token1 := entities.Token{
-		CollectionID: coll.ID,
-		Listed:       true,
-		OwnerId:      1,
+		CollectionID:       coll.ID,
+		Status:             entities.List,
+		OwnerId:            1,
 		Attributes:   datatypes.JSON(`{"hair": "red", "background": "dark"}`),
 	}
 	err = AddToken(&token1)
 	require.Nil(t, err)
 
 	token2 := entities.Token{
-		CollectionID: coll.ID,
-		Listed:       true,
-		OwnerId:      1,
+		CollectionID:       coll.ID,
+		Status:             entities.List,
+		OwnerId:            1,
 		Attributes:   datatypes.JSON(`{"hair": "green", "background": "dark"}`),
 	}
 	err = AddToken(&token2)
@@ -188,7 +188,7 @@ func defaultToken() entities.Token {
 		TokenID:      "my_token",
 		Nonce:        10,
 		PriceNominal: 1_000_000_000_000_000_000_000,
-		Listed:       true,
+		Status:       entities.List,
 		MetadataLink: "link.com",
 		OwnerId:      1,
 		CollectionID: 1,

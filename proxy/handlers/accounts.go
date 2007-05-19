@@ -206,15 +206,14 @@ func (handler *accountsHandler) setAccountProfile(c *gin.Context) {
 		return
 	}
 
-	err = services.SetAccountProfileImage(walletAddress, cacheInfo.AccountId, &imageBase64)
+	link, err := services.SetAccountProfileImage(walletAddress, cacheInfo.AccountId, &imageBase64)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
 	}
 
-	dtos.JsonResponse(c, http.StatusOK, "", "")
+	dtos.JsonResponse(c, http.StatusOK, link, "")
 }
-
 
 // @Summary Set account cover image
 // @Description Expects base64 std encoding of the image representation. Returns empty string. Max size of byte array is 1MB.
@@ -250,13 +249,13 @@ func (handler *accountsHandler) setAccountCover(c *gin.Context) {
 		return
 	}
 
-	err = services.SetAccountCoverImage(walletAddress, cacheInfo.AccountId, &imageBase64)
+	link, err := services.SetAccountCoverImage(walletAddress, cacheInfo.AccountId, &imageBase64)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
 	}
 
-	dtos.JsonResponse(c, http.StatusOK, "", "")
+	dtos.JsonResponse(c, http.StatusOK, link, "")
 }
 
 // @Summary Gets tokens for an account.
@@ -265,9 +264,9 @@ func (handler *accountsHandler) setAccountCover(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param walletAddress path string true "wallet address"
-// @Param offset path int true "offset"
-// @Param limit path int true "limit"
-// @Success 200 {object} []entities.Token
+// @Param offset path uint true "offset"
+// @Param limit path uint true "limit"
+// @Success 200 {object} []dtos.OwnedTokenDto
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 404 {object} dtos.ApiResponse
 // @Router /accounts/{walletAddress}/tokens/{offset}/{limit} [get]
@@ -282,25 +281,32 @@ func (handler *accountsHandler) getAccountTokens(c *gin.Context) {
 		return
 	}
 
-	offset, err := strconv.Atoi(offsetStr)
+	offset, err := strconv.ParseUint(offsetStr, 10, 0)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
-	limit, err := strconv.Atoi(limitStr)
+	limit, err := strconv.ParseUint(limitStr, 10, 0)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
-	tokens, err := storage.GetTokensByOwnerIdWithOffsetLimit(cacheInfo.AccountId, offset, limit)
+	err = ValidateLimit(limit)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	tokens, err := storage.GetTokensByOwnerIdWithOffsetLimit(cacheInfo.AccountId, int(offset), int(limit))
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
-	dtos.JsonResponse(c, http.StatusOK, tokens, "")
+	ownedTokens := services.ConstructOwnedTokensFromTokens(tokens)
+	dtos.JsonResponse(c, http.StatusOK, ownedTokens, "")
 }
 
 // @Summary Gets collections for an account.
@@ -309,8 +315,8 @@ func (handler *accountsHandler) getAccountTokens(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param walletAddress path string true "wallet address"
-// @Param offset path int true "offset"
-// @Param limit path int true "limit"
+// @Param offset path uint true "offset"
+// @Param limit path uint true "limit"
 // @Success 200 {object} []entities.Collection
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 404 {object} dtos.ApiResponse
@@ -326,19 +332,25 @@ func (handler *accountsHandler) getAccountCollections(c *gin.Context) {
 		return
 	}
 
-	offset, err := strconv.Atoi(offsetStr)
+	offset, err := strconv.ParseUint(offsetStr, 10, 0)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
-	limit, err := strconv.Atoi(limitStr)
+	limit, err := strconv.ParseUint(limitStr, 10, 0)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
-	collections, err := storage.GetCollectionsByOwnerIdWithOffsetLimit(cacheInfo.AccountId, offset, limit)
+	err = ValidateLimit(limit)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	collections, err := storage.GetCollectionsByOwnerIdWithOffsetLimit(cacheInfo.AccountId, int(offset), int(limit))
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return

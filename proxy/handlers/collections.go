@@ -69,8 +69,8 @@ func NewCollectionsHandler(groupHandler *groupHandler, authCfg config.AuthConfig
 // @Tags collections
 // @Accept json
 // @Produce json
-// @Param offset path int true "offset"
-// @Param limit path int true "limit"
+// @Param offset path uint true "offset"
+// @Param limit path uint true "limit"
 // @Success 200 {object} []entities.Collection
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 404 {object} dtos.ApiResponse
@@ -79,19 +79,25 @@ func (handler *collectionsHandler) getList(c *gin.Context) {
 	offsetStr := c.Param("offset")
 	limitStr := c.Param("limit")
 
-	offset, err := strconv.Atoi(offsetStr)
+	offset, err := strconv.ParseUint(offsetStr, 10, 0)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
-	limit, err := strconv.Atoi(limitStr)
+	limit, err := strconv.ParseUint(limitStr, 10, 0)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
-	collections, err := storage.GetCollectionsWithOffsetLimit(offset, limit)
+	err = ValidateLimit(limit)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	collections, err := storage.GetCollectionsWithOffsetLimit(int(offset), int(limit))
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
@@ -244,8 +250,8 @@ func (handler *collectionsHandler) create(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param collectionId path string true "collection id"
-// @Param offset path int true "offset"
-// @Param limit path int true "limit"
+// @Param offset path uint true "offset"
+// @Param limit path uint true "limit"
 // @Success 200 {object} []entities.Token
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 404 {object} dtos.ApiResponse
@@ -270,19 +276,25 @@ func (handler *collectionsHandler) getTokens(c *gin.Context) {
 		return
 	}
 
-	offset, err := strconv.Atoi(offsetStr)
+	offset, err := strconv.ParseUint(offsetStr, 10, 0)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
-	limit, err := strconv.Atoi(limitStr)
+	limit, err := strconv.ParseUint(limitStr, 10, 0)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
-	tokens, err := storage.GetTokensByCollectionIdWithOffsetLimit(cacheInfo.CollectionId, offset, limit, filters, sortRules)
+	err = ValidateLimit(limit)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	tokens, err := storage.GetTokensByCollectionIdWithOffsetLimit(cacheInfo.CollectionId, int(offset), int(limit), filters, sortRules)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
@@ -336,13 +348,13 @@ func (handler *collectionsHandler) setCollectionProfile(c *gin.Context) {
 		return
 	}
 
-	err = services.SetCollectionProfileImage(tokenId, cacheInfo.CollectionId, &imageBase64)
+	link, err := services.SetCollectionProfileImage(tokenId, cacheInfo.CollectionId, &imageBase64)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
 	}
 
-	dtos.JsonResponse(c, http.StatusOK, "", "")
+	dtos.JsonResponse(c, http.StatusOK, link, "")
 }
 
 // @Summary Set collection cover image
@@ -391,13 +403,13 @@ func (handler *collectionsHandler) setCollectionCover(c *gin.Context) {
 		return
 	}
 
-	err = services.SetCollectionCoverImage(tokenId, cacheInfo.CollectionId, &imageBase64)
+	link, err := services.SetCollectionCoverImage(tokenId, cacheInfo.CollectionId, &imageBase64)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
 	}
 
-	dtos.JsonResponse(c, http.StatusOK, "", "")
+	dtos.JsonResponse(c, http.StatusOK, link, "")
 }
 
 // @Summary Gets mint info about a collection.
@@ -445,8 +457,8 @@ func (handler *collectionsHandler) getMintInfo(c *gin.Context) {
 // @Tags collections
 // @Accept json
 // @Produce json
-// @Param offset path int true "offset"
-// @Param limit path int true "limit"
+// @Param offset path uint true "offset"
+// @Param limit path uint true "limit"
 // @Success 200 {object} RankingEntry
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 500 {object} dtos.ApiResponse
@@ -456,13 +468,19 @@ func (handler *collectionsHandler) getCollectionRankings(c *gin.Context) {
 	limitStr := c.Param("limit")
 	sortParams := c.QueryMap("sort")
 
-	offset, err := strconv.Atoi(offsetStr)
+	offset, err := strconv.ParseUint(offsetStr, 10, 0)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
-	limit, err := strconv.Atoi(limitStr)
+	limit, err := strconv.ParseUint(limitStr, 10, 0)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	err = ValidateLimit(limit)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
@@ -487,7 +505,7 @@ func (handler *collectionsHandler) getCollectionRankings(c *gin.Context) {
 
 	table := sortParams["criteria"]
 	isRev := strings.ToLower(sortParams["mode"]) == "desc"
-	entries, err := collstats.GetLeaderboardEntries(table, offset, limit, isRev)
+	entries, err := collstats.GetLeaderboardEntries(table, int(offset), int(limit), isRev)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return

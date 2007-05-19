@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"gorm.io/datatypes"
 	"time"
 
 	logger "github.com/ElrondNetwork/elrond-go-logger"
@@ -13,11 +14,6 @@ import (
 	"github.com/erdsea/erdsea-api/stats"
 	"github.com/erdsea/erdsea-api/storage"
 )
-
-type CacheInfo struct {
-	CollectionId   uint64
-	CollectionName string
-}
 
 var (
 	redisCollectionStatsKeyFormat = "CollStats:%s"
@@ -51,12 +47,13 @@ func GetStatisticsForTokenId(tokenId string) (*dtos.CollectionStatistics, error)
 	}
 }
 
-func AddCollectionToCache(collectionId uint64, collectionName string, tokenId string) (*CacheInfo, error) {
+func AddCollectionToCache(collectionId uint64, collectionName string, collectionFlags datatypes.JSON, tokenId string) (*dtos.CollectionCacheInfo, error) {
 	db := cache.GetBolt()
 
-	cacheInfo := CacheInfo{
-		CollectionId:   collectionId,
-		CollectionName: collectionName,
+	cacheInfo := dtos.CollectionCacheInfo{
+		CollectionId:    collectionId,
+		CollectionName:  collectionName,
+		CollectionFlags: collectionFlags,
 	}
 
 	entryBytes, err := json.Marshal(&cacheInfo)
@@ -77,7 +74,7 @@ func AddCollectionToCache(collectionId uint64, collectionName string, tokenId st
 	return &cacheInfo, err
 }
 
-func GetCollectionCacheInfo(tokenId string) (*CacheInfo, error) {
+func GetCollectionCacheInfo(tokenId string) (*dtos.CollectionCacheInfo, error) {
 	db := cache.GetBolt()
 
 	var bytes []byte
@@ -94,7 +91,7 @@ func GetCollectionCacheInfo(tokenId string) (*CacheInfo, error) {
 		return nil, err
 	}
 
-	var cacheInfo CacheInfo
+	var cacheInfo dtos.CollectionCacheInfo
 	err = json.Unmarshal(bytes, &cacheInfo)
 	if err != nil {
 		return nil, err
@@ -103,7 +100,7 @@ func GetCollectionCacheInfo(tokenId string) (*CacheInfo, error) {
 	return &cacheInfo, nil
 }
 
-func GetOrAddCollectionCacheInfo(tokenId string) (*CacheInfo, error) {
+func GetOrAddCollectionCacheInfo(tokenId string) (*dtos.CollectionCacheInfo, error) {
 	cacheInfo, err := GetCollectionCacheInfo(tokenId)
 	if err != nil {
 		coll, innerErr := storage.GetCollectionByTokenId(tokenId)
@@ -111,7 +108,7 @@ func GetOrAddCollectionCacheInfo(tokenId string) (*CacheInfo, error) {
 			return nil, innerErr
 		}
 
-		cacheInfo, innerErr = AddCollectionToCache(coll.ID, coll.Name, coll.TokenID)
+		cacheInfo, innerErr = AddCollectionToCache(coll.ID, coll.Name, coll.Flags, coll.TokenID)
 		if innerErr != nil {
 			return nil, innerErr
 		}

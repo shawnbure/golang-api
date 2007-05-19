@@ -60,6 +60,8 @@ func NewWebServer(cfg *config.GeneralConfig) (*webServer, error) {
 	processor := process.NewEventProcessor(
 		cfg.ConnectorApi.Addresses,
 		cfg.ConnectorApi.Identifiers,
+		cfg.Blockchain.ProxyUrl,
+		cfg.Blockchain.MarketplaceAddress,
 		observerMonitor,
 	)
 
@@ -81,11 +83,14 @@ func NewWebServer(cfg *config.GeneralConfig) (*webServer, error) {
 	handlers.NewTokensHandler(groupHandler)
 	handlers.NewCollectionsHandler(groupHandler, cfg.Auth, cfg.Blockchain)
 	handlers.NewTransactionsHandler(groupHandler)
-	handlers.NewTxTemplateHandler(groupHandler, cfg.Auth, cfg.Blockchain)
+	handlers.NewTxTemplateHandler(groupHandler, cfg.Blockchain)
 	handlers.NewPriceHandler(groupHandler)
 	handlers.NewAccountsHandler(groupHandler, cfg.Auth)
 	handlers.NewSearchHandler(groupHandler)
 	handlers.NewSwaggerHandler(groupHandler, cfg.Swagger)
+	handlers.NewProfferHandler(groupHandler)
+	handlers.NewDepositsHandler(groupHandler, cfg.Blockchain)
+	handlers.NewRoyaltiesHandler(groupHandler, cfg.Blockchain)
 
 	groupHandler.RegisterEndpoints(router)
 

@@ -11,11 +11,20 @@ import (
 )
 
 var (
-	listNftEndpointName         = "putNftForSale"
-	buyNftEndpointName          = "buyNft"
-	withdrawNftEndpointName     = "withdrawNft"
-	ESDTNFTTransferEndpointName = "ESDTNFTTransfer"
-	mintTokensEndpointName      = "mintTokens"
+	listNftEndpointName                  = "putNftForSale"
+	buyNftEndpointName                   = "buyNft"
+	withdrawNftEndpointName              = "withdrawNft"
+	ESDTNFTTransferEndpointName          = "ESDTNFTTransfer"
+	mintTokensEndpointName               = "mintTokens"
+	makeOfferEndpointName                = "makeOffer"
+	acceptOfferEndpointName              = "acceptOffer"
+	cancelOfferEndpointName              = "cancelOffer"
+	startAuctionEndpointName             = "startAuction"
+	placeBidEndpointName                 = "placeBid"
+	endAuctionEndpointName               = "endAuction"
+	depositEndpointName                  = "deposit"
+	withdrawEndpointName                 = "withdraw"
+	withdrawCreatorRoyaltiesEndpointName = "withdrawCreatorRoyalties"
 )
 
 type Transaction struct {
@@ -111,6 +120,202 @@ func (f *TxFormatter) NewWithdrawNftTxTemplate(senderAddr string, tokenId string
 	}
 }
 
+func (f *TxFormatter) MakeOfferTxTemplate(senderAddr string, tokenId string, nonce uint64, amount float64, expire uint64) Transaction {
+	txData := makeOfferEndpointName +
+		"@" + hex.EncodeToString([]byte(tokenId)) +
+		"@" + hex.EncodeToString(big.NewInt(int64(nonce)).Bytes()) +
+		"@" + hex.EncodeToString(services.GetPriceDenominated(amount).Bytes()) +
+		"@" + hex.EncodeToString(big.NewInt(int64(expire)).Bytes())
+
+	return Transaction{
+		Nonce:     0,
+		Value:     "0",
+		RcvAddr:   f.config.MarketplaceAddress,
+		SndAddr:   senderAddr,
+		GasPrice:  f.config.GasPrice,
+		GasLimit:  f.config.MakeOfferGasLimit,
+		Data:      txData,
+		Signature: "",
+		ChainID:   f.config.ChainID,
+		Version:   1,
+		Options:   0,
+	}
+}
+
+func (f *TxFormatter) AcceptOfferTxTemplate(senderAddr string, tokenId string, nonce uint64, offeror string, amount float64) (*Transaction, error) {
+	offerorAddress, err := data.NewAddressFromBech32String(offeror)
+	if err != nil {
+		return nil, err
+	}
+
+	txData := acceptOfferEndpointName +
+		"@" + hex.EncodeToString([]byte(tokenId)) +
+		"@" + hex.EncodeToString(big.NewInt(int64(nonce)).Bytes()) +
+		"@" + hex.EncodeToString(offerorAddress.AddressBytes()) +
+		"@" + hex.EncodeToString(services.GetPriceDenominated(amount).Bytes())
+
+	return &Transaction{
+		Nonce:     0,
+		Value:     "0",
+		RcvAddr:   f.config.MarketplaceAddress,
+		SndAddr:   senderAddr,
+		GasPrice:  f.config.GasPrice,
+		GasLimit:  f.config.AcceptOfferGasLimit,
+		Data:      txData,
+		Signature: "",
+		ChainID:   f.config.ChainID,
+		Version:   1,
+		Options:   0,
+	}, nil
+}
+
+func (f *TxFormatter) CancelOfferTxTemplate(senderAddr string, tokenId string, nonce uint64, amount float64) Transaction {
+	txData := cancelOfferEndpointName +
+		"@" + hex.EncodeToString([]byte(tokenId)) +
+		"@" + hex.EncodeToString(big.NewInt(int64(nonce)).Bytes()) +
+		"@" + hex.EncodeToString(services.GetPriceDenominated(amount).Bytes())
+
+	return Transaction{
+		Nonce:     0,
+		Value:     "0",
+		RcvAddr:   f.config.MarketplaceAddress,
+		SndAddr:   senderAddr,
+		GasPrice:  f.config.GasPrice,
+		GasLimit:  f.config.CancelOfferGasLimit,
+		Data:      txData,
+		Signature: "",
+		ChainID:   f.config.ChainID,
+		Version:   1,
+		Options:   0,
+	}
+}
+
+func (f *TxFormatter) StartAuctionTxTemplate(senderAddr string, tokenId string, nonce uint64, minBid float64, startTime uint64, deadline uint64) (*Transaction, error) {
+	marketPlaceAddress, err := data.NewAddressFromBech32String(f.config.MarketplaceAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	txData := ESDTNFTTransferEndpointName +
+		"@" + hex.EncodeToString([]byte(tokenId)) +
+		"@" + hex.EncodeToString(big.NewInt(int64(nonce)).Bytes()) +
+		"@" + hex.EncodeToString(big.NewInt(int64(1)).Bytes()) +
+		"@" + hex.EncodeToString(marketPlaceAddress.AddressBytes()) +
+		"@" + hex.EncodeToString([]byte(startAuctionEndpointName)) +
+		"@" + hex.EncodeToString(services.GetPriceDenominated(minBid).Bytes()) +
+		"@" + hex.EncodeToString(big.NewInt(int64(deadline)).Bytes()) +
+		"@" + hex.EncodeToString(big.NewInt(int64(startTime)).Bytes())
+
+	return &Transaction{
+		Nonce:     0,
+		Value:     "0",
+		RcvAddr:   senderAddr,
+		SndAddr:   senderAddr,
+		GasPrice:  f.config.GasPrice,
+		GasLimit:  f.config.StartAuctionGasLimit,
+		Data:      txData,
+		Signature: "",
+		ChainID:   f.config.ChainID,
+		Version:   1,
+		Options:   0,
+	}, nil
+}
+
+func (f *TxFormatter) PlaceBidTxTemplate(senderAddr string, tokenId string, nonce uint64, payment string, bidAmount float64) Transaction {
+	txData := placeBidEndpointName +
+		"@" + hex.EncodeToString([]byte(tokenId)) +
+		"@" + hex.EncodeToString(big.NewInt(int64(nonce)).Bytes()) +
+		"@" + hex.EncodeToString(services.GetPriceDenominated(bidAmount).Bytes())
+
+	return Transaction{
+		Nonce:     0,
+		Value:     payment,
+		RcvAddr:   f.config.MarketplaceAddress,
+		SndAddr:   senderAddr,
+		GasPrice:  f.config.GasPrice,
+		GasLimit:  f.config.StartAuctionGasLimit,
+		Data:      txData,
+		Signature: "",
+		ChainID:   f.config.ChainID,
+		Version:   1,
+		Options:   0,
+	}
+}
+
+func (f *TxFormatter) EndAuctionTxTemplate(senderAddr string, tokenId string, nonce uint64) Transaction {
+	txData := endAuctionEndpointName +
+		"@" + hex.EncodeToString([]byte(tokenId)) +
+		"@" + hex.EncodeToString(big.NewInt(int64(nonce)).Bytes())
+
+	return Transaction{
+		Nonce:     0,
+		Value:     "0",
+		RcvAddr:   f.config.MarketplaceAddress,
+		SndAddr:   senderAddr,
+		GasPrice:  f.config.GasPrice,
+		GasLimit:  f.config.StartAuctionGasLimit,
+		Data:      txData,
+		Signature: "",
+		ChainID:   f.config.ChainID,
+		Version:   1,
+		Options:   0,
+	}
+}
+
+func (f *TxFormatter) DepositTxTemplate(senderAddr string, payment string) Transaction {
+	txData := depositEndpointName
+
+	return Transaction{
+		Nonce:     0,
+		Value:     payment,
+		RcvAddr:   f.config.MarketplaceAddress,
+		SndAddr:   senderAddr,
+		GasPrice:  f.config.GasPrice,
+		GasLimit:  f.config.DepositGasLimit,
+		Data:      txData,
+		Signature: "",
+		ChainID:   f.config.ChainID,
+		Version:   1,
+		Options:   0,
+	}
+}
+
+func (f *TxFormatter) WithdrawTxTemplate(senderAddr string) Transaction {
+	txData := withdrawEndpointName
+
+	return Transaction{
+		Nonce:     0,
+		Value:     "0",
+		RcvAddr:   f.config.MarketplaceAddress,
+		SndAddr:   senderAddr,
+		GasPrice:  f.config.GasPrice,
+		GasLimit:  f.config.WithdrawGasLimit,
+		Data:      txData,
+		Signature: "",
+		ChainID:   f.config.ChainID,
+		Version:   1,
+		Options:   0,
+	}
+}
+
+func (f *TxFormatter) WithdrawCreatorRoyaltiesTxTemplate(senderAddr string) Transaction {
+	txData := withdrawCreatorRoyaltiesEndpointName
+
+	return Transaction{
+		Nonce:     0,
+		Value:     "0",
+		RcvAddr:   f.config.MarketplaceAddress,
+		SndAddr:   senderAddr,
+		GasPrice:  f.config.GasPrice,
+		GasLimit:  f.config.WithdrawGasLimit,
+		Data:      txData,
+		Signature: "",
+		ChainID:   f.config.ChainID,
+		Version:   1,
+		Options:   0,
+	}
+}
+
 func (f *TxFormatter) NewMintNftsTxTemplate(
 	walletAddress string,
 	contractAddress string,
@@ -118,13 +323,13 @@ func (f *TxFormatter) NewMintNftsTxTemplate(
 	numberOfTokens uint64,
 ) Transaction {
 	gasLimit := f.config.MintTokenGasLimit * numberOfTokens
-	totalPrice := fmt.Sprintf("%f", mintPricePerToken * float64(numberOfTokens))
+	totalPrice := fmt.Sprintf("%f", mintPricePerToken*float64(numberOfTokens))
 	txData := mintTokensEndpointName +
 		"@" + hex.EncodeToString(big.NewInt(int64(numberOfTokens)).Bytes())
 
 	return Transaction{
 		Nonce:     0,
-		Value:	   totalPrice,
+		Value:     totalPrice,
 		RcvAddr:   contractAddress,
 		SndAddr:   walletAddress,
 		GasPrice:  f.config.GasPrice,

@@ -20,84 +20,84 @@ var (
 	ctx                 = context.Background()
 )
 
-func SetAccountProfileImage(accountAddress string, accountId uint64, image *string) error {
+func SetAccountProfileImage(accountAddress string, accountId uint64, image *string) (string, error) {
 	imageSize := getByteArrayLenOfBase64EncodedImage(image)
 	if imageSize > maxProfileImageSize {
-		return errorProfileTooBig
+		return "", errorProfileTooBig
 	}
 
 	imgId := accountAddress + ProfileSuffix
 	response, err := cdn.UploadToCloudy(ctx, *image, imgId)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	err = storage.UpdateAccountProfileWhereId(accountId, response.SecureURL)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	return nil
+	return response.SecureURL, nil
 }
 
-func SetAccountCoverImage(accountAddress string, accountId uint64, image *string) error {
+func SetAccountCoverImage(accountAddress string, accountId uint64, image *string) (string, error) {
 	imageSize := getByteArrayLenOfBase64EncodedImage(image)
 	if imageSize > maxCoverImageSize {
-		return errorCoverTooBig
+		return "", errorCoverTooBig
 	}
 
 	imgId := accountAddress + CoverSuffix
 	response, err := cdn.UploadToCloudy(ctx, *image, imgId)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	err = storage.UpdateAccountCoverWhereId(accountId, response.SecureURL)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	return nil
+	return response.SecureURL, nil
 }
 
-func SetCollectionCoverImage(tokenId string, collectionId uint64, image *string) error {
+func SetCollectionCoverImage(tokenId string, collectionId uint64, image *string) (string, error) {
 	imageSize := getByteArrayLenOfBase64EncodedImage(image)
 	if imageSize > maxCoverImageSize {
-		return errorCoverTooBig
+		return "", errorCoverTooBig
 	}
 
 	imgId := tokenId + CoverSuffix
 	response, err := cdn.UploadToCloudy(ctx, *image, imgId)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	err = storage.UpdateCollectionCoverWhereId(collectionId, response.SecureURL)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	return nil
+	return response.SecureURL, nil
 }
 
-func SetCollectionProfileImage(tokenId string, collectionId uint64, image *string) error {
+func SetCollectionProfileImage(tokenId string, collectionId uint64, image *string) (string, error) {
 	imageSize := getByteArrayLenOfBase64EncodedImage(image)
 	if imageSize > maxProfileImageSize {
-		return errorCoverTooBig
+		return "", errorCoverTooBig
 	}
 
 	imgId := tokenId + ProfileSuffix
 	response, err := cdn.UploadToCloudy(ctx, *image, imgId)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	err = storage.UpdateCollectionProfileWhereId(collectionId, response.SecureURL)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	return nil
+	return response.SecureURL, nil
 }
 
 func getByteArrayLenOfBase64EncodedImage(image *string) int {

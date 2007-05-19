@@ -168,7 +168,8 @@ func CountListedTokensByCollectionId(collectionId uint64) (uint64, error) {
 		return 0, err
 	}
 
-	txRead := database.Model(&entities.Token{}).Where("listed = true AND collection_id = ?", collectionId).Count(&count)
+	txRead := database.Model(&entities.Token{}).Where("(status = 'List' OR status = 'Auction') AND collection_id = ?", collectionId)
+	txRead.Count(&count)
 	if txRead.Error != nil {
 		return 0, txRead.Error
 	}
@@ -184,7 +185,8 @@ func CountUniqueOwnersWithListedTokensByCollectionId(collectionId uint64) (uint6
 		return 0, err
 	}
 
-	txRead := database.Model(&entities.Token{}).Where("listed = true AND collection_id = ?", collectionId).Distinct("owner_id").Count(&count)
+	txRead := database.Model(&entities.Token{}).Where("(status = 'List' OR status = 'Auction') AND collection_id = ?", collectionId)
+	txRead.Distinct("owner_id").Count(&count)
 	if txRead.Error != nil {
 		return 0, txRead.Error
 	}
