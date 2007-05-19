@@ -100,7 +100,7 @@ func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) 
 		return nil, err
 	}
 
-	err = collstats.AddCollection(collection.ID, collection.Name, collection.TokenID)
+	_, err = collstats.AddCollectionToCache(collection.ID, collection.Name, collection.TokenID)
 	if err != nil {
 		log.Debug("could not add to coll stats")
 	}

@@ -18,10 +18,10 @@ func Test_AddGetBolt(t *testing.T) {
 	cache.InitCacher(cfg)
 	defer cache.CloseCacher()
 
-	err := AddCollection(12, "name", "token")
+	_, err := AddCollectionToCache(12, "name", "token")
 	require.Nil(t, err)
 
-	coll, err := GetCollection("token")
+	coll, err := GetCollectionCacheInfo("token")
 	require.Nil(t, err)
 
 	require.Equal(t, coll.CollectionId, uint64(12))
@@ -40,7 +40,7 @@ func Test_GetStats(t *testing.T) {
 	err := storage.AddCollection(&collection)
 	require.Nil(t, err)
 
-	err = AddCollection(collection.ID, collection.Name, collection.TokenID)
+	_, err = AddCollectionToCache(collection.ID, collection.Name, collection.TokenID)
 	require.Nil(t, err)
 
 	token := entities.Token{

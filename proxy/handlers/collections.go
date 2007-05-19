@@ -106,7 +106,7 @@ func (handler *collectionsHandler) getList(c *gin.Context) {
 func (handler *collectionsHandler) get(c *gin.Context) {
 	tokenId := c.Param("collectionId")
 
-	cacheInfo, err := collstats.GetCollection(tokenId)
+	cacheInfo, err := collstats.GetOrAddCollectionCacheInfo(tokenId)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
@@ -154,7 +154,7 @@ func (handler *collectionsHandler) set(c *gin.Context) {
 		return
 	}
 
-	cacheInfo, err := collstats.GetCollection(tokenId)
+	cacheInfo, err := collstats.GetOrAddCollectionCacheInfo(tokenId)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
@@ -247,7 +247,7 @@ func (handler *collectionsHandler) getTokens(c *gin.Context) {
 		return
 	}
 
-	cacheInfo, err := collstats.GetCollection(tokenId)
+	cacheInfo, err := collstats.GetOrAddCollectionCacheInfo(tokenId)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
@@ -287,7 +287,7 @@ func (handler *collectionsHandler) getTokens(c *gin.Context) {
 func (handler *collectionsHandler) getCollectionProfile(c *gin.Context) {
 	tokenId := c.Param("collectionId")
 
-	cacheInfo, err := collstats.GetCollection(tokenId)
+	cacheInfo, err := collstats.GetOrAddCollectionCacheInfo(tokenId)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
@@ -323,7 +323,7 @@ func (handler *collectionsHandler) setCollectionProfile(c *gin.Context) {
 		return
 	}
 
-	cacheInfo, err := collstats.GetCollection(tokenId)
+	cacheInfo, err := collstats.GetOrAddCollectionCacheInfo(tokenId)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
@@ -369,7 +369,7 @@ func (handler *collectionsHandler) setCollectionProfile(c *gin.Context) {
 func (handler *collectionsHandler) getCollectionCover(c *gin.Context) {
 	tokenId := c.Param("collectionId")
 
-	cacheInfo, err := collstats.GetCollection(tokenId)
+	cacheInfo, err := collstats.GetOrAddCollectionCacheInfo(tokenId)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
@@ -406,7 +406,7 @@ func (handler *collectionsHandler) setCollectionCover(c *gin.Context) {
 		return
 	}
 
-	cacheInfo, err := collstats.GetCollection(tokenId)
+	cacheInfo, err := collstats.GetOrAddCollectionCacheInfo(tokenId)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return

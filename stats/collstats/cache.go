@@ -10,6 +10,7 @@ import (
 	"github.com/erdsea/erdsea-api/cache"
 	"github.com/erdsea/erdsea-api/data/dtos"
 	"github.com/erdsea/erdsea-api/stats"
+	"github.com/erdsea/erdsea-api/storage"
 )
 
 type CacheInfo struct {
@@ -44,20 +45,65 @@ func GetStatisticsForTokenId(tokenId string) (*dtos.CollectionStatistics, error)
 	}
 }
 
-func AddCollection(collectionId uint64, collectionName string, tokenId string) error {
+func AddCollectionToCache(collectionId uint64, collectionName string, tokenId string) (*CacheInfo, error) {
+	db := cache.GetBolt()
+
 	cacheInfo := CacheInfo{
 		CollectionId:   collectionId,
 		CollectionName: collectionName,
 	}
 
-	err := addCollectionToBolt(tokenId, cacheInfo)
-	return err
-}
-
-func GetCollection(tokenId string) (*CacheInfo, error) {
-	cacheInfo, err := getCollectionFromBolt(tokenId)
+	entryBytes, err := json.Marshal(&cacheInfo)
 	if err != nil {
 		return nil, err
+	}
+
+	err = db.Update(func(tx *bolt.Tx) error {
+		_, innerErr := tx.CreateBucketIfNotExists(tokenIdToCollectionCacheInfo)
+		if innerErr != nil {
+			return innerErr
+		}
+
+		innerErr = tx.Bucket(tokenIdToCollectionCacheInfo).Put([]byte(tokenId), entryBytes)
+		return innerErr
+	})
+
+	return &cacheInfo, err
+}
+
+func GetCollectionCacheInfo(tokenId string) (*CacheInfo, error) {
+	db := cache.GetBolt()
+
+	var bytes []byte
+	err := db.View(func(tx *bolt.Tx) error {
+		bytes = tx.Bucket(tokenIdToCollectionCacheInfo).Get([]byte(tokenId))
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	var cacheInfo CacheInfo
+	err = json.Unmarshal(bytes, &cacheInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	return &cacheInfo, nil
+}
+
+func GetOrAddCollectionCacheInfo(tokenId string) (*CacheInfo, error) {
+	cacheInfo, err := GetCollectionCacheInfo(tokenId)
+	if err != nil {
+		coll, innerErr := storage.GetCollectionByTokenId(tokenId)
+		if innerErr != nil {
+			return nil, err
+		}
+
+		cacheInfo, innerErr = AddCollectionToCache(coll.ID, coll.Name, coll.TokenID)
+		if innerErr != nil {
+			return nil, err
+		}
 	}
 
 	return cacheInfo, nil
@@ -88,7 +134,7 @@ func setStatisticsRaw(tokenId string) (*dtos.CollectionStatistics, error) {
 	redis := cache.GetRedis()
 	redisCtx := cache.GetContext()
 
-	cacheInfo, err := getCollectionFromBolt(tokenId)
+	cacheInfo, err := GetOrAddCollectionCacheInfo(tokenId)
 	if err != nil {
 		log.Debug("get collection from bolt failed", err)
 		return nil, err
@@ -118,46 +164,4 @@ func setStatisticsRaw(tokenId string) (*dtos.CollectionStatistics, error) {
 	}
 
 	return cacheStats, nil
-}
-
-func addCollectionToBolt(tokenId string, info CacheInfo) error {
-	db := cache.GetBolt()
-
-	entryBytes, err := json.Marshal(&info)
-	if err != nil {
-		return err
-	}
-
-	err = db.Update(func(tx *bolt.Tx) error {
-		_, innerErr := tx.CreateBucketIfNotExists(tokenIdToCollectionCacheInfo)
-		if innerErr != nil {
-			return innerErr
-		}
-
-		innerErr = tx.Bucket(tokenIdToCollectionCacheInfo).Put([]byte(tokenId), entryBytes)
-		return innerErr
-	})
-
-	return err
-}
-
-func getCollectionFromBolt(tokenId string) (*CacheInfo, error) {
-	db := cache.GetBolt()
-
-	var bytes []byte
-	err := db.View(func(tx *bolt.Tx) error {
-		bytes = tx.Bucket(tokenIdToCollectionCacheInfo).Get([]byte(tokenId))
-		return nil
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	var cacheInfo CacheInfo
-	err = json.Unmarshal(bytes, &cacheInfo)
-	if err != nil {
-		return nil, err
-	}
-
-	return &cacheInfo, nil
 }
