@@ -1,7 +1,10 @@
 package storage
 
 import (
+	"gorm.io/datatypes"
+	"strconv"
 	"testing"
+	"time"
 
 	"github.com/erdsea/erdsea-api/data"
 	"github.com/stretchr/testify/require"
@@ -138,6 +141,45 @@ func Test_CountUniqueOwnersWithListedAssetsByCollectionId(t *testing.T) {
 	count, err := CountUniqueOwnersWithListedAssetsByCollectionId(1)
 	require.Nil(t, err)
 	require.Equal(t, count, uint64(1))
+}
+
+func Test_GetAssetsByCollectionIdWithOffsetLimit(t *testing.T) {
+	connectToTestDb()
+
+	coll := data.Collection{
+		Name: strconv.Itoa(int(time.Now().Unix())),
+	}
+	err := AddCollection(&coll)
+	require.Nil(t, err)
+
+	asset1 := data.Asset{
+		CollectionID: coll.ID,
+		Listed:       true,
+		OwnerId:      1,
+		Attributes:   datatypes.JSON(`{"hair": "red", "background": "dark"}`),
+	}
+	err = AddAsset(&asset1)
+	require.Nil(t, err)
+
+	asset2 := data.Asset{
+		CollectionID: coll.ID,
+		Listed:       true,
+		OwnerId:      1,
+		Attributes:   datatypes.JSON(`{"hair": "green", "background": "dark"}`),
+	}
+	err = AddAsset(&asset2)
+	require.Nil(t, err)
+
+	attrs := map[string]string{"background": "dark"}
+	assets, err := GetAssetsByCollectionIdWithOffsetLimit(coll.ID, 0, 100, attrs)
+	require.Nil(t, err)
+	require.Equal(t, len(assets), 2)
+
+
+	attrs2 := map[string]string{"background": "dark", "hair": "green"}
+	assets2, err := GetAssetsByCollectionIdWithOffsetLimit(coll.ID, 0, 100, attrs2)
+	require.Nil(t, err)
+	require.Equal(t, len(assets2), 1)
 }
 
 func defaultAsset() data.Asset {

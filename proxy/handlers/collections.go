@@ -234,6 +234,7 @@ func (handler *collectionsHandler) getAssetsForCollectionWithName(c *gin.Context
 	collectionName := c.Param("collectionName")
 	offsetStr := c.Param("offset")
 	limitStr := c.Param("limit")
+	filters := c.QueryMap("filters")
 
 	offset, err := strconv.Atoi(offsetStr)
 	if err != nil {
@@ -253,7 +254,7 @@ func (handler *collectionsHandler) getAssetsForCollectionWithName(c *gin.Context
 		return
 	}
 
-	assets, err := storage.GetAssetsByCollectionIdWithOffsetLimit(collection.ID, offset, limit)
+	assets, err := storage.GetAssetsByCollectionIdWithOffsetLimit(collection.ID, offset, limit, filters)
 	if err != nil {
 		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
