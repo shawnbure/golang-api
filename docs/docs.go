@@ -1029,6 +1029,74 @@ var doc = `{
                 }
             }
         },
+        "/proffers/{tokenId}/{nonce}/{offset}/{limit}": {
+            "get": {
+                "description": "Retrieves proffers for a token (identified by tokenId and nonce)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tokens"
+                ],
+                "summary": "Get proffers (offers and bids) for token",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "token id",
+                        "name": "tokenId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "token nonce",
+                        "name": "nonce",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "offset",
+                        "name": "offset",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "limit",
+                        "name": "limit",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entities.Proffer"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/search/accounts/{accountName}": {
             "get": {
                 "description": "Searches for accounts by name. Cached for 20 minutes. Limit 5 elements.",
@@ -1539,6 +1607,12 @@ var doc = `{
                         "schema": {
                             "$ref": "#/definitions/dtos.ApiResponse"
                         }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
                     }
                 }
             }
@@ -1807,6 +1881,12 @@ var doc = `{
                         "schema": {
                             "$ref": "#/definitions/dtos.ApiResponse"
                         }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
                     }
                 }
             }
@@ -2067,6 +2147,12 @@ var doc = `{
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/dtos.ApiResponse"
                         }
@@ -2348,6 +2434,38 @@ var doc = `{
                     "type": "string"
                 },
                 "website": {
+                    "type": "string"
+                }
+            }
+        },
+        "entities.Proffer": {
+            "type": "object",
+            "properties": {
+                "amountNominal": {
+                    "type": "number"
+                },
+                "amountString": {
+                    "type": "string"
+                },
+                "expire": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "offerorId": {
+                    "type": "integer"
+                },
+                "timestamp": {
+                    "type": "integer"
+                },
+                "tokenId": {
+                    "type": "integer"
+                },
+                "txHash": {
+                    "type": "string"
+                },
+                "type": {
                     "type": "string"
                 }
             }

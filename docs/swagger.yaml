@@ -104,6 +104,27 @@ definitions:
       website:
         type: string
     type: object
+  entities.Proffer:
+    properties:
+      amountNominal:
+        type: number
+      amountString:
+        type: string
+      expire:
+        type: integer
+      id:
+        type: integer
+      offerorId:
+        type: integer
+      timestamp:
+        type: integer
+      tokenId:
+        type: integer
+      txHash:
+        type: string
+      type:
+        type: string
+    type: object
   entities.Token:
     properties:
       attributes:
@@ -1016,6 +1037,52 @@ paths:
       summary: Gets EGLD price in dollars.
       tags:
       - egld_price
+  /proffers/{tokenId}/{nonce}/{offset}/{limit}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves proffers for a token (identified by tokenId and nonce)
+      parameters:
+      - description: token id
+        in: path
+        name: tokenId
+        required: true
+        type: string
+      - description: token nonce
+        in: path
+        name: nonce
+        required: true
+        type: integer
+      - description: offset
+        in: path
+        name: offset
+        required: true
+        type: integer
+      - description: limit
+        in: path
+        name: limit
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entities.Proffer'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: Get proffers (offers and bids) for token
+      tags:
+      - tokens
   /search/{searchString}:
     get:
       consumes:
@@ -1358,6 +1425,10 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/dtos.ApiResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
       summary: Accepts offer for an NFT - tx template.
       tags:
       - tx-template
@@ -1541,6 +1612,10 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/dtos.ApiResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
       summary: Gets tx-template for NFT list.
       tags:
       - tx-template
@@ -1719,6 +1794,10 @@ paths:
             $ref: '#/definitions/formatter.Transaction'
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+        "500":
+          description: Internal Server Error
           schema:
             $ref: '#/definitions/dtos.ApiResponse'
       summary: Start auction for an NFT - tx template.
