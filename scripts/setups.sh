@@ -6,7 +6,7 @@ PSQL_USER=user
 PSQL_PSW=password
 
 PSQL_ADDR_REPLACE="#listen_addresses = 'localhost'"
-PSQL_ADDR_WITH="listen_addresses = *"
+PSQL_ADDR_WITH="listen_addresses = '*'"
 PSQL_CLIENT_CONNECT_OPT="host        all         all             0.0.0.0/0               md5"
 
 REDIS_PSW=some_pass
