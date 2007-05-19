@@ -644,7 +644,7 @@ var doc = `{
         },
         "/collections/rankings/{offset}/{limit}": {
             "get": {
-                "description": "Acts as a leaderboard.",
+                "description": "Acts as a leaderboard. Optionally provide ?sort[criteria]=volumeTraded\u0026sort[mode]=asc",
                 "consumes": [
                     "application/json"
                 ],
@@ -675,10 +675,7 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/handlers.RankingEntry"
-                            }
+                            "$ref": "#/definitions/handlers.RankingEntry"
                         }
                     },
                     "400": {

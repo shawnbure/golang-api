@@ -450,7 +450,9 @@ func (handler *collectionsHandler) setCollectionCover(c *gin.Context) {
 // @Tags collections
 // @Accept json
 // @Produce json
-// @Success 200 {object} []collstats.LeaderboardEntry
+// @Param offset path int true "offset"
+// @Param limit path int true "limit"
+// @Success 200 {object} RankingEntry
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 500 {object} dtos.ApiResponse
 // @Router /collections/rankings/{offset}/{limit} [get]
