@@ -41,8 +41,6 @@ func (e *EventProcessor) PoolWorker() {
 	for eventArray := range e.eventsPool {
 		for _, event := range eventArray {
 			switch event.Identifier {
-			case "collection_register":
-				e.onEventCollectionRegister(event)
 			case "put_nft_for_sale":
 				e.onEventPutNftForSale(event)
 			case "buy_nft":
@@ -72,18 +70,6 @@ func (e *EventProcessor) OnEvents(events []data.Event) {
 
 func (e *EventProcessor) isEventAccepted(ev data.Event) bool {
 	return e.addressSet[ev.Address] && e.identifiersSet[ev.Identifier]
-}
-
-func (e *EventProcessor) onEventCollectionRegister(event data.Event) {
-	args := services.CreateNewCollectionArgs{
-		OwnerAddress:          decodeAddressFromTopic(event.Topics[0]),
-		TokenId:               decodeStringFromTopic(event.Topics[1]),
-		CollectionName:        decodeStringFromTopic(event.Topics[2]),
-		CollectionDescription: decodeStringFromTopic(event.Topics[3]),
-	}
-
-	log.Debug("onEventCollectionRegister", args.ToString())
-	services.CreateNewCollection(args)
 }
 
 func (e *EventProcessor) onEventPutNftForSale(event data.Event) {

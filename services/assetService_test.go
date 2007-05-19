@@ -1,11 +1,14 @@
 package services
 
 import (
+	"github.com/erdsea/erdsea-api/config"
 	"github.com/erdsea/erdsea-api/data"
 	"github.com/erdsea/erdsea-api/storage"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
+
+const ConfigTestFilePath = "../config/config_test.toml"
 
 func Test_ListAsset(t *testing.T) {
 	connectToDb(t)
@@ -170,4 +173,10 @@ func Test_WithdrawAsset(t *testing.T) {
 		CollectionID: asset.CollectionID,
 	}
 	require.Equal(t, expectedAsset, *asset)
+}
+
+func connectToDb(t *testing.T) {
+	cfg, err := config.LoadConfig(ConfigTestFilePath)
+	require.Nil(t, err)
+	storage.Connect(cfg.Database)
 }

@@ -31,7 +31,6 @@ type BlockchainConfig struct {
 	ListNftGasLimit            uint64
 	BuyNftGasLimit             uint64
 	WithdrawNftGasLimit        uint64
-	RegisterCollectionGasLimit uint64
 }
 
 type DatabaseConfig struct {

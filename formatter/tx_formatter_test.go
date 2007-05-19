@@ -59,19 +59,6 @@ func TestTxFormatter_NewWithdrawNftTxTemplate(t *testing.T) {
 	require.True(t, strings.EqualFold(string(tx.Data), "withdrawNft@4C4B4D45582D383565613133@02"))
 }
 
-func TestTxFormatter_NewRegisterCollectionTxTemplate(t *testing.T) {
-	formatter := NewTxFormatter(defaultConfig())
-
-	tx := formatter.NewRegisterCollectionTxTemplate(
-		"erd17s2pz8qrds6ake3qwheezgy48wzf7dr5nhdpuu2h4rr4mt5rt9ussj7xzh",
-		"EGLDBUSDF-cc97b8",
-		"This is the Name",
-		"This is the description",
-	)
-
-	require.True(t, strings.EqualFold(string(tx.Data), "registerCollection@45474C4442555344462D636339376238@5468697320697320746865204E616D65@5468697320697320746865206465736372697074696F6E"))
-}
-
 func defaultConfig() config.BlockchainConfig {
 	return config.BlockchainConfig{
 		GasPrice:            1_000_000_000,

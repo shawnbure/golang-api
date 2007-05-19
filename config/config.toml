@@ -6,7 +6,6 @@
         "erd1qqqqqqqqqqqqqpgq3k89y42xjk2z05zu5vtjkcgsvhvjhu6nt9usruf2td",
     ]
     Identifiers = [
-        "collection_register",
         "put_nft_for_sale",
         "buy_nft",
         "withdraw_nft",
@@ -21,7 +20,6 @@
     ListNftGasLimit = 20_000_000
     BuyNftGasLimit = 15_000_000
     WithdrawNftGasLimit = 15_000_000
-    RegisterCollectionGasLimit = 50_000_000
 
 [Database]
     Dialect = "postgres"

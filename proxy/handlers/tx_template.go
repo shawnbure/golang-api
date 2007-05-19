@@ -15,7 +15,6 @@ const (
 	listNftFormatEndpoint            = "/list-nft/:userAddress/:tokenId/:nonce/:price"
 	buyNftFormatEndpoint             = "/buy-nft/:userAddress/:tokenId/:nonce/:price"
 	withdrawNftFormatEndpoint        = "/withdraw-nft/:userAddress/:tokenId/:nonce"
-	registerCollectionFormatEndpoint = "/register-collection/:userAddress/:tokenId/:collectionName/:collectionDescription"
 )
 
 type txTemplateHandler struct {
@@ -31,7 +30,6 @@ func NewTxTemplateHandler(groupHandler *groupHandler, authCfg config.AuthConfig,
 		{Method: http.MethodGet, Path: listNftFormatEndpoint, HandlerFunc: handler.getListNftTemplate},
 		{Method: http.MethodGet, Path: buyNftFormatEndpoint, HandlerFunc: handler.getBuyNftTemplate},
 		{Method: http.MethodGet, Path: withdrawNftFormatEndpoint, HandlerFunc: handler.getWithdrawNftTemplate},
-		{Method: http.MethodGet, Path: registerCollectionFormatEndpoint, HandlerFunc: handler.registerCollectionTemplate},
 	}
 
 	endpointGroupHandler := EndpointGroupHandler{
@@ -93,15 +91,5 @@ func (handler *txTemplateHandler) getWithdrawNftTemplate(c *gin.Context) {
 	}
 
 	template := handler.txFormatter.NewWithdrawNftTxTemplate(userAddress, tokenId, nonce)
-	data.JsonResponse(c, http.StatusOK, template, "")
-}
-
-func (handler *txTemplateHandler) registerCollectionTemplate(c *gin.Context) {
-	userAddress := c.Param("userAddress")
-	tokenId := c.Param("tokenId")
-	collectionName := c.Param("collectionName")
-	collectionDescription := c.Param("collectionDescription")
-
-	template := handler.txFormatter.NewRegisterCollectionTxTemplate(userAddress, tokenId, collectionName, collectionDescription)
 	data.JsonResponse(c, http.StatusOK, template, "")
 }

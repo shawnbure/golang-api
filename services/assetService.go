@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+	logger "github.com/ElrondNetwork/elrond-go-logger"
 	"github.com/erdsea/erdsea-api/data"
 	"github.com/erdsea/erdsea-api/storage"
 )
@@ -15,6 +16,8 @@ type ListAssetArgs struct {
 	Price          string
 	TxHash         string
 }
+
+var log = logger.GetOrCreate("services")
 
 func (args *ListAssetArgs) ToString() string {
 	return fmt.Sprintf(""+
@@ -96,13 +99,13 @@ func (args *WithdrawAssetArgs) ToString() string {
 func ListAsset(args ListAssetArgs) {
 	ownerAccount, err := GetOrCreateAccount(args.OwnerAddress)
 	if err != nil {
-		printError(err)
+		log.Debug("Unexpected error: ", err)
 		return
 	}
 
 	collection, err := storage.GetCollectionByName(args.CollectionName)
 	if err != nil {
-		printError(err)
+		log.Debug("Unexpected error: ", err)
 		return
 	}
 
@@ -124,7 +127,7 @@ func ListAsset(args ListAssetArgs) {
 		err = storage.AddNewAsset(&asset)
 	}
 	if err != nil {
-		printError(err)
+		log.Debug("Unexpected error: ", err)
 		return
 	}
 
@@ -139,7 +142,7 @@ func ListAsset(args ListAssetArgs) {
 
 	err = storage.AddNewTransaction(&transaction)
 	if err != nil {
-		printError(err)
+		log.Debug("Unexpected error: ", err)
 		return
 	}
 }
@@ -147,19 +150,19 @@ func ListAsset(args ListAssetArgs) {
 func BuyAsset(args BuyAssetArgs) {
 	ownerAccount, err := storage.GetAccountByAddress(args.OwnerAddress)
 	if err != nil {
-		printError(err)
+		log.Debug("Unexpected error: ", err)
 		return
 	}
 
 	buyerAccount, err := GetOrCreateAccount(args.BuyerAddress)
 	if err != nil {
-		printError(err)
+		log.Debug("Unexpected error: ", err)
 		return
 	}
 
 	asset, err := storage.GetAssetByTokenIdAndNonce(args.TokenId, args.Nonce)
 	if err != nil {
-		printError(err)
+		log.Debug("Unexpected error: ", err)
 		return
 	}
 
@@ -167,7 +170,7 @@ func BuyAsset(args BuyAssetArgs) {
 	asset.OwnerId = 0
 	err = storage.UpdateAsset(asset)
 	if err != nil {
-		printError(err)
+		log.Debug("Unexpected error: ", err)
 		return
 	}
 
@@ -182,7 +185,7 @@ func BuyAsset(args BuyAssetArgs) {
 
 	err = storage.AddNewTransaction(&transaction)
 	if err != nil {
-		printError(err)
+		log.Debug("Unexpected error: ", err)
 		return
 	}
 }
@@ -190,13 +193,13 @@ func BuyAsset(args BuyAssetArgs) {
 func WithdrawAsset(args WithdrawAssetArgs) {
 	ownerAccount, err := storage.GetAccountByAddress(args.OwnerAddress)
 	if err != nil {
-		printError(err)
+		log.Debug("Unexpected error: ", err)
 		return
 	}
 
 	asset, err := storage.GetAssetByTokenIdAndNonce(args.TokenId, args.Nonce)
 	if err != nil {
-		printError(err)
+		log.Debug("Unexpected error: ", err)
 		return
 	}
 
@@ -204,7 +207,7 @@ func WithdrawAsset(args WithdrawAssetArgs) {
 	asset.OwnerId = 0
 	err = storage.UpdateAsset(asset)
 	if err != nil {
-		printError(err)
+		log.Debug("Unexpected error: ", err)
 		return
 	}
 
@@ -219,7 +222,7 @@ func WithdrawAsset(args WithdrawAssetArgs) {
 
 	err = storage.AddNewTransaction(&transaction)
 	if err != nil {
-		printError(err)
+		log.Debug("Unexpected error: ", err)
 		return
 	}
 }
