@@ -24,6 +24,14 @@ func UpdateDeposit(args DepositUpdateArgs) error {
 		args.Amount = "00"
 	}
 
+	_, err := GetOrAddAccountCacheInfo(args.Owner)
+	if err != nil {
+		_, innerErr := GetOrCreateAccount(args.Owner)
+		if innerErr != nil {
+			log.Debug("cannot create account", innerErr)
+		}
+	}
+
 	depositNominal, err := GetPriceNominal(args.Amount)
 	if err != nil {
 		log.Debug("could not get price nominal")
