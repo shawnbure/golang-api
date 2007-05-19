@@ -16,7 +16,7 @@ const (
 	availableTokensEndpoint          = "/available"
 	offersForTokenIdAndNonceEndpoint = "/:tokenId/:nonce/offers/:offset/:limit"
 	bidsForTokenIdAndNonceEndpoint   = "/:tokenId/:nonce/bids/:offset/:limit"
-	tokenMetadataRelayEndpoint       = "/token/metadata/relay"
+	tokenMetadataRelayEndpoint       = "/metadata/relay"
 )
 
 type tokensHandler struct {
