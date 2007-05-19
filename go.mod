@@ -16,6 +16,7 @@ require (
 	github.com/uptrace/uptrace-go v1.0.1
 	github.com/urfave/cli v1.22.5
 	go.opentelemetry.io/otel/metric v0.22.0
+	go.uber.org/atomic v1.7.0
 	gorm.io/driver/postgres v1.1.0
 	gorm.io/gorm v1.21.14
 )

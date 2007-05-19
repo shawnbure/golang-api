@@ -3,6 +3,7 @@ package cache
 import (
 	"context"
 	"fmt"
+	"go.uber.org/atomic"
 	"time"
 
 	"github.com/erdsea/erdsea-api/config"
@@ -10,9 +11,14 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
+type Stats struct {
+	Hits   atomic.Int64
+	Misses atomic.Int64
+}
+
 type BaseCacher struct {
 	cache *cache.Cache
-
+	stats Stats
 	ctx context.Context
 }
 
@@ -34,6 +40,7 @@ func NewBaseCacher(cfg config.CacheConfig) *BaseCacher {
 
 	return &BaseCacher{
 		cache: cacher,
+		stats: Stats{},
 		ctx:   context.Background(),
 	}
 }
@@ -48,5 +55,13 @@ func (c *BaseCacher) Set(k string, v interface{}, ttl time.Duration) error {
 }
 
 func (c *BaseCacher) Get(k string, v interface{}) error {
-	return c.cache.Get(c.ctx, k, v)
+	err := c.cache.Get(c.ctx, k, v)
+
+	if err == nil {
+		c.stats.Hits.Add(1)
+	} else {
+		c.stats.Misses.Add(1)
+	}
+
+	return err
 }

@@ -1,7 +1,10 @@
 package cache
 
 import (
+	"bytes"
+	"crypto/rand"
 	"math/big"
+	"strconv"
 	"testing"
 	"time"
 
@@ -51,4 +54,36 @@ func TestBaseCacher_SetThenGetShouldWork(t *testing.T) {
 
 	require.Nil(t, err)
 	require.Equal(t, res, defaultStruct)
+}
+
+func TestBaseCacher_MaxEntry(t *testing.T) {
+	t.Parallel()
+
+	cacher := NewBaseCacher(cfg)
+
+	MaxSize := 100_000
+	ObjSize := 4_000
+
+	objects := make([][]byte, MaxSize)
+	for i := 0; i < MaxSize; i++ {
+		objects[i] = make([]byte, ObjSize)
+		_, err := rand.Read(objects[i])
+		require.Nil(t, err)
+	}
+
+	for i := 0; i < MaxSize; i++ {
+		err := cacher.Set(strconv.Itoa(i), objects[i], 10*time.Minute)
+		require.Nil(t, err)
+	}
+
+	result := make([]byte, ObjSize)
+	for i := 0; i < MaxSize; i++ {
+		err := cacher.Get(strconv.Itoa(i), &result)
+		if err == nil {
+			require.True(t, bytes.Equal(result, objects[i]))
+		}
+	}
+
+	println(cacher.stats.Misses.Load())
+	println(cacher.stats.Hits.Load())
 }
