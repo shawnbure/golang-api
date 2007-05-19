@@ -9,6 +9,7 @@ import (
 	"math/big"
 	"strconv"
 	"strings"
+	"time"
 
 	logger "github.com/ElrondNetwork/elrond-go-logger"
 	"github.com/boltdb/bolt"
@@ -67,6 +68,9 @@ const (
 
 	ZeroAddress           = "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu"
 	NftProxyRequestFormat = "%s/address/%s/nft/%s/nonce/%d"
+
+	UrlResponseCacheKeyFormat = "Url:%s"
+	UrlResponseExpirePeriod   = 5 * time.Minute
 )
 
 var (
@@ -681,4 +685,30 @@ func ConstructOwnedTokensFromTokens(tokens []entities.Token) []dtos.OwnedTokenDt
 	}
 
 	return ownedTokens
+}
+
+func TryGetResponseCached(url string) (string, error) {
+	redis := cache.GetRedis()
+	redisCtx := cache.GetContext()
+
+	key := fmt.Sprintf(UrlResponseCacheKeyFormat, url)
+	metadataBytes, err := redis.Get(redisCtx, key).Result()
+	if err == nil {
+		return metadataBytes, nil
+	}
+
+	metadataBytes, err = HttpGetRaw(url)
+	if err != nil {
+		log.Debug("http get returned error", err)
+	}
+	if len(metadataBytes) > maxTokenLinkResponseSize {
+		metadataBytes = ""
+	}
+
+	err = redis.Set(redisCtx, key, metadataBytes, UrlResponseExpirePeriod).Err()
+	if err != nil {
+		log.Debug("could not set to redis", err)
+	}
+
+	return metadataBytes, nil
 }

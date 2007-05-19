@@ -46,26 +46,6 @@ func NewTokensHandler(groupHandler *groupHandler) {
 	groupHandler.AddEndpointGroupHandler(endpointGroupHandler)
 }
 
-// TODO: authorize the shit out of it
-func (handler *tokensHandler) relayMetadataResponse(c *gin.Context) {
-	var req metadataRelayRequest
-
-	err := c.Bind(&req)
-	if err != nil {
-		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
-		return
-	}
-
-	var metadataJson map[string]interface{}
-	err = services.HttpGet(req.Url, &metadataJson)
-	if err != nil {
-		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
-		return
-	}
-
-	dtos.JsonResponse(c, http.StatusOK, metadataJson, "")
-}
-
 // @Summary Get token by id and nonce
 // @Description Retrieves a token by tokenId and nonce
 // @Tags tokens
@@ -239,4 +219,22 @@ func (handler *tokensHandler) getBids(c *gin.Context) {
 
 	bidsDtos := services.MakeBidDtos(bids)
 	dtos.JsonResponse(c, http.StatusOK, bidsDtos, "")
+}
+
+func (handler *tokensHandler) relayMetadataResponse(c *gin.Context) {
+	var req metadataRelayRequest
+
+	err := c.Bind(&req)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	responseBytes, err := services.TryGetResponseCached(req.Url)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	dtos.JsonResponse(c, http.StatusOK, responseBytes, "")
 }
