@@ -33,7 +33,7 @@ var defaultStruct = TestStruct{
 func TestNewBaseCacher_ShouldCreate(t *testing.T) {
 	t.Parallel()
 
-	cacher := NewBaseCacher(cfg)
+	InitCacher(cfg)
 
 	require.NotNil(t, cacher)
 }
@@ -41,7 +41,7 @@ func TestNewBaseCacher_ShouldCreate(t *testing.T) {
 func TestBaseCacher_SetThenGetShouldWork(t *testing.T) {
 	t.Parallel()
 
-	cacher := NewBaseCacher(cfg)
+	InitCacher(cfg)
 
 	k := "test-key"
 
@@ -59,7 +59,7 @@ func TestBaseCacher_SetThenGetShouldWork(t *testing.T) {
 func TestBaseCacher_MaxEntry(t *testing.T) {
 	t.Parallel()
 
-	cacher := NewBaseCacher(cfg)
+	InitCacher(cfg)
 
 	MaxSize := 100_000
 	ObjSize := 4_000
