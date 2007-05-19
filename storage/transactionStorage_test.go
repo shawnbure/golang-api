@@ -6,11 +6,11 @@ import (
 	"testing"
 )
 
-func Test_AddNewTransaction(t *testing.T) {
+func Test_AddTransaction(t *testing.T) {
 	connectToTestDb()
 
 	transaction := defaultTransaction()
-	err := AddNewTransaction(&transaction)
+	err := AddTransaction(&transaction)
 	require.Nil(t, err)
 
 	var transactionRead data.Transaction
@@ -24,7 +24,7 @@ func Test_GetTransactionById(t *testing.T) {
 	connectToTestDb()
 
 	transaction := defaultTransaction()
-	err := AddNewTransaction(&transaction)
+	err := AddTransaction(&transaction)
 	require.Nil(t, err)
 
 	transactionRead, err := GetTransactionById(transaction.ID)
@@ -36,11 +36,11 @@ func Test_GetTransactionsByBuyerId(t *testing.T) {
 	connectToTestDb()
 
 	transaction := defaultTransaction()
-	err := AddNewTransaction(&transaction)
+	err := AddTransaction(&transaction)
 	require.Nil(t, err)
 
 	otherTransaction := defaultTransaction()
-	err = AddNewTransaction(&otherTransaction)
+	err = AddTransaction(&otherTransaction)
 	require.Nil(t, err)
 
 	transactionsRead, err := GetTransactionsByBuyerId(transaction.BuyerID)
@@ -56,11 +56,11 @@ func Test_GetTransactionsBySellerId(t *testing.T) {
 	connectToTestDb()
 
 	transaction := defaultTransaction()
-	err := AddNewTransaction(&transaction)
+	err := AddTransaction(&transaction)
 	require.Nil(t, err)
 
 	otherTransaction := defaultTransaction()
-	err = AddNewTransaction(&otherTransaction)
+	err = AddTransaction(&otherTransaction)
 	require.Nil(t, err)
 
 	transactionsRead, err := GetTransactionsBySellerId(transaction.SellerID)
@@ -76,11 +76,11 @@ func Test_GetTransactionsByBuyerOrSellerId(t *testing.T) {
 	connectToTestDb()
 
 	transaction := defaultTransaction()
-	err := AddNewTransaction(&transaction)
+	err := AddTransaction(&transaction)
 	require.Nil(t, err)
 
 	otherTransaction := defaultTransaction()
-	err = AddNewTransaction(&otherTransaction)
+	err = AddTransaction(&otherTransaction)
 	require.Nil(t, err)
 
 	transactionsRead, err := GetTransactionsByBuyerOrSellerId(transaction.SellerID)
@@ -98,11 +98,11 @@ func Test_GetTransactionsByAssetId(t *testing.T) {
 	connectToTestDb()
 
 	transaction := defaultTransaction()
-	err := AddNewTransaction(&transaction)
+	err := AddTransaction(&transaction)
 	require.Nil(t, err)
 
 	otherTransaction := defaultTransaction()
-	err = AddNewTransaction(&otherTransaction)
+	err = AddTransaction(&otherTransaction)
 	require.Nil(t, err)
 
 	transactionsRead, err := GetTransactionsByAssetId(transaction.AssetID)
@@ -119,7 +119,7 @@ func Test_GetTransactionsByHash(t *testing.T) {
 
 	transaction := defaultTransaction()
 	transaction.Hash = "my_unique_hash"
-	err := AddNewTransaction(&transaction)
+	err := AddTransaction(&transaction)
 	require.Nil(t, err)
 
 	transactionRead, err := GetTransactionByHash(transaction.Hash)
@@ -134,7 +134,7 @@ func Test_GetTransactionWithMinPriceByCollectionId(t *testing.T) {
 	transaction.PriceNominal = float64(1)
 	transaction.Type = "Buy"
 	transaction.Hash = "my_unique_hash"
-	err := AddNewTransaction(&transaction)
+	err := AddTransaction(&transaction)
 	require.Nil(t, err)
 
 	minPrice, err := GetMinBuyPriceForTransactionsWithCollectionId(99)
@@ -148,7 +148,7 @@ func Test_GetSumBuyPriceForTransactionsWithCollectionId(t *testing.T) {
 	transaction := defaultTransaction()
 	transaction.Type = "Buy"
 	transaction.Hash = "my_unique_hash"
-	err := AddNewTransaction(&transaction)
+	err := AddTransaction(&transaction)
 	require.Nil(t, err)
 
 	sumPrice, err := GetSumBuyPriceForTransactionsWithCollectionId(1)

@@ -62,6 +62,9 @@ func NewWebServer(cfg *config.GeneralConfig) (*webServer, error) {
 	handlers.NewTransactionsHandler(groupHandler, cfg.Auth)
 	handlers.NewTxTemplateHandler(groupHandler, cfg.Auth, cfg.Blockchain)
 	handlers.NewPriceHandler(groupHandler, cfg.Auth)
+	handlers.NewAccountsHandler(groupHandler, cfg.Auth)
+	handlers.NewSearchHandler(groupHandler, cfg.Auth)
+	handlers.NewImageHandler(groupHandler, cfg.Auth)
 
 	url := ginSwagger.URL("http://localhost:5000/swagger/doc.json")
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))

@@ -19,7 +19,7 @@ func Test_ListAsset(t *testing.T) {
 		Description: "",
 		CreatorID:   0,
 	}
-	_ = storage.AddNewCollection(&collection)
+	_ = storage.AddCollection(&collection)
 
 	args := ListAssetArgs{
 		OwnerAddress: "ownerAddress",
@@ -64,7 +64,7 @@ func Test_SellAsset(t *testing.T) {
 		Description: "",
 		CreatorID:   0,
 	}
-	_ = storage.AddNewCollection(&collection)
+	_ = storage.AddCollection(&collection)
 
 	listArgs := ListAssetArgs{
 		OwnerAddress: "ownerAddress",
@@ -124,7 +124,7 @@ func Test_WithdrawAsset(t *testing.T) {
 		Description: "",
 		CreatorID:   0,
 	}
-	_ = storage.AddNewCollection(&collection)
+	_ = storage.AddCollection(&collection)
 
 	listArgs := ListAssetArgs{
 		OwnerAddress: "ownerAddress",

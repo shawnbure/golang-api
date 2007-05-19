@@ -6,11 +6,11 @@ import (
 	"testing"
 )
 
-func Test_AddNewCollection(t *testing.T) {
+func Test_AddCollection(t *testing.T) {
 	connectToTestDb()
 
 	collection := defaultCollection()
-	err := AddNewCollection(&collection)
+	err := AddCollection(&collection)
 	require.Nil(t, err)
 
 	var collectionRead data.Collection
@@ -24,7 +24,7 @@ func Test_GetCollectionById(t *testing.T) {
 	connectToTestDb()
 
 	collection := defaultCollection()
-	err := AddNewCollection(&collection)
+	err := AddCollection(&collection)
 	require.Nil(t, err)
 
 	collectionRead, err := GetCollectionById(collection.ID)
@@ -36,11 +36,11 @@ func Test_GetCollectionsCreatedById(t *testing.T) {
 	connectToTestDb()
 
 	collection := defaultCollection()
-	err := AddNewCollection(&collection)
+	err := AddCollection(&collection)
 	require.Nil(t, err)
 
 	otherCollection := defaultCollection()
-	err = AddNewCollection(&otherCollection)
+	err = AddCollection(&otherCollection)
 	require.Nil(t, err)
 
 	collectionsRead, err := GetCollectionsCreatedBy(collection.CreatorID)
@@ -57,12 +57,27 @@ func Test_GetCollectionByName(t *testing.T) {
 
 	collection := defaultCollection()
 	collection.Name = "insane_unique_name"
-	err := AddNewCollection(&collection)
+	err := AddCollection(&collection)
 	require.Nil(t, err)
 
 	retrievedCollection, err := GetCollectionByName(collection.Name)
 	require.Nil(t, err)
 	require.Equal(t, retrievedCollection.Name, collection.Name)
+}
+
+func Test_GetCollectionsWithNameAlikeWithLimit(t *testing.T) {
+	connectToTestDb()
+
+	collection := defaultCollection()
+	_ = AddNewCollection(&collection)
+	collection.ID = 0
+	_ = AddNewCollection(&collection)
+
+	retrievedCollection, err := GetCollectionsWithNameAlikeWithLimit("default", 5)
+	require.Nil(t, err)
+	require.GreaterOrEqual(t, len(retrievedCollection), 2)
+	require.Equal(t, retrievedCollection[0].Name, "default")
+	require.Equal(t, retrievedCollection[1].Name, "default")
 }
 
 func defaultCollection() data.Collection {

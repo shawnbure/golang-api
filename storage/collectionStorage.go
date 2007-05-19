@@ -5,7 +5,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func AddNewCollection(collection *data.Collection) error {
+func AddCollection(collection *data.Collection) error {
 	database, err := GetDBOrError()
 	if err != nil {
 		return err
@@ -104,6 +104,22 @@ func GetCollectionsWithOffsetLimit(offset int, limit int) ([]data.Collection, er
 	}
 
 	txRead := database.Offset(offset).Limit(limit).Find(&collections)
+	if txRead.Error != nil {
+		return nil, txRead.Error
+	}
+
+	return collections, nil
+}
+
+func GetCollectionsWithNameAlikeWithLimit(name string, limit int) ([]data.Collection, error) {
+	var collections []data.Collection
+
+	database, err := GetDBOrError()
+	if err != nil {
+		return nil, err
+	}
+
+	txRead := database.Limit(limit).Where("name LIKE ?", name).Find(&collections)
 	if txRead.Error != nil {
 		return nil, txRead.Error
 	}

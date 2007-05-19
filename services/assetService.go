@@ -58,7 +58,7 @@ func ListAsset(args ListAssetArgs) {
 		asset.ID = existingAsset.ID
 		innerErr = storage.UpdateAsset(&asset)
 	} else {
-		innerErr = storage.AddNewAsset(&asset)
+		innerErr = storage.AddAsset(&asset)
 	}
 
 	if innerErr != nil {
@@ -77,7 +77,7 @@ func ListAsset(args ListAssetArgs) {
 		CollectionID: collection.ID,
 	}
 
-	addNewTransaction(&transaction)
+	AddTransaction(&transaction)
 }
 
 func BuyAsset(args BuyAssetArgs) {
@@ -126,7 +126,7 @@ func BuyAsset(args BuyAssetArgs) {
 		CollectionID: asset.CollectionID,
 	}
 
-	addNewTransaction(&transaction)
+	AddTransaction(&transaction)
 }
 
 func WithdrawAsset(args WithdrawAssetArgs) {
@@ -169,7 +169,7 @@ func WithdrawAsset(args WithdrawAssetArgs) {
 		CollectionID: asset.CollectionID,
 	}
 
-	addNewTransaction(&transaction)
+	AddTransaction(&transaction)
 }
 
 func GetPriceNominal(priceHex string) (float64, error) {
@@ -204,8 +204,8 @@ func GetRoyaltiesPercentNominal(percent uint64) float64 {
 	return float64(percent) / minPercentRoyaltiesUnit
 }
 
-func addNewTransaction(tx *data.Transaction) {
-	err := storage.AddNewTransaction(tx)
+func AddTransaction(tx *data.Transaction) {
+	err := storage.AddTransaction(tx)
 	if err != nil {
 		log.Debug("could not create new transaction", "err", err)
 		return

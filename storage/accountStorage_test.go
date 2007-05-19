@@ -6,11 +6,11 @@ import (
 	"testing"
 )
 
-func Test_AddNewAccount(t *testing.T) {
+func Test_AddAccount(t *testing.T) {
 	connectToTestDb()
 
 	account := defaultAccount()
-	err := AddNewAccount(&account)
+	err := AddAccount(&account)
 	require.Nil(t, err)
 
 	var accountRead data.Account
@@ -24,7 +24,7 @@ func Test_GetAccountById(t *testing.T) {
 	connectToTestDb()
 
 	account := defaultAccount()
-	err := AddNewAccount(&account)
+	err := AddAccount(&account)
 	require.Nil(t, err)
 
 	accountRead, err := GetAccountById(account.ID)
@@ -37,7 +37,7 @@ func Test_GetAccountByAddress(t *testing.T) {
 
 	account := defaultAccount()
 	account.Address = "unique_erd_addr"
-	err := AddNewAccount(&account)
+	err := AddAccount(&account)
 	require.Nil(t, err)
 
 	retrievedAccount, err := GetAccountByAddress(account.Address)
@@ -45,8 +45,24 @@ func Test_GetAccountByAddress(t *testing.T) {
 	require.GreaterOrEqual(t, retrievedAccount.Address, account.Address)
 }
 
+func Test_GetAccountsWithNameAlikeWithLimit(t *testing.T) {
+	connectToTestDb()
+
+	account := defaultAccount()
+	_ = AddNewAccount(&account)
+	account.ID = 0
+	_ = AddNewAccount(&account)
+
+	retrievedAccounts, err := GetAccountsWithNameAlikeWithLimit("default", 5)
+	require.Nil(t, err)
+	require.GreaterOrEqual(t, len(retrievedAccounts), 2)
+	require.Equal(t, retrievedAccounts[0].Name, "default")
+	require.Equal(t, retrievedAccounts[1].Name, "default")
+}
+
 func defaultAccount() data.Account {
 	return data.Account{
 		Address: "erd123",
+		Name:    "default",
 	}
 }

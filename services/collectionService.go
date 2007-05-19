@@ -1,6 +1,7 @@
 package services
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -11,14 +12,16 @@ import (
 )
 
 const (
-	TokenIdMaxLen            = 15
-	MaxNameLen               = 20
-	MaxLinkLen               = 100
-	MaxDescLen               = 1000
-	RegisteredNFTsBaseFormat = "%s/address/%s/registered-nfts"
-	HttpResponseExpirePeriod = 10 * time.Minute
-	StatisticsCacheKeyFormat = "StatisticsForId%d"
-	StatisticsExpirePeriod   = 15 * time.Minute
+	TokenIdMaxLen                  = 15
+	MaxNameLen                     = 20
+	MaxLinkLen                     = 100
+	MaxDescLen                     = 1000
+	RegisteredNFTsBaseFormat       = "%s/address/%s/registered-nfts"
+	HttpResponseExpirePeriod       = 10 * time.Minute
+	StatisticsCacheKeyFormat       = "StatisticsForId:%d"
+	StatisticsExpirePeriod         = 15 * time.Minute
+	CollectionSearchCacheKeyFormat = "CollectionSearch:%s"
+	CollectionSearchExpirePeriod   = 20 * time.Minute
 )
 
 type CreateCollectionRequest struct {
@@ -91,7 +94,7 @@ func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) 
 		CreatedAt:     uint64(time.Now().Unix()),
 	}
 
-	return storage.AddNewCollection(collection)
+	return storage.AddCollection(collection)
 }
 
 func GetStatisticsForCollection(collectionId uint64) (*CollectionStatistics, error) {
@@ -139,6 +142,34 @@ func GetStatisticsForCollection(collectionId uint64) (*CollectionStatistics, err
 	return &stats, nil
 }
 
+func GetCollectionsWithNameAlike(name string, limit int) ([]data.Collection, error) {
+	var byteArray []byte
+	var collectionArray []data.Collection
+
+	cacheKey := fmt.Sprintf(CollectionSearchCacheKeyFormat, name)
+	err := cache.GetCacher().Get(cacheKey, &byteArray)
+	if err == nil {
+		err = json.Unmarshal(byteArray, &collectionArray)
+		return collectionArray, err
+	}
+
+	searchName := "%" + name + "%"
+	collectionArray, err = storage.GetCollectionsWithNameAlikeWithLimit(searchName, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	byteArray, err = json.Marshal(collectionArray)
+	if err == nil {
+		err = cache.GetCacher().Set(cacheKey, byteArray, CollectionSearchExpirePeriod)
+		if err != nil {
+			log.Debug("could not set cache", "err", err)
+		}
+	}
+
+	return collectionArray, nil
+}
+
 func contains(arr []string, str string) bool {
 	for _, a := range arr {
 		if a == str {
@@ -176,7 +207,7 @@ func checkValidInput(request *CreateCollectionRequest) error {
 	}
 
 	if len(request.TokenId) > TokenIdMaxLen {
-		return errors.New("empty token id")
+		return errors.New("token id too long")
 	}
 
 	if len(request.Name) == 0 {
