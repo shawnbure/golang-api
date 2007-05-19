@@ -2,9 +2,6 @@ package cache
 
 import (
 	"context"
-	"path"
-	"path/filepath"
-	"runtime"
 	"sync"
 	"time"
 
@@ -34,15 +31,9 @@ var (
 	closeOnce sync.Once
 	cacher    *Cacher
 
-	BoltDbPath = RootDir() + "/bolt.db"
+	BoltDbPath = "/tmp/bolt.db"
 	log        = logger.GetOrCreate("cacheLog")
 )
-
-func RootDir() string {
-	_, b, _, _ := runtime.Caller(0)
-	d := path.Join(path.Dir(b))
-	return filepath.Dir(d)
-}
 
 func InitCacher(cfg config.CacheConfig) {
 	initOnce.Do(func() {
