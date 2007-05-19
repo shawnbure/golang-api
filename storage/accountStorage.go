@@ -118,7 +118,7 @@ func GetAccountsWithNameAlikeWithLimit(name string, limit int) ([]entities.Accou
 		return nil, err
 	}
 
-	txRead := database.Limit(limit).Where("name LIKE ?", name).Find(&accounts)
+	txRead := database.Limit(limit).Where("name ILIKE ?", name).Find(&accounts)
 	if txRead.Error != nil {
 		return nil, txRead.Error
 	}

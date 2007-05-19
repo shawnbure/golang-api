@@ -194,7 +194,7 @@ func GetCollectionsWithNameAlikeWithLimit(name string, limit int) ([]entities.Co
 		return nil, err
 	}
 
-	txRead := database.Limit(limit).Where("name LIKE ?", name).Find(&collections)
+	txRead := database.Limit(limit).Where("name ILIKE ?", name).Find(&collections)
 	if txRead.Error != nil {
 		return nil, txRead.Error
 	}
