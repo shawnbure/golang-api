@@ -22,6 +22,7 @@ const (
 	placeBidEventName      = "place_bid"
 	endAuctionEventName    = "end_bid"
 	updateDepositEventName = "update_deposit"
+	cancelOfferEventName   = "cancel_offer"
 
 	saveEventsTTL = 5 * time.Minute
 )
@@ -89,6 +90,8 @@ func (e *EventProcessor) PoolWorker() {
 				e.onEventEndAuction(event)
 			case updateDepositEventName:
 				e.onEventUpdateDeposit(event)
+			case cancelOfferEventName:
+				e.onEventCancelOffer(event)
 			}
 		}
 	}
@@ -250,6 +253,29 @@ func (e *EventProcessor) onEventMakeOffer(event entities.Event) {
 	}
 
 	_, _ = services.MakeOffer(args)
+}
+
+func (e *EventProcessor) onEventCancelOffer(event entities.Event) {
+	if len(event.Topics) != 7 {
+		log.Error("received corrupted cancelOffer event", "err", "incorrect topics length")
+		return
+	}
+
+	args := services.CancelOfferArgs{
+		OfferorAddress: decodeAddressFromTopic(event.Topics[1]),
+		TokenId:        decodeStringFromTopic(event.Topics[2]),
+		Nonce:          decodeU64FromTopic(event.Topics[3]),
+		Amount:         decodeBigUintFromTopic(event.Topics[4]),
+		Timestamp:      decodeU64FromTopic(event.Topics[5]),
+		TxHash:         decodeTxHashFromTopic(event.Topics[6]),
+	}
+
+	eventJson, err := json.Marshal(args)
+	if err == nil {
+		log.Debug("onEventCancelOffer", string(eventJson))
+	}
+
+	services.CancelOffer(args)
 }
 
 func (e *EventProcessor) onEventAcceptOffer(event entities.Event) {

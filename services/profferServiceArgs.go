@@ -9,6 +9,15 @@ type MakeOfferArgs struct {
 	TxHash         string
 }
 
+type CancelOfferArgs struct {
+	OfferorAddress string
+	TokenId        string
+	Nonce          uint64
+	Amount         string
+	Timestamp      uint64
+	TxHash         string
+}
+
 type AcceptOfferArgs struct {
 	OwnerAddress   string
 	TokenId        string

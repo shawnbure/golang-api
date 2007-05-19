@@ -103,3 +103,7 @@ func PlaceBid(args PlaceBidArgs) {
 func EndAuction(args EndAuctionArgs) {
 
 }
+
+func CancelOffer(args CancelOfferArgs) {
+
+}
