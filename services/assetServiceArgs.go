@@ -9,7 +9,6 @@ type ListAssetArgs struct {
 	LastLink         string
 	Hash             string
 	Attributes       string
-	Uri              string
 	Price            string
 	RoyaltiesPercent uint64
 	Timestamp        uint64
