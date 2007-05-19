@@ -32,7 +32,7 @@ type AvailableToken struct {
 		Nonce     uint64 `json:"nonce"`
 		Name      string `json:"name"`
 		Available bool   `json:"available"`
-	}
+	} `json:"token"`
 }
 
 type AvailableTokensResponse struct {
@@ -436,6 +436,7 @@ func GetOrAddTokenCacheInfo(tokenId string, nonce uint64) (*TokenCacheInfo, erro
 
 func GetAvailableTokens(args AvailableTokensRequest) AvailableTokensResponse {
 	var response AvailableTokensResponse
+	response.Tokens = make(map[string]AvailableToken)
 
 	for _, token := range args.Tokens {
 		parts := strings.Split(token, "-")
