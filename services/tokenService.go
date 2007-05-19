@@ -361,10 +361,6 @@ func StartAuction(args StartAuctionArgs, blockchainProxy string, marketplaceAddr
 }
 
 func EndAuction(args EndAuctionArgs) {
-	if args.Winner == ZeroAddress {
-		return
-	}
-
 	amountNominal, err := GetPriceNominal(args.Amount)
 	if err != nil {
 		log.Debug("could not parse price", "err", err)

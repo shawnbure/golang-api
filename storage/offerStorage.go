@@ -69,7 +69,7 @@ func GetOffersForTokenWithOffsetLimit(tokenId uint64, offset int, limit int) ([]
 		return nil, err
 	}
 
-	txRead := database.Offset(offset).Limit(limit).Find(&offer, "token_id = ?", tokenId)
+	txRead := database.Offset(offset).Limit(limit).Order("id desc").Find(&offer, "token_id = ?", tokenId)
 	if txRead.Error != nil {
 		return nil, txRead.Error
 	}
