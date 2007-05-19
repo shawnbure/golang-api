@@ -9,6 +9,7 @@ type Asset struct {
 	Link             string
 	CreatedAt        uint64
 	Listed           bool
+	LinkResponse	 string
 
 	OwnerId      uint64
 	CollectionID uint64

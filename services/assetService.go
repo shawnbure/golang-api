@@ -3,6 +3,7 @@ package services
 import (
 	"errors"
 	"math/big"
+	"strconv"
 
 	logger "github.com/ElrondNetwork/elrond-go-logger"
 	"github.com/erdsea/erdsea-api/data"
@@ -16,6 +17,8 @@ const (
 	minPercentUnit          = 1000
 	minPercentRoyaltiesUnit = 100
 	minPriceDecimals        = 15
+
+	maxAssetLinkResponseSize = 1024
 )
 
 var baseExp = big.NewInt(10)
@@ -49,6 +52,7 @@ func ListAsset(args ListAssetArgs) {
 		Listed:           true,
 		OwnerId:          ownerAccount.ID,
 		CollectionID:     collectionId,
+		LinkResponse:     "",
 	}
 
 	existingAsset, err := storage.GetAssetByTokenIdAndNonce(args.TokenId, args.Nonce)
@@ -56,8 +60,21 @@ func ListAsset(args ListAssetArgs) {
 	var innerErr error
 	if err == nil {
 		asset.ID = existingAsset.ID
+		asset.LinkResponse = existingAsset.LinkResponse
 		innerErr = storage.UpdateAsset(&asset)
 	} else {
+		assetLinkWithNonce := GetAssetLinkWithNonce(&asset)
+		response, reqErr := HttpGetRaw(assetLinkWithNonce)
+		if reqErr != nil {
+			log.Debug("could not http get asset link response", "link", asset.Link)
+			response = ""
+		}
+		if len(response) > maxAssetLinkResponseSize {
+			log.Debug("response too long for asset link request")
+			response = ""
+		}
+
+		asset.LinkResponse = response
 		innerErr = storage.AddAsset(&asset)
 	}
 
@@ -202,6 +219,10 @@ func GetPriceDenominated(price float64) *big.Int {
 
 func GetRoyaltiesPercentNominal(percent uint64) float64 {
 	return float64(percent) / minPercentRoyaltiesUnit
+}
+
+func GetAssetLinkWithNonce(asset *data.Asset) string {
+	return asset.Link + "/" + strconv.FormatUint(asset.Nonce, 10)
 }
 
 func AddTransaction(tx *data.Transaction) {

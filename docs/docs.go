@@ -1558,6 +1558,9 @@ var doc = `{
                 "link": {
                     "type": "string"
                 },
+                "linkResponse": {
+                    "type": "string"
+                },
                 "listed": {
                     "type": "boolean"
                 },

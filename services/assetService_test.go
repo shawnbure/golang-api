@@ -201,6 +201,20 @@ func Test_GetPriceDenominated(T *testing.T) {
 	require.Equal(T, GetPriceDenominated(price).Text(10), "0")
 }
 
+func Test_GetAssetLinkResponse(t *testing.T) {
+	asset := data.Asset{
+		Nonce: 1,
+		Link: "https://wow-prod-nftribe.s3.eu-west-2.amazonaws.com/t",
+	}
+
+	assetLinkWithNonce := GetAssetLinkWithNonce(&asset)
+	response, err := HttpGetRaw(assetLinkWithNonce)
+	require.Nil(t, err)
+
+	responseLen := len(response)
+	require.GreaterOrEqual(t, responseLen, 0)
+}
+
 func connectToDb() {
 	storage.Connect(config.DatabaseConfig{
 		Dialect:       "postgres",
