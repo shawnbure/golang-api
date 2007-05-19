@@ -60,3 +60,19 @@ func DeleteOffersByTokenIdAccountIdAndAmount(tokenDbId uint64, accountDbId uint6
 
 	return nil
 }
+
+func GetProffersForTokenWithOffsetLimit(tokenId uint64, offset int, limit int) ([]entities.Proffer, error) {
+	var proffers []entities.Proffer
+
+	database, err := GetDBOrError()
+	if err != nil {
+		return nil, err
+	}
+
+	txRead := database.Offset(offset).Limit(limit).Find(&proffers, "token_id = ?", tokenId)
+	if txRead.Error != nil {
+		return nil, txRead.Error
+	}
+
+	return proffers, nil
+}

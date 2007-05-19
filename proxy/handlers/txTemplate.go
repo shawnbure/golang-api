@@ -72,6 +72,7 @@ func NewTxTemplateHandler(groupHandler *groupHandler, blockchainConfig config.Bl
 // @Param price path float64 true "price"
 // @Success 200 {object} formatter.Transaction
 // @Failure 400 {object} dtos.ApiResponse
+// @Failure 500 {object} dtos.ApiResponse
 // @Router /tx-template/list-nft/{userAddress}/{tokenId}/{nonce}/{price} [get]
 func (handler *txTemplateHandler) getListNftTemplate(c *gin.Context) {
 	userAddress := c.Param("userAddress")
@@ -93,7 +94,7 @@ func (handler *txTemplateHandler) getListNftTemplate(c *gin.Context) {
 
 	template, err := handler.txFormatter.NewListNftTxTemplate(userAddress, tokenId, nonce, price)
 	if err != nil {
-		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
 	}
 
@@ -208,6 +209,7 @@ func (handler *txTemplateHandler) getMakeOfferTemplate(c *gin.Context) {
 // @Param amount path float64 true "amount"
 // @Success 200 {object} formatter.Transaction
 // @Failure 400 {object} dtos.ApiResponse
+// @Failure 500 {object} dtos.ApiResponse
 // @Router /tx-template/accept-offer/{userAddress}/{tokenId}/{nonce}/{offerorAddress}/{amount} [get]
 func (handler *txTemplateHandler) getAcceptOfferTemplate(c *gin.Context) {
 	userAddress := c.Param("userAddress")
@@ -230,7 +232,7 @@ func (handler *txTemplateHandler) getAcceptOfferTemplate(c *gin.Context) {
 
 	template, err := handler.txFormatter.AcceptOfferTxTemplate(userAddress, tokenId, nonce, offerorAddress, amount)
 	if err != nil {
-		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
 	}
 
@@ -284,6 +286,7 @@ func (handler *txTemplateHandler) getCancelOfferTemplate(c *gin.Context) {
 // @Param deadline path int true "nonce"
 // @Success 200 {object} formatter.Transaction
 // @Failure 400 {object} dtos.ApiResponse
+// @Failure 500 {object} dtos.ApiResponse
 // @Router /tx-template/start-auction/{userAddress}/{tokenId}/{nonce}/{minBid}/{startTime}/{deadline} [get]
 func (handler *txTemplateHandler) getStartAuctionTemplate(c *gin.Context) {
 	userAddress := c.Param("userAddress")
@@ -319,7 +322,7 @@ func (handler *txTemplateHandler) getStartAuctionTemplate(c *gin.Context) {
 
 	template, err := handler.txFormatter.StartAuctionTxTemplate(userAddress, tokenId, nonce, minBid, startTime, deadline)
 	if err != nil {
-		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
 	}
 
