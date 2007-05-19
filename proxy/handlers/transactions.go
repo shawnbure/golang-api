@@ -9,10 +9,10 @@ import (
 )
 
 const (
-	baseTransactionsEndpoint = "/transactions"
-	getTransactionsEndpoint = "/:offset/:limit"
-	getTransactionsByAssetEndpoint  = "/by-asset/:tokenId/:nonce/:offset/:limit"
-	getTransactionsByAddressEndpoint  = "/by-address/:address/:offset/:limit"
+	baseTransactionsEndpoint         = "/transactions"
+	getTransactionsEndpoint          = "/:offset/:limit"
+	getTransactionsByAssetEndpoint   = "/by-asset/:tokenId/:nonce/:offset/:limit"
+	getTransactionsByAddressEndpoint = "/by-address/:address/:offset/:limit"
 )
 
 type transactionsHandler struct {

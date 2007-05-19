@@ -9,9 +9,9 @@ import (
 )
 
 const (
-	baseAssetsEndpoint = "/assets"
-	getAssetByTokenIdAndNonceEndpoint  = "/by-token-id-nonce/:tokenId/:nonce"
-	getAssetsByCollectionEndpoint = "/by-collection/:collectionName/:offset/:limit"
+	baseAssetsEndpoint                = "/assets"
+	getAssetByTokenIdAndNonceEndpoint = "/by-token-id-nonce/:tokenId/:nonce"
+	getAssetsByCollectionEndpoint     = "/by-collection/:collectionName/:offset/:limit"
 )
 
 type assetsHandler struct {
