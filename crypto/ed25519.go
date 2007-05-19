@@ -1,11 +1,15 @@
 package crypto
 
 import (
+	libed25519 "crypto/ed25519"
 	"crypto/rand"
 	"encoding/hex"
+	"fmt"
 
-	libed25519 "crypto/ed25519"
+	"github.com/ElrondNetwork/elrond-go/hashing/keccak"
 )
+
+const ElrondSignPrefix = "\x17Elrond Signed Message:\n"
 
 func generateSeed() string {
 	_, sk, _ := libed25519.GenerateKey(rand.Reader)
@@ -28,6 +32,11 @@ func VerifySignature(publicKey, message, signature []byte) error {
 	}
 
 	return nil
+}
+
+func ComputeElrondSignableMessage(message []byte) []byte {
+	payloadForHash := fmt.Sprintf("%s%v%s", ElrondSignPrefix, len(message), message)
+	return keccak.Keccak{}.Compute(payloadForHash)
 }
 
 func SignPayload(privKey, message []byte) ([]byte, error) {
