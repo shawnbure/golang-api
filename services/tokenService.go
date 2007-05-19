@@ -723,12 +723,12 @@ func TryGetResponseCached(url string) (string, error) {
 }
 
 func TryRefreshCollectionId(token *entities.Token) {
-	collection, err := storage.GetCollectionByTokenId(token.TokenID)
+	collection, err := collstats.GetOrAddCollectionCacheInfo(token.TokenID)
 	if err != nil {
 		return
 	}
 
-	token.CollectionID = collection.ID
+	token.CollectionID = collection.CollectionId
 	err = storage.UpdateToken(token)
 	if err != nil {
 		log.Debug("could not update token", "err", err.Error())
