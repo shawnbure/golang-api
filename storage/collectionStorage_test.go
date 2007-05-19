@@ -1,7 +1,9 @@
 package storage
 
 import (
+	"strconv"
 	"testing"
+	"time"
 
 	"github.com/erdsea/erdsea-api/data/entities"
 	"github.com/stretchr/testify/require"
@@ -89,6 +91,24 @@ func Test_GetCollectionsSorted(t *testing.T) {
 	colls, err := GetCollectionsWithOffsetLimit(0, 2)
 	require.Nil(t, err)
 	require.True(t, colls[0].Priority > colls[1].Priority)
+}
+
+func Test_CollectionWithNameILike(t *testing.T) {
+	connectToTestDb()
+
+	timeNowUnix := strconv.FormatInt(time.Now().Unix(), 10)
+	name := "name" + timeNowUnix
+	collection := entities.Collection{
+		Name: name,
+	}
+	err := AddCollection(&collection)
+	require.Nil(t, err)
+
+	_, err = GetCollectionWithNameILike("Name" + timeNowUnix)
+	require.Nil(t, err)
+
+	_, err = GetCollectionByName("Name" + timeNowUnix)
+	require.NotNil(t, err)
 }
 
 func defaultCollection() entities.Collection {

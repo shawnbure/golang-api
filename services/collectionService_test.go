@@ -276,3 +276,8 @@ func Test_GetMintInfoFromContract(t *testing.T) {
 	require.True(t, info.MaxSupply > 0)
 	require.True(t, info.TotalSold > 0)
 }
+
+func Test_StandardizeName(t *testing.T) {
+	name1 := "\n  \t    Name       1  \t   \n   \t"
+	require.Equal(t, "Name 1", standardizeName(name1))
+}

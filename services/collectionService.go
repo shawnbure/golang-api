@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/boltdb/bolt"
@@ -79,7 +80,8 @@ func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) 
 		return nil, errors.New("token not owner by user")
 	}
 
-	_, err = storage.GetCollectionByName(request.Name)
+	standardizedName := standardizeName(request.Name)
+	_, err = storage.GetCollectionWithNameILike(standardizedName)
 	if err == nil {
 		return nil, errors.New("collection name already taken")
 	}
@@ -96,7 +98,7 @@ func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) 
 
 	collection := &entities.Collection{
 		ID:            0,
-		Name:          request.Name,
+		Name:          standardizedName,
 		TokenID:       request.TokenId,
 		Description:   request.Description,
 		Website:       request.Website,
@@ -372,4 +374,8 @@ func checkValidInputOnUpdate(request *UpdateCollectionRequest) error {
 	}
 
 	return nil
+}
+
+func standardizeName(s string) string {
+	return strings.Join(strings.Fields(strings.TrimSpace(s)), " ")
 }

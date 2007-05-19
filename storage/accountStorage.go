@@ -91,7 +91,7 @@ func GetAccountById(id uint64) (*entities.Account, error) {
 	return &account, nil
 }
 
-func GetAccountByAddress(name string) (*entities.Account, error) {
+func GetAccountByAddress(address string) (*entities.Account, error) {
 	var account entities.Account
 
 	database, err := GetDBOrError()
@@ -99,7 +99,7 @@ func GetAccountByAddress(name string) (*entities.Account, error) {
 		return nil, err
 	}
 
-	txRead := database.Find(&account, "address = ?", name)
+	txRead := database.Find(&account, "address = ?", address)
 	if txRead.Error != nil {
 		return nil, txRead.Error
 	}

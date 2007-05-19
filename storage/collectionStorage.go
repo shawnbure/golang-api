@@ -126,6 +126,25 @@ func GetCollectionByName(name string) (*entities.Collection, error) {
 	return &collection, nil
 }
 
+func GetCollectionWithNameILike(name string) (*entities.Collection, error) {
+	var collection entities.Collection
+
+	database, err := GetDBOrError()
+	if err != nil {
+		return nil, err
+	}
+
+	txRead := database.Find(&collection, "name ILIKE ?", name)
+	if txRead.Error != nil {
+		return nil, txRead.Error
+	}
+	if txRead.RowsAffected == 0 {
+		return nil, gorm.ErrRecordNotFound
+	}
+
+	return &collection, nil
+}
+
 func GetCollectionByTokenId(tokenId string) (*entities.Collection, error) {
 	var collection entities.Collection
 
