@@ -4,34 +4,48 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/cloudinary/cloudinary-go"
+	logger "github.com/ElrondNetwork/elrond-go-logger"
 	"github.com/erdsea/erdsea-api/config"
 )
 
 var (
-	once   sync.Once
-	cloudy *cloudinary.Cloudinary
+	once        sync.Once
+	imgUploader ImageUploader
+
+	log = logger.GetOrCreate("cdn")
 )
 
-func MakeCloudyCDN(cfg config.CDNConfig) {
+const (
+	local     = "local"
+	cloudyCDN = "cloudy"
+)
+
+func InitUploader(cfg config.CDNConfig) {
 	once.Do(func() {
-		newCloudy, err := cloudinary.NewFromParams(
-			cfg.Name,
-			cfg.ApiKey,
-			cfg.ApiSecret,
-		)
+		upl, err := makeUploader(cfg)
 		if err != nil {
 			panic(err)
 		}
 
-		cloudy = newCloudy
+		imgUploader = upl
 	})
 }
 
-func GetCloudyCDNOrErr() (*cloudinary.Cloudinary, error) {
-	if cloudy == nil {
-		return nil, errors.New("cloudy cdn is not initialized")
+func GetImageUploaderOrErr() (ImageUploader, error) {
+	if imgUploader == nil {
+		return nil, errors.New("no uploader initialized")
 	}
 
-	return cloudy, nil
+	return imgUploader, nil
+}
+
+func makeUploader(cfg config.CDNConfig) (ImageUploader, error) {
+	switch cfg.Selector {
+	case local:
+		return NewLocalUploader(cfg), nil
+	case cloudyCDN:
+		return NewCloudyUploader(cfg)
+	default:
+		return nil, errors.New("unknown selector provided")
+	}
 }

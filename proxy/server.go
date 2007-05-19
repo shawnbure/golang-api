@@ -90,6 +90,7 @@ func NewWebServer(cfg *config.GeneralConfig) (*webServer, error) {
 	handlers.NewSwaggerHandler(groupHandler, cfg.Swagger)
 	handlers.NewDepositsHandler(groupHandler, cfg.Blockchain)
 	handlers.NewRoyaltiesHandler(groupHandler, cfg.Blockchain)
+	handlers.NewImageHandler(groupHandler)
 
 	groupHandler.RegisterEndpoints(router)
 

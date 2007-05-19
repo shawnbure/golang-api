@@ -20,6 +20,7 @@ const (
 	accountCollectionsEndpoint = "/:walletAddress/collections/:offset/:limit"
 	accountProfileEndpoint     = "/:walletAddress/profile"
 	accountCoverEndpoint       = "/:walletAddress/cover"
+	imageEndpoint              = "/image/:filename"
 )
 
 type accountsHandler struct {
@@ -63,7 +64,7 @@ func NewAccountsHandler(groupHandler *groupHandler, authCfg config.AuthConfig) {
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 404 {object} dtos.ApiResponse
 // @Router /accounts/{walletAddress} [get]
-func (handler *accountsHandler) get(c *gin.Context) {
+func (h *accountsHandler) get(c *gin.Context) {
 	walletAddress := c.Param("walletAddress")
 
 	cacheInfo, err := services.GetOrAddAccountCacheInfo(walletAddress)
@@ -93,7 +94,7 @@ func (handler *accountsHandler) get(c *gin.Context) {
 // @Failure 401 {object} dtos.ApiResponse
 // @Failure 500 {object} dtos.ApiResponse
 // @Router /accounts/{walletAddress} [post]
-func (handler *accountsHandler) set(c *gin.Context) {
+func (h *accountsHandler) set(c *gin.Context) {
 	var request services.SetAccountRequest
 	walletAddress := c.Param("walletAddress")
 
@@ -137,7 +138,7 @@ func (handler *accountsHandler) set(c *gin.Context) {
 // @Failure 401 {object} dtos.ApiResponse
 // @Failure 500 {object} dtos.ApiResponse
 // @Router /accounts/{walletAddress}/profile [post]
-func (handler *accountsHandler) setAccountProfile(c *gin.Context) {
+func (h *accountsHandler) setAccountProfile(c *gin.Context) {
 	walletAddress := c.Param("walletAddress")
 
 	buf := new(bytes.Buffer)
@@ -181,7 +182,7 @@ func (handler *accountsHandler) setAccountProfile(c *gin.Context) {
 // @Failure 401 {object} dtos.ApiResponse
 // @Failure 500 {object} dtos.ApiResponse
 // @Router /accounts/{walletAddress}/cover [post]
-func (handler *accountsHandler) setAccountCover(c *gin.Context) {
+func (h *accountsHandler) setAccountCover(c *gin.Context) {
 	walletAddress := c.Param("walletAddress")
 
 	buf := new(bytes.Buffer)
@@ -225,7 +226,7 @@ func (handler *accountsHandler) setAccountCover(c *gin.Context) {
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 404 {object} dtos.ApiResponse
 // @Router /accounts/{walletAddress}/tokens/{offset}/{limit} [get]
-func (handler *accountsHandler) getAccountTokens(c *gin.Context) {
+func (h *accountsHandler) getAccountTokens(c *gin.Context) {
 	offsetStr := c.Param("offset")
 	limitStr := c.Param("limit")
 	walletAddress := c.Param("walletAddress")
@@ -276,7 +277,7 @@ func (handler *accountsHandler) getAccountTokens(c *gin.Context) {
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 404 {object} dtos.ApiResponse
 // @Router /accounts/{walletAddress}/collections/{offset}/{limit} [get]
-func (handler *accountsHandler) getAccountCollections(c *gin.Context) {
+func (h *accountsHandler) getAccountCollections(c *gin.Context) {
 	offsetStr := c.Param("offset")
 	limitStr := c.Param("limit")
 	walletAddress := c.Param("walletAddress")
