@@ -1,0 +1,28 @@
+[ConnectorApi]
+    # The port on which the Hub listens for subscriptions
+    Port = "5000"
+
+    # List of addresses to get events from
+    Addressess = [
+        "erd111",
+        "erd222",
+        "erd333"
+    ]
+
+[Blockchain]
+    ChainID = "D"
+    GasPrice = 1_000_000_000
+    PemPath = "./config/owner.pem"
+    ProxyUrl = "https://devnet-gateway.elrond.com"
+
+[Database]
+    Dialect = "postgres"
+    Host = "localhost"
+    Port = 5432
+    DbName = "erdsea_db_test"
+    User = "postgres"
+    Password = "root"
+    SslMode = "disable"
+    MaxOpenConns = 50
+    MaxIdleConns = 10
+    ShouldMigrate = true
