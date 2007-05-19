@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
+	"time"
 
 	"github.com/erdsea/erdsea-api/config"
 	"github.com/erdsea/erdsea-api/data/dtos"
@@ -46,17 +48,35 @@ func NewEventsHandler(
 }
 
 func (h *eventsHandler) pushEvents(c *gin.Context) {
-	var events []entities.Event
+	var blockEvents entities.BlockEvents
 
-	err := c.Bind(&events)
+	err := c.Bind(&blockEvents)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
-	if events != nil {
-		h.processor.OnEvents(events)
+	log.Println("received events at:", time.Now().Unix())
+	log.Println("batch events hash:", blockEvents.Hash)
+
+	//if blockEvents.Events != nil {
+	//	h.processor.OnEvents(blockEvents.Events)
+	//}
+
+	dtos.JsonResponse(c, http.StatusOK, nil, "")
+}
+
+func (h *eventsHandler) pushFinalizedEvents(c *gin.Context) {
+	var finalizedBlock entities.FinalizedBlock
+
+	err := c.Bind(&finalizedBlock)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
 	}
+
+	log.Println("received finalized events at:", time.Now().Unix())
+	log.Println("finalized hash:", finalizedBlock.Hash)
 
 	dtos.JsonResponse(c, http.StatusOK, nil, "")
 }
