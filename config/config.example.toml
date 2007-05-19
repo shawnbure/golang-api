@@ -6,9 +6,9 @@
         "erd1qqqqqqqqqqqqqpgqj8vnqw76wq333qwx2wjf2nyn89dc8jhct9usvxzd7g",
     ]
     Identifiers = [
-        "put_nft_for_sale",
-        "buy_nft",
-        "withdraw_nft",
+        "putNftForSale",
+        "buyNft",
+        "withdrawNft",
     ]
 
 [Blockchain]

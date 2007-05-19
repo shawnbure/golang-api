@@ -43,11 +43,11 @@ func (e *EventProcessor) PoolWorker() {
 	for eventArray := range e.eventsPool {
 		for _, event := range eventArray {
 			switch event.Identifier {
-			case "put_nft_for_sale":
+			case "putNftForSale":
 				e.onEventPutNftForSale(event)
-			case "buy_nft":
+			case "buyNft":
 				e.onEventBuyNft(event)
-			case "withdraw_nft":
+			case "withdrawNft":
 				e.onEventWithdrawNft(event)
 			}
 		}
@@ -76,18 +76,18 @@ func (e *EventProcessor) isEventAccepted(ev entities.Event) bool {
 
 func (e *EventProcessor) onEventPutNftForSale(event entities.Event) {
 	args := services.ListTokenArgs{
-		OwnerAddress:     decodeAddressFromTopic(event.Topics[0]),
-		TokenId:          decodeStringFromTopic(event.Topics[1]),
-		Nonce:            decodeU64FromTopic(event.Topics[2]),
-		TokenName:        decodeStringFromTopic(event.Topics[3]),
-		FirstLink:        decodeStringFromTopic(event.Topics[4]),
-		LastLink:         decodeStringFromTopic(event.Topics[5]),
-		Hash:             decodeStringFromTopic(event.Topics[6]),
-		Attributes:       decodeStringFromTopic(event.Topics[7]),
-		Price:            decodeBigUintFromTopic(event.Topics[8]),
-		RoyaltiesPercent: decodeU64FromTopic(event.Topics[9]),
-		Timestamp:        decodeU64FromTopic(event.Topics[10]),
-		TxHash:           decodeTxHashFromTopic(event.Topics[11]),
+		OwnerAddress:     decodeAddressFromTopic(event.Topics[1]),
+		TokenId:          decodeStringFromTopic(event.Topics[2]),
+		Nonce:            decodeU64FromTopic(event.Topics[3]),
+		TokenName:        decodeStringFromTopic(event.Topics[4]),
+		FirstLink:        decodeStringFromTopic(event.Topics[5]),
+		LastLink:         decodeStringFromTopic(event.Topics[6]),
+		Hash:             decodeStringFromTopic(event.Topics[7]),
+		Attributes:       decodeStringFromTopic(event.Topics[8]),
+		Price:            decodeBigUintFromTopic(event.Topics[9]),
+		RoyaltiesPercent: decodeU64FromTopic(event.Topics[10]),
+		Timestamp:        decodeU64FromTopic(event.Topics[11]),
+		TxHash:           decodeTxHashFromTopic(event.Topics[12]),
 	}
 
 	eventJson, err := json.Marshal(args)
@@ -100,13 +100,13 @@ func (e *EventProcessor) onEventPutNftForSale(event entities.Event) {
 
 func (e *EventProcessor) onEventBuyNft(event entities.Event) {
 	args := services.BuyTokenArgs{
-		OwnerAddress: decodeAddressFromTopic(event.Topics[0]),
-		BuyerAddress: decodeAddressFromTopic(event.Topics[1]),
-		TokenId:      decodeStringFromTopic(event.Topics[2]),
-		Nonce:        decodeU64FromTopic(event.Topics[3]),
-		Price:        decodeBigUintFromTopic(event.Topics[4]),
-		Timestamp:    decodeU64FromTopic(event.Topics[5]),
-		TxHash:       decodeTxHashFromTopic(event.Topics[6]),
+		OwnerAddress: decodeAddressFromTopic(event.Topics[1]),
+		BuyerAddress: decodeAddressFromTopic(event.Topics[2]),
+		TokenId:      decodeStringFromTopic(event.Topics[3]),
+		Nonce:        decodeU64FromTopic(event.Topics[4]),
+		Price:        decodeBigUintFromTopic(event.Topics[5]),
+		Timestamp:    decodeU64FromTopic(event.Topics[6]),
+		TxHash:       decodeTxHashFromTopic(event.Topics[7]),
 	}
 
 	eventJson, err := json.Marshal(args)
@@ -119,12 +119,12 @@ func (e *EventProcessor) onEventBuyNft(event entities.Event) {
 
 func (e *EventProcessor) onEventWithdrawNft(event entities.Event) {
 	args := services.WithdrawTokenArgs{
-		OwnerAddress: decodeAddressFromTopic(event.Topics[0]),
-		TokenId:      decodeStringFromTopic(event.Topics[1]),
-		Nonce:        decodeU64FromTopic(event.Topics[2]),
-		Price:        decodeBigUintFromTopic(event.Topics[3]),
-		Timestamp:    decodeU64FromTopic(event.Topics[4]),
-		TxHash:       decodeTxHashFromTopic(event.Topics[5]),
+		OwnerAddress: decodeAddressFromTopic(event.Topics[1]),
+		TokenId:      decodeStringFromTopic(event.Topics[2]),
+		Nonce:        decodeU64FromTopic(event.Topics[3]),
+		Price:        decodeBigUintFromTopic(event.Topics[4]),
+		Timestamp:    decodeU64FromTopic(event.Topics[5]),
+		TxHash:       decodeTxHashFromTopic(event.Topics[6]),
 	}
 
 	eventJson, err := json.Marshal(args)
