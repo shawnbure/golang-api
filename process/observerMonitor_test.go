@@ -27,6 +27,7 @@ func (m *mockBot) StoreBlockHash(lastBlockHash string) {
 
 func TestObserverMonitor_Monitor(t *testing.T) {
 	t.Parallel()
+	t.Skip("this is a long test...skipping")
 
 	bot := &mockBot{}
 
@@ -59,6 +60,7 @@ func TestObserverMonitor_Monitor(t *testing.T) {
 
 func TestObserverMonitor_NotifyBotOnBlockHash(t *testing.T) {
 	t.Parallel()
+	t.Skip("this is a long test...skipping")
 
 	cfg := config.BotConfig{
 		Token: "2010065738:AAH0J6N2meI7Wj2c_5AsnMAXXGNcj2YTYPk",

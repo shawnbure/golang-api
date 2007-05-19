@@ -53,6 +53,8 @@ func TestEventProcessor_OnEvents(t *testing.T) {
 
 func TestNewEventProcessor_OnEventsWithFinalized(t *testing.T) {
 	t.Parallel()
+	t.Skip("this is a long test...skipping")
+
 	cache.InitCacher(cacheCfg)
 
 	addresses := []string{"erd1", "erd2", "erd3"}
