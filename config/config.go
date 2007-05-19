@@ -12,6 +12,7 @@ type GeneralConfig struct {
 	Database     DatabaseConfig
 	Auth         AuthConfig
 	Cache        CacheConfig
+	Swagger      SwaggerConfig
 }
 
 type ConnectorApiConfig struct {
@@ -55,6 +56,10 @@ type AuthConfig struct {
 
 type CacheConfig struct {
 	Url string
+}
+
+type SwaggerConfig struct {
+	Enabled bool
 }
 
 func (d DatabaseConfig) Url() string {

@@ -6,15 +6,12 @@ import (
 	"strings"
 
 	"github.com/erdsea/erdsea-api/config"
+	_ "github.com/erdsea/erdsea-api/docs"
 	"github.com/erdsea/erdsea-api/process"
 	"github.com/erdsea/erdsea-api/proxy/handlers"
 	"github.com/erdsea/erdsea-api/services"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
-
-	_ "github.com/erdsea/erdsea-api/docs"
 )
 
 type webServer struct {
@@ -64,9 +61,7 @@ func NewWebServer(cfg *config.GeneralConfig) (*webServer, error) {
 	handlers.NewPriceHandler(groupHandler, cfg.Auth)
 	handlers.NewAccountsHandler(groupHandler, cfg.Auth)
 	handlers.NewSearchHandler(groupHandler, cfg.Auth)
-
-	url := ginSwagger.URL("http://localhost:5000/swagger/doc.json")
-	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
+	handlers.NewSwaggerHandler(groupHandler, cfg.Swagger)
 
 	groupHandler.RegisterEndpoints(router)
 

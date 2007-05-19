@@ -42,3 +42,5 @@
 [Cache]
     Url = "redis://localhost:6379"
 
+[Swagger]
+    Enabled = true
