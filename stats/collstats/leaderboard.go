@@ -18,17 +18,17 @@ type LeaderboardEntry struct {
 }
 
 const (
-	itemsTotal   = "itemsTotal"
-	ownersTotal  = "ownersTotal"
-	floorPrice   = "floorPrice"
-	volumeTraded = "volumeTraded"
+	ItemsTotal   = "itemsTotal"
+	OwnersTotal  = "ownersTotal"
+	FloorPrice   = "floorPrice"
+	VolumeTraded = "volumeTraded"
 )
 
 func updateLeaderboardTables(tokenId string, stats *dtos.CollectionStatistics) error {
 	redisCache := cache.GetRedis()
 	redisCtx := cache.GetContext()
 
-	_, err := redisCache.ZAdd(redisCtx, itemsTotal, &redis.Z{
+	_, err := redisCache.ZAdd(redisCtx, ItemsTotal, &redis.Z{
 		Score:  float64(stats.ItemsTotal),
 		Member: tokenId,
 	}).Result()
@@ -36,7 +36,7 @@ func updateLeaderboardTables(tokenId string, stats *dtos.CollectionStatistics) e
 		log.Debug("sorted set add failed")
 	}
 
-	_, err = redisCache.ZAdd(redisCtx, ownersTotal, &redis.Z{
+	_, err = redisCache.ZAdd(redisCtx, OwnersTotal, &redis.Z{
 		Score:  float64(stats.OwnersTotal),
 		Member: tokenId,
 	}).Result()
@@ -44,7 +44,7 @@ func updateLeaderboardTables(tokenId string, stats *dtos.CollectionStatistics) e
 		log.Debug("sorted set add failed")
 	}
 
-	_, err = redisCache.ZAdd(redisCtx, floorPrice, &redis.Z{
+	_, err = redisCache.ZAdd(redisCtx, FloorPrice, &redis.Z{
 		Score:  stats.FloorPrice,
 		Member: tokenId,
 	}).Result()
@@ -52,7 +52,7 @@ func updateLeaderboardTables(tokenId string, stats *dtos.CollectionStatistics) e
 		log.Debug("sorted set add failed")
 	}
 
-	_, err = redisCache.ZAdd(redisCtx, volumeTraded, &redis.Z{
+	_, err = redisCache.ZAdd(redisCtx, VolumeTraded, &redis.Z{
 		Score:  stats.VolumeTraded,
 		Member: tokenId,
 	}).Result()
@@ -111,13 +111,13 @@ func GetLeaderboardEntries(table string, start int, stop int, rev bool) ([]Leade
 
 func testTableName(table string) error {
 	switch table {
-	case itemsTotal:
+	case ItemsTotal:
 		return nil
-	case ownersTotal:
+	case OwnersTotal:
 		return nil
-	case floorPrice:
+	case FloorPrice:
 		return nil
-	case volumeTraded:
+	case VolumeTraded:
 		return nil
 	default:
 		return errors.New("not a valid lb table name")

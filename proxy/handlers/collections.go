@@ -533,16 +533,20 @@ func (handler *collectionsHandler) getCollectionRankings(c *gin.Context) {
 		return
 	}
 
+	if sortRules == nil {
+		sortRules = make(map[string]string, 2)
+	}
+
 	if len(sortRules) == 0 {
-		dtos.JsonResponse(c, http.StatusBadRequest, nil, "no sorting rules")
-		return
+		sortRules["criteria"] = collstats.VolumeTraded
+		sortRules["mode"] = "desc"
 	}
 
 	acceptedCriteria := map[string]bool{
-		"floorprice":   true,
-		"volumetraded": true,
-		"itemstotal":   true,
-		"ownerstotal":  true,
+		collstats.FloorPrice:   true,
+		collstats.VolumeTraded: true,
+		collstats.ItemsTotal:   true,
+		collstats.OwnersTotal:  true,
 	}
 	err = testInputSortParams(sortRules, acceptedCriteria)
 	if err != nil {
@@ -580,8 +584,7 @@ func testInputSortParams(sortParams map[string]string, acceptedCriteria map[stri
 	}
 
 	if v, ok := sortParams["criteria"]; ok {
-		vLower := strings.ToLower(v)
-		if _, accepted := acceptedCriteria[vLower]; !accepted {
+		if _, accepted := acceptedCriteria[v]; !accepted {
 			return errors.New("bad sorting criteria")
 		}
 	} else {
