@@ -33,7 +33,7 @@ func NewEventsHandler(
 
 	endpoints := []EndpointHandler{
 		{Method: http.MethodPost, Path: pushEventsEndpoint, HandlerFunc: h.pushEvents},
-		{Method: http.MethodPost, Path: pushFinalizedEndpoint, HandlerFunc: h.pushFinalizedEvents},
+		//{Method: http.MethodPost, Path: pushFinalizedEndpoint, HandlerFunc: h.pushFinalizedEvents},
 	}
 
 	endpointGroupHandler := EndpointGroupHandler{
