@@ -32,7 +32,7 @@ func SetAccountProfileImage(accountAddress string, accountId uint64, image *stri
 		return err
 	}
 
-	err = storage.UpdateAccountProfileWhereId(accountId, response.URL)
+	err = storage.UpdateAccountProfileWhereId(accountId, response.SecureURL)
 	if err != nil {
 		return err
 	}
@@ -52,7 +52,7 @@ func SetAccountCoverImage(accountAddress string, accountId uint64, image *string
 		return err
 	}
 
-	err = storage.UpdateAccountCoverWhereId(accountId, response.URL)
+	err = storage.UpdateAccountCoverWhereId(accountId, response.SecureURL)
 	if err != nil {
 		return err
 	}
@@ -72,7 +72,7 @@ func SetCollectionCoverImage(tokenId string, collectionId uint64, image *string)
 		return err
 	}
 
-	err = storage.UpdateCollectionCoverWhereId(collectionId, response.URL)
+	err = storage.UpdateCollectionCoverWhereId(collectionId, response.SecureURL)
 	if err != nil {
 		return err
 	}
@@ -92,7 +92,7 @@ func SetCollectionProfileImage(tokenId string, collectionId uint64, image *strin
 		return err
 	}
 
-	err = storage.UpdateCollectionProfileWhereId(collectionId, response.URL)
+	err = storage.UpdateCollectionProfileWhereId(collectionId, response.SecureURL)
 	if err != nil {
 		return err
 	}
