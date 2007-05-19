@@ -1,12 +1,13 @@
 package handlers
 
 import (
+	"net/http"
+
 	"github.com/erdsea/erdsea-api/config"
 	"github.com/erdsea/erdsea-api/data/dtos"
 	"github.com/erdsea/erdsea-api/data/entities"
 	"github.com/erdsea/erdsea-api/process"
 	"github.com/gin-gonic/gin"
-	"net/http"
 )
 
 const (

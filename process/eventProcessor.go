@@ -14,10 +14,11 @@ var log = logger.GetOrCreate("eventProcessor")
 
 const (
 	putNFTForSaleIdentifier = "putNftForSale"
+	buyNFTIdentifier        = "buyNft"
+	withdrawNFTIdentifier   = "withdrawNft"
 
-	buyNFTIdentifier = "buyNft"
-
-	withdrawNFTIdentifier = "withdrawNft"
+	saveEventsTTL        = 5 * time.Minute
+	saveFinalizedHashTTL = 30 * time.Minute
 )
 
 type EventProcessor struct {
@@ -27,19 +28,12 @@ type EventProcessor struct {
 	eventsPool chan []entities.Event
 
 	localCacher *cache.LocalCacher
-
-	putForSaleFunc    func(args services.ListTokenArgs)
-	buyTokenFunc      func(args services.BuyTokenArgs)
-	withdrawTokenFunc func(args services.WithdrawTokenArgs)
 }
 
 func NewEventProcessor(
 	addresses []string,
 	identifiers []string,
 	localCacher *cache.LocalCacher,
-	putForSaleFunc func(args services.ListTokenArgs),
-	buyTokenFunc func(args services.BuyTokenArgs),
-	withdrawTokenFunc func(args services.WithdrawTokenArgs),
 ) *EventProcessor {
 	addrSet := map[string]bool{}
 	idSet := map[string]bool{}
@@ -53,13 +47,10 @@ func NewEventProcessor(
 	}
 
 	processor := &EventProcessor{
-		addressSet:        addrSet,
-		identifiersSet:    idSet,
-		eventsPool:        make(chan []entities.Event),
-		localCacher:       localCacher,
-		putForSaleFunc:    putForSaleFunc,
-		buyTokenFunc:      buyTokenFunc,
-		withdrawTokenFunc: withdrawTokenFunc,
+		addressSet:     addrSet,
+		identifiersSet: idSet,
+		eventsPool:     make(chan []entities.Event),
+		localCacher:    localCacher,
 	}
 
 	go processor.PoolWorker()
@@ -72,11 +63,11 @@ func (e *EventProcessor) PoolWorker() {
 		for _, event := range eventArray {
 			switch event.Identifier {
 			case putNFTForSaleIdentifier:
-				e.onEventPutNftForSale(event, e.putForSaleFunc)
+				e.onEventPutNftForSale(event)
 			case buyNFTIdentifier:
-				e.onEventBuyNft(event, e.buyTokenFunc)
+				e.onEventBuyNft(event)
 			case withdrawNFTIdentifier:
-				e.onEventWithdrawNft(event, e.withdrawTokenFunc)
+				e.onEventWithdrawNft(event)
 			}
 		}
 	}
@@ -91,18 +82,16 @@ func (e *EventProcessor) OnEvents(blockEvents entities.BlockEvents) {
 		}
 	}
 
-	if len(filterableEvents) > 0 {
-		// TODO: move to const | config
-		ttl := 5 * time.Minute
-		err := e.localCacher.SetWithTTLSync(blockEvents.Hash, blockEvents.Events, ttl)
-		if err != nil {
-			log.Error(
-				"could not store events at block",
-				"headerHash", blockEvents.Hash,
-				"err", err.Error(),
-			)
-		}
+	err := e.localCacher.SetWithTTLSync(blockEvents.Hash, blockEvents.Events, saveEventsTTL)
+	if err != nil {
+		log.Error(
+			"could not store events at block",
+			"headerHash", blockEvents.Hash,
+			"err", err.Error(),
+		)
 	}
+
+	log.Info("pushed events to cache for block", "headerHash", blockEvents.Hash)
 }
 
 func (e *EventProcessor) OnFinalizedEvent(fb entities.FinalizedBlock) {
@@ -125,16 +114,20 @@ func (e *EventProcessor) OnFinalizedEvent(fb entities.FinalizedBlock) {
 	}
 
 	if len(cachedEvents) == 0 {
-		log.Warn("loaded empty slice from cache - ignoring")
+		log.Warn("loaded empty []entities.Event from cache at block", "headerHash", fb.Hash)
 		return
 	}
 
 	e.eventsPool <- cachedEvents
 
-	ttl := 30 * time.Minute
-	err = e.localCacher.SetWithTTLSync(fb.Hash, true, ttl)
+	err = e.localCacher.Del(fb.Hash)
 	if err != nil {
-		log.Warn("could not set finalized block flag", "err", err.Error())
+		log.Error("could not delete block events", "err", err.Error())
+	}
+
+	err = e.localCacher.SetWithTTLSync(fb.Hash, true, saveFinalizedHashTTL)
+	if err != nil {
+		log.Error("could not set finalized block flag", "err", err.Error())
 	}
 }
 
@@ -142,10 +135,12 @@ func (e *EventProcessor) isEventAccepted(ev entities.Event) bool {
 	return e.addressSet[ev.Address] && e.identifiersSet[ev.Identifier]
 }
 
-func (e *EventProcessor) onEventPutNftForSale(
-	event entities.Event,
-	putForSaleFunc func(args services.ListTokenArgs),
-) {
+func (e *EventProcessor) onEventPutNftForSale(event entities.Event) {
+	if len(event.Topics) != 13 {
+		log.Error("received corrupted putNFTForSale event", "err", "incorrect topics length")
+		return
+	}
+
 	args := services.ListTokenArgs{
 		OwnerAddress:     decodeAddressFromTopic(event.Topics[1]),
 		TokenId:          decodeStringFromTopic(event.Topics[2]),
@@ -167,13 +162,15 @@ func (e *EventProcessor) onEventPutNftForSale(
 		log.Debug("onEventPutNftForSale", string(eventJson))
 	}
 
-	putForSaleFunc(args)
+	services.ListToken(args)
 }
 
-func (e *EventProcessor) onEventBuyNft(
-	event entities.Event,
-	buyTokenFunc func(args services.BuyTokenArgs),
-) {
+func (e *EventProcessor) onEventBuyNft(event entities.Event) {
+	if len(event.Topics) != 8 {
+		log.Error("received corrupted buyNFT event", "err", "incorrect topics length")
+		return
+	}
+
 	args := services.BuyTokenArgs{
 		OwnerAddress: decodeAddressFromTopic(event.Topics[1]),
 		BuyerAddress: decodeAddressFromTopic(event.Topics[2]),
@@ -189,13 +186,15 @@ func (e *EventProcessor) onEventBuyNft(
 		log.Debug("onEventBuyNft", string(eventJson))
 	}
 
-	buyTokenFunc(args)
+	services.BuyToken(args)
 }
 
-func (e *EventProcessor) onEventWithdrawNft(
-	event entities.Event,
-	withdrawTokenFunc func(args services.WithdrawTokenArgs),
-) {
+func (e *EventProcessor) onEventWithdrawNft(event entities.Event) {
+	if len(event.Topics) != 7 {
+		log.Error("received corrupted withdrawNFT event", "err", "incorrect topics length")
+		return
+	}
+
 	args := services.WithdrawTokenArgs{
 		OwnerAddress: decodeAddressFromTopic(event.Topics[1]),
 		TokenId:      decodeStringFromTopic(event.Topics[2]),
@@ -210,5 +209,5 @@ func (e *EventProcessor) onEventWithdrawNft(
 		log.Debug("onEventWithdrawNft", string(eventJson))
 	}
 
-	withdrawTokenFunc(args)
+	services.WithdrawToken(args)
 }
