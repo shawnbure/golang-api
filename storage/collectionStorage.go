@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
 
 	"github.com/erdsea/erdsea-api/data/entities"
@@ -164,7 +165,7 @@ func GetCollectionByTokenId(tokenId string) (*entities.Collection, error) {
 	return &collection, nil
 }
 
-func GetCollectionsWithOffsetLimit(offset int, limit int) ([]entities.Collection, error) {
+func GetCollectionsWithOffsetLimit(offset int, limit int, flags []string) ([]entities.Collection, error) {
 	var collections []entities.Collection
 
 	database, err := GetDBOrError()
@@ -172,7 +173,12 @@ func GetCollectionsWithOffsetLimit(offset int, limit int) ([]entities.Collection
 		return nil, err
 	}
 
-	txRead := database.Offset(offset).Limit(limit).Order("priority desc").Find(&collections)
+	txRead := database.Offset(offset).Limit(limit)
+	for _, flag := range flags {
+		txRead.Where(datatypes.JSONQuery("flags").HasKey(flag))
+	}
+
+	txRead.Order("priority desc").Find(&collections)
 	if txRead.Error != nil {
 		return nil, txRead.Error
 	}
