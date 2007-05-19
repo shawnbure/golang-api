@@ -8,8 +8,6 @@ import (
 	"testing"
 )
 
-const ConfigFilePath = "../config/config.toml"
-
 func Test_ListAsset(t *testing.T) {
 	connectToDb()
 

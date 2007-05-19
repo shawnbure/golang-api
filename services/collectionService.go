@@ -44,17 +44,22 @@ func CreateCollection(request *CreateCollectionRequest, elrondProxy string) erro
 		return err
 	}
 
-	_, err = storage.GetCollectionByName(request.Name)
-	if err == nil {
-		return errors.New("collection name already taken")
-	}
-
 	tokenRegisteredByUser, err := getTokensRegisteredBy(request.UserAddress, elrondProxy)
 	if err != nil {
 		return err
 	}
 	if !contains(tokenRegisteredByUser, request.TokenId) {
 		return errors.New("token not owner by user")
+	}
+
+	_, err = storage.GetCollectionByName(request.Name)
+	if err == nil {
+		return errors.New("collection name already taken")
+	}
+
+	_, err = storage.GetCollectionByTokenId(request.TokenId)
+	if err == nil {
+		return errors.New("token id already has a collection associated")
 	}
 
 	account, err := GetOrCreateAccount(request.UserAddress)
