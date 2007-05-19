@@ -2,9 +2,10 @@ package handlers
 
 import (
 	"encoding/hex"
-	"github.com/ElrondNetwork/elrond-sdk-erdgo/data"
 	"net/http"
 
+	erdgoData "github.com/ElrondNetwork/elrond-sdk-erdgo/data"
+	"github.com/erdsea/erdsea-api/data"
 	"github.com/erdsea/erdsea-api/services"
 	"github.com/gin-gonic/gin"
 )
@@ -58,7 +59,7 @@ func (h *authHandler) createAccessToken(c *gin.Context) {
 		return
 	}
 
-	pk, err := data.NewAddressFromBech32String(req.Address)
+	pk, err := erdgoData.NewAddressFromBech32String(req.Address)
 	if err != nil {
 		h.badReqResp(c, err.Error())
 		return
@@ -77,11 +78,11 @@ func (h *authHandler) createAccessToken(c *gin.Context) {
 
 	jwt, refresh, err := h.service.CreateToken(pk.AddressBytes(), sigBytes, msgBytes)
 	if err != nil {
-		JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		data.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
 	}
 
-	JsonResponse(c, http.StatusOK, gin.H{
+	data.JsonResponse(c, http.StatusOK, gin.H{
 		"accessToken":  jwt,
 		"refreshToken": refresh,
 	}, "")
@@ -98,16 +99,16 @@ func (h *authHandler) refreshAccessToken(c *gin.Context) {
 
 	jwt, refresh, err := h.service.RefreshToken(req.AccessToken, req.RefreshToken)
 	if err != nil {
-		JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		data.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
 	}
 
-	JsonResponse(c, http.StatusOK, gin.H{
+	data.JsonResponse(c, http.StatusOK, gin.H{
 		"accessToken":  jwt,
 		"refreshToken": refresh,
 	}, "")
 }
 
 func (h *authHandler) badReqResp(c *gin.Context, err string) {
-	JsonResponse(c, http.StatusBadRequest, nil, err)
+	data.JsonResponse(c, http.StatusBadRequest, nil, err)
 }

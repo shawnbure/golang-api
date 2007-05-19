@@ -49,7 +49,7 @@ func (h *eventsHandler) pushEvents(c *gin.Context) {
 
 	err := c.Bind(&events)
 	if err != nil {
-		JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
@@ -57,7 +57,7 @@ func (h *eventsHandler) pushEvents(c *gin.Context) {
 		h.processor.OnEvents(events)
 	}
 
-	JsonResponse(c, http.StatusOK, nil, "")
+	data.JsonResponse(c, http.StatusOK, nil, "")
 }
 
 func (h *eventsHandler) createMiddlewares() []gin.HandlerFunc {

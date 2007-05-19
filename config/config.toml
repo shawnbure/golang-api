@@ -1,14 +1,10 @@
 [ConnectorApi]
     Port = "5000"
-
     Username = ""
-
     Password = ""
-
     Addresses = [
         "erd1qqqqqqqqqqqqqpgq3k89y42xjk2z05zu5vtjkcgsvhvjhu6nt9usruf2td",
     ]
-
     Identifiers = [
         "collection_register",
         "put_nft_for_sale",
@@ -28,7 +24,7 @@
     Port = 5432
     DbName = "erdsea_db"
     User = "postgres"
-    Password = "root"
+    Password = "boop"
     SslMode = "disable"
     MaxOpenConns = 50
     MaxIdleConns = 10

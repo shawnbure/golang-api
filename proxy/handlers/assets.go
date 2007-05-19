@@ -1,6 +1,9 @@
 package handlers
 
 import (
+	"github.com/erdsea/erdsea-api/config"
+	"github.com/erdsea/erdsea-api/data"
+	"github.com/erdsea/erdsea-api/proxy/middleware"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -14,7 +17,7 @@ const (
 type assetsHandler struct {
 }
 
-func NewAssetsHandler(groupHandler *groupHandler) {
+func NewAssetsHandler(groupHandler *groupHandler, authCfg config.AuthConfig) {
 	h := &assetsHandler{}
 
 	endpoints := []EndpointHandler{
@@ -23,7 +26,7 @@ func NewAssetsHandler(groupHandler *groupHandler) {
 
 	endpointGroupHandler := EndpointGroupHandler{
 		Root:             baseAssetsEndpoint,
-		Middlewares:      []gin.HandlerFunc{},
+		Middlewares:      []gin.HandlerFunc{middleware.Authorization(authCfg.JwtSecret)},
 		EndpointHandlers: endpoints,
 	}
 
@@ -33,5 +36,5 @@ func NewAssetsHandler(groupHandler *groupHandler) {
 func (a *assetsHandler) getById(c *gin.Context) {
 	id := c.Param("id")
 
-	JsonResponse(c, http.StatusOK, id, "")
+	data.JsonResponse(c, http.StatusOK, id, "")
 }

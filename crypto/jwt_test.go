@@ -15,6 +15,13 @@ var (
 	addr = "erd111"
 )
 
+func TestGenerateJwt_ForTestExpiry25(t *testing.T) {
+	t.Parallel()
+
+	jwt, _ := GenerateJwt(addr, secret, issuer, 25)
+	t.Log(jwt)
+}
+
 func TestGenerateJwt_ShouldValidateThenParseClaims(t *testing.T) {
 	t.Parallel()
 
