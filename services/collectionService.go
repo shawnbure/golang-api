@@ -139,6 +139,17 @@ func GetStatisticsForCollection(collectionId uint64) (*CollectionStatistics, err
 	return &stats, nil
 }
 
+func GetCollectionsWithNameAlike(name string, limit int) ([]data.Collection, error) {
+	//TODO: use cache here
+	searchName := "%" + name + "%"
+	accounts, err := storage.GetCollectionsWithNameAlikeWithLimit(searchName, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	return accounts, nil
+}
+
 func contains(arr []string, str string) bool {
 	for _, a := range arr {
 		if a == str {

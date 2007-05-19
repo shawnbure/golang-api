@@ -44,5 +44,16 @@ func AddOrUpdateAccount(account *data.Account) error {
 		err = storage.UpdateAccount(account)
 	}
 
-	return nil
+	return err
+}
+
+func GetAccountsWithNameAlike(name string, limit int) ([]data.Account, error) {
+	//TODO: use cache here
+	searchName := "%" + name + "%"
+	accounts, err := storage.GetAccountsWithNameAlikeWithLimit(searchName, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	return accounts, nil
 }

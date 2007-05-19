@@ -110,3 +110,19 @@ func GetCollectionsWithOffsetLimit(offset int, limit int) ([]data.Collection, er
 
 	return collections, nil
 }
+
+func GetCollectionsWithNameAlikeWithLimit(name string, limit int) ([]data.Collection, error) {
+	var collections []data.Collection
+
+	database, err := GetDBOrError()
+	if err != nil {
+		return nil, err
+	}
+
+	txRead := database.Limit(limit).Where("name LIKE ?", name).Find(&collections)
+	if txRead.Error != nil {
+		return nil, txRead.Error
+	}
+
+	return collections, nil
+}
