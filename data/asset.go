@@ -4,8 +4,9 @@ type Asset struct {
 	ID      uint64 `gorm:"primaryKey"`
 	TokenID string
 	Nonce   uint64
-	Price   string //no big.Int support in gorm
+	Price   string
 	Link    string
+	Listed	bool
 
 	OwnerId      uint64
 	CollectionID uint64

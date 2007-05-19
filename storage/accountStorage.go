@@ -2,6 +2,7 @@ package storage
 
 import (
 	"github.com/erdsea/erdsea-api/data"
+	"gorm.io/gorm"
 )
 
 func AddNewAccount(account *data.Account) error {
@@ -13,6 +14,9 @@ func AddNewAccount(account *data.Account) error {
 	txCreate := database.Create(&account)
 	if txCreate.Error != nil {
 		return txCreate.Error
+	}
+	if txCreate.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
 	}
 
 	return nil
@@ -30,6 +34,9 @@ func GetAccountById(id uint64) (*data.Account, error) {
 	if txRead.Error != nil {
 		return nil, txRead.Error
 	}
+	if txRead.RowsAffected == 0 {
+		return nil, gorm.ErrRecordNotFound
+	}
 
 	return &account, nil
 }
@@ -45,6 +52,9 @@ func GetAccountByAddress(name string) (*data.Account, error) {
 	txRead := database.Find(&account, "address = ?", name)
 	if txRead.Error != nil {
 		return nil, txRead.Error
+	}
+	if txRead.RowsAffected == 0 {
+		return nil, gorm.ErrRecordNotFound
 	}
 
 	return &account, nil

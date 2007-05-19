@@ -63,7 +63,7 @@ func Test_GetTransactionsBySellerId(t *testing.T) {
 	err = AddNewTransaction(&otherTransaction)
 	require.Nil(t, err)
 
-	transactionsRead, err := GetTransactionsByBuyerId(transaction.SellerID)
+	transactionsRead, err := GetTransactionsBySellerId(transaction.SellerID)
 	require.Nil(t, err)
 	require.GreaterOrEqual(t, len(transactionsRead), 2)
 
@@ -83,7 +83,7 @@ func Test_GetTransactionsByBuyerOrSellerId(t *testing.T) {
 	err = AddNewTransaction(&otherTransaction)
 	require.Nil(t, err)
 
-	transactionsRead, err := GetTransactionsBySellerId(transaction.SellerID)
+	transactionsRead, err := GetTransactionsByBuyerOrSellerId(transaction.SellerID)
 	require.Nil(t, err)
 	require.GreaterOrEqual(t, len(transactionsRead), 2)
 
@@ -130,6 +130,8 @@ func Test_GetTransactionsByHash(t *testing.T) {
 func defaultTransaction() data.Transaction {
 	return data.Transaction{
 		Hash:     "hash",
+		Type:     "test",
+		Price:    "1000",
 		SellerID: 1,
 		BuyerID:  2,
 		AssetID:  3,

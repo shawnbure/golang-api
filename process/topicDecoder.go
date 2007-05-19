@@ -27,3 +27,7 @@ func decodeBigUintFromTopic(bytes []byte) string {
 	bigUintBytes := bigUint.Bytes()
 	return hex.EncodeToString(bigUintBytes)
 }
+
+func decodeTxHashFromTopic(bytes []byte) string {
+	return hex.EncodeToString(bytes)
+}

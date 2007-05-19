@@ -3,6 +3,7 @@ package process
 import (
 	"fmt"
 	"github.com/erdsea/erdsea-api/data"
+	"github.com/erdsea/erdsea-api/services"
 )
 
 type EventProcessor struct {
@@ -77,8 +78,17 @@ func (e *EventProcessor) onEventCollectionRegister(event data.Event) {
 	collectionName := decodeStringFromTopic(event.Topics[2])
 	collectionDescription := decodeStringFromTopic(event.Topics[3])
 	timestamp := decodeU64FromTopic(event.Topics[4])
+	txHash := decodeTxHashFromTopic(event.Topics[5])
 
-	fmt.Println(ownerAddress, tokenId, collectionName, collectionDescription, timestamp)
+	fmt.Printf("onEventCollectionRegister\n"+
+		"OwnerAddress: %s\n"+
+		"TokenId: %s\n"+
+		"CollectionName: %s\n"+
+		"Timestamp: %d\n"+
+		"TxHash: %s\n",
+		ownerAddress, tokenId, collectionName, timestamp, txHash)
+
+	services.CreateNewCollection(ownerAddress, tokenId, collectionName, collectionDescription)
 }
 
 func (e *EventProcessor) onEventPutNftForSale(event data.Event) {
@@ -89,8 +99,20 @@ func (e *EventProcessor) onEventPutNftForSale(event data.Event) {
 	collectionName := decodeStringFromTopic(event.Topics[4])
 	price := decodeBigUintFromTopic(event.Topics[5])
 	timestamp := decodeU64FromTopic(event.Topics[6])
+	txHash := decodeTxHashFromTopic(event.Topics[7])
 
-	fmt.Println(ownerAddress, tokenId, nonce, uri, collectionName, price, timestamp)
+	fmt.Printf("onEventPutNftForSale\n"+
+		"OwnerAddress: %s\n"+
+		"TokenId: %s\n"+
+		"Nonce: %d\n"+
+		"Uri: %s\n"+
+		"CollectionName: %s\n"+
+		"Price: %s\n"+
+		"Timestamp: %d\n"+
+		"TxHash: %s\n",
+		ownerAddress, tokenId, nonce, uri, collectionName, price, timestamp, txHash)
+
+	services.ListAsset(ownerAddress, tokenId, nonce, uri, collectionName, price, txHash)
 }
 
 func (e *EventProcessor) onEventBuyNft(event data.Event) {
@@ -102,8 +124,21 @@ func (e *EventProcessor) onEventBuyNft(event data.Event) {
 	collectionName := decodeStringFromTopic(event.Topics[5])
 	price := decodeBigUintFromTopic(event.Topics[6])
 	timestamp := decodeU64FromTopic(event.Topics[7])
+	txHash := decodeTxHashFromTopic(event.Topics[8])
 
-	fmt.Println(ownerAddress, buyerAddress, tokenId, nonce, uri, collectionName, price, timestamp)
+	fmt.Printf("onEventBuyNft\n"+
+		"OwnerAddress: %s\n"+
+		"BuyerAddress: %s\n"+
+		"TokenId: %s\n"+
+		"Nonce: %d\n"+
+		"Uri: %s\n"+
+		"CollectionName: %s\n"+
+		"Price: %s\n"+
+		"Timestamp: %d\n"+
+		"TxHash: %s\n",
+		ownerAddress, buyerAddress, tokenId, nonce, uri, collectionName, price, timestamp, txHash)
+
+	services.BuyAsset(ownerAddress, buyerAddress, tokenId, nonce, price, txHash)
 }
 
 func (e *EventProcessor) onEventWithdrawNft(event data.Event) {
@@ -114,6 +149,18 @@ func (e *EventProcessor) onEventWithdrawNft(event data.Event) {
 	collectionName := decodeStringFromTopic(event.Topics[4])
 	price := decodeBigUintFromTopic(event.Topics[5])
 	timestamp := decodeU64FromTopic(event.Topics[6])
+	txHash := decodeTxHashFromTopic(event.Topics[7])
 
-	fmt.Println(ownerAddress, tokenId, nonce, uri, collectionName, price, timestamp)
+	fmt.Printf("onEventWithdrawNft\n"+
+		"OwnerAddress: %s\n"+
+		"TokenId: %s\n"+
+		"Nonce: %d\n"+
+		"Uri: %s\n"+
+		"CollectionName: %s\n"+
+		"Price: %s\n"+
+		"Timestamp: %d\n"+
+		"TxHash: %s\n",
+		ownerAddress, tokenId, nonce, uri, collectionName, price, timestamp, txHash)
+
+	services.WithdrawAsset(ownerAddress, tokenId, nonce, price, txHash)
 }

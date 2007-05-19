@@ -2,6 +2,7 @@ package storage
 
 import (
 	"github.com/erdsea/erdsea-api/data"
+	"gorm.io/gorm"
 )
 
 func AddNewCollection(collection *data.Collection) error {
@@ -13,6 +14,9 @@ func AddNewCollection(collection *data.Collection) error {
 	txCreate := database.Create(&collection)
 	if txCreate.Error != nil {
 		return txCreate.Error
+	}
+	if txCreate.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
 	}
 
 	return nil
@@ -29,6 +33,9 @@ func GetCollectionById(id uint64) (*data.Collection, error) {
 	txRead := database.Find(&collection, id)
 	if txRead.Error != nil {
 		return nil, txRead.Error
+	}
+	if txRead.RowsAffected == 0 {
+		return nil, gorm.ErrRecordNotFound
 	}
 
 	return &collection, nil
@@ -61,6 +68,9 @@ func GetCollectionByName(name string) (*data.Collection, error) {
 	txRead := database.Find(&collection, "name = ?", name)
 	if txRead.Error != nil {
 		return nil, txRead.Error
+	}
+	if txRead.RowsAffected == 0 {
+		return nil, gorm.ErrRecordNotFound
 	}
 
 	return &collection, nil
