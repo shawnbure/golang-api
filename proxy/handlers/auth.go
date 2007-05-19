@@ -38,7 +38,7 @@ func NewAuthHandler(groupHandler *groupHandler, authService services.AuthService
 
 	endpoints := []EndpointHandler{
 		{Method: http.MethodPost, Path: accessAuthEndpoint, HandlerFunc: h.createAccessToken},
-		{Method: http.MethodGet, Path: refreshAuthEndpoint, HandlerFunc: h.refreshAccessToken},
+		{Method: http.MethodPost, Path: refreshAuthEndpoint, HandlerFunc: h.refreshAccessToken},
 	}
 
 	endpointGroupHandler := EndpointGroupHandler{
