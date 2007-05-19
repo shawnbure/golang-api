@@ -76,6 +76,11 @@ func GetCollectionCacheInfo(tokenId string) (*CacheInfo, error) {
 
 	var bytes []byte
 	err := db.View(func(tx *bolt.Tx) error {
+		_, innerErr := tx.CreateBucketIfNotExists(tokenIdToCollectionCacheInfo)
+		if innerErr != nil {
+			return innerErr
+		}
+
 		bytes = tx.Bucket(tokenIdToCollectionCacheInfo).Get([]byte(tokenId))
 		return nil
 	})

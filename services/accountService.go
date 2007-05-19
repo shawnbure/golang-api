@@ -150,6 +150,11 @@ func GetAccountCacheInfo(walletAddress string) (*AccountCacheInfo, error) {
 
 	var bytes []byte
 	err := db.View(func(tx *bolt.Tx) error {
+		_, innerErr := tx.CreateBucketIfNotExists(WalletAddressToAccountCacheInfo)
+		if innerErr != nil {
+			return innerErr
+		}
+
 		bytes = tx.Bucket(WalletAddressToAccountCacheInfo).Get([]byte(walletAddress))
 		return nil
 	})
