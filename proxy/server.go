@@ -52,6 +52,7 @@ func NewWebServer(cfg *config.GeneralConfig) (*webServer, error) {
 	handlers.NewTxTemplateHandler(groupHandler, cfg.Auth, cfg.Blockchain)
 	handlers.NewPriceHandler(groupHandler, cfg.Auth)
 	handlers.NewAccountsHandler(groupHandler, cfg.Auth)
+	handlers.NewImageHandler(groupHandler, cfg.Auth)
 
 	groupHandler.RegisterEndpoints(router)
 

@@ -5,7 +5,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func AddNewAsset(asset *data.Asset) error {
+func AddAsset(asset *data.Asset) error {
 	database, err := GetDBOrError()
 	if err != nil {
 		return err

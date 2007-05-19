@@ -2,6 +2,7 @@ package storage
 
 import (
 	"errors"
+	"github.com/erdsea/erdsea-api/data/images"
 	"sync"
 
 	"database/sql"
@@ -62,6 +63,26 @@ func TryMigrate() error {
 	}
 
 	err = db.AutoMigrate(&data.Collection{})
+	if err != nil {
+		return err
+	}
+
+	err = db.AutoMigrate(&images.AccountCoverImage{})
+	if err != nil {
+		return err
+	}
+
+	err = db.AutoMigrate(&images.AccountProfileImage{})
+	if err != nil {
+		return err
+	}
+
+	err = db.AutoMigrate(&images.CollectionCoverImage{})
+	if err != nil {
+		return err
+	}
+
+	err = db.AutoMigrate(&images.CollectionProfileImage{})
 	if err != nil {
 		return err
 	}
