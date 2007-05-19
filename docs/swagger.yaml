@@ -14,6 +14,25 @@ definitions:
       value:
         type: string
     type: object
+  dtos.BidDto:
+    properties:
+      bidAmountNominal:
+        type: number
+      bidAmountString:
+        type: string
+      bidderAddress:
+        type: string
+      bidderName:
+        type: string
+      id:
+        type: integer
+      timestamp:
+        type: integer
+      tokenId:
+        type: integer
+      txHash:
+        type: string
+    type: object
   dtos.CollectionStatistics:
     properties:
       attributes:
@@ -83,6 +102,27 @@ definitions:
       tokenId:
         type: string
       tokenName:
+        type: string
+    type: object
+  dtos.OfferDto:
+    properties:
+      amountNominal:
+        type: number
+      amountString:
+        type: string
+      expire:
+        type: integer
+      id:
+        type: integer
+      offerorAddress:
+        type: string
+      offerorName:
+        type: string
+      timestamp:
+        type: integer
+      tokenId:
+        type: integer
+      txHash:
         type: string
     type: object
   dtos.OwnedTokenDto:
@@ -194,27 +234,6 @@ definitions:
       twitterLink:
         type: string
       website:
-        type: string
-    type: object
-  entities.Proffer:
-    properties:
-      amountNominal:
-        type: number
-      amountString:
-        type: string
-      expire:
-        type: integer
-      id:
-        type: integer
-      offerorId:
-        type: integer
-      timestamp:
-        type: integer
-      tokenId:
-        type: integer
-      txHash:
-        type: string
-      type:
         type: string
     type: object
   entities.Token:
@@ -1117,52 +1136,6 @@ paths:
       summary: Gets EGLD price in dollars.
       tags:
       - egld_price
-  /proffers/{tokenId}/{nonce}/{offset}/{limit}:
-    get:
-      consumes:
-      - application/json
-      description: Retrieves proffers for a token (identified by tokenId and nonce)
-      parameters:
-      - description: token id
-        in: path
-        name: tokenId
-        required: true
-        type: string
-      - description: token nonce
-        in: path
-        name: nonce
-        required: true
-        type: integer
-      - description: offset
-        in: path
-        name: offset
-        required: true
-        type: integer
-      - description: limit
-        in: path
-        name: limit
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/entities.Proffer'
-            type: array
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/dtos.ApiResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/dtos.ApiResponse'
-      summary: Get proffers (offers and bids) for token
-      tags:
-      - proffers
   /royalties/{userAddress}:
     get:
       consumes:
@@ -1327,6 +1300,98 @@ paths:
           schema:
             $ref: '#/definitions/dtos.ApiResponse'
       summary: Get token by id and nonce
+      tags:
+      - tokens
+  /tokens/{tokenId}/{nonce}/bids/{offset}/{limit}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves bids for a token (identified by tokenId and nonce)
+      parameters:
+      - description: token id
+        in: path
+        name: tokenId
+        required: true
+        type: string
+      - description: token nonce
+        in: path
+        name: nonce
+        required: true
+        type: integer
+      - description: offset
+        in: path
+        name: offset
+        required: true
+        type: integer
+      - description: limit
+        in: path
+        name: limit
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dtos.BidDto'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: Get bids for token
+      tags:
+      - tokens
+  /tokens/{tokenId}/{nonce}/offers/{offset}/{limit}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves offers for a token (identified by tokenId and nonce)
+      parameters:
+      - description: token id
+        in: path
+        name: tokenId
+        required: true
+        type: string
+      - description: token nonce
+        in: path
+        name: nonce
+        required: true
+        type: integer
+      - description: offset
+        in: path
+        name: offset
+        required: true
+        type: integer
+      - description: limit
+        in: path
+        name: limit
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dtos.OfferDto'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: Get offers for token
       tags:
       - tokens
   /tokens/available:

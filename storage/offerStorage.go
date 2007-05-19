@@ -6,7 +6,7 @@ import (
 	"github.com/erdsea/erdsea-api/data/entities"
 )
 
-func AddProffer(p *entities.Proffer) error {
+func AddOffer(p *entities.Offer) error {
 	database, err := GetDBOrError()
 	if err != nil {
 		return err
@@ -23,15 +23,15 @@ func AddProffer(p *entities.Proffer) error {
 	return nil
 }
 
-func DeleteProffersForTokenId(tokenDbId uint64) error {
-	var proffers []entities.Proffer
+func DeleteOffersForTokenId(tokenDbId uint64) error {
+	var offers []entities.Offer
 
 	database, err := GetDBOrError()
 	if err != nil {
 		return err
 	}
 
-	txCreate := database.Delete(proffers, "token_id = ?", tokenDbId)
+	txCreate := database.Delete(offers, "token_id = ?", tokenDbId)
 	if txCreate.Error != nil {
 		return txCreate.Error
 	}
@@ -42,15 +42,15 @@ func DeleteProffersForTokenId(tokenDbId uint64) error {
 	return nil
 }
 
-func DeleteOfferByTokenIdAndAccountId(tokenDbId uint64, accountDbId uint64) error {
-	var proffer entities.Proffer
+func DeleteOfferByOfferorForTokenId(offerorAddress string, tokenDbId uint64,) error {
+	var proffer entities.Offer
 
 	database, err := GetDBOrError()
 	if err != nil {
 		return err
 	}
 
-	txCreate := database.Delete(&proffer, "type = ? AND token_id = ? AND offeror_id = ?", entities.Offer, tokenDbId, accountDbId)
+	txCreate := database.Delete(&proffer, "token_id = ? AND offeror_address = ?", tokenDbId, offerorAddress)
 	if txCreate.Error != nil {
 		return txCreate.Error
 	}
@@ -61,18 +61,18 @@ func DeleteOfferByTokenIdAndAccountId(tokenDbId uint64, accountDbId uint64) erro
 	return nil
 }
 
-func GetProffersForTokenWithOffsetLimit(tokenId uint64, offset int, limit int) ([]entities.Proffer, error) {
-	var proffers []entities.Proffer
+func GetOffersForTokenWithOffsetLimit(tokenId uint64, offset int, limit int) ([]entities.Offer, error) {
+	var offer []entities.Offer
 
 	database, err := GetDBOrError()
 	if err != nil {
 		return nil, err
 	}
 
-	txRead := database.Offset(offset).Limit(limit).Find(&proffers, "token_id = ?", tokenId)
+	txRead := database.Offset(offset).Limit(limit).Find(&offer, "token_id = ?", tokenId)
 	if txRead.Error != nil {
 		return nil, txRead.Error
 	}
 
-	return proffers, nil
+	return offer, nil
 }

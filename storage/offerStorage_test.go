@@ -10,15 +10,14 @@ import (
 func Test_DeleteProffer(t *testing.T) {
 	connectToTestDb()
 
-	proffer := entities.Proffer{
-		Type:          "Offer",
-		AmountNominal: 1,
-		TokenID:       1,
-		OfferorID:     1,
+	offer := entities.Offer{
+		AmountNominal:  1,
+		TokenID:        1,
+		OfferorAddress: "erd1",
 	}
-	err := AddProffer(&proffer)
+	err := AddOffer(&offer)
 	require.Nil(t, err)
 
-	err = DeleteOfferByTokenIdAndAccountId(1, 1)
+	err = DeleteOfferByOfferorForTokenId("erd1", 1)
 	require.Nil(t, err)
 }

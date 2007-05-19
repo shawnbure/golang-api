@@ -144,7 +144,12 @@ func TryMigrate() error {
 		return err
 	}
 
-	err = db.AutoMigrate(&entities.Proffer{})
+	err = db.AutoMigrate(&entities.Offer{})
+	if err != nil {
+		return err
+	}
+
+	err = db.AutoMigrate(&entities.Bid{})
 	if err != nil {
 		return err
 	}
