@@ -1317,6 +1317,46 @@ var doc = `{
                 }
             }
         },
+        "/tokens/available": {
+            "get": {
+                "description": "Get available tokens and some collection info",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tokens"
+                ],
+                "summary": "Get available tokens",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "availableTokensRequest",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.AvailableTokensRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.AvailableTokensResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/tokens/{tokenId}/{nonce}": {
             "get": {
                 "description": "Retrieves a token by tokenId and nonce",
@@ -1559,7 +1599,7 @@ var doc = `{
                 "summary": "Gets transaction for an token.",
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "token id",
                         "name": "tokenId",
                         "in": "path",
@@ -1876,6 +1916,12 @@ var doc = `{
                 "collection": {
                     "$ref": "#/definitions/entities.Collection"
                 },
+                "creatorName": {
+                    "type": "string"
+                },
+                "creatorWalletAddress": {
+                    "type": "string"
+                },
                 "statistics": {
                     "$ref": "#/definitions/dtos.CollectionStatistics"
                 }
@@ -2083,6 +2129,61 @@ var doc = `{
                 },
                 "version": {
                     "type": "integer"
+                }
+            }
+        },
+        "handlers.AvailableToken": {
+            "type": "object",
+            "properties": {
+                "collection": {
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "string"
+                        },
+                        "name": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "token": {
+                    "type": "object",
+                    "properties": {
+                        "available": {
+                            "type": "boolean"
+                        },
+                        "id": {
+                            "type": "string"
+                        },
+                        "name": {
+                            "type": "string"
+                        },
+                        "nonce": {
+                            "type": "integer"
+                        }
+                    }
+                }
+            }
+        },
+        "handlers.AvailableTokensRequest": {
+            "type": "object",
+            "properties": {
+                "tokens": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "handlers.AvailableTokensResponse": {
+            "type": "object",
+            "properties": {
+                "tokens": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/handlers.AvailableToken"
+                    }
                 }
             }
         },

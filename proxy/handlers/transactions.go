@@ -80,7 +80,7 @@ func (handler *transactionsHandler) getList(c *gin.Context) {
 // @Tags transactions
 // @Accept json
 // @Produce json
-// @Param tokenId path uint64 true "token id"
+// @Param tokenId path string true "token id"
 // @Param offset path int true "offset"
 // @Param limit path int true "limit"
 // @Success 200 {object} []entities.Transaction

@@ -11,6 +11,9 @@ type ExtendedTokenDto struct {
 	OwnerName          string `json:"ownerName"`
 	OwnerWalletAddress string `json:"ownerWalletAddress"`
 
+	CreatorName          string `json:"creatorName"`
+	CreatorWalletAddress string `json:"creatorWalletAddress"`
+
 	CollectionStats CollectionStatistics `json:"collectionStats"`
 }
 
@@ -19,14 +22,18 @@ func CreateExtendedTokenDto(
 	collection entities.Collection,
 	ownerName string,
 	ownerWalletAddress string,
+	creatorName string,
+	creatorWalletAddress string,
 	collStats CollectionStatistics,
 ) (*ExtendedTokenDto, error) {
 	e := &ExtendedTokenDto{
-		Token:              token,
-		Collection:         collection,
-		OwnerName:          ownerName,
-		OwnerWalletAddress: ownerWalletAddress,
-		CollectionStats:    collStats,
+		Token:                token,
+		Collection:           collection,
+		OwnerName:            ownerName,
+		OwnerWalletAddress:   ownerWalletAddress,
+		CreatorName:          creatorName,
+		CreatorWalletAddress: creatorWalletAddress,
+		CollectionStats:      collStats,
 	}
 
 	return e, nil

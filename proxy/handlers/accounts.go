@@ -50,7 +50,7 @@ func NewAccountsHandler(groupHandler *groupHandler, authCfg config.AuthConfig) {
 	}
 	publicEndpointGroupHandler := EndpointGroupHandler{
 		Root:             baseAccountsEndpoint,
-		Middlewares:      []gin.HandlerFunc{middleware.Authorization(authCfg.JwtSecret)},
+		Middlewares:      []gin.HandlerFunc{},
 		EndpointHandlers: publicEndpoints,
 	}
 	groupHandler.AddEndpointGroupHandler(publicEndpointGroupHandler)
