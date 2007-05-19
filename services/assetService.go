@@ -33,10 +33,10 @@ func ListAsset(args ListAssetArgs) {
 		return
 	}
 
+	collectionId := uint64(0)
 	collection, err := storage.GetCollectionByTokenId(args.TokenId)
-	if err != nil {
-		log.Debug("could not get collection", "err", err)
-		return
+	if err == nil {
+		collectionId = collection.ID
 	}
 
 	asset := data.Asset{
@@ -48,7 +48,7 @@ func ListAsset(args ListAssetArgs) {
 		CreatedAt:        args.Timestamp,
 		Listed:           true,
 		OwnerId:          ownerAccount.ID,
-		CollectionID:     collection.ID,
+		CollectionID:     collectionId,
 	}
 
 	existingAsset, err := storage.GetAssetByTokenIdAndNonce(args.TokenId, args.Nonce)
@@ -74,7 +74,7 @@ func ListAsset(args ListAssetArgs) {
 		SellerID:     ownerAccount.ID,
 		BuyerID:      0,
 		AssetID:      asset.ID,
-		CollectionID: collection.ID,
+		CollectionID: collectionId,
 	}
 
 	AddTransaction(&transaction)
