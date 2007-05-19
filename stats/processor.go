@@ -16,7 +16,6 @@ type CollectionMetadata struct {
 func ComputeStatisticsForCollection(collectionId uint64) (*dtos.CollectionStatistics, error) {
 	var stats dtos.CollectionStatistics
 
-	//TODO: refactor this to something smarter. Min price is not good
 	minPrice, err := storage.GetMinBuyPriceForTransactionsWithCollectionId(collectionId)
 	if err != nil {
 		return nil, err

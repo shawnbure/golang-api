@@ -82,12 +82,6 @@ func main() {
 		generalConfigFile,
 		workingDirectory,
 	}
-	app.Authors = []cli.Author{
-		{
-			Name:  "The ErdSea Team",
-			Email: "contact@erdsea.com",
-		},
-	}
 	app.Action = startProxy
 
 	err := app.Run(os.Args)

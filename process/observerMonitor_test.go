@@ -5,10 +5,6 @@ import (
 	"fmt"
 	"testing"
 	"time"
-
-	"github.com/erdsea/erdsea-api/alerts/tg"
-	"github.com/erdsea/erdsea-api/config"
-	"github.com/stretchr/testify/require"
 )
 
 type mockBot struct {
@@ -56,25 +52,4 @@ func TestObserverMonitor_Monitor(t *testing.T) {
 	time.Sleep(10 * time.Minute)
 	ticker.Stop()
 	done <- true
-}
-
-func TestObserverMonitor_NotifyBotOnBlockHash(t *testing.T) {
-	t.Parallel()
-	t.Skip("this is a long test...skipping")
-
-	cfg := config.BotConfig{
-		Token: "2010065738:AAH0J6N2meI7Wj2c_5AsnMAXXGNcj2YTYPk",
-		RecID: "-1001435005959",
-	}
-
-	bot, err := tg.NewTelegramBot(cfg)
-	require.Nil(t, err)
-
-	bot.Start()
-
-	monit := NewObserverMonitor(bot, context.Background(), true)
-	monit.LivenessChan() <- "test-hash-cool-cool"
-
-	ch := make(chan bool)
-	<-ch
 }

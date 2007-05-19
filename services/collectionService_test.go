@@ -286,24 +286,24 @@ func Test_CollectionFlags(t *testing.T) {
 	connectToDb()
 
 	collection := entities.Collection{
-		Flags: datatypes.JSON(`["ceva", "altceva"]`),
+		Flags: datatypes.JSON(`["k1", "k2"]`),
 	}
 	err := storage.AddCollection(&collection)
 	require.Nil(t, err)
 
 	db := storage.GetDB()
 	var read entities.Collection
-	tx := db.Where(datatypes.JSONQuery("flags").HasKey("ceva")).Find(&read)
+	tx := db.Where(datatypes.JSONQuery("flags").HasKey("k1")).Find(&read)
 	require.Nil(t, tx.Error)
 	require.NotZero(t, tx.RowsAffected)
 }
 
 func Test_ValidFlags(t *testing.T) {
-	flags := []string{"ceva", "ceva ceva"}
+	flags := []string{"k1", "k2"}
 	err := CheckValidFlags(flags)
 	require.Nil(t, err)
 
-	flags = []string{"ceva", "ceva ceva", ";"}
+	flags = []string{"k1", "k2", ";"}
 	err = CheckValidFlags(flags)
 	require.NotNil(t, err)
 }
@@ -312,16 +312,16 @@ func Test_FlagsFilter(t *testing.T) {
 	connectToDb()
 
 	collection := entities.Collection{
-		Flags: datatypes.JSON(`["ceva", "altceva123"]`),
+		Flags: datatypes.JSON(`["k1", "k2"]`),
 	}
 	err := storage.AddCollection(&collection)
 	require.Nil(t, err)
 
-	colls, err := storage.GetCollectionsWithOffsetLimit(0, 10, []string{"ceva", "altceva123"})
+	colls, err := storage.GetCollectionsWithOffsetLimit(0, 10, []string{"k1", "k2"})
 	require.Nil(t, err)
 	require.GreaterOrEqual(t, len(colls), 1)
 
-	colls, err = storage.GetCollectionsWithOffsetLimit(0, 10, []string{"ceva", "bkqbdwkqehwleqh"})
+	colls, err = storage.GetCollectionsWithOffsetLimit(0, 10, []string{"k1", "bkqbdwkqehwleqh"})
 	require.Nil(t, err)
 	require.Zero(t, len(colls))
 }

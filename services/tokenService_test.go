@@ -264,7 +264,7 @@ func Test_ErdCompatibility(t *testing.T) {
 		Nonce:        nonce,
 		TokenName:    "some_name",
 		Price:        "3635C9ADC5DEA00000",
-		Attributes:   `{"ceva": "ceva"}`,
+		Attributes:   `{"k1": "v1"}`,
 		FirstLink:    "https://wow-prod-nftribe.s3.eu-west-2.amazonaws.com/t/70",
 		SecondLink:   "some_link",
 	}

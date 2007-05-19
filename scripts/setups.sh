@@ -11,7 +11,7 @@ PSQL_CLIENT_CONNECT_OPT="host        all         all             0.0.0.0/0      
 
 REDIS_PSW=some_pass
 
-NGINX_CONF_ABS_PATH="/home/elrond/Github/erdsea/erdsea-api/scripts/nginx.conf"
+NGINX_CONF_ABS_PATH="/home/erdsea-api/scripts/nginx.conf"
 
 postgres_install() {
   if ! [ -x "$(command psql -V)" ]; then

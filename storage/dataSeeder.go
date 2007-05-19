@@ -21,7 +21,7 @@ var _accounts = []entities.Account{
 		Name:          "bouncing banana",
 		Description:   "fuck-off",
 		Website:       "https://github.com/",
-		TwitterLink:   "https://twitter.com/disclosetv",
+		TwitterLink:   "https://twitter.com/test",
 		InstagramLink: "https://www.instagram.com/",
 		CreatedAt:     uint64(time.Now().Unix()),
 	},

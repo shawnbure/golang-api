@@ -12,7 +12,7 @@ import (
 
 func Test_CreateAndRefreshBeforeExpireShouldNotWork(t *testing.T) {
 	seed := "202d2274940909b4f3c23691c857d7d3352a0574cfb96efbf1ef90cbc66e2cbc"
-	msg := []byte("all your tokens are belong to us, kind ser")
+	msg := []byte("msg")
 
 	seedBytes, _ := hex.DecodeString(seed)
 
@@ -24,7 +24,7 @@ func Test_CreateAndRefreshBeforeExpireShouldNotWork(t *testing.T) {
 	require.Nil(t, verifyErr)
 
 	service, err := NewAuthService(config.AuthConfig{
-		JwtSecret:     "bitcoin-to-1-milly",
+		JwtSecret:     "supersecret",
 		JwtIssuer:     "localhost:5000",
 		JwtKeySeedHex: "d6592724167553acf9c8cba9a7dbc7f514efc757d7906546cecfdfc5d4c2e8d1",
 		JwtExpiryMins: 15,
@@ -50,7 +50,7 @@ func Test_CreateAndRefreshBeforeExpireShouldNotWork(t *testing.T) {
 
 func Test_CreateAndRefreshAfterExpireShouldWork(t *testing.T) {
 	seed := "202d2274940909b4f3c23691c857d7d3352a0574cfb96efbf1ef90cbc66e2cbc"
-	msg := []byte("all your tokens are belong to us, kind ser")
+	msg := []byte("msg")
 
 	seedBytes, _ := hex.DecodeString(seed)
 
@@ -62,7 +62,7 @@ func Test_CreateAndRefreshAfterExpireShouldWork(t *testing.T) {
 	require.Nil(t, verifyErr)
 
 	service, err := NewAuthService(config.AuthConfig{
-		JwtSecret:     "bitcoin-to-1-milly",
+		JwtSecret:     "supersecret",
 		JwtIssuer:     "localhost:5000",
 		JwtKeySeedHex: "d6592724167553acf9c8cba9a7dbc7f514efc757d7906546cecfdfc5d4c2e8d1",
 		JwtExpiryMins: -1,

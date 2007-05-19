@@ -43,6 +43,6 @@ func (cu *cloudyUploader) UploadBase64(ctx context.Context, b64Img, imgID string
 	return res.SecureURL, nil
 }
 
-func (cu *cloudyUploader) GetImage(fileName string) ([]byte, string, error) {
+func (cu *cloudyUploader) GetImage(_ string) ([]byte, string, error) {
 	return nil, "", nil
 }

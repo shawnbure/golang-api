@@ -59,7 +59,7 @@ func TestNewEdKey_KeySignatureWillBeVerified(t *testing.T) {
 	t.Parallel()
 
 	seed := "202d2274940909b4f3c23691c857d7d3352a0574cfb96efbf1ef90cbc66e2cbc"
-	msg := []byte("all your tokens are belong to us, kind ser")
+	msg := []byte("some test message")
 
 	seedBytes, _ := hex.DecodeString(seed)
 
@@ -70,19 +70,6 @@ func TestNewEdKey_KeySignatureWillBeVerified(t *testing.T) {
 
 	verifyErr := VerifySignature(pk, msg, sig)
 	require.Nil(t, verifyErr)
-}
-
-func Test_VerifyDevnetWalletGeneratedSignature(t *testing.T) {
-	address, err := erdgoData.NewAddressFromBech32String("erd17s2pz8qrds6ake3qwheezgy48wzf7dr5nhdpuu2h4rr4mt5rt9ussj7xzh")
-	require.Nil(t, err)
-
-	message := []byte("cevaceva")
-	sig, err := hex.DecodeString("8722fc7a40c84ab784d7cca3c94a334bd2da82fd55c827e242fe4bc3a7062342d7f61ac037bee380dac1237ea369bc390882059abb965ab98855139dc7745e0c")
-	require.Nil(t, err)
-
-	erdMsg := ComputeElrondSignableMessage(message)
-	err = VerifySignature(address.AddressBytes(), erdMsg, sig)
-	require.Nil(t, err)
 }
 
 func Test_ElrondGoCopyPasted(t *testing.T) {
