@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/erdsea/erdsea-api/cdn"
 	"github.com/erdsea/erdsea-api/storage"
@@ -34,8 +35,14 @@ func SetAccountProfileImage(accountAddress string, accountId uint64, image *stri
 	if err != nil {
 		return "", err
 	}
+
+	base64ImageSize := getRawBase64ImageLength(image)
+	if base64ImageSize % 4 != 0 {
+		*image = (*image)[:base64ImageSize-1]
+	}
+
 	imgId := accountAddress + ProfileSuffix
-	imgUrl, err := uploader.UploadBase64(ctx, (*image)[:len(*image)-1], imgId)
+	imgUrl, err := uploader.UploadBase64(ctx, *image, imgId)
 	if err != nil {
 		return "", err
 	}
@@ -61,8 +68,14 @@ func SetAccountCoverImage(accountAddress string, accountId uint64, image *string
 	if err != nil {
 		return "", err
 	}
+
+	base64ImageSize := getRawBase64ImageLength(image)
+	if base64ImageSize % 4 != 0 {
+		*image = (*image)[:base64ImageSize-1]
+	}
+
 	imgId := accountAddress + CoverSuffix
-	imgUrl, err := uploader.UploadBase64(ctx, (*image)[:len(*image)-1], imgId)
+	imgUrl, err := uploader.UploadBase64(ctx, *image, imgId)
 	if err != nil {
 		return "", err
 	}
@@ -88,8 +101,14 @@ func SetCollectionCoverImage(tokenId string, collectionId uint64, image *string)
 	if err != nil {
 		return "", err
 	}
+
+	base64ImageSize := getRawBase64ImageLength(image)
+	if base64ImageSize % 4 != 0 {
+		*image = (*image)[:base64ImageSize-1]
+	}
+
 	imgId := tokenId + CoverSuffix
-	imgUrl, err := uploader.UploadBase64(ctx, (*image)[:len(*image)-1], imgId)
+	imgUrl, err := uploader.UploadBase64(ctx, *image, imgId)
 	if err != nil {
 		return "", err
 	}
@@ -115,8 +134,14 @@ func SetCollectionProfileImage(tokenId string, collectionId uint64, image *strin
 	if err != nil {
 		return "", err
 	}
+
+	base64ImageSize := getRawBase64ImageLength(image)
+	if base64ImageSize % 4 != 0 {
+		*image = (*image)[:base64ImageSize-1]
+	}
+
 	imgId := tokenId + ProfileSuffix
-	imgUrl, err := uploader.UploadBase64(ctx, (*image)[:len(*image)-1], imgId)
+	imgUrl, err := uploader.UploadBase64(ctx, *image, imgId)
 	if err != nil {
 		return "", err
 	}
@@ -131,4 +156,8 @@ func SetCollectionProfileImage(tokenId string, collectionId uint64, image *strin
 
 func getByteArrayLenOfBase64EncodedImage(image *string) int {
 	return base64.StdEncoding.DecodedLen(len(*image))
+}
+
+func getRawBase64ImageLength(image *string) int {
+	return len(*image) - (strings.Index(*image, cdn.Base64Separator) + 1)
 }

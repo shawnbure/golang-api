@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	base64Separator = ","
+	Base64Separator = ","
 )
 
 func Base64ToReader(base64Img string) (io.Reader, error) {
@@ -35,7 +35,7 @@ func Base64ToBytes(base64Img string) ([]byte, error) {
 }
 
 func stripB64Str(s string) string {
-	suffixIdx := strings.Index(s, base64Separator)
+	suffixIdx := strings.Index(s, Base64Separator)
 
 	return s[suffixIdx+1:]
 }
