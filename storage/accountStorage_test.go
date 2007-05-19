@@ -7,7 +7,7 @@ import (
 )
 
 func Test_AddNewAccount(t *testing.T) {
-	connectToDb(t)
+	connectToTestDb()
 
 	account := defaultAccount()
 	err := AddNewAccount(&account)
@@ -21,7 +21,7 @@ func Test_AddNewAccount(t *testing.T) {
 }
 
 func Test_GetAccountById(t *testing.T) {
-	connectToDb(t)
+	connectToTestDb()
 
 	account := defaultAccount()
 	err := AddNewAccount(&account)
@@ -33,7 +33,7 @@ func Test_GetAccountById(t *testing.T) {
 }
 
 func Test_GetAccountByAddress(t *testing.T) {
-	connectToDb(t)
+	connectToTestDb()
 
 	account := defaultAccount()
 	account.Address = "unique_erd_addr"

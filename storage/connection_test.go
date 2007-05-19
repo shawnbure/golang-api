@@ -8,14 +8,12 @@ import (
 	"testing"
 )
 
-const ConfigTestFilePath = "../config/config_test.toml"
-
 func Test_Connection(t *testing.T) {
-	connectToDb(t)
+	connectToTestDb()
 }
 
 func Test_BasicWrite(t *testing.T) {
-	connectToDb(t)
+	connectToTestDb()
 
 	collection := defaultCollection()
 	tx := GetDB().Create(&collection)
@@ -23,7 +21,7 @@ func Test_BasicWrite(t *testing.T) {
 }
 
 func Test_BasicWriteRead(t *testing.T) {
-	connectToDb(t)
+	connectToTestDb()
 
 	collection := defaultCollection()
 	tx := GetDB().Create(&collection)
@@ -36,8 +34,17 @@ func Test_BasicWriteRead(t *testing.T) {
 	require.Equal(t, collectionRead, collection)
 }
 
-func connectToDb(t *testing.T) {
-	cfg, err := config.LoadConfig(ConfigTestFilePath)
-	require.Nil(t, err)
-	Connect(cfg.Database)
+func connectToTestDb() {
+	Connect(config.DatabaseConfig{
+		Dialect:       "postgres",
+		Host:          "localhost",
+		Port:          5432,
+		DbName:        "erdsea_db_test",
+		User:          "postgres",
+		Password:      "root",
+		SslMode:       "disable",
+		MaxOpenConns:  50,
+		MaxIdleConns:  10,
+		ShouldMigrate: true,
+	})
 }
