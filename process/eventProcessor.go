@@ -346,7 +346,7 @@ func (e *EventProcessor) onEventStartAuction(event entities.Event) {
 
 	eventJson, err := json.Marshal(args)
 	if err == nil {
-		log.Debug("onEventAcceptOffer", string(eventJson))
+		log.Debug("onEventStartAuction", string(eventJson))
 	}
 
 	_, err = services.StartAuction(args, e.blockchainProxy, e.marketplaceAddress)
