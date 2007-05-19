@@ -195,20 +195,14 @@ func GetExtendedTokenData(tokenId string, nonce uint64) (*dtos.ExtendedTokenDto,
 		return nil, err
 	}
 
-	var collection *entities.Collection
-	if token.CollectionID > 0 {
-		collection, err = storage.GetCollectionById(token.CollectionID)
-		if err != nil {
-			return nil, err
-		}
+	collection, err := storage.GetCollectionById(token.CollectionID)
+	if err != nil {
+		return nil, err
 	}
 
-	var owner *entities.Account
-	if token.OwnerId > 0 {
-		owner, err = storage.GetAccountById(token.OwnerId)
-		if err != nil {
-			return nil, err
-		}
+	owner, err := storage.GetAccountById(token.OwnerId)
+	if err != nil {
+		return nil, err
 	}
 
 	collStats, err := collstats.GetStatisticsForTokenId(tokenId)
@@ -218,8 +212,7 @@ func GetExtendedTokenData(tokenId string, nonce uint64) (*dtos.ExtendedTokenDto,
 
 	return dtos.CreateExtendedTokenDto(
 		*token,
-		collection.TokenID,
-		collection.Name,
+		*collection,
 		owner.Name,
 		owner.Address,
 		*collStats,

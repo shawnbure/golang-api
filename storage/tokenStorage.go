@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"fmt"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 
@@ -111,7 +112,13 @@ func GetTokensByCollectionId(collectionId uint64) ([]entities.Token, error) {
 	return tokens, nil
 }
 
-func GetTokensByCollectionIdWithOffsetLimit(collectionId uint64, offset int, limit int, attributesFilters map[string]string) ([]entities.Token, error) {
+func GetTokensByCollectionIdWithOffsetLimit(
+	collectionId uint64,
+	offset int,
+	limit int,
+	attributesFilters map[string]string,
+	sortRules map[string]string,
+) ([]entities.Token, error) {
 	var tokens []entities.Token
 
 	database, err := GetDBOrError()
@@ -122,6 +129,11 @@ func GetTokensByCollectionIdWithOffsetLimit(collectionId uint64, offset int, lim
 	txRead := database.Offset(offset).Limit(limit)
 	for k, v := range attributesFilters {
 		txRead.Where(datatypes.JSONQuery("attributes").Equals(v, k))
+	}
+
+	if len(sortRules) == 2 {
+		query := fmt.Sprintf("%s %s", sortRules["criteria"], sortRules["mode"])
+		txRead.Order(query)
 	}
 
 	txRead.Find(&tokens, "collection_id = ?", collectionId)
