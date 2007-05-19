@@ -2,10 +2,11 @@ package interaction
 
 import (
 	"encoding/hex"
-	"github.com/erdsea/erdsea-api/config"
-	"github.com/stretchr/testify/require"
 	"strconv"
 	"testing"
+
+	"github.com/erdsea/erdsea-api/config"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_SimpleQuery(t *testing.T) {
