@@ -18,7 +18,6 @@ const (
 	withdrawNFTIdentifier   = "withdrawNft"
 
 	saveEventsTTL        = 5 * time.Minute
-	saveFinalizedHashTTL = 30 * time.Minute
 )
 
 type EventProcessor struct {
@@ -82,7 +81,7 @@ func (e *EventProcessor) OnEvents(blockEvents entities.BlockEvents) {
 		}
 	}
 
-	err := e.localCacher.SetWithTTLSync(blockEvents.Hash, blockEvents.Events, saveEventsTTL)
+	err := e.localCacher.SetWithTTLSync(blockEvents.Hash, filterableEvents, saveEventsTTL)
 	if err != nil {
 		log.Error(
 			"could not store events at block",
@@ -151,7 +150,6 @@ func (e *EventProcessor) onEventPutNftForSale(event entities.Event) {
 		TxHash:           decodeTxHashFromTopic(event.Topics[12]),
 	}
 
-	// TODO: if printing the args obj is not intended, marshaling should be rm
 	eventJson, err := json.Marshal(args)
 	if err == nil {
 		log.Debug("onEventPutNftForSale", string(eventJson))
