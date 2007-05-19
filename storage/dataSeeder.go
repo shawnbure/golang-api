@@ -2,6 +2,7 @@ package storage
 
 import (
 	"encoding/json"
+	"math/rand"
 	"time"
 
 	"github.com/erdsea/erdsea-api/config"
@@ -46,9 +47,7 @@ var _collections = []entities.Collection{
 		InstagramLink: "https://www.instagram.com",
 		TelegramLink:  "https://telegram.com",
 		CreatedAt:     uint64(time.Now().Unix()),
-		Priority:      50,
-
-		CreatorID: 1,
+		Priority:      25,
 	},
 	{
 		Name:          "Women",
@@ -60,9 +59,7 @@ var _collections = []entities.Collection{
 		InstagramLink: "https://www.instagram.com",
 		TelegramLink:  "https://telegram.com",
 		CreatedAt:     uint64(time.Now().Unix()),
-		Priority:      25,
-
-		CreatorID: 1,
+		Priority:      50,
 	},
 }
 
@@ -70,7 +67,7 @@ var _tokens = []entities.Token{
 	{
 		TokenID:          "APE-abcdef",
 		Nonce:            1,
-		PriceString:      "100",
+		PriceString:      "100000000000000000000",
 		PriceNominal:     100,
 		RoyaltiesPercent: 200,
 		MetadataLink:     "https://galacticapes.mypinata.cloud/ipfs/QmcX6g2xXiFP5j1iAfXREuP9EucRRpuMCAnoYaVYjtrJeK",
@@ -83,15 +80,12 @@ var _tokens = []entities.Token{
 		TokenName: "Galactic apes",
 		ImageLink: "https://galacticapes.mypinata.cloud/ipfs/QmPqKt7guhrCNS6DWy7gNeyR9ia7UgijVj8evWcUjFiQrc/1.png",
 		Hash:      "",
-
-		OwnerId:      2,
-		CollectionID: 2,
 	},
 	{
 		TokenID:          "APE-abcdef",
 		Nonce:            2,
-		PriceString:      "0",
-		PriceNominal:     0,
+		PriceString:      "1000000000000000000",
+		PriceNominal:     1,
 		RoyaltiesPercent: 200,
 		MetadataLink:     "https://galacticapes.mypinata.cloud/ipfs/QmcX6g2xXiFP5j1iAfXREuP9EucRRpuMCAnoYaVYjtrJeK",
 		CreatedAt:        uint64(time.Now().Unix()),
@@ -104,22 +98,13 @@ var _tokens = []entities.Token{
 		TokenName: "Galactic apes",
 		ImageLink: "https://galacticapes.mypinata.cloud/ipfs/QmPqKt7guhrCNS6DWy7gNeyR9ia7UgijVj8evWcUjFiQrc/2.png",
 		Hash:      "",
-
-		OwnerId:      1,
-		CollectionID: 2,
 	},
 }
 
-var _txs = []entities.Transaction{
-	{
-		Hash:         "hash1",
-		Type:         entities.ListToken,
-		PriceNominal: 100,
-		SellerID:     2,
-		BuyerID:      0,
-		TokenID:      1,
-		CollectionID: 1,
-	},
+var _txTemplate = entities.Transaction{
+	Hash:         "hash1",
+	Type:         entities.ListToken,
+	PriceNominal: 100,
 }
 
 func SeedDatabase(cfg config.DatabaseConfig) {
@@ -147,8 +132,8 @@ func SeedDatabase(cfg config.DatabaseConfig) {
 }
 
 func addAccounts() error {
-	for _, acc := range _accounts {
-		if err := AddAccount(&acc); err != nil {
+	for index, _ := range _accounts {
+		if err := AddAccount(&_accounts[index]); err != nil {
 			return err
 		}
 	}
@@ -157,8 +142,9 @@ func addAccounts() error {
 }
 
 func addCollections() error {
-	for _, coll := range _collections {
-		if err := AddCollection(&coll); err != nil {
+	for index, _ := range _collections {
+		_collections[index].CreatorID = _accounts[rand.Intn(len(_accounts))].ID
+		if err := AddCollection(&_collections[index]); err != nil {
 			return err
 		}
 	}
@@ -167,8 +153,10 @@ func addCollections() error {
 }
 
 func addTokens() error {
-	for _, t := range _tokens {
-		if err := AddToken(&t); err != nil {
+	for index, _ := range _tokens {
+		_tokens[index].OwnerId = _accounts[rand.Intn(len(_accounts))].ID
+		_tokens[index].CollectionID = _collections[rand.Intn(len(_collections))].ID
+		if err := AddToken(&_tokens[index]); err != nil {
 			return err
 		}
 	}
@@ -177,7 +165,28 @@ func addTokens() error {
 }
 
 func addTxs() error {
-	for _, tx := range _txs {
+	for i := 1; i < 20; i++ {
+		var txType entities.TxType
+		if i % 3 == 0 {
+			txType = entities.ListToken
+		}
+		if i % 3 == 1 {
+			txType = entities.BuyToken
+		}
+		if i % 3 == 2 {
+			txType = entities.WithdrawToken
+		}
+
+		tx := _txTemplate
+		randToken := _tokens[rand.Intn(len(_tokens))]
+
+		tx.Type = txType
+		tx.TokenID = randToken.ID
+		tx.PriceNominal = randToken.PriceNominal
+		tx.CollectionID = randToken.CollectionID
+		tx.BuyerID = _accounts[rand.Intn(len(_accounts))].ID
+		tx.SellerID = _accounts[rand.Intn(len(_accounts))].ID
+
 		if err := AddTransaction(&tx); err != nil {
 			return err
 		}
