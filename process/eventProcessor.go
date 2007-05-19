@@ -33,7 +33,6 @@ type EventProcessor struct {
 func NewEventProcessor(
 	addresses []string,
 	identifiers []string,
-	localCacher *cache.LocalCacher,
 	monitor *observerMonitor,
 ) *EventProcessor {
 	addrSet := map[string]bool{}
@@ -51,7 +50,7 @@ func NewEventProcessor(
 		addressSet:     addrSet,
 		identifiersSet: idSet,
 		eventsPool:     make(chan []entities.Event),
-		localCacher:    localCacher,
+		localCacher:    cache.GetLocalCacher(),
 		monitor:        monitor,
 	}
 

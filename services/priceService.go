@@ -58,11 +58,10 @@ func GetPrice(from, to string) (float64, error) {
 }
 
 func GetEGLDPrice() (float64, error) {
-	var price float64
-
-	errRead := cache.GetCacher().Get(EGLDPriceCacheKey, &price)
+	localCacher := cache.GetLocalCacher()
+	priceVal, errRead := localCacher.Get(EGLDPriceCacheKey)
 	if errRead == nil {
-		return price, nil
+		return priceVal.(float64), nil
 	}
 
 	price, err := GetPrice(EGLDTicker, USDTTicker)
@@ -70,7 +69,7 @@ func GetEGLDPrice() (float64, error) {
 		return price, err
 	}
 
-	errSet := cache.GetCacher().Set(EGLDPriceCacheKey, price, binanceResponseExpirePeriod)
+	errSet := localCacher.SetWithTTLSync(EGLDPriceCacheKey, price, binanceResponseExpirePeriod)
 	if errSet != nil {
 		log.Debug("could not cache result", errSet)
 	}
