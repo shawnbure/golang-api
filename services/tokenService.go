@@ -63,6 +63,7 @@ const (
 	minPriceDecimals        = 15
 
 	maxTokenLinkResponseSize = 1024
+	maxTokenNumAvailableSize = 25
 
 	ZeroAddress           = "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu"
 	NftProxyRequestFormat = "%s/address/%s/nft/%s/nonce/%d"
@@ -73,7 +74,8 @@ var (
 
 	baseExp = big.NewInt(10)
 
-	log = logger.GetOrCreate("services")
+	log                = logger.GetOrCreate("services")
+	tooManyTokensError = errors.New("too many tokens")
 )
 
 func ListToken(args ListTokenArgs, blockchainProxy string, marketplaceAddress string) {
@@ -589,10 +591,13 @@ func GetOrAddTokenCacheInfo(tokenId string, nonce uint64) (*TokenCacheInfo, erro
 	return cacheInfo, nil
 }
 
-func GetAvailableTokens(args AvailableTokensRequest) AvailableTokensResponse {
+func GetAvailableTokens(args AvailableTokensRequest) (AvailableTokensResponse, error) {
 	var response AvailableTokensResponse
-	response.Tokens = make(map[string]AvailableToken)
+	if len(args.Tokens) > maxTokenNumAvailableSize {
+		return response, tooManyTokensError
+	}
 
+	response.Tokens = make(map[string]AvailableToken)
 	for _, token := range args.Tokens {
 		parts := strings.Split(token, "-")
 		if len(parts) != 3 {
@@ -645,7 +650,7 @@ func GetAvailableTokens(args AvailableTokensRequest) AvailableTokensResponse {
 		}
 	}
 
-	return response
+	return response, nil
 }
 
 func TryGetMetadataLink(blockchainProxy string, address string, tokenId string, nonce uint64) (string, error) {

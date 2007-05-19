@@ -83,7 +83,11 @@ func (handler *tokensHandler) getAvailableTokens(c *gin.Context) {
 		return
 	}
 
-	//TODO: add limit for token number
-	response := services.GetAvailableTokens(request)
+	response, err := services.GetAvailableTokens(request)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
 	dtos.JsonResponse(c, http.StatusOK, response, "")
 }
