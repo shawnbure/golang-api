@@ -2,11 +2,10 @@ package formatter
 
 import (
 	"encoding/hex"
-	"errors"
 	"github.com/ElrondNetwork/elrond-sdk-erdgo/data"
 	"github.com/erdsea/erdsea-api/config"
+	"github.com/erdsea/erdsea-api/services"
 	"math/big"
-	"strconv"
 )
 
 var (
@@ -24,15 +23,10 @@ func NewTxFormatter(cfg config.BlockchainConfig) TxFormatter {
 	return TxFormatter{config: cfg}
 }
 
-func (f *TxFormatter) NewListNftTxTemplate(senderAddr string, tokenId string, nonce uint64, price string) (*data.Transaction, error) {
+func (f *TxFormatter) NewListNftTxTemplate(senderAddr string, tokenId string, nonce uint64, price float64) (*data.Transaction, error) {
 	marketPlaceAddress, err := data.NewAddressFromBech32String(f.config.MarketplaceAddress)
 	if err != nil {
 		return nil, err
-	}
-
-	priceBigInt, success := big.NewInt(0).SetString(price, 10)
-	if !success {
-		return nil, errors.New("cannot parse price")
 	}
 
 	txData := ESDTNFTTransferEndpointName +
@@ -41,7 +35,7 @@ func (f *TxFormatter) NewListNftTxTemplate(senderAddr string, tokenId string, no
 		"@" + hex.EncodeToString(big.NewInt(int64(1)).Bytes()) +
 		"@" + hex.EncodeToString(marketPlaceAddress.AddressBytes()) +
 		"@" + hex.EncodeToString([]byte(listNftEndpointName)) +
-		"@" + hex.EncodeToString(priceBigInt.Bytes())
+		"@" + hex.EncodeToString(services.GetPriceDenominated(price).Bytes())
 
 	tx := data.Transaction{
 		Nonce:     0,
@@ -60,9 +54,8 @@ func (f *TxFormatter) NewListNftTxTemplate(senderAddr string, tokenId string, no
 	return &tx, nil
 }
 
-func (f *TxFormatter) NewBuyNftTxTemplate(senderAddr string, tokenId string, nonce uint64, price string) data.Transaction {
-	priceDec := big.NewInt(0).SetBytes([]byte(price)).Int64()
-	priceDecStr := strconv.FormatInt(priceDec, 10)
+func (f *TxFormatter) NewBuyNftTxTemplate(senderAddr string, tokenId string, nonce uint64, price float64) data.Transaction {
+	priceDecStr := services.GetPriceDenominated(price).Text(10)
 
 	txData := buyNftEndpointName +
 		"@" + hex.EncodeToString([]byte(tokenId)) +

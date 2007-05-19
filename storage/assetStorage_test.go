@@ -111,7 +111,8 @@ func defaultAsset() data.Asset {
 	return data.Asset{
 		TokenID:      "my_token",
 		Nonce:        10,
-		Price:        "100000",
+		PriceNominal: 1_000_000_000_000_000_000_000,
+		Listed:       true,
 		Link:         "link.com",
 		OwnerId:      1,
 		CollectionID: 1,
