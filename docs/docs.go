@@ -1558,12 +1558,6 @@ var doc = `{
                         "schema": {
                             "$ref": "#/definitions/dtos.ApiResponse"
                         }
-                    },
-                    "501": {
-                        "description": "Not Implemented",
-                        "schema": {
-                            "$ref": "#/definitions/dtos.ApiResponse"
-                        }
                     }
                 }
             }

@@ -1449,10 +1449,6 @@ paths:
           description: Not Found
           schema:
             $ref: '#/definitions/dtos.ApiResponse'
-        "501":
-          description: Not Implemented
-          schema:
-            $ref: '#/definitions/dtos.ApiResponse'
       summary: Tries to refresh token metadata link and attributes.
       tags:
       - tokens

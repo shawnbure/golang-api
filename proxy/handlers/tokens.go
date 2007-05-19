@@ -274,7 +274,6 @@ func (handler *tokensHandler) relayMetadataResponse(c *gin.Context) {
 // @Success 200 {object} string
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 404 {object} dtos.ApiResponse
-// @Failure 501 {object} dtos.ApiResponse
 // @Router /tokens/{tokenId}/{nonce}/refresh [post]
 func (handler *tokensHandler) refreshMetadata(c *gin.Context) {
 	tokenId := c.Param("tokenId")
@@ -293,20 +292,9 @@ func (handler *tokensHandler) refreshMetadata(c *gin.Context) {
 	}
 
 	jwtAddress := c.GetString(middleware.AddressKey)
-	jwtUser, err := services.GetOrAddAccountCacheInfo(jwtAddress)
-	if err != nil {
-		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
-		return
-	}
-
 	token, err := storage.GetTokenById(tokenCacheInfo.TokenDbId)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
-		return
-	}
-
-	if token.OwnerId != 0 && token.OwnerId != jwtUser.AccountId {
-		dtos.JsonResponse(c, http.StatusUnauthorized, nil, "")
 		return
 	}
 
