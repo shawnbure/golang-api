@@ -198,7 +198,7 @@ func setMintInfoCache(contractAddress string) (*MintInfo, error) {
 		return nil, errors.New("no blockchain interactor")
 	}
 
-	result, err := bi.DoSimpleVmQuery(contractAddress, MintInfoViewName)
+	result, err := bi.DoVmQuery(contractAddress, MintInfoViewName, []string{})
 	if err != nil {
 		return nil, err
 	}

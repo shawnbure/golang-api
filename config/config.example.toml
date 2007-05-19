@@ -3,7 +3,7 @@
     Username = ""
     Password = ""
     Addresses = [
-        "erd1qqqqqqqqqqqqqpgqj8vnqw76wq333qwx2wjf2nyn89dc8jhct9usvxzd7g",
+        "erd1qqqqqqqqqqqqqpgqm4dmwyxc5fsj49z3jcu9h08azjrcf60kt9uspxs483",
     ]
     Identifiers = [
         "putNftForSale",
@@ -23,7 +23,7 @@
     GasPrice = 1_000_000_000
     PemPath = "./config/owner.pem"
     ProxyUrl = "https://devnet-gateway.elrond.com"
-    MarketplaceAddress = "erd1qqqqqqqqqqqqqpgqj8vnqw76wq333qwx2wjf2nyn89dc8jhct9usvxzd7g"
+    MarketplaceAddress = "erd1qqqqqqqqqqqqqpgqm4dmwyxc5fsj49z3jcu9h08azjrcf60kt9uspxs483"
     ListNftGasLimit = 20_000_000
     BuyNftGasLimit = 15_000_000
     WithdrawNftGasLimit = 15_000_000

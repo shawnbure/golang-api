@@ -31,6 +31,9 @@ type EventProcessor struct {
 	addressSet     map[string]bool
 	identifiersSet map[string]bool
 
+	blockchainProxy    string
+	marketplaceAddress string
+
 	eventsPool chan []entities.Event
 
 	localCacher *cache.LocalCacher
@@ -40,6 +43,8 @@ type EventProcessor struct {
 func NewEventProcessor(
 	addresses []string,
 	identifiers []string,
+	blockchainProxy string,
+	marketplaceAddress string,
 	monitor *observerMonitor,
 ) *EventProcessor {
 	addrSet := map[string]bool{}
@@ -54,11 +59,13 @@ func NewEventProcessor(
 	}
 
 	processor := &EventProcessor{
-		addressSet:     addrSet,
-		identifiersSet: idSet,
-		eventsPool:     make(chan []entities.Event),
-		localCacher:    cache.GetLocalCacher(),
-		monitor:        monitor,
+		addressSet:         addrSet,
+		identifiersSet:     idSet,
+		blockchainProxy:    blockchainProxy,
+		marketplaceAddress: marketplaceAddress,
+		eventsPool:         make(chan []entities.Event),
+		localCacher:        cache.GetLocalCacher(),
+		monitor:            monitor,
 	}
 
 	go processor.PoolWorker()
@@ -188,7 +195,7 @@ func (e *EventProcessor) onEventPutNftForSale(event entities.Event) {
 		log.Debug("onEventPutNftForSale", string(eventJson))
 	}
 
-	services.ListToken(args)
+	services.ListToken(args, e.blockchainProxy, e.marketplaceAddress)
 }
 
 func (e *EventProcessor) onEventBuyNft(event entities.Event) {
@@ -340,7 +347,7 @@ func (e *EventProcessor) onEventStartAuction(event entities.Event) {
 		log.Debug("onEventAcceptOffer", string(eventJson))
 	}
 
-	_, err = services.StartAuction(args)
+	_, err = services.StartAuction(args, e.blockchainProxy, e.marketplaceAddress)
 	if err != nil {
 		log.Error("could not start auction", err)
 	}

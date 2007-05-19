@@ -60,6 +60,8 @@ func NewWebServer(cfg *config.GeneralConfig) (*webServer, error) {
 	processor := process.NewEventProcessor(
 		cfg.ConnectorApi.Addresses,
 		cfg.ConnectorApi.Identifiers,
+		cfg.Blockchain.ProxyUrl,
+		cfg.Blockchain.MarketplaceAddress,
 		observerMonitor,
 	)
 
