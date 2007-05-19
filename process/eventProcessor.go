@@ -72,22 +72,48 @@ func (e *EventProcessor) isEventAccepted(ev data.Event) bool {
 }
 
 func (e *EventProcessor) onEventCollectionRegister(event data.Event) {
-	creatorAddress := decodeAddressFromTopic(event.Topics[0])
+	ownerAddress := decodeAddressFromTopic(event.Topics[0])
 	tokenId := decodeStringFromTopic(event.Topics[1])
 	collectionName := decodeStringFromTopic(event.Topics[2])
-	timestamp := decodeU64FromTopic(event.Topics[3])
+	collectionDescription := decodeStringFromTopic(event.Topics[3])
+	timestamp := decodeU64FromTopic(event.Topics[4])
 
-	fmt.Println(creatorAddress, tokenId, collectionName, timestamp)
+	fmt.Println(ownerAddress, tokenId, collectionName, collectionDescription, timestamp)
 }
 
 func (e *EventProcessor) onEventPutNftForSale(event data.Event) {
+	ownerAddress := decodeAddressFromTopic(event.Topics[0])
+	tokenId := decodeStringFromTopic(event.Topics[1])
+	nonce := decodeU64FromTopic(event.Topics[2])
+	uri := decodeStringFromTopic(event.Topics[3])
+	collectionName := decodeStringFromTopic(event.Topics[4])
+	price := decodeBigUintFromTopic(event.Topics[5])
+	timestamp := decodeU64FromTopic(event.Topics[6])
 
+	fmt.Println(ownerAddress, tokenId, nonce, uri, collectionName, price, timestamp)
 }
 
 func (e *EventProcessor) onEventBuyNft(event data.Event) {
+	ownerAddress := decodeAddressFromTopic(event.Topics[0])
+	buyerAddress := decodeAddressFromTopic(event.Topics[1])
+	tokenId := decodeStringFromTopic(event.Topics[2])
+	nonce := decodeU64FromTopic(event.Topics[3])
+	uri := decodeStringFromTopic(event.Topics[4])
+	collectionName := decodeStringFromTopic(event.Topics[5])
+	price := decodeBigUintFromTopic(event.Topics[6])
+	timestamp := decodeU64FromTopic(event.Topics[7])
 
+	fmt.Println(ownerAddress, buyerAddress, tokenId, nonce, uri, collectionName, price, timestamp)
 }
 
 func (e *EventProcessor) onEventWithdrawNft(event data.Event) {
+	ownerAddress := decodeAddressFromTopic(event.Topics[0])
+	tokenId := decodeStringFromTopic(event.Topics[1])
+	nonce := decodeU64FromTopic(event.Topics[2])
+	uri := decodeStringFromTopic(event.Topics[3])
+	collectionName := decodeStringFromTopic(event.Topics[4])
+	price := decodeBigUintFromTopic(event.Topics[5])
+	timestamp := decodeU64FromTopic(event.Topics[6])
 
+	fmt.Println(ownerAddress, tokenId, nonce, uri, collectionName, price, timestamp)
 }

@@ -5,5 +5,6 @@ type Collection struct {
 	Name    string
 	TokenID string
 
-	CreatorID uint64
+	Description string
+	CreatorID   uint64
 }
