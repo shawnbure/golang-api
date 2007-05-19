@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/erdsea/erdsea-api/config"
 	"image"
 	"image/jpeg"
 	"image/png"
@@ -13,6 +12,8 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+
+	"github.com/erdsea/erdsea-api/config"
 )
 
 var (

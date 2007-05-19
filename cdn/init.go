@@ -2,9 +2,9 @@ package cdn
 
 import (
 	"errors"
-	logger "github.com/ElrondNetwork/elrond-go-logger"
 	"sync"
 
+	logger "github.com/ElrondNetwork/elrond-go-logger"
 	"github.com/erdsea/erdsea-api/config"
 )
 
