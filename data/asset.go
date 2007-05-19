@@ -1,5 +1,7 @@
 package data
 
+import "gorm.io/datatypes"
+
 type Asset struct {
 	ID               uint64 `gorm:"primaryKey"`
 	TokenID          string
@@ -9,7 +11,7 @@ type Asset struct {
 	Link             string
 	CreatedAt        uint64
 	Listed           bool
-	LinkResponse	 string
+	Attributes       datatypes.JSON
 
 	OwnerId      uint64
 	CollectionID uint64

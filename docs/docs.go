@@ -1546,6 +1546,12 @@ var doc = `{
         "data.Asset": {
             "type": "object",
             "properties": {
+                "attributes": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
                 "collectionID": {
                     "type": "integer"
                 },
@@ -1556,9 +1562,6 @@ var doc = `{
                     "type": "integer"
                 },
                 "link": {
-                    "type": "string"
-                },
-                "linkResponse": {
                     "type": "string"
                 },
                 "listed": {

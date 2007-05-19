@@ -1,7 +1,9 @@
 package services
 
 import (
+	"encoding/json"
 	"errors"
+	"gorm.io/datatypes"
 	"math/big"
 	"strconv"
 
@@ -9,6 +11,16 @@ import (
 	"github.com/erdsea/erdsea-api/data"
 	"github.com/erdsea/erdsea-api/storage"
 )
+
+type AssetLinkResponse struct {
+	Image      string      `json:"image"`
+	Attributes []Attribute `json:"attributes"`
+}
+
+type Attribute struct {
+	Value     string `json:"value"`
+	TraitType string `json:"trait_type"`
+}
 
 var log = logger.GetOrCreate("services")
 
@@ -52,17 +64,12 @@ func ListAsset(args ListAssetArgs) {
 		Listed:           true,
 		OwnerId:          ownerAccount.ID,
 		CollectionID:     collectionId,
-		LinkResponse:     "",
 	}
 
 	existingAsset, err := storage.GetAssetByTokenIdAndNonce(args.TokenId, args.Nonce)
 
 	var innerErr error
-	if err == nil {
-		asset.ID = existingAsset.ID
-		asset.LinkResponse = existingAsset.LinkResponse
-		innerErr = storage.UpdateAsset(&asset)
-	} else {
+	if err != nil {
 		assetLinkWithNonce := GetAssetLinkWithNonce(&asset)
 		response, reqErr := HttpGetRaw(assetLinkWithNonce)
 		if reqErr != nil {
@@ -70,12 +77,22 @@ func ListAsset(args ListAssetArgs) {
 			response = ""
 		}
 		if len(response) > maxAssetLinkResponseSize {
-			log.Debug("response too long for asset link request")
+			log.Debug("response too long for asset link request", "link", asset.Link)
 			response = ""
 		}
 
-		asset.LinkResponse = response
+		//TODO: Can take other info from request as well. Do we want?
+		attributes, constructErr := ConstructAttributesJsonFromResponse(response)
+		if constructErr != nil {
+			log.Debug("could not construct attributes", "err", constructErr)
+		}
+
+		asset.Attributes = *attributes
 		innerErr = storage.AddAsset(&asset)
+	} else {
+		asset.ID = existingAsset.ID
+		asset.Attributes = existingAsset.Attributes
+		innerErr = storage.UpdateAsset(&asset)
 	}
 
 	if innerErr != nil {
@@ -187,6 +204,28 @@ func WithdrawAsset(args WithdrawAssetArgs) {
 	}
 
 	AddTransaction(&transaction)
+}
+
+func ConstructAttributesJsonFromResponse(response string) (*datatypes.JSON, error) {
+	var responseParsed AssetLinkResponse
+
+	err := json.Unmarshal([]byte(response), &responseParsed)
+	if err != nil {
+		return nil, err
+	}
+
+	attrsMap := make(map[string]string)
+	for _, element := range responseParsed.Attributes {
+		attrsMap[element.TraitType] = element.Value
+	}
+
+	attrsBytes, err := json.Marshal(attrsMap)
+	if err != nil {
+		return nil, err
+	}
+
+	attrsJson := datatypes.JSON(attrsBytes)
+	return &attrsJson, err
 }
 
 func GetPriceNominal(priceHex string) (float64, error) {

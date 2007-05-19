@@ -26,6 +26,10 @@ definitions:
     type: object
   data.Asset:
     properties:
+      attributes:
+        items:
+          type: integer
+        type: array
       collectionID:
         type: integer
       createdAt:
@@ -33,8 +37,6 @@ definitions:
       id:
         type: integer
       link:
-        type: string
-      linkResponse:
         type: string
       listed:
         type: boolean

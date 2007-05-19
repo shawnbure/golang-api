@@ -1530,6 +1530,12 @@
         "data.Asset": {
             "type": "object",
             "properties": {
+                "attributes": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
                 "collectionID": {
                     "type": "integer"
                 },
@@ -1540,9 +1546,6 @@
                     "type": "integer"
                 },
                 "link": {
-                    "type": "string"
-                },
-                "linkResponse": {
                     "type": "string"
                 },
                 "listed": {
