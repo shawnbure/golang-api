@@ -1,11 +1,11 @@
 package storage
 
 import (
-	"github.com/erdsea/erdsea-api/data"
 	"sync"
 
 	"database/sql"
 	"github.com/erdsea/erdsea-api/config"
+	"github.com/erdsea/erdsea-api/data"
 	_ "github.com/lib/pq"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -52,7 +52,6 @@ func TryMigrate() error {
 	if err != nil {
 		return err
 	}
-
 
 	err = db.AutoMigrate(&data.Transaction{})
 	if err != nil {

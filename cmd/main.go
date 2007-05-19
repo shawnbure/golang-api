@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/erdsea/erdsea-api/storage"
 	"net/http"
 	"os"
 	"os/signal"
@@ -14,6 +13,7 @@ import (
 	"github.com/erdsea/erdsea-api/config"
 	"github.com/erdsea/erdsea-api/logging"
 	"github.com/erdsea/erdsea-api/proxy"
+	"github.com/erdsea/erdsea-api/storage"
 	"github.com/urfave/cli"
 )
 
