@@ -13,10 +13,11 @@ import (
 )
 
 const (
-	baseCollectionsEndpoint     = "/collections"
-	getCollectionsEndpoint      = "/:offset/:limit"
-	getCollectionByNameEndpoint = "/by-name/:collectionName"
-	createCollectionEndpoint    = "/create"
+	baseCollectionsEndpoint         = "/collections"
+	getCollectionsEndpoint          = "/:offset/:limit"
+	getCollectionByNameEndpoint     = "/by-name/:collectionName"
+	createCollectionEndpoint        = "/create"
+	getCollectionStatisticsEndpoint = "/statistics/:collectionName"
 )
 
 type collectionsHandler struct {
@@ -29,6 +30,7 @@ func NewCollectionsHandler(groupHandler *groupHandler, authCfg config.AuthConfig
 	endpoints := []EndpointHandler{
 		{Method: http.MethodGet, Path: getCollectionsEndpoint, HandlerFunc: handler.get},
 		{Method: http.MethodGet, Path: getCollectionByNameEndpoint, HandlerFunc: handler.getByName},
+		{Method: http.MethodGet, Path: getCollectionStatisticsEndpoint, HandlerFunc: handler.getStatisticsForCollectionWithName},
 		{Method: http.MethodPost, Path: createCollectionEndpoint, HandlerFunc: handler.create},
 	}
 
@@ -69,13 +71,31 @@ func (ch *collectionsHandler) get(c *gin.Context) {
 func (ch *collectionsHandler) getByName(c *gin.Context) {
 	collectionName := c.Param("collectionName")
 
-	asset, err := storage.GetCollectionByName(collectionName)
+	collection, err := storage.GetCollectionByName(collectionName)
 	if err != nil {
 		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
-	data.JsonResponse(c, http.StatusOK, asset, "")
+	data.JsonResponse(c, http.StatusOK, collection, "")
+}
+
+func (ch *collectionsHandler) getStatisticsForCollectionWithName(c *gin.Context) {
+	collectionName := c.Param("collectionName")
+
+	collection, err := storage.GetCollectionByName(collectionName)
+	if err != nil {
+		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	stats, err := services.GetStatisticsForCollection(collection.ID)
+	if err != nil {
+		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	data.JsonResponse(c, http.StatusOK, stats, "")
 }
 
 func (ch *collectionsHandler) create(c *gin.Context) {

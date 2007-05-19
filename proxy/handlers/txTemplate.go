@@ -45,9 +45,15 @@ func (handler *txTemplateHandler) getListNftTemplate(c *gin.Context) {
 	userAddress := c.Param("userAddress")
 	tokenId := c.Param("tokenId")
 	nonceStr := c.Param("nonce")
-	price := c.Param("price")
+	priceStr := c.Param("price")
 
 	nonce, err := strconv.ParseUint(nonceStr, 10, 64)
+	if err != nil {
+		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	price, err := strconv.ParseFloat(priceStr, 64)
 	if err != nil {
 		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
@@ -66,9 +72,15 @@ func (handler *txTemplateHandler) getBuyNftTemplate(c *gin.Context) {
 	userAddress := c.Param("userAddress")
 	tokenId := c.Param("tokenId")
 	nonceStr := c.Param("nonce")
-	price := c.Param("price")
+	priceStr := c.Param("price")
 
 	nonce, err := strconv.ParseUint(nonceStr, 10, 64)
+	if err != nil {
+		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	price, err := strconv.ParseFloat(priceStr, 64)
 	if err != nil {
 		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return

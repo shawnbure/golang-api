@@ -1,6 +1,7 @@
 package services
 
 import (
+	"strconv"
 	"testing"
 
 	"github.com/erdsea/erdsea-api/config"
@@ -45,7 +46,7 @@ func Test_ListAsset(t *testing.T) {
 		ID:           asset.ID,
 		TokenID:      "tokenId",
 		Nonce:        13,
-		Price:        "1000",
+		PriceNominal: 1_000_000_000_000_000_000_000,
 		Link:         "uri",
 		Listed:       true,
 		OwnerId:      ownerAccount.ID,
@@ -105,7 +106,7 @@ func Test_SellAsset(t *testing.T) {
 		ID:           asset.ID,
 		TokenID:      "tokenId",
 		Nonce:        13,
-		Price:        "1000",
+		PriceNominal: 1_000_000_000_000_000_000_000,
 		Link:         "uri",
 		Listed:       false,
 		OwnerId:      0,
@@ -160,13 +161,44 @@ func Test_WithdrawAsset(t *testing.T) {
 		ID:           asset.ID,
 		TokenID:      "tokenId",
 		Nonce:        13,
-		Price:        "1000",
+		PriceNominal: 1_000_000_000_000_000_000_000,
 		Link:         "uri",
 		Listed:       false,
 		OwnerId:      0,
 		CollectionID: asset.CollectionID,
 	}
 	require.Equal(t, expectedAsset, *asset)
+}
+
+func Test_GetPriceNominal(T *testing.T) {
+	hex := strconv.FormatInt(1_000_000_000_000_000_000, 16)
+	priceNominal, err := GetPriceNominal(hex)
+	require.Nil(T, err)
+	require.Equal(T, priceNominal, float64(1))
+
+	hex = strconv.FormatInt(1_000_000_000_000_000, 16)
+	priceNominal, err = GetPriceNominal(hex)
+	require.Nil(T, err)
+	require.Equal(T, priceNominal, 0.001)
+
+	hex = strconv.FormatInt(100_000_000_000_000, 16)
+	priceNominal, err = GetPriceNominal(hex)
+	require.Nil(T, err)
+	require.Equal(T, priceNominal, float64(0))
+}
+
+func Test_GetPriceDenominated(T *testing.T) {
+	price := float64(1)
+	require.Equal(T, GetPriceDenominated(price).Text(10), "1000000000000000000")
+
+	price = 1000
+	require.Equal(T, GetPriceDenominated(price).Text(10), "1000000000000000000000")
+
+	price = 0.001
+	require.Equal(T, GetPriceDenominated(price).Text(10), "1000000000000000")
+
+	price = 0.0001
+	require.Equal(T, GetPriceDenominated(price).Text(10), "0")
 }
 
 func connectToDb() {

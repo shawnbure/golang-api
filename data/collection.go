@@ -11,6 +11,7 @@ type Collection struct {
 	InstagramLink string
 	TelegramLink  string
 	CreatedAt     uint64
+	Priority      uint64
 
 	CreatorID uint64
 }

@@ -127,13 +127,43 @@ func Test_GetTransactionsByHash(t *testing.T) {
 	require.Equal(t, transactionRead.Hash, transaction.Hash)
 }
 
+func Test_GetTransactionWithMinPriceByCollectionId(t *testing.T) {
+	connectToTestDb()
+
+	transaction := defaultTransaction()
+	transaction.PriceNominal = float64(1)
+	transaction.Type = "Buy"
+	transaction.Hash = "my_unique_hash"
+	err := AddNewTransaction(&transaction)
+	require.Nil(t, err)
+
+	minPrice, err := GetMinBuyPriceForTransactionsWithCollectionId(99)
+	require.Nil(t, err)
+	require.Equal(t, minPrice, float64(1))
+}
+
+func Test_GetSumBuyPriceForTransactionsWithCollectionId(t *testing.T) {
+	connectToTestDb()
+
+	transaction := defaultTransaction()
+	transaction.Type = "Buy"
+	transaction.Hash = "my_unique_hash"
+	err := AddNewTransaction(&transaction)
+	require.Nil(t, err)
+
+	sumPrice, err := GetSumBuyPriceForTransactionsWithCollectionId(1)
+	require.Nil(t, err)
+	require.GreaterOrEqual(t, sumPrice, float64(1_000_000_000_000_000_000_000))
+}
+
 func defaultTransaction() data.Transaction {
 	return data.Transaction{
-		Hash:     "hash",
-		Type:     "test",
-		Price:    "1000",
-		SellerID: 1,
-		BuyerID:  2,
-		AssetID:  3,
+		Hash:         "hash",
+		Type:         "test",
+		PriceNominal: 1_000_000_000_000_000_000_000,
+		SellerID:     1,
+		BuyerID:      2,
+		AssetID:      3,
+		CollectionID: 1,
 	}
 }

@@ -17,6 +17,8 @@ const (
 	MaxDescLen               = 1000
 	RegisteredNFTsBaseFormat = "%s/address/%s/registered-nfts"
 	HttpResponseExpirePeriod = 10 * time.Minute
+	StatisticsCacheKeyFormat = "StatisticsForId%d"
+	StatisticsExpirePeriod   = 15 * time.Minute
 )
 
 type CreateCollectionRequest struct {
@@ -29,6 +31,13 @@ type CreateCollectionRequest struct {
 	TwitterLink   string `json:"twitterLink"`
 	InstagramLink string `json:"instagramLink"`
 	TelegramLink  string `json:"telegramLink"`
+}
+
+type CollectionStatistics struct {
+	ItemsCount   uint64 `json:"itemsCount"`
+	OwnersCount  uint64 `json:"ownersCount"`
+	FloorPrice   float64 `json:"floorPrice"`
+	VolumeTraded float64 `json:"volumeTraded"`
 }
 
 type ProxyRegisteredNFTsResponse struct {
@@ -83,6 +92,51 @@ func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) 
 	}
 
 	return storage.AddNewCollection(collection)
+}
+
+func GetStatisticsForCollection(collectionId uint64) (*CollectionStatistics, error) {
+	var stats CollectionStatistics
+	cacheKey := fmt.Sprintf(StatisticsCacheKeyFormat, collectionId)
+
+	err := cache.GetCacher().Get(cacheKey, &stats)
+	if err == nil {
+		return &stats, nil
+	}
+
+	numItems, err := storage.CountListedAssetsByCollectionId(collectionId)
+	if err != nil {
+		return nil, err
+	}
+
+	numOwners, err := storage.CountUniqueOwnersWithListedAssetsByCollectionId(collectionId)
+	if err != nil {
+		return nil, err
+	}
+
+	//TODO: refactor this to something smarter. Min price is not good
+	minPrice, err := storage.GetMinBuyPriceForTransactionsWithCollectionId(collectionId)
+	if err != nil {
+		return nil, err
+	}
+
+	sumPrice, err := storage.GetSumBuyPriceForTransactionsWithCollectionId(collectionId)
+	if err != nil {
+		return nil, err
+	}
+
+	stats = CollectionStatistics{
+		ItemsCount:   numItems,
+		OwnersCount:  numOwners,
+		FloorPrice:   minPrice,
+		VolumeTraded: sumPrice,
+	}
+
+	err = cache.GetCacher().Set(cacheKey, stats, StatisticsExpirePeriod)
+	if err != nil {
+		log.Debug("could not set cache", "err", err)
+	}
+
+	return &stats, nil
 }
 
 func contains(arr []string, str string) bool {
