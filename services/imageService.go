@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/erdsea/erdsea-api/data/images"
+	"github.com/erdsea/erdsea-api/data/entities/images"
 	"github.com/erdsea/erdsea-api/storage"
 )
 

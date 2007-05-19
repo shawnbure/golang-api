@@ -8,8 +8,8 @@ import (
 	"sync"
 
 	"github.com/erdsea/erdsea-api/config"
-	"github.com/erdsea/erdsea-api/data"
-	"github.com/erdsea/erdsea-api/data/images"
+	"github.com/erdsea/erdsea-api/data/entities"
+	"github.com/erdsea/erdsea-api/data/entities/images"
 	_ "github.com/lib/pq"
 )
 
@@ -47,22 +47,22 @@ func Connect(cfg config.DatabaseConfig) {
 }
 
 func TryMigrate() error {
-	err := db.AutoMigrate(&data.Account{})
+	err := db.AutoMigrate(&entities.Account{})
 	if err != nil {
 		return err
 	}
 
-	err = db.AutoMigrate(&data.Asset{})
+	err = db.AutoMigrate(&entities.Asset{})
 	if err != nil {
 		return err
 	}
 
-	err = db.AutoMigrate(&data.Transaction{})
+	err = db.AutoMigrate(&entities.Transaction{})
 	if err != nil {
 		return err
 	}
 
-	err = db.AutoMigrate(&data.Collection{})
+	err = db.AutoMigrate(&entities.Collection{})
 	if err != nil {
 		return err
 	}

@@ -2,20 +2,21 @@ package services
 
 import (
 	"encoding/json"
-	"github.com/erdsea/erdsea-api/config"
-	"github.com/erdsea/erdsea-api/data"
-	"github.com/erdsea/erdsea-api/storage"
-	"github.com/stretchr/testify/require"
 	"gorm.io/datatypes"
 	"strconv"
 	"strings"
 	"testing"
+
+	"github.com/erdsea/erdsea-api/config"
+	"github.com/erdsea/erdsea-api/data/entities"
+	"github.com/erdsea/erdsea-api/storage"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_ListAsset(t *testing.T) {
 	connectToDb()
 
-	collection := data.Collection{
+	collection := entities.Collection{
 		Name:        "col",
 		TokenID:     "",
 		Description: "",
@@ -43,7 +44,7 @@ func Test_ListAsset(t *testing.T) {
 	asset, err := storage.GetAssetByTokenIdAndNonce("tokenId", 13)
 	require.Nil(t, err)
 
-	expectedAsset := data.Asset{
+	expectedAsset := entities.Asset{
 		ID:           asset.ID,
 		TokenID:      "tokenId",
 		Nonce:        13,
@@ -58,7 +59,7 @@ func Test_ListAsset(t *testing.T) {
 func Test_SellAsset(t *testing.T) {
 	connectToDb()
 
-	collection := data.Collection{
+	collection := entities.Collection{
 		Name:        "col",
 		TokenID:     "",
 		Description: "",
@@ -100,7 +101,7 @@ func Test_SellAsset(t *testing.T) {
 	asset, err := storage.GetAssetByTokenIdAndNonce("tokenId", 13)
 	require.Nil(t, err)
 
-	expectedAsset := data.Asset{
+	expectedAsset := entities.Asset{
 		ID:           asset.ID,
 		TokenID:      "tokenId",
 		Nonce:        13,
@@ -115,7 +116,7 @@ func Test_SellAsset(t *testing.T) {
 func Test_WithdrawAsset(t *testing.T) {
 	connectToDb()
 
-	collection := data.Collection{
+	collection := entities.Collection{
 		Name:        "col",
 		TokenID:     "",
 		Description: "",
@@ -152,7 +153,7 @@ func Test_WithdrawAsset(t *testing.T) {
 	asset, err := storage.GetAssetByTokenIdAndNonce("tokenId", 13)
 	require.Nil(t, err)
 
-	expectedAsset := data.Asset{
+	expectedAsset := entities.Asset{
 		ID:           asset.ID,
 		TokenID:      "tokenId",
 		Nonce:        13,
@@ -196,7 +197,7 @@ func Test_GetPriceDenominated(T *testing.T) {
 }
 
 func Test_GetAssetLinkResponse(t *testing.T) {
-	asset := data.Asset{
+	asset := entities.Asset{
 		Nonce:        1,
 		MetadataLink: "https://wow-prod-nftribe.s3.eu-west-2.amazonaws.com/t",
 	}
@@ -220,7 +221,7 @@ func Test_GetAssetLinkResponse(t *testing.T) {
 	db, err := storage.GetDBOrError()
 	require.Nil(t, err)
 
-	var assetRead data.Asset
+	var assetRead entities.Asset
 	txRead := db.First(&assetRead, datatypes.JSONQuery("attributes").Equals("Lightning Bolts", "Earrings"))
 	require.Nil(t, txRead.Error)
 	require.Equal(t, asset.MetadataLink, "https://wow-prod-nftribe.s3.eu-west-2.amazonaws.com/t")

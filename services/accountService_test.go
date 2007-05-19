@@ -5,7 +5,7 @@ import (
 
 	"github.com/erdsea/erdsea-api/cache"
 	"github.com/erdsea/erdsea-api/config"
-	"github.com/erdsea/erdsea-api/data"
+	"github.com/erdsea/erdsea-api/data/entities"
 	"github.com/erdsea/erdsea-api/storage"
 	"github.com/stretchr/testify/require"
 )
@@ -26,7 +26,7 @@ func Test_SearchAccount(T *testing.T) {
 	connectToDb()
 	cache.InitCacher(config.CacheConfig{Url: "redis://localhost:6379"})
 
-	acc := &data.Account{
+	acc := &entities.Account{
 		Name: "this name is uniquee",
 	}
 

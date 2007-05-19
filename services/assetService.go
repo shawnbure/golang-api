@@ -3,12 +3,13 @@ package services
 import (
 	"encoding/json"
 	"errors"
+	"github.com/erdsea/erdsea-api/data/dtos"
 	"gorm.io/datatypes"
 	"math/big"
 	"strconv"
 
 	logger "github.com/ElrondNetwork/elrond-go-logger"
-	"github.com/erdsea/erdsea-api/data"
+	"github.com/erdsea/erdsea-api/data/entities"
 	"github.com/erdsea/erdsea-api/storage"
 )
 
@@ -79,9 +80,9 @@ func ListAsset(args ListAssetArgs) {
 		return
 	}
 
-	transaction := data.Transaction{
+	transaction := entities.Transaction{
 		Hash:         args.TxHash,
-		Type:         data.ListAsset,
+		Type:         entities.ListAsset,
 		PriceNominal: priceNominal,
 		Timestamp:    args.Timestamp,
 		SellerID:     ownerAccount.ID,
@@ -128,9 +129,9 @@ func BuyAsset(args BuyAssetArgs) {
 		return
 	}
 
-	transaction := data.Transaction{
+	transaction := entities.Transaction{
 		Hash:         args.TxHash,
-		Type:         data.BuyAsset,
+		Type:         entities.BuyAsset,
 		PriceNominal: priceNominal,
 		Timestamp:    args.Timestamp,
 		SellerID:     ownerAccount.ID,
@@ -171,9 +172,9 @@ func WithdrawAsset(args WithdrawAssetArgs) {
 		return
 	}
 
-	transaction := data.Transaction{
+	transaction := entities.Transaction{
 		Hash:         args.TxHash,
-		Type:         data.WithdrawAsset,
+		Type:         entities.WithdrawAsset,
 		PriceNominal: priceNominal,
 		Timestamp:    args.Timestamp,
 		SellerID:     0,
@@ -185,8 +186,45 @@ func WithdrawAsset(args WithdrawAssetArgs) {
 	AddTransaction(&transaction)
 }
 
-func ConstructNewAssetFromListArgs(args ListAssetArgs) data.Asset {
-	asset := data.Asset{
+func GetExtendedTokenData(tokenId string, nonce uint64) (*dtos.ExtendedTokenDto, error) {
+	token, err := storage.GetAssetByTokenIdAndNonce(tokenId, nonce)
+	if err != nil {
+		return nil, err
+	}
+
+	var collection *entities.Collection
+	if token.CollectionID > 0 {
+		collection, err = storage.GetCollectionById(token.CollectionID)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	var owner *entities.Account
+	if token.OwnerId > 0 {
+		owner, err = storage.GetAccountById(token.OwnerId)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	collStats, err := GetStatisticsForCollection(collection.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return dtos.CreateExtendedTokenDto(
+		*token,
+		collection.TokenID,
+		collection.Name,
+		owner.Name,
+		owner.Address,
+		*collStats,
+	)
+}
+
+func ConstructNewAssetFromListArgs(args ListAssetArgs) entities.Asset {
+	asset := entities.Asset{
 		TokenID:          args.TokenId,
 		Nonce:            args.Nonce,
 		RoyaltiesPercent: GetRoyaltiesPercentNominal(args.RoyaltiesPercent),
@@ -287,7 +325,7 @@ func GetRoyaltiesPercentNominal(percent uint64) float64 {
 	return float64(percent) / minPercentRoyaltiesUnit
 }
 
-func AddTransaction(tx *data.Transaction) {
+func AddTransaction(tx *entities.Transaction) {
 	err := storage.AddTransaction(tx)
 	if err != nil {
 		log.Debug("could not create new transaction", "err", err)

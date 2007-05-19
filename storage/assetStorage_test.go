@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/erdsea/erdsea-api/data"
+	"github.com/erdsea/erdsea-api/data/entities"
 	"github.com/stretchr/testify/require"
 )
 
@@ -17,7 +17,7 @@ func Test_AddAsset(t *testing.T) {
 	err := AddAsset(&asset)
 	require.Nil(t, err)
 
-	var assetRead data.Asset
+	var assetRead entities.Asset
 	txRead := GetDB().Last(&assetRead)
 
 	require.Nil(t, txRead.Error)
@@ -34,7 +34,7 @@ func Test_UpdateAsset(t *testing.T) {
 	asset.TokenID = "new_token_id"
 	err = UpdateAsset(&asset)
 
-	var assetRead data.Asset
+	var assetRead entities.Asset
 	txRead := GetDB().Last(&assetRead)
 
 	require.Nil(t, txRead.Error)
@@ -146,13 +146,13 @@ func Test_CountUniqueOwnersWithListedAssetsByCollectionId(t *testing.T) {
 func Test_GetAssetsByCollectionIdWithOffsetLimit(t *testing.T) {
 	connectToTestDb()
 
-	coll := data.Collection{
+	coll := entities.Collection{
 		Name: strconv.Itoa(int(time.Now().Unix())),
 	}
 	err := AddCollection(&coll)
 	require.Nil(t, err)
 
-	asset1 := data.Asset{
+	asset1 := entities.Asset{
 		CollectionID: coll.ID,
 		Listed:       true,
 		OwnerId:      1,
@@ -161,7 +161,7 @@ func Test_GetAssetsByCollectionIdWithOffsetLimit(t *testing.T) {
 	err = AddAsset(&asset1)
 	require.Nil(t, err)
 
-	asset2 := data.Asset{
+	asset2 := entities.Asset{
 		CollectionID: coll.ID,
 		Listed:       true,
 		OwnerId:      1,
@@ -182,8 +182,8 @@ func Test_GetAssetsByCollectionIdWithOffsetLimit(t *testing.T) {
 	require.Equal(t, len(assets2), 1)
 }
 
-func defaultAsset() data.Asset {
-	return data.Asset{
+func defaultAsset() entities.Asset {
+	return entities.Asset{
 		TokenID:      "my_token",
 		Nonce:        10,
 		PriceNominal: 1_000_000_000_000_000_000_000,

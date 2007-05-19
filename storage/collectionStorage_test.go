@@ -3,7 +3,7 @@ package storage
 import (
 	"testing"
 
-	"github.com/erdsea/erdsea-api/data"
+	"github.com/erdsea/erdsea-api/data/entities"
 	"github.com/stretchr/testify/require"
 )
 
@@ -14,7 +14,7 @@ func Test_AddCollection(t *testing.T) {
 	err := AddCollection(&collection)
 	require.Nil(t, err)
 
-	var collectionRead data.Collection
+	var collectionRead entities.Collection
 	txRead := GetDB().Last(&collectionRead)
 
 	require.Nil(t, txRead.Error)
@@ -81,8 +81,8 @@ func Test_GetCollectionsWithNameAlikeWithLimit(t *testing.T) {
 	require.Equal(t, retrievedCollection[1].Name, "default")
 }
 
-func defaultCollection() data.Collection {
-	return data.Collection{
+func defaultCollection() entities.Collection {
+	return entities.Collection{
 		Name:      "default",
 		TokenID:   "my_token",
 		CreatorID: 0,

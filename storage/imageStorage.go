@@ -4,7 +4,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	"github.com/erdsea/erdsea-api/data/images"
+	"github.com/erdsea/erdsea-api/data/entities/images"
 )
 
 func GetAccountProfileImageByAccountId(accountId uint64) (*images.AccountProfileImage, error) {

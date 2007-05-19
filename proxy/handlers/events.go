@@ -4,7 +4,8 @@ import (
 	"net/http"
 
 	"github.com/erdsea/erdsea-api/config"
-	"github.com/erdsea/erdsea-api/data"
+	"github.com/erdsea/erdsea-api/data/dtos"
+	"github.com/erdsea/erdsea-api/data/entities"
 	"github.com/erdsea/erdsea-api/process"
 	"github.com/gin-gonic/gin"
 )
@@ -45,11 +46,11 @@ func NewEventsHandler(
 }
 
 func (h *eventsHandler) pushEvents(c *gin.Context) {
-	var events []data.Event
+	var events []entities.Event
 
 	err := c.Bind(&events)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
@@ -57,7 +58,7 @@ func (h *eventsHandler) pushEvents(c *gin.Context) {
 		h.processor.OnEvents(events)
 	}
 
-	data.JsonResponse(c, http.StatusOK, nil, "")
+	dtos.JsonResponse(c, http.StatusOK, nil, "")
 }
 
 func (h *eventsHandler) createMiddlewares() []gin.HandlerFunc {

@@ -3,10 +3,10 @@ package storage
 import (
 	"gorm.io/gorm"
 
-	"github.com/erdsea/erdsea-api/data"
+	"github.com/erdsea/erdsea-api/data/entities"
 )
 
-func AddCollection(collection *data.Collection) error {
+func AddCollection(collection *entities.Collection) error {
 	database, err := GetDBOrError()
 	if err != nil {
 		return err
@@ -23,7 +23,7 @@ func AddCollection(collection *data.Collection) error {
 	return nil
 }
 
-func UpdateCollection(collection *data.Collection) error {
+func UpdateCollection(collection *entities.Collection) error {
 	database, err := GetDBOrError()
 	if err != nil {
 		return err
@@ -40,8 +40,8 @@ func UpdateCollection(collection *data.Collection) error {
 	return nil
 }
 
-func GetCollectionById(id uint64) (*data.Collection, error) {
-	var collection data.Collection
+func GetCollectionById(id uint64) (*entities.Collection, error) {
+	var collection entities.Collection
 
 	database, err := GetDBOrError()
 	if err != nil {
@@ -59,8 +59,8 @@ func GetCollectionById(id uint64) (*data.Collection, error) {
 	return &collection, nil
 }
 
-func GetCollectionsCreatedBy(id uint64) ([]data.Collection, error) {
-	var collections []data.Collection
+func GetCollectionsCreatedBy(id uint64) ([]entities.Collection, error) {
+	var collections []entities.Collection
 
 	database, err := GetDBOrError()
 	if err != nil {
@@ -75,8 +75,8 @@ func GetCollectionsCreatedBy(id uint64) ([]data.Collection, error) {
 	return collections, nil
 }
 
-func GetCollectionByName(name string) (*data.Collection, error) {
-	var collection data.Collection
+func GetCollectionByName(name string) (*entities.Collection, error) {
+	var collection entities.Collection
 
 	database, err := GetDBOrError()
 	if err != nil {
@@ -94,8 +94,8 @@ func GetCollectionByName(name string) (*data.Collection, error) {
 	return &collection, nil
 }
 
-func GetCollectionByTokenId(tokenId string) (*data.Collection, error) {
-	var collection data.Collection
+func GetCollectionByTokenId(tokenId string) (*entities.Collection, error) {
+	var collection entities.Collection
 
 	database, err := GetDBOrError()
 	if err != nil {
@@ -113,8 +113,8 @@ func GetCollectionByTokenId(tokenId string) (*data.Collection, error) {
 	return &collection, nil
 }
 
-func GetCollectionsWithOffsetLimit(offset int, limit int) ([]data.Collection, error) {
-	var collections []data.Collection
+func GetCollectionsWithOffsetLimit(offset int, limit int) ([]entities.Collection, error) {
+	var collections []entities.Collection
 
 	database, err := GetDBOrError()
 	if err != nil {
@@ -129,8 +129,8 @@ func GetCollectionsWithOffsetLimit(offset int, limit int) ([]data.Collection, er
 	return collections, nil
 }
 
-func GetCollectionsWithNameAlikeWithLimit(name string, limit int) ([]data.Collection, error) {
-	var collections []data.Collection
+func GetCollectionsWithNameAlikeWithLimit(name string, limit int) ([]entities.Collection, error) {
+	var collections []entities.Collection
 
 	database, err := GetDBOrError()
 	if err != nil {

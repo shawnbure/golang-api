@@ -1,11 +1,11 @@
 package handlers
 
 import (
+	"github.com/erdsea/erdsea-api/data/dtos"
 	"net/http"
 	"strconv"
 
 	"github.com/erdsea/erdsea-api/config"
-	"github.com/erdsea/erdsea-api/data"
 	"github.com/erdsea/erdsea-api/proxy/middleware"
 	"github.com/erdsea/erdsea-api/services"
 	"github.com/erdsea/erdsea-api/storage"
@@ -72,23 +72,23 @@ func (handler *collectionsHandler) getList(c *gin.Context) {
 
 	offset, err := strconv.Atoi(offsetStr)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	limit, err := strconv.Atoi(limitStr)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	collections, err := storage.GetCollectionsWithOffsetLimit(offset, limit)
 	if err != nil {
-		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
-	data.JsonResponse(c, http.StatusOK, collections, "")
+	dtos.JsonResponse(c, http.StatusOK, collections, "")
 }
 
 // @Summary Gets collection by name.
@@ -106,17 +106,17 @@ func (handler *collectionsHandler) get(c *gin.Context) {
 
 	collectionId, err := strconv.ParseUint(collectionIdString, 10, 16)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	collection, err := storage.GetCollectionById(collectionId)
 	if err != nil {
-		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
-	data.JsonResponse(c, http.StatusOK, collection, "")
+	dtos.JsonResponse(c, http.StatusOK, collection, "")
 }
 
 // @Summary Set collection info.
@@ -137,41 +137,41 @@ func (handler *collectionsHandler) set(c *gin.Context) {
 
 	err := c.Bind(&request)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	collectionId, err := strconv.ParseUint(collectionIdString, 10, 16)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	collection, err := storage.GetCollectionById(collectionId)
 	if err != nil {
-		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
 	creator, err := storage.GetAccountById(collection.CreatorID)
 	if err != nil {
-		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
 	jwtAddress := c.GetString(middleware.AddressKey)
 	if creator.Address != jwtAddress {
-		data.JsonResponse(c, http.StatusUnauthorized, nil, "")
+		dtos.JsonResponse(c, http.StatusUnauthorized, nil, "")
 		return
 	}
 
 	err = services.UpdateCollection(collection, &request)
 	if err != nil {
-		data.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
 	}
 
-	data.JsonResponse(c, http.StatusOK, collection, "")
+	dtos.JsonResponse(c, http.StatusOK, collection, "")
 }
 
 // @Summary Gets collection statistics.
@@ -189,17 +189,17 @@ func (handler *collectionsHandler) getStatistics(c *gin.Context) {
 
 	collectionId, err := strconv.ParseUint(collectionIdString, 10, 16)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	stats, err := services.GetStatisticsForCollection(collectionId)
 	if err != nil {
-		data.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
 	}
 
-	data.JsonResponse(c, http.StatusOK, stats, "")
+	dtos.JsonResponse(c, http.StatusOK, stats, "")
 }
 
 // @Summary Creates a collection.
@@ -218,23 +218,23 @@ func (handler *collectionsHandler) create(c *gin.Context) {
 
 	err := c.Bind(&request)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	jwtAddress := c.GetString(middleware.AddressKey)
 	if jwtAddress != request.UserAddress {
-		data.JsonResponse(c, http.StatusUnauthorized, nil, "jwt and request addresses differ")
+		dtos.JsonResponse(c, http.StatusUnauthorized, nil, "jwt and request addresses differ")
 		return
 	}
 
 	collection, err := services.CreateCollection(&request, handler.blockchainCfg.ProxyUrl)
 	if err != nil {
-		data.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
 	}
 
-	data.JsonResponse(c, http.StatusOK, collection, "")
+	dtos.JsonResponse(c, http.StatusOK, collection, "")
 }
 
 // @Summary Get collection assets.
@@ -257,29 +257,29 @@ func (handler *collectionsHandler) getAssets(c *gin.Context) {
 
 	collectionId, err := strconv.ParseUint(collectionIdString, 10, 16)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	offset, err := strconv.Atoi(offsetStr)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	limit, err := strconv.Atoi(limitStr)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	assets, err := storage.GetAssetsByCollectionIdWithOffsetLimit(collectionId, offset, limit, filters)
 	if err != nil {
-		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
-	data.JsonResponse(c, http.StatusOK, assets, "")
+	dtos.JsonResponse(c, http.StatusOK, assets, "")
 }
 
 // @Summary Get collection profile image
@@ -297,17 +297,17 @@ func (handler *collectionsHandler) getCollectionProfile(c *gin.Context) {
 
 	collectionId, err := strconv.ParseUint(collectionIdString, 10, 16)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	image, err := storage.GetCollectionProfileImageByCollectionId(collectionId)
 	if err != nil {
-		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
-	data.JsonResponse(c, http.StatusOK, &image, "")
+	dtos.JsonResponse(c, http.StatusOK, &image, "")
 }
 
 // @Summary Set collection profile image
@@ -327,41 +327,41 @@ func (handler *collectionsHandler) setCollectionProfile(c *gin.Context) {
 
 	err := c.Bind(&imageBase64)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	collectionId, err := strconv.ParseUint(collectionIdString, 10, 16)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	collection, err := storage.GetCollectionById(collectionId)
 	if err != nil {
-		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
 	account, err := storage.GetAccountById(collection.CreatorID)
 	if err != nil {
-		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
 	jwtAddress := c.GetString(middleware.AddressKey)
 	if account.Address != jwtAddress {
-		data.JsonResponse(c, http.StatusUnauthorized, nil, "")
+		dtos.JsonResponse(c, http.StatusUnauthorized, nil, "")
 		return
 	}
 
 	err = services.SetCollectionProfileImage(collectionId, &imageBase64)
 	if err != nil {
-		data.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
 	}
 
-	data.JsonResponse(c, http.StatusOK, "", "")
+	dtos.JsonResponse(c, http.StatusOK, "", "")
 }
 
 // @Summary Get collection cover image
@@ -379,17 +379,17 @@ func (handler *collectionsHandler) getCollectionCover(c *gin.Context) {
 
 	collectionId, err := strconv.ParseUint(collectionIdString, 10, 16)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	image, err := storage.GetCollectionCoverImageByCollectionId(collectionId)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
-	data.JsonResponse(c, http.StatusOK, &image, "")
+	dtos.JsonResponse(c, http.StatusOK, &image, "")
 }
 
 // @Summary Set collection cover image
@@ -410,39 +410,39 @@ func (handler *collectionsHandler) setCollectionCover(c *gin.Context) {
 
 	err := c.Bind(&imageBase64)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	collectionId, err := strconv.ParseUint(collectionIdString, 10, 16)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	collection, err := storage.GetCollectionById(collectionId)
 	if err != nil {
-		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
 	account, err := storage.GetAccountById(collection.CreatorID)
 	if err != nil {
-		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
 	jwtAddress := c.GetString(middleware.AddressKey)
 	if account.Address != jwtAddress {
-		data.JsonResponse(c, http.StatusUnauthorized, nil, "")
+		dtos.JsonResponse(c, http.StatusUnauthorized, nil, "")
 		return
 	}
 
 	err = services.SetCollectionCoverImage(collectionId, &imageBase64)
 	if err != nil {
-		data.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
 	}
 
-	data.JsonResponse(c, http.StatusOK, "", "")
+	dtos.JsonResponse(c, http.StatusOK, "", "")
 }

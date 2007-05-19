@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	erdgoData "github.com/ElrondNetwork/elrond-sdk-erdgo/data"
-	"github.com/erdsea/erdsea-api/data"
+	"github.com/erdsea/erdsea-api/data/dtos"
 	"github.com/erdsea/erdsea-api/services"
 	"github.com/gin-gonic/gin"
 )
@@ -89,11 +89,11 @@ func (h *authHandler) createAccessToken(c *gin.Context) {
 
 	jwt, refresh, err := h.service.CreateToken(pk.AddressBytes(), sigBytes, msgBytes)
 	if err != nil {
-		data.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
 	}
 
-	data.JsonResponse(c, http.StatusOK, tokenPayload{
+	dtos.JsonResponse(c, http.StatusOK, tokenPayload{
 		AccessToken:  jwt,
 		RefreshToken: refresh,
 	}, "")
@@ -120,16 +120,16 @@ func (h *authHandler) refreshAccessToken(c *gin.Context) {
 
 	jwt, refresh, err := h.service.RefreshToken(req.AccessToken, req.RefreshToken)
 	if err != nil {
-		data.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
 	}
 
-	data.JsonResponse(c, http.StatusOK, tokenPayload{
+	dtos.JsonResponse(c, http.StatusOK, tokenPayload{
 		AccessToken:  jwt,
 		RefreshToken: refresh,
 	}, "")
 }
 
 func (h *authHandler) badReqResp(c *gin.Context, err string) {
-	data.JsonResponse(c, http.StatusBadRequest, nil, err)
+	dtos.JsonResponse(c, http.StatusBadRequest, nil, err)
 }

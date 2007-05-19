@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/erdsea/erdsea-api/config"
-	"github.com/erdsea/erdsea-api/data"
+	"github.com/erdsea/erdsea-api/data/entities"
 	_ "github.com/lib/pq"
 	"github.com/stretchr/testify/require"
 )
@@ -28,7 +28,7 @@ func Test_BasicWriteRead(t *testing.T) {
 	tx := GetDB().Create(&collection)
 	require.Nil(t, tx.Error)
 
-	var collectionRead data.Collection
+	var collectionRead entities.Collection
 	txRead := GetDB().Last(&collectionRead)
 
 	require.Nil(t, txRead.Error)

@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/erdsea/erdsea-api/config"
-	"github.com/erdsea/erdsea-api/data"
+	"github.com/erdsea/erdsea-api/data/dtos"
 	"github.com/erdsea/erdsea-api/proxy/middleware"
 	"github.com/erdsea/erdsea-api/services"
 	"github.com/gin-gonic/gin"
@@ -44,9 +44,9 @@ func NewPriceHandler(groupHandler *groupHandler, authCfg config.AuthConfig) {
 func (handler *eEGLDPriceHandler) get(c *gin.Context) {
 	price, err := services.GetEGLDPrice()
 	if err != nil {
-		data.JsonResponse(c, http.StatusInternalServerError, nil, "could not get price")
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, "could not get price")
 		return
 	}
 
-	data.JsonResponse(c, http.StatusOK, price, "")
+	dtos.JsonResponse(c, http.StatusOK, price, "")
 }

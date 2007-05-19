@@ -4,10 +4,10 @@ import (
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 
-	"github.com/erdsea/erdsea-api/data"
+	"github.com/erdsea/erdsea-api/data/entities"
 )
 
-func AddAsset(asset *data.Asset) error {
+func AddAsset(asset *entities.Asset) error {
 	database, err := GetDBOrError()
 	if err != nil {
 		return err
@@ -24,7 +24,7 @@ func AddAsset(asset *data.Asset) error {
 	return nil
 }
 
-func UpdateAsset(asset *data.Asset) error {
+func UpdateAsset(asset *entities.Asset) error {
 	database, err := GetDBOrError()
 	if err != nil {
 		return err
@@ -41,8 +41,8 @@ func UpdateAsset(asset *data.Asset) error {
 	return nil
 }
 
-func GetAssetById(id uint64) (*data.Asset, error) {
-	var asset data.Asset
+func GetAssetById(id uint64) (*entities.Asset, error) {
+	var asset entities.Asset
 
 	database, err := GetDBOrError()
 	if err != nil {
@@ -60,8 +60,8 @@ func GetAssetById(id uint64) (*data.Asset, error) {
 	return &asset, nil
 }
 
-func GetAssetByTokenIdAndNonce(tokenId string, nonce uint64) (*data.Asset, error) {
-	var asset data.Asset
+func GetAssetByTokenIdAndNonce(tokenId string, nonce uint64) (*entities.Asset, error) {
+	var asset entities.Asset
 
 	database, err := GetDBOrError()
 	if err != nil {
@@ -79,8 +79,8 @@ func GetAssetByTokenIdAndNonce(tokenId string, nonce uint64) (*data.Asset, error
 	return &asset, nil
 }
 
-func GetAssetsByOwnerIdWithOffsetLimit(ownerId uint64, offset int, limit int) ([]data.Asset, error) {
-	var assets []data.Asset
+func GetAssetsByOwnerIdWithOffsetLimit(ownerId uint64, offset int, limit int) ([]entities.Asset, error) {
+	var assets []entities.Asset
 
 	database, err := GetDBOrError()
 	if err != nil {
@@ -95,8 +95,8 @@ func GetAssetsByOwnerIdWithOffsetLimit(ownerId uint64, offset int, limit int) ([
 	return assets, nil
 }
 
-func GetAssetsByCollectionId(collectionId uint64) ([]data.Asset, error) {
-	var assets []data.Asset
+func GetAssetsByCollectionId(collectionId uint64) ([]entities.Asset, error) {
+	var assets []entities.Asset
 
 	database, err := GetDBOrError()
 	if err != nil {
@@ -111,8 +111,8 @@ func GetAssetsByCollectionId(collectionId uint64) ([]data.Asset, error) {
 	return assets, nil
 }
 
-func GetAssetsByCollectionIdWithOffsetLimit(collectionId uint64, offset int, limit int, attributesFilters map[string]string) ([]data.Asset, error) {
-	var assets []data.Asset
+func GetAssetsByCollectionIdWithOffsetLimit(collectionId uint64, offset int, limit int, attributesFilters map[string]string) ([]entities.Asset, error) {
+	var assets []entities.Asset
 
 	database, err := GetDBOrError()
 	if err != nil {
@@ -132,8 +132,8 @@ func GetAssetsByCollectionIdWithOffsetLimit(collectionId uint64, offset int, lim
 	return assets, nil
 }
 
-func GetListedAssetsByCollectionIdWithOffsetLimit(collectionId uint64, offset int, limit int) ([]data.Asset, error) {
-	var assets []data.Asset
+func GetListedAssetsByCollectionIdWithOffsetLimit(collectionId uint64, offset int, limit int) ([]entities.Asset, error) {
+	var assets []entities.Asset
 
 	database, err := GetDBOrError()
 	if err != nil {
@@ -156,7 +156,7 @@ func CountListedAssetsByCollectionId(collectionId uint64) (uint64, error) {
 		return 0, err
 	}
 
-	txRead := database.Model(&data.Asset{}).Where("listed = true AND collection_id = ?", collectionId).Count(&count)
+	txRead := database.Model(&entities.Asset{}).Where("listed = true AND collection_id = ?", collectionId).Count(&count)
 	if txRead.Error != nil {
 		return 0, txRead.Error
 	}
@@ -172,7 +172,7 @@ func CountUniqueOwnersWithListedAssetsByCollectionId(collectionId uint64) (uint6
 		return 0, err
 	}
 
-	txRead := database.Model(&data.Asset{}).Where("listed = true AND collection_id = ?", collectionId).Distinct("owner_id").Count(&count)
+	txRead := database.Model(&entities.Asset{}).Where("listed = true AND collection_id = ?", collectionId).Distinct("owner_id").Count(&count)
 	if txRead.Error != nil {
 		return 0, txRead.Error
 	}

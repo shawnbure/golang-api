@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	"github.com/erdsea/erdsea-api/config"
-	"github.com/erdsea/erdsea-api/data"
+	"github.com/erdsea/erdsea-api/data/dtos"
 	"github.com/erdsea/erdsea-api/proxy/middleware"
 	"github.com/erdsea/erdsea-api/storage"
 	"github.com/gin-gonic/gin"
@@ -58,23 +58,23 @@ func (handler *transactionsHandler) getList(c *gin.Context) {
 
 	offset, err := strconv.Atoi(offsetStr)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	limit, err := strconv.Atoi(limitStr)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	transactions, err := storage.GetTransactionsWithOffsetLimit(offset, limit)
 	if err != nil {
-		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
-	data.JsonResponse(c, http.StatusOK, transactions, "")
+	dtos.JsonResponse(c, http.StatusOK, transactions, "")
 }
 
 // @Summary Gets transaction for an asset.
@@ -96,29 +96,29 @@ func (handler *transactionsHandler) getByAsset(c *gin.Context) {
 
 	assetId, err := strconv.ParseUint(assetIdString, 10, 64)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	offset, err := strconv.Atoi(offsetStr)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	limit, err := strconv.Atoi(limitStr)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	transactions, err := storage.GetTransactionsByAssetIdWithOffsetLimit(assetId, offset, limit)
 	if err != nil {
-		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
-	data.JsonResponse(c, http.StatusOK, transactions, "")
+	dtos.JsonResponse(c, http.StatusOK, transactions, "")
 }
 
 // @Summary Gets transaction for an account.
@@ -140,29 +140,29 @@ func (handler *transactionsHandler) getByAccount(c *gin.Context) {
 
 	accountId, err := strconv.ParseUint(accountIdString, 10, 64)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	offset, err := strconv.Atoi(offsetStr)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	limit, err := strconv.Atoi(limitStr)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	transactions, err := storage.GetTransactionsByBuyerOrSellerIdWithOffsetLimit(accountId, offset, limit)
 	if err != nil {
-		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
-	data.JsonResponse(c, http.StatusOK, transactions, "")
+	dtos.JsonResponse(c, http.StatusOK, transactions, "")
 }
 
 // @Summary Gets transaction for a collection.
@@ -184,27 +184,27 @@ func (handler *transactionsHandler) getByCollection(c *gin.Context) {
 
 	collectionId, err := strconv.ParseUint(collectionIdString, 10, 64)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	offset, err := strconv.Atoi(offsetStr)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	limit, err := strconv.Atoi(limitStr)
 	if err != nil {
-		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	transactions, err := storage.GetTransactionsByCollectionIdWithOffsetLimit(collectionId, offset, limit)
 	if err != nil {
-		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
-	data.JsonResponse(c, http.StatusOK, transactions, "")
+	dtos.JsonResponse(c, http.StatusOK, transactions, "")
 }

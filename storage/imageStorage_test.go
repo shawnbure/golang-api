@@ -5,7 +5,7 @@ import (
 	"encoding/base64"
 	"testing"
 
-	"github.com/erdsea/erdsea-api/data/images"
+	"github.com/erdsea/erdsea-api/data/entities/images"
 	"github.com/stretchr/testify/require"
 )
 
