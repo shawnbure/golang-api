@@ -1545,6 +1545,64 @@
                 }
             }
         },
+        "/tx-template/mint-tokens/{userAddress}/{collectionId}/{numberOfTokens}": {
+            "get": {
+                "description": "Retrieves tx-template for mint tokens. Only account nonce and signature must be added afterwards.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tx-template"
+                ],
+                "summary": "Gets tx-template for mint tokens.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "user address",
+                        "name": "userAddress",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "collection id",
+                        "name": "collectionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "number of tokens",
+                        "name": "numberOfTokens",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/formatter.Transaction"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/tx-template/withdraw-nft/{userAddress}/{tokenId}/{nonce}": {
             "get": {
                 "description": "Retrieves tx-template for NFT withdraw. Only account nonce and signature must be added afterwards.",
@@ -1677,6 +1735,9 @@
         "entities.Collection": {
             "type": "object",
             "properties": {
+                "contractAddress": {
+                    "type": "string"
+                },
                 "createdAt": {
                     "type": "integer"
                 },
@@ -1689,10 +1750,19 @@
                 "discordLink": {
                     "type": "string"
                 },
+                "flags": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
                 "id": {
                     "type": "integer"
                 },
                 "instagramLink": {
+                    "type": "string"
+                },
+                "mintPricePerTokenString": {
                     "type": "string"
                 },
                 "name": {

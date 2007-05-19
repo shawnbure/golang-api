@@ -50,6 +50,8 @@ definitions:
     type: object
   entities.Collection:
     properties:
+      contractAddress:
+        type: string
       createdAt:
         type: integer
       creatorId:
@@ -58,9 +60,15 @@ definitions:
         type: string
       discordLink:
         type: string
+      flags:
+        items:
+          type: integer
+        type: array
       id:
         type: integer
       instagramLink:
+        type: string
+      mintPricePerTokenString:
         type: string
       name:
         type: string
@@ -1285,6 +1293,46 @@ paths:
           schema:
             $ref: '#/definitions/dtos.ApiResponse'
       summary: Gets tx-template for NFT list.
+      tags:
+      - tx-template
+  /tx-template/mint-tokens/{userAddress}/{collectionId}/{numberOfTokens}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves tx-template for mint tokens. Only account nonce and signature
+        must be added afterwards.
+      parameters:
+      - description: user address
+        in: path
+        name: userAddress
+        required: true
+        type: integer
+      - description: collection id
+        in: path
+        name: collectionId
+        required: true
+        type: string
+      - description: number of tokens
+        in: path
+        name: numberOfTokens
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/formatter.Transaction'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: Gets tx-template for mint tokens.
       tags:
       - tx-template
   /tx-template/withdraw-nft/{userAddress}/{tokenId}/{nonce}:
