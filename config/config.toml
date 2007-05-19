@@ -14,3 +14,11 @@
     GasPrice = 1_000_000_000
     PemPath = "./config/owner.pem"
     ProxyUrl = "https://devnet-gateway.elrond.com"
+
+[Database]
+    Host = "localhost"
+    Port = 5432
+    DbName = "erdsea_db"
+    User = "postgres"
+    Password = "root"
+    SslMode = "disable"

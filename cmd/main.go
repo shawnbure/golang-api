@@ -115,7 +115,7 @@ func startProxy(ctx *cli.Context) error {
 	server := api.Run()
 
 	waitForGracefulShutdown(server)
-	log.Debug("closing erdsea-ap proxy...")
+	log.Debug("closing erdsea-api proxy...")
 	if !check.IfNil(fileLogging) {
 		err = fileLogging.Close()
 		if err != nil {
