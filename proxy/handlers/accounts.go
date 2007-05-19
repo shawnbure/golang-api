@@ -59,7 +59,7 @@ func NewAccountsHandler(groupHandler *groupHandler, authCfg config.AuthConfig) {
 // @Success 200 {object} entities.Account
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 404 {object} dtos.ApiResponse
-// @Router /accounts/{accountId} [get]
+// @Router /accounts/{walletAddress} [get]
 func (handler *accountsHandler) get(c *gin.Context) {
 	walletAddress := c.Param("walletAddress")
 
@@ -137,7 +137,7 @@ func (handler *accountsHandler) set(c *gin.Context) {
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 401 {object} dtos.ApiResponse
 // @Failure 500 {object} dtos.ApiResponse
-// @Router /accounts/{address} [post]
+// @Router /accounts/create [post]
 func (handler *accountsHandler) create(c *gin.Context) {
 	var request services.CreateAccountRequest
 
@@ -173,7 +173,7 @@ func (handler *accountsHandler) create(c *gin.Context) {
 // @Tags accounts
 // @Accept json
 // @Produce json
-// @Param walletAddress path uint64 true "wallet address"
+// @Param walletAddress path string true "wallet address"
 // @Success 200 {object} string
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 404 {object} dtos.ApiResponse
@@ -201,7 +201,7 @@ func (handler *accountsHandler) getAccountProfile(c *gin.Context) {
 // @Tags accounts
 // @Accept json
 // @Produce json
-// @Param walletAddress path uint64 true "wallet address"
+// @Param walletAddress path string true "wallet address"
 // @Param image body string true "base64 encoded image"
 // @Success 200 {object} string
 // @Failure 400 {object} dtos.ApiResponse
@@ -244,7 +244,7 @@ func (handler *accountsHandler) setAccountProfile(c *gin.Context) {
 // @Tags accounts
 // @Accept json
 // @Produce json
-// @Param walletAddress path uint64 true "wallet address"
+// @Param walletAddress path string true "wallet address"
 // @Success 200 {object} string
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 404 {object} dtos.ApiResponse
@@ -272,7 +272,7 @@ func (handler *accountsHandler) getAccountCover(c *gin.Context) {
 // @Tags accounts
 // @Accept json
 // @Produce json
-// @Param walletAddress path uint64 true "wallet address"
+// @Param walletAddress path string true "wallet address"
 // @Param image body string true "base64 encoded image"
 // @Success 200 {object} string
 // @Failure 400 {object} dtos.ApiResponse
@@ -315,7 +315,7 @@ func (handler *accountsHandler) setAccountCover(c *gin.Context) {
 // @Tags accounts
 // @Accept json
 // @Produce json
-// @Param walletAddress path uint64 true "wallet address"
+// @Param walletAddress path string true "wallet address"
 // @Param offset path int true "offset"
 // @Param limit path int true "limit"
 // @Success 200 {object} []entities.Token

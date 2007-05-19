@@ -28,51 +28,7 @@ var doc = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/accounts/{accountId}": {
-            "get": {
-                "description": "Retrieves an account by walletAddress",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "accounts"
-                ],
-                "summary": "Get account by account walletAddress",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "wallet address",
-                        "name": "walletAddress",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/entities.Account"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/dtos.ApiResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/dtos.ApiResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/accounts/{address}": {
+        "/accounts/create": {
             "post": {
                 "description": "Creates an account",
                 "consumes": [
@@ -125,6 +81,48 @@ var doc = `{
             }
         },
         "/accounts/{walletAddress}": {
+            "get": {
+                "description": "Retrieves an account by walletAddress",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "accounts"
+                ],
+                "summary": "Get account by account walletAddress",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "wallet address",
+                        "name": "walletAddress",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/entities.Account"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    }
+                }
+            },
             "post": {
                 "description": "Sets an account settable information",
                 "consumes": [
@@ -198,7 +196,7 @@ var doc = `{
                 "summary": "Get account cover image",
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "wallet address",
                         "name": "walletAddress",
                         "in": "path",
@@ -240,7 +238,7 @@ var doc = `{
                 "summary": "Set account cover image",
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "wallet address",
                         "name": "walletAddress",
                         "in": "path",
@@ -299,7 +297,7 @@ var doc = `{
                 "summary": "Get account profile image",
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "wallet address",
                         "name": "walletAddress",
                         "in": "path",
@@ -341,7 +339,7 @@ var doc = `{
                 "summary": "Set account profile image",
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "wallet address",
                         "name": "walletAddress",
                         "in": "path",
@@ -400,7 +398,7 @@ var doc = `{
                 "summary": "Gets tokens for an account.",
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "wallet address",
                         "name": "walletAddress",
                         "in": "path",

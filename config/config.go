@@ -59,7 +59,8 @@ type CacheConfig struct {
 }
 
 type SwaggerConfig struct {
-	Enabled bool
+	LocalDocRoute string
+	Enabled       bool
 }
 
 func (d DatabaseConfig) Url() string {

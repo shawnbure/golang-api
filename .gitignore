@@ -30,3 +30,7 @@ config.toml
 
 cache/bolt.db
 bolt.db
+cmd/erdsea
+cmd/cmd
+
+aws.pem

@@ -255,7 +255,7 @@ info:
   title: erdsea-api
   version: "1.0"
 paths:
-  /accounts/{accountId}:
+  /accounts/{walletAddress}:
     get:
       consumes:
       - application/json
@@ -284,41 +284,6 @@ paths:
       summary: Get account by account walletAddress
       tags:
       - accounts
-  /accounts/{address}:
-    post:
-      consumes:
-      - application/json
-      description: Creates an account
-      parameters:
-      - description: account info
-        in: body
-        name: createAccountRequest
-        required: true
-        schema:
-          $ref: '#/definitions/services.CreateAccountRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/entities.Account'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/dtos.ApiResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/dtos.ApiResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/dtos.ApiResponse'
-      summary: Creates an account
-      tags:
-      - accounts
-  /accounts/{walletAddress}:
     post:
       consumes:
       - application/json
@@ -368,7 +333,7 @@ paths:
         in: path
         name: walletAddress
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -397,7 +362,7 @@ paths:
         in: path
         name: walletAddress
         required: true
-        type: integer
+        type: string
       - description: base64 encoded image
         in: body
         name: image
@@ -437,7 +402,7 @@ paths:
         in: path
         name: walletAddress
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -466,7 +431,7 @@ paths:
         in: path
         name: walletAddress
         required: true
-        type: integer
+        type: string
       - description: base64 encoded image
         in: body
         name: image
@@ -505,7 +470,7 @@ paths:
         in: path
         name: walletAddress
         required: true
-        type: integer
+        type: string
       - description: offset
         in: path
         name: offset
@@ -534,6 +499,40 @@ paths:
           schema:
             $ref: '#/definitions/dtos.ApiResponse'
       summary: Gets tokens for an account.
+      tags:
+      - accounts
+  /accounts/create:
+    post:
+      consumes:
+      - application/json
+      description: Creates an account
+      parameters:
+      - description: account info
+        in: body
+        name: createAccountRequest
+        required: true
+        schema:
+          $ref: '#/definitions/services.CreateAccountRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entities.Account'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: Creates an account
       tags:
       - accounts
   /auth/access:

@@ -12,12 +12,10 @@ import (
 var (
 	baseSwaggerEndpoint = "/swagger"
 	anySwaggerEndpoint  = "/*any"
-
-	swaggerLocalDocRoute = "http://localhost:5000/swagger/doc.json"
 )
 
 func NewSwaggerHandler(groupHandler *groupHandler, conf config.SwaggerConfig) {
-	url := ginSwagger.URL(swaggerLocalDocRoute)
+	url := ginSwagger.URL(conf.LocalDocRoute)
 	endpoints := []EndpointHandler{
 		{Method: http.MethodGet, Path: anySwaggerEndpoint, HandlerFunc: ginSwagger.WrapHandler(swaggerFiles.Handler, url)},
 	}

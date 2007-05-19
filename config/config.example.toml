@@ -43,4 +43,5 @@
     Url = "redis://localhost:6379"
 
 [Swagger]
+    LocalDocRoute = "http://localhost:5000/swagger/doc.json"
     Enabled = true
