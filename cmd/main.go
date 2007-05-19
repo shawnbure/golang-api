@@ -13,6 +13,7 @@ import (
 	"github.com/erdsea/erdsea-api/config"
 	"github.com/erdsea/erdsea-api/logging"
 	"github.com/erdsea/erdsea-api/proxy"
+	"github.com/erdsea/erdsea-api/storage"
 	"github.com/urfave/cli"
 )
 
@@ -107,6 +108,8 @@ func startProxy(ctx *cli.Context) error {
 		return err
 	}
 
+	storage.Connect(cfg.Database)
+
 	api, err := proxy.NewWebServer(cfg)
 	if err != nil {
 		return err
@@ -115,7 +118,7 @@ func startProxy(ctx *cli.Context) error {
 	server := api.Run()
 
 	waitForGracefulShutdown(server)
-	log.Debug("closing erdsea-ap proxy...")
+	log.Debug("closing erdsea-api proxy...")
 	if !check.IfNil(fileLogging) {
 		err = fileLogging.Close()
 		if err != nil {

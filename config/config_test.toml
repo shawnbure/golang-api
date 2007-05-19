@@ -19,7 +19,7 @@
     Dialect = "postgres"
     Host = "localhost"
     Port = 5432
-    DbName = "erdsea_db"
+    DbName = "erdsea_db_test"
     User = "postgres"
     Password = "root"
     SslMode = "disable"
