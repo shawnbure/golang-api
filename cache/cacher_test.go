@@ -13,7 +13,7 @@ import (
 )
 
 var cfg = config.CacheConfig{
-	Addrs: []string{":6379"},
+	Url: "redis://localhost:6379",
 }
 
 type TestStruct struct {

@@ -28,7 +28,5 @@
     ShouldMigrate = true
 
 [Cache]
-    Urls = [
-        ":6379"
-    ]
+    Url = "redis://localhost:6379"
 

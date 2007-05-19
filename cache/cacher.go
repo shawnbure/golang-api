@@ -2,13 +2,12 @@ package cache
 
 import (
 	"context"
-	"fmt"
-	"go.uber.org/atomic"
 	"time"
 
 	"github.com/erdsea/erdsea-api/config"
 	"github.com/go-redis/cache/v8"
 	"github.com/go-redis/redis/v8"
+	"go.uber.org/atomic"
 )
 
 type Stats struct {
@@ -19,22 +18,17 @@ type Stats struct {
 type BaseCacher struct {
 	cache *cache.Cache
 	stats Stats
-	ctx context.Context
+	ctx   context.Context
 }
 
 func NewBaseCacher(cfg config.CacheConfig) *BaseCacher {
-	addrs := map[string]string{}
-	for i, addr := range cfg.Addrs {
-		k := fmt.Sprintf("cache-%d", i)
-		addrs[k] = addr
+	opt, err := redis.ParseURL(cfg.Url)
+	if err != nil {
+		panic(err)
 	}
 
-	ring := redis.NewRing(&redis.RingOptions{
-		Addrs: addrs,
-	})
-
 	cacher := cache.New(&cache.Options{
-		Redis:      ring,
+		Redis:      redis.NewClient(opt),
 		LocalCache: cache.NewTinyLFU(1000, time.Second),
 	})
 

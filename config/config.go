@@ -41,7 +41,7 @@ type DatabaseConfig struct {
 }
 
 type CacheConfig struct {
-	Addrs []string
+	Url string
 }
 
 func (d DatabaseConfig) Url() string {
