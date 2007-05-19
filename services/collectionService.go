@@ -111,22 +111,8 @@ func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) 
 	return collection, nil
 }
 
-func UpdateCollection(collectionName string, request *UpdateCollectionRequest, requestSourceAddress string) (*data.Collection, error) {
+func UpdateCollection(collection *data.Collection, request *UpdateCollectionRequest) error {
 	err := checkValidInputOnUpdate(request)
-
-	collection, err := storage.GetCollectionByName(collectionName)
-	if err != nil {
-		return nil, err
-	}
-
-	creator, err := storage.GetAccountById(collection.CreatorID)
-	if err != nil {
-		return nil, err
-	}
-
-	if creator.Address != requestSourceAddress {
-		return nil, errorNotAuthorized
-	}
 
 	collection.Description = request.Description
 	collection.Website = request.Website
@@ -137,10 +123,10 @@ func UpdateCollection(collectionName string, request *UpdateCollectionRequest, r
 
 	err = storage.UpdateCollection(collection)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return collection, nil
+	return nil
 }
 
 func GetStatisticsForCollection(collectionId uint64) (*CollectionStatistics, error) {

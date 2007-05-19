@@ -19,9 +19,9 @@ const (
 	SearchCategoryLimit = 5
 )
 
-type generalSearchResponse struct {
-	accounts    []data.Account
-	collections []data.Collection
+type GeneralSearchResponse struct {
+	Accounts    []data.Account
+	Collections []data.Collection
 }
 
 type searchHandler struct {
@@ -45,6 +45,15 @@ func NewSearchHandler(groupHandler *groupHandler, authCfg config.AuthConfig) {
 	groupHandler.AddEndpointGroupHandler(endpointGroupHandler)
 }
 
+// @Summary General search by string.
+// @Description Searches for collections by name and accounts by name. Cached for 20 minutes. Limit 5 elements for each.
+// @Tags search
+// @Accept json
+// @Produce json
+// @Param searchString path string true "search string"
+// @Success 200 {object} GeneralSearchResponse
+// @Failure 500 {object} data.ApiResponse
+// @Router /search/{searchString} [get]
 func (handler *searchHandler) search(c *gin.Context) {
 	searchString := c.Param("searchString")
 
@@ -60,13 +69,22 @@ func (handler *searchHandler) search(c *gin.Context) {
 		return
 	}
 
-	response := generalSearchResponse{
-		accounts:    accounts,
-		collections: collections,
+	response := GeneralSearchResponse{
+		Accounts:    accounts,
+		Collections: collections,
 	}
 	data.JsonResponse(c, http.StatusOK, response, "")
 }
 
+// @Summary Search collections by name.
+// @Description Searches for collections by name. Cached for 20 minutes. Limit 5 elements.
+// @Tags search
+// @Accept json
+// @Produce json
+// @Param collectionName path string true "search string"
+// @Success 200 {object} []data.Collection
+// @Failure 500 {object} data.ApiResponse
+// @Router /search/collections/{collectionName} [get]
 func (handler *searchHandler) collectionSearch(c *gin.Context) {
 	collectionName := c.Param("collectionName")
 
@@ -79,6 +97,15 @@ func (handler *searchHandler) collectionSearch(c *gin.Context) {
 	data.JsonResponse(c, http.StatusOK, collections, "")
 }
 
+// @Summary Search accounts by name.
+// @Description Searches for accounts by name. Cached for 20 minutes. Limit 5 elements.
+// @Tags search
+// @Accept json
+// @Produce json
+// @Param accountName path string true "search string"
+// @Success 200 {object} []data.Account
+// @Failure 500 {object} data.ApiResponse
+// @Router /search/accounts/{accountName} [get]
 func (handler *searchHandler) accountSearch(c *gin.Context) {
 	accountName := c.Param("accountName")
 

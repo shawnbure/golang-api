@@ -33,6 +33,14 @@ func NewPriceHandler(groupHandler *groupHandler, authCfg config.AuthConfig) {
 	groupHandler.AddEndpointGroupHandler(endpointGroupHandler)
 }
 
+// @Summary Gets EGLD price in dollars.
+// @Description Retrieves EGLD price in dollars. Price taken from Binance. Cached for 15 minutes.
+// @Tags egld_price
+// @Accept json
+// @Produce json
+// @Success 200 {object} float64
+// @Failure 500 {object} data.ApiResponse
+// @Router /egld_price [get]
 func (handler *eEGLDPriceHandler) get(c *gin.Context) {
 	price, err := services.GetEGLDPrice()
 	if err != nil {

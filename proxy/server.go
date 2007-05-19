@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/erdsea/erdsea-api/config"
+	_ "github.com/erdsea/erdsea-api/docs"
 	"github.com/erdsea/erdsea-api/process"
 	"github.com/erdsea/erdsea-api/proxy/handlers"
 	"github.com/erdsea/erdsea-api/services"
@@ -18,6 +19,14 @@ type webServer struct {
 	generalConfig *config.GeneralConfig
 }
 
+// @title erdsea-api
+// @version 1.0
+// @termsOfService http://swagger.io/terms/
+
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host localhost:5000
 func NewWebServer(cfg *config.GeneralConfig) (*webServer, error) {
 	router := gin.Default()
 	router.Use(cors.Default())
@@ -52,6 +61,7 @@ func NewWebServer(cfg *config.GeneralConfig) (*webServer, error) {
 	handlers.NewPriceHandler(groupHandler, cfg.Auth)
 	handlers.NewAccountsHandler(groupHandler, cfg.Auth)
 	handlers.NewSearchHandler(groupHandler, cfg.Auth)
+	handlers.NewSwaggerHandler(groupHandler, cfg.Swagger)
 
 	groupHandler.RegisterEndpoints(router)
 
