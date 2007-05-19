@@ -6,6 +6,7 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/ElrondNetwork/elrond-sdk-erdgo/data"
 	"github.com/erdsea/erdsea-api/cache"
 	"github.com/erdsea/erdsea-api/interaction"
 )
@@ -82,7 +83,13 @@ func GetDeposit(marketplaceAddress string, address string) (float64, error) {
 func DoGetDepositVmQuery(marketplaceAddress string, address string) (string, error) {
 	bi := interaction.GetBlockchainInteractor()
 
-	result, err := bi.DoVmQuery(marketplaceAddress, GetDepositView, []string{address})
+	addressDecoded, err := data.NewAddressFromBech32String(address)
+	if err != nil {
+		return "", err
+	}
+
+	addressHex := hex.EncodeToString(addressDecoded.AddressBytes())
+	result, err := bi.DoVmQuery(marketplaceAddress, GetDepositView, []string{addressHex})
 	if err != nil || len(result) == 0{
 		return "", nil
 	}

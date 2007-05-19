@@ -13,6 +13,7 @@ import (
 	"github.com/erdsea/erdsea-api/cache"
 	"github.com/erdsea/erdsea-api/cdn"
 	"github.com/erdsea/erdsea-api/config"
+	"github.com/erdsea/erdsea-api/interaction"
 	"github.com/erdsea/erdsea-api/logging"
 	"github.com/erdsea/erdsea-api/proxy"
 	"github.com/erdsea/erdsea-api/storage"
@@ -134,6 +135,7 @@ func startProxy(ctx *cli.Context) error {
 }
 
 func establishConnections(cfg *config.GeneralConfig) {
+	interaction.InitBlockchainInteractor(cfg.Blockchain)
 	cache.InitCacher(cfg.Cache)
 	storage.Connect(cfg.Database)
 	cdn.MakeCloudyCDN(cfg.CDN)

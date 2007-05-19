@@ -999,45 +999,7 @@
                 }
             }
         },
-        "/royalties/last/{userAddress}": {
-            "get": {
-                "description": "Gets last withdrawal epoch for a creator. Next withdraw needs to be calculated as (current_epoch - this_epoch) %30",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "royalties"
-                ],
-                "summary": "Gets last withdrawal epoch (EGLD) for an address.",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "userAddress",
-                        "name": "userAddress",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "number"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/dtos.ApiResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/royalties/{userAddress}": {
+        "/royalties/{userAddress}/amount": {
             "get": {
                 "description": "Retrieves royalties amount for an address.",
                 "consumes": [
@@ -1063,7 +1025,83 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "number"
+                            "type": "integer"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/royalties/{userAddress}/last": {
+            "get": {
+                "description": "Gets last withdrawal epoch for a creator.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "royalties"
+                ],
+                "summary": "Gets last withdrawal epoch (EGLD) for an address.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "userAddress",
+                        "name": "userAddress",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/royalties/{userAddress}/remaining": {
+            "get": {
+                "description": "Gets remaining epochs until withdrawal epoch for a creator.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "royalties"
+                ],
+                "summary": "Gets remaining epochs until withdraw royalties for an address.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "userAddress",
+                        "name": "userAddress",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "integer"
                         }
                     },
                     "400": {

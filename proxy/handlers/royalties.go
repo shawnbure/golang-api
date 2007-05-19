@@ -10,9 +10,10 @@ import (
 )
 
 const (
-	baseRoyaltiesEndpoint                 = "/royalties"
-	royaltiesForAddressEndpoint           = "/:userAddress"
-	lastWithdrawalEpochForAddressEndpoint = "/last/:userAddress"
+	baseRoyaltiesEndpoint                         = "/royalties"
+	royaltiesForAddressEndpoint                   = "/:userAddress/amount"
+	lastWithdrawalEpochForAddressEndpoint         = "/:userAddress/last"
+	remainingEpochUntilWithdrawForAddressEndpoint = "/:userAddress/remaining"
 )
 
 type royaltiesHandler struct {
@@ -25,6 +26,7 @@ func NewRoyaltiesHandler(groupHandler *groupHandler, cfg config.BlockchainConfig
 	endpoints := []EndpointHandler{
 		{Method: http.MethodGet, Path: royaltiesForAddressEndpoint, HandlerFunc: handler.getRoyaltiesForAddress},
 		{Method: http.MethodGet, Path: lastWithdrawalEpochForAddressEndpoint, HandlerFunc: handler.getLastWithdrawalEpochForAddress},
+		{Method: http.MethodGet, Path: remainingEpochUntilWithdrawForAddressEndpoint, HandlerFunc: handler.getRemainingEpochsUntilWithdrawForAddress},
 	}
 
 	endpointGroupHandler := EndpointGroupHandler{
@@ -42,9 +44,9 @@ func NewRoyaltiesHandler(groupHandler *groupHandler, cfg config.BlockchainConfig
 // @Accept json
 // @Produce json
 // @Param userAddress path string true "userAddress"
-// @Success 200 {object} float64
+// @Success 200 {object} int
 // @Failure 400 {object} dtos.ApiResponse
-// @Router /royalties/{userAddress} [get]
+// @Router /royalties/{userAddress}/amount [get]
 func (handler *royaltiesHandler) getRoyaltiesForAddress(c *gin.Context) {
 	userAddress := c.Param("userAddress")
 
@@ -64,14 +66,14 @@ func (handler *royaltiesHandler) getRoyaltiesForAddress(c *gin.Context) {
 }
 
 // @Summary Gets last withdrawal epoch (EGLD) for an address.
-// @Description Gets last withdrawal epoch for a creator. Next withdraw needs to be calculated as (current_epoch - this_epoch) %30
+// @Description Gets last withdrawal epoch for a creator.
 // @Tags royalties
 // @Accept json
 // @Produce json
 // @Param userAddress path string true "userAddress"
-// @Success 200 {object} float64
+// @Success 200 {object} int
 // @Failure 400 {object} dtos.ApiResponse
-// @Router /royalties/last/{userAddress} [get]
+// @Router /royalties/{userAddress}/last [get]
 func (handler *royaltiesHandler) getLastWithdrawalEpochForAddress(c *gin.Context) {
 	userAddress := c.Param("userAddress")
 
@@ -82,6 +84,33 @@ func (handler *royaltiesHandler) getLastWithdrawalEpochForAddress(c *gin.Context
 	}
 
 	deposit, err := services.GetCreatorLastWithdrawalEpoch(handler.cfg.MarketplaceAddress, userAddress)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		return
+	}
+
+	dtos.JsonResponse(c, http.StatusOK, deposit, "")
+}
+
+// @Summary Gets remaining epochs until withdraw royalties for an address.
+// @Description Gets remaining epochs until withdrawal epoch for a creator.
+// @Tags royalties
+// @Accept json
+// @Produce json
+// @Param userAddress path string true "userAddress"
+// @Success 200 {object} int
+// @Failure 400 {object} dtos.ApiResponse
+// @Router /royalties/{userAddress}/remaining [get]
+func (handler *royaltiesHandler) getRemainingEpochsUntilWithdrawForAddress(c *gin.Context) {
+	userAddress := c.Param("userAddress")
+
+	_, err := services.GetOrAddAccountCacheInfo(userAddress)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	deposit, err := services.GetCreatorRemainingEpochsUntilWithdraw(handler.cfg.MarketplaceAddress, userAddress)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return

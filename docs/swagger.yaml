@@ -1136,7 +1136,7 @@ paths:
       summary: Gets EGLD price in dollars.
       tags:
       - egld_price
-  /royalties/{userAddress}:
+  /royalties/{userAddress}/amount:
     get:
       consumes:
       - application/json
@@ -1153,7 +1153,7 @@ paths:
         "200":
           description: OK
           schema:
-            type: number
+            type: integer
         "400":
           description: Bad Request
           schema:
@@ -1161,12 +1161,11 @@ paths:
       summary: Gets the royalties (EGLD) located in the marketplace for an address.
       tags:
       - royalties
-  /royalties/last/{userAddress}:
+  /royalties/{userAddress}/last:
     get:
       consumes:
       - application/json
-      description: Gets last withdrawal epoch for a creator. Next withdraw needs to
-        be calculated as (current_epoch - this_epoch) %30
+      description: Gets last withdrawal epoch for a creator.
       parameters:
       - description: userAddress
         in: path
@@ -1179,12 +1178,37 @@ paths:
         "200":
           description: OK
           schema:
-            type: number
+            type: integer
         "400":
           description: Bad Request
           schema:
             $ref: '#/definitions/dtos.ApiResponse'
       summary: Gets last withdrawal epoch (EGLD) for an address.
+      tags:
+      - royalties
+  /royalties/{userAddress}/remaining:
+    get:
+      consumes:
+      - application/json
+      description: Gets remaining epochs until withdrawal epoch for a creator.
+      parameters:
+      - description: userAddress
+        in: path
+        name: userAddress
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: integer
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: Gets remaining epochs until withdraw royalties for an address.
       tags:
       - royalties
   /search/{searchString}:

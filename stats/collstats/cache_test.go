@@ -1,6 +1,7 @@
 package collstats
 
 import (
+	"gorm.io/datatypes"
 	"testing"
 
 	"github.com/erdsea/erdsea-api/cache"
@@ -18,7 +19,7 @@ func Test_AddGetBolt(t *testing.T) {
 	cache.InitCacher(cfg)
 	defer cache.CloseCacher()
 
-	_, err := AddCollectionToCache(12, "name", "token")
+	_, err := AddCollectionToCache(12, "name", datatypes.JSON("[]"), "token")
 	require.Nil(t, err)
 
 	coll, err := GetCollectionCacheInfo("token")
@@ -40,7 +41,7 @@ func Test_GetStats(t *testing.T) {
 	err := storage.AddCollection(&collection)
 	require.Nil(t, err)
 
-	_, err = AddCollectionToCache(collection.ID, collection.Name, collection.TokenID)
+	_, err = AddCollectionToCache(collection.ID, collection.Name, datatypes.JSON("[]"), collection.TokenID)
 	require.Nil(t, err)
 
 	token := entities.Token{
