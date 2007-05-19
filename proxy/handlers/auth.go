@@ -21,6 +21,11 @@ type createTokenRequest struct {
 	Message   string `json:"message"`
 }
 
+type refreshTokenRequest struct {
+	AccessToken  string `json:"accessToken"`
+	RefreshToken string `json:"refreshToken"`
+}
+
 type authHandler struct {
 	service services.AuthService
 }
@@ -47,31 +52,27 @@ func RegisterAuthHandler(authService services.AuthService, groupHandler *groupHa
 func (h *authHandler) createAccessToken(c *gin.Context) {
 	req := createTokenRequest{}
 
-	var badReqResp = func(c *gin.Context, err string) {
-		JsonResponse(c, http.StatusBadRequest, nil, err)
-	}
-
 	err := c.Bind(&req)
 	if err != nil {
-		badReqResp(c, err.Error())
+		h.badReqResp(c, err.Error())
 		return
 	}
 
 	pk, err := data.NewAddressFromBech32String(req.Address)
 	if err != nil {
-		badReqResp(c, err.Error())
+		h.badReqResp(c, err.Error())
 		return
 	}
 
 	sigBytes, err := hex.DecodeString(req.Signature)
 	if err != nil {
-		badReqResp(c, err.Error())
+		h.badReqResp(c, err.Error())
 		return
 	}
 
 	msgBytes, err := hex.DecodeString(req.Message)
 	if err != nil {
-		badReqResp(c, err.Error())
+		h.badReqResp(c, err.Error())
 	}
 
 	jwt, refresh, err := h.service.CreateToken(pk.AddressBytes(), sigBytes, msgBytes)
@@ -81,11 +82,32 @@ func (h *authHandler) createAccessToken(c *gin.Context) {
 	}
 
 	JsonResponse(c, http.StatusOK, gin.H{
-		"token":   jwt,
-		"refresh": refresh,
+		"accessToken":  jwt,
+		"refreshToken": refresh,
 	}, "")
 }
 
 func (h *authHandler) refreshAccessToken(c *gin.Context) {
+	req := refreshTokenRequest{}
 
+	err := c.Bind(&req)
+	if err != nil {
+		h.badReqResp(c, err.Error())
+		return
+	}
+
+	jwt, refresh, err := h.service.RefreshToken(req.AccessToken, req.RefreshToken)
+	if err != nil {
+		JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		return
+	}
+
+	JsonResponse(c, http.StatusOK, gin.H{
+		"accessToken":  jwt,
+		"refreshToken": refresh,
+	}, "")
+}
+
+func (h *authHandler) badReqResp(c *gin.Context, err string) {
+	JsonResponse(c, http.StatusBadRequest, nil, err)
 }

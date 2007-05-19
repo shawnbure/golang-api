@@ -41,13 +41,7 @@ func (a *AuthService) CreateToken(pubkey, sig, msg []byte) (string, string, erro
 
 	bech32Addr := data.NewAddressFromBytes(pubkey)
 
-	jwt, err := crypto.GenerateJwt(
-		bech32Addr.AddressAsBech32String(),
-		a.config.JwtSecret,
-		a.config.JwtIssuer,
-		a.config.JwtExpiryMins,
-	)
-
+	jwt, err := a.newJwt(bech32Addr.AddressAsBech32String())
 	if err != nil {
 		return "", "", err
 	}
@@ -61,4 +55,40 @@ func (a *AuthService) CreateToken(pubkey, sig, msg []byte) (string, string, erro
 	return jwt, hex.EncodeToString(refresh), nil
 }
 
-func (a *AuthService) RefreshToken() {}
+func (a *AuthService) RefreshToken(token, refresh string) (string, string, error) {
+	claims, err := crypto.GetClaims(token, a.config.JwtSecret, false)
+	if err != nil {
+		return "", "", err
+	}
+
+	refreshBytes, err := hex.DecodeString(refresh)
+	if err != nil {
+		return "", "", err
+	}
+
+	err = crypto.VerifySignature(a.pubKey, []byte(token), refreshBytes)
+	if err != nil {
+		return "", "", err
+	}
+
+	newJwt, err := a.newJwt(claims.Address)
+	if err != nil {
+		return "", "", err
+	}
+
+	newRefresh, err := crypto.SignPayload(a.privKey, []byte(newJwt))
+	if err != nil {
+		return "", "", err
+	}
+
+	return newJwt, hex.EncodeToString(newRefresh), nil
+}
+
+func (a *AuthService) newJwt(address string) (string, error) {
+	return crypto.GenerateJwt(
+		address,
+		a.config.JwtSecret,
+		a.config.JwtIssuer,
+		a.config.JwtExpiryMins,
+	)
+}
