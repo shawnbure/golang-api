@@ -2,21 +2,38 @@ package process
 
 import (
 	"encoding/json"
+	"time"
 
 	logger "github.com/ElrondNetwork/elrond-go-logger"
+	"github.com/erdsea/erdsea-api/cache"
 	"github.com/erdsea/erdsea-api/data/entities"
 	"github.com/erdsea/erdsea-api/services"
+)
+
+var log = logger.GetOrCreate("eventProcessor")
+
+const (
+	putNFTForSaleIdentifier = "putNftForSale"
+	buyNFTIdentifier        = "buyNft"
+	withdrawNFTIdentifier   = "withdrawNft"
+
+	saveEventsTTL        = 5 * time.Minute
 )
 
 type EventProcessor struct {
 	addressSet     map[string]bool
 	identifiersSet map[string]bool
-	eventsPool     chan []entities.Event
+
+	eventsPool chan []entities.Event
+
+	localCacher *cache.LocalCacher
 }
 
-var log = logger.GetOrCreate("EventProcessor")
-
-func NewEventProcessor(addresses []string, identifiers []string) *EventProcessor {
+func NewEventProcessor(
+	addresses []string,
+	identifiers []string,
+	localCacher *cache.LocalCacher,
+) *EventProcessor {
 	addrSet := map[string]bool{}
 	idSet := map[string]bool{}
 
@@ -32,6 +49,7 @@ func NewEventProcessor(addresses []string, identifiers []string) *EventProcessor
 		addressSet:     addrSet,
 		identifiersSet: idSet,
 		eventsPool:     make(chan []entities.Event),
+		localCacher:    localCacher,
 	}
 
 	go processor.PoolWorker()
@@ -43,31 +61,70 @@ func (e *EventProcessor) PoolWorker() {
 	for eventArray := range e.eventsPool {
 		for _, event := range eventArray {
 			switch event.Identifier {
-			case "putNftForSale":
+			case putNFTForSaleIdentifier:
 				e.onEventPutNftForSale(event)
-			case "buyNft":
+			case buyNFTIdentifier:
 				e.onEventBuyNft(event)
-			case "withdrawNft":
+			case withdrawNFTIdentifier:
 				e.onEventWithdrawNft(event)
 			}
 		}
 	}
 }
 
-func (e *EventProcessor) OnEvents(events []entities.Event) {
+func (e *EventProcessor) OnEvents(blockEvents entities.BlockEvents) {
 	var filterableEvents []entities.Event
 
-	for _, event := range events {
+	for _, event := range blockEvents.Events {
 		if e.isEventAccepted(event) {
 			filterableEvents = append(filterableEvents, event)
 		}
 	}
 
 	if len(filterableEvents) > 0 {
-		e.eventsPool <- filterableEvents
+		err := e.localCacher.SetWithTTLSync(blockEvents.Hash, filterableEvents, saveEventsTTL)
+		if err != nil {
+			log.Error(
+				"could not store events at block",
+				"headerHash", blockEvents.Hash,
+				"err", err.Error(),
+			)
+		}
+
+		log.Info("pushed events to cache for block", "headerHash", blockEvents.Hash)
+	}
+}
+
+func (e *EventProcessor) OnFinalizedEvent(fb entities.FinalizedBlock) {
+	cachedValue, err := e.localCacher.Get(fb.Hash)
+	if err != nil {
+		log.Warn("could not load events from cache for block",
+			"headerHash", fb.Hash,
+			"err", err.Error(),
+		)
+		return
 	}
 
-	return
+	cachedEvents, ok := cachedValue.([]entities.Event)
+	if !ok {
+		log.Error(
+			"could not cast cached value to []entities.Event",
+			"reason", "corrupted cached data",
+		)
+		return
+	}
+
+	if len(cachedEvents) == 0 {
+		log.Warn("loaded empty []entities.Event from cache at block", "headerHash", fb.Hash)
+		return
+	}
+
+	e.eventsPool <- cachedEvents
+
+	err = e.localCacher.Del(fb.Hash)
+	if err != nil {
+		log.Error("could not delete block events", "err", err.Error())
+	}
 }
 
 func (e *EventProcessor) isEventAccepted(ev entities.Event) bool {
@@ -75,6 +132,11 @@ func (e *EventProcessor) isEventAccepted(ev entities.Event) bool {
 }
 
 func (e *EventProcessor) onEventPutNftForSale(event entities.Event) {
+	if len(event.Topics) != 13 {
+		log.Error("received corrupted putNFTForSale event", "err", "incorrect topics length")
+		return
+	}
+
 	args := services.ListTokenArgs{
 		OwnerAddress:     decodeAddressFromTopic(event.Topics[1]),
 		TokenId:          decodeStringFromTopic(event.Topics[2]),
@@ -91,7 +153,7 @@ func (e *EventProcessor) onEventPutNftForSale(event entities.Event) {
 	}
 
 	eventJson, err := json.Marshal(args)
-	if err != nil {
+	if err == nil {
 		log.Debug("onEventPutNftForSale", string(eventJson))
 	}
 
@@ -99,6 +161,11 @@ func (e *EventProcessor) onEventPutNftForSale(event entities.Event) {
 }
 
 func (e *EventProcessor) onEventBuyNft(event entities.Event) {
+	if len(event.Topics) != 8 {
+		log.Error("received corrupted buyNFT event", "err", "incorrect topics length")
+		return
+	}
+
 	args := services.BuyTokenArgs{
 		OwnerAddress: decodeAddressFromTopic(event.Topics[1]),
 		BuyerAddress: decodeAddressFromTopic(event.Topics[2]),
@@ -110,7 +177,7 @@ func (e *EventProcessor) onEventBuyNft(event entities.Event) {
 	}
 
 	eventJson, err := json.Marshal(args)
-	if err != nil {
+	if err == nil {
 		log.Debug("onEventBuyNft", string(eventJson))
 	}
 
@@ -118,6 +185,11 @@ func (e *EventProcessor) onEventBuyNft(event entities.Event) {
 }
 
 func (e *EventProcessor) onEventWithdrawNft(event entities.Event) {
+	if len(event.Topics) != 7 {
+		log.Error("received corrupted withdrawNFT event", "err", "incorrect topics length")
+		return
+	}
+
 	args := services.WithdrawTokenArgs{
 		OwnerAddress: decodeAddressFromTopic(event.Topics[1]),
 		TokenId:      decodeStringFromTopic(event.Topics[2]),
@@ -128,7 +200,7 @@ func (e *EventProcessor) onEventWithdrawNft(event entities.Event) {
 	}
 
 	eventJson, err := json.Marshal(args)
-	if err != nil {
+	if err == nil {
 		log.Debug("onEventWithdrawNft", string(eventJson))
 	}
 
