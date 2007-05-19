@@ -682,15 +682,20 @@ func TryGetMetadataLink(blockchainProxy string, address string, tokenId string, 
 
 	link, err := base64.StdEncoding.DecodeString(proxyResponse.Data.TokenData.Uris[1])
 	linkStr := string(link)
-	if strings.HasPrefix(linkStr, ipfsProtocolURLPrefix) {
+
+	return ParseMetadataUrl(linkStr), err
+}
+
+func ParseMetadataUrl(link string) string {
+	if strings.HasPrefix(link, ipfsProtocolURLPrefix) {
 		parsedUrl := fmt.Sprintf(
 			ipfsDefaultGatewayURL,
-			strings.Replace(linkStr, ipfsProtocolURLPrefix, "", 1),
+			strings.Replace(link, ipfsProtocolURLPrefix, "", 1),
 		)
-		linkStr = parsedUrl
+		link = parsedUrl
 	}
 
-	return linkStr, err
+	return link
 }
 
 func TryGetTokenResponse(blockchainProxy string, address string, tokenId string, nonce uint64) (NftProxyReponseToken, error) {
@@ -782,7 +787,7 @@ func AddOrRefreshToken(
 	refreshKey := fmt.Sprintf(RefreshMetadataSetNxKeyFormat, tokenId, nonce)
 	ok, err := redisClient.SetNX(redisContext, refreshKey, true, RefreshMetadataSetNxExpirePeriod).Result()
 	if err != nil {
-		log.Debug("set nx resulted in error", err)
+		log.Debug("set nx resulted in error", "err", err.Error())
 	}
 
 	shouldTry := ok == true && err == nil
@@ -824,7 +829,7 @@ func AddOrRefreshToken(
 			return emptyAttributes, innerErr
 		}
 
-		metadataLink = string(link)
+		metadataLink = ParseMetadataUrl(string(link))
 	}
 
 	if len(tokenProxyResponse.Royalties) == 0 {
