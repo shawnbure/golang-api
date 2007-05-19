@@ -33,3 +33,7 @@
     MaxOpenConns = 50
     MaxIdleConns = 10
     ShouldMigrate = true
+
+[Cache]
+    Url = "redis://localhost:6379"
+
