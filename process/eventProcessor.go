@@ -81,22 +81,24 @@ func (e *EventProcessor) OnEvents(blockEvents entities.BlockEvents) {
 		}
 	}
 
-	err := e.localCacher.SetWithTTLSync(blockEvents.Hash, filterableEvents, saveEventsTTL)
-	if err != nil {
-		log.Error(
-			"could not store events at block",
-			"headerHash", blockEvents.Hash,
-			"err", err.Error(),
-		)
-	}
+	if len(filterableEvents) > 0 {
+		err := e.localCacher.SetWithTTLSync(blockEvents.Hash, filterableEvents, saveEventsTTL)
+		if err != nil {
+			log.Error(
+				"could not store events at block",
+				"headerHash", blockEvents.Hash,
+				"err", err.Error(),
+			)
+		}
 
-	log.Info("pushed events to cache for block", "headerHash", blockEvents.Hash)
+		log.Info("pushed events to cache for block", "headerHash", blockEvents.Hash)
+	}
 }
 
 func (e *EventProcessor) OnFinalizedEvent(fb entities.FinalizedBlock) {
 	cachedValue, err := e.localCacher.Get(fb.Hash)
 	if err != nil {
-		log.Error("could not load events from cache for block",
+		log.Warn("could not load events from cache for block",
 			"headerHash", fb.Hash,
 			"err", err.Error(),
 		)
