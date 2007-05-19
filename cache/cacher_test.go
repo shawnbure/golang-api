@@ -1,12 +1,12 @@
 package cache
 
 import (
-	"github.com/stretchr/testify/require"
 	"math/big"
 	"testing"
 	"time"
 
 	"github.com/erdsea/erdsea-api/config"
+	"github.com/stretchr/testify/require"
 )
 
 var cfg = config.CacheConfig{

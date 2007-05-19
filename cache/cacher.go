@@ -3,9 +3,9 @@ package cache
 import (
 	"context"
 	"fmt"
-	"github.com/erdsea/erdsea-api/config"
 	"time"
 
+	"github.com/erdsea/erdsea-api/config"
 	"github.com/go-redis/cache/v8"
 	"github.com/go-redis/redis/v8"
 )
