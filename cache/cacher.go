@@ -27,9 +27,10 @@ type Cacher struct {
 }
 
 var (
-	initOnce  sync.Once
-	closeOnce sync.Once
-	cacher    *Cacher
+	initOnce    sync.Once
+	closeOnce   sync.Once
+	cacher      *Cacher
+	localCacher *LocalCacher
 
 	BoltDbPath = "/tmp/bolt.db"
 	log        = logger.GetOrCreate("cacheLog")
@@ -49,6 +50,11 @@ func InitCacher(cfg config.CacheConfig) {
 		})
 
 		boltDb, err := bolt.Open(BoltDbPath, 0600, nil)
+		if err != nil {
+			panic(err)
+		}
+
+		localCacher, err = NewLocalCacher()
 		if err != nil {
 			panic(err)
 		}
@@ -111,4 +117,8 @@ func GetContext() context.Context {
 
 func GetBolt() *bolt.DB {
 	return cacher.bolt
+}
+
+func GetLocalCacher() *LocalCacher {
+	return localCacher
 }
