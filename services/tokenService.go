@@ -444,6 +444,7 @@ func GetExtendedTokenData(tokenId string, nonce uint64) (*dtos.ExtendedTokenDto,
 
 func GetAttributesFromMetadata(link string) datatypes.JSON {
 	emptyResponse := datatypes.JSON("")
+	link = strings.TrimSpace(link)
 	if len(link) == 0 {
 		return emptyResponse
 	}
@@ -697,6 +698,7 @@ func ConstructOwnedTokensFromTokens(tokens []entities.Token) []dtos.OwnedTokenDt
 func TryGetResponseCached(url string) (string, error) {
 	redis := cache.GetRedis()
 	redisCtx := cache.GetContext()
+	url = strings.TrimSpace(url)
 
 	key := fmt.Sprintf(UrlResponseCacheKeyFormat, url)
 	metadataBytes, err := redis.Get(redisCtx, key).Result()
