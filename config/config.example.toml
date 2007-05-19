@@ -14,6 +14,8 @@
         "startAuction",
         "placeBid",
         "endAuction",
+        "deposit",
+        "withdraw",
     ]
 
 [Blockchain]
@@ -26,6 +28,12 @@
     BuyNftGasLimit = 15_000_000
     WithdrawNftGasLimit = 15_000_000
     MintTokenGasLimit = 10_000_000
+    MakeOfferGasLimit = 20_000_000
+    AcceptOfferGasLimit = 20_000_000
+    CancelOfferGasLimit = 20_000_000
+    StartAuctionGasLimit = 20_000_000
+    PlaceBidGasLimit = 20_000_000
+    EndAuctionGasLimit = 20_000_000
 
 [Database]
     Dialect = "postgres"

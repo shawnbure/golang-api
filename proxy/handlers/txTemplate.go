@@ -13,17 +13,23 @@ import (
 )
 
 const (
-	baseFormatEndpoint        = "/tx-template"
-	listNftFormatEndpoint     = "/list-nft/:userAddress/:tokenId/:nonce/:price"
-	buyNftFormatEndpoint      = "/buy-nft/:userAddress/:tokenId/:nonce/:price"
-	withdrawNftFormatEndpoint = "/withdraw-nft/:userAddress/:tokenId/:nonce"
+	baseFormatEndpoint         = "/tx-template"
+	listNftFormatEndpoint      = "/list-nft/:userAddress/:tokenId/:nonce/:price"
+	buyNftFormatEndpoint       = "/buy-nft/:userAddress/:tokenId/:nonce/:price"
+	withdrawNftFormatEndpoint  = "/withdraw-nft/:userAddress/:tokenId/:nonce"
+	makeOfferFormatEndpoint    = "/make-offer/:userAddress/:tokenId/:nonce/:amount/:expiration"
+	acceptOfferFormatEndpoint  = "/accept-offer/:userAddress/:tokenId/:nonce/:offeror/:amount"
+	cancelOfferFormatEndpoint  = "/cancel-offer/:userAddress/:tokenId/:nonce/:amount"
+	startAuctionFormatEndpoint = "/start-auction/:userAddress/:tokenId/:nonce/:price/:startTime/:deadline"
+	placeBidFormatEndpoint     = "/place-bid/:userAddress/:tokenId/:nonce/:amount"
+	endAuctionFormatEndpoint   = "/end-auction/:userAddress/:tokenId/:nonce"
 )
 
 type txTemplateHandler struct {
 	txFormatter formatter.TxFormatter
 }
 
-func NewTxTemplateHandler(groupHandler *groupHandler, authCfg config.AuthConfig, blockchainConfig config.BlockchainConfig) {
+func NewTxTemplateHandler(groupHandler *groupHandler, blockchainConfig config.BlockchainConfig) {
 	handler := &txTemplateHandler{
 		txFormatter: formatter.NewTxFormatter(blockchainConfig),
 	}
@@ -32,6 +38,12 @@ func NewTxTemplateHandler(groupHandler *groupHandler, authCfg config.AuthConfig,
 		{Method: http.MethodGet, Path: listNftFormatEndpoint, HandlerFunc: handler.getListNftTemplate},
 		{Method: http.MethodGet, Path: buyNftFormatEndpoint, HandlerFunc: handler.getBuyNftTemplate},
 		{Method: http.MethodGet, Path: withdrawNftFormatEndpoint, HandlerFunc: handler.getWithdrawNftTemplate},
+		{Method: http.MethodGet, Path: makeOfferFormatEndpoint, HandlerFunc: handler.getWithdrawNftTemplate},
+		{Method: http.MethodGet, Path: acceptOfferFormatEndpoint, HandlerFunc: handler.getWithdrawNftTemplate},
+		{Method: http.MethodGet, Path: cancelOfferFormatEndpoint, HandlerFunc: handler.getWithdrawNftTemplate},
+		{Method: http.MethodGet, Path: startAuctionFormatEndpoint, HandlerFunc: handler.getWithdrawNftTemplate},
+		{Method: http.MethodGet, Path: placeBidFormatEndpoint, HandlerFunc: handler.getWithdrawNftTemplate},
+		{Method: http.MethodGet, Path: endAuctionFormatEndpoint, HandlerFunc: handler.getWithdrawNftTemplate},
 	}
 
 	endpointGroupHandler := EndpointGroupHandler{
@@ -133,6 +145,40 @@ func (handler *txTemplateHandler) getWithdrawNftTemplate(c *gin.Context) {
 	}
 
 	template := handler.txFormatter.NewWithdrawNftTxTemplate(userAddress, tokenId, nonce)
+	dtos.JsonResponse(c, http.StatusOK, template, "")
+}
+
+// @Summary Make offer for an NFT tx template.
+// @Description Retrieves tx-template for make offer transaction.
+// @Tags tx-template
+// @Accept json
+// @Produce json
+// @Param userAddress path int true "user address"
+// @Param tokenId path int true "token id"
+// @Param nonce path int true "nonce"
+// @Param amount path float64 true "price"
+// @Success 200 {object} formatter.Transaction
+// @Failure 400 {object} dtos.ApiResponse
+// @Router /tx-template/make-offer/{userAddress}/{tokenId}/{nonce}/{amount} [get]
+func (handler *txTemplateHandler) makeOfferTemplate(c *gin.Context) {
+	userAddress := c.Param("userAddress")
+	tokenId := c.Param("tokenId")
+	nonceStr := c.Param("nonce")
+	amountStr := c.Param("amount")
+
+	nonce, err := strconv.ParseUint(nonceStr, 10, 64)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	amount, err := strconv.ParseFloat(amountStr, 64)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	template := handler.txFormatter.MakeOfferTxTemplate(userAddress, tokenId, nonce, amount)
 	dtos.JsonResponse(c, http.StatusOK, template, "")
 }
 
