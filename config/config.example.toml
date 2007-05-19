@@ -65,7 +65,7 @@
     JwtSecret = "jwtSecret"
     JwtIssuer = "localhost:5000"
     JwtKeySeedHex = "d6592724167553acf9c8cba9a7dbc7f514efc757d7906546cecfdfc5d4c2e8d1"
-    JwtExpiryMins = 120
+    JwtExpiryMins = 1440
 
 [Cache]
     Url = "redis://localhost:6379"

@@ -734,7 +734,7 @@ func RefreshMetadata(blockchainProxy string, token *entities.Token, ownerAddress
 
 	shouldTry := ok == true && err == nil
 	if !shouldTry {
-		return token.Attributes, nil
+		return JsonOrEmpty(token.Attributes), nil
 	}
 
 	refreshedMetadataLink := false
@@ -774,4 +774,12 @@ func RefreshMetadata(blockchainProxy string, token *entities.Token, ownerAddress
 	}
 
 	return attrs, nil
+}
+
+func JsonOrEmpty(value datatypes.JSON) datatypes.JSON {
+	if value != nil {
+		return value
+	}
+
+	return datatypes.JSON("")
 }
