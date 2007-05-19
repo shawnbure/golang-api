@@ -102,5 +102,5 @@ func parseTokenUnverified(signedToken, secret string) (*JwtClaims, error) {
 		return nil, err
 	}
 
-	return token.Claims.(*JwtClaims), nil
+	return nil, ErrJwtParse
 }
