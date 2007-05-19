@@ -3,10 +3,11 @@ package services
 import (
 	libed25519 "crypto/ed25519"
 	"encoding/hex"
+	"testing"
+
 	"github.com/erdsea/erdsea-api/config"
 	"github.com/erdsea/erdsea-api/crypto"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func Test_CreateAndRefreshBeforeExpireShouldNotWork(t *testing.T) {

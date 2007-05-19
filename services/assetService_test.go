@@ -1,14 +1,16 @@
 package services
 
 import (
+	"testing"
+
+	"github.com/erdsea/erdsea-api/config"
 	"github.com/erdsea/erdsea-api/data"
 	"github.com/erdsea/erdsea-api/storage"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func Test_ListAsset(t *testing.T) {
-	connectToDb(t)
+	connectToDb()
 
 	collection := data.Collection{
 		Name:        "col",
@@ -19,13 +21,12 @@ func Test_ListAsset(t *testing.T) {
 	_ = storage.AddNewCollection(&collection)
 
 	args := ListAssetArgs{
-		OwnerAddress:   "ownerAddress",
-		TokenId:        "tokenId",
-		Nonce:          13,
-		Uri:            "uri",
-		CollectionName: "col",
-		Price:          "1000",
-		TxHash:         "txHash",
+		OwnerAddress: "ownerAddress",
+		TokenId:      "tokenId",
+		Nonce:        13,
+		Uri:          "uri",
+		Price:        "1000",
+		TxHash:       "txHash",
 	}
 	ListAsset(args)
 
@@ -54,7 +55,7 @@ func Test_ListAsset(t *testing.T) {
 }
 
 func Test_SellAsset(t *testing.T) {
-	connectToDb(t)
+	connectToDb()
 
 	collection := data.Collection{
 		Name:        "col",
@@ -65,25 +66,23 @@ func Test_SellAsset(t *testing.T) {
 	_ = storage.AddNewCollection(&collection)
 
 	listArgs := ListAssetArgs{
-		OwnerAddress:   "ownerAddress",
-		TokenId:        "tokenId",
-		Nonce:          13,
-		Uri:            "uri",
-		CollectionName: "col",
-		Price:          "1000",
-		TxHash:         "txHash",
+		OwnerAddress: "ownerAddress",
+		TokenId:      "tokenId",
+		Nonce:        13,
+		Uri:          "uri",
+		Price:        "1000",
+		TxHash:       "txHash",
 	}
 	ListAsset(listArgs)
 
 	buyArgs := BuyAssetArgs{
-		OwnerAddress:   "ownerAddress",
-		BuyerAddress:   "buyerAddress",
-		TokenId:        "tokenId",
-		Nonce:          13,
-		Uri:            "col",
-		CollectionName: "col",
-		Price:          "1000",
-		TxHash:         "txHashBuy",
+		OwnerAddress: "ownerAddress",
+		BuyerAddress: "buyerAddress",
+		TokenId:      "tokenId",
+		Nonce:        13,
+		Uri:          "col",
+		Price:        "1000",
+		TxHash:       "txHashBuy",
 	}
 	BuyAsset(buyArgs)
 
@@ -116,7 +115,7 @@ func Test_SellAsset(t *testing.T) {
 }
 
 func Test_WithdrawAsset(t *testing.T) {
-	connectToDb(t)
+	connectToDb()
 
 	collection := data.Collection{
 		Name:        "col",
@@ -127,24 +126,22 @@ func Test_WithdrawAsset(t *testing.T) {
 	_ = storage.AddNewCollection(&collection)
 
 	listArgs := ListAssetArgs{
-		OwnerAddress:   "ownerAddress",
-		TokenId:        "tokenId",
-		Nonce:          13,
-		Uri:            "uri",
-		CollectionName: "col",
-		Price:          "1000",
-		TxHash:         "txHash",
+		OwnerAddress: "ownerAddress",
+		TokenId:      "tokenId",
+		Nonce:        13,
+		Uri:          "uri",
+		Price:        "1000",
+		TxHash:       "txHash",
 	}
 	ListAsset(listArgs)
 
 	withdrawArgs := WithdrawAssetArgs{
-		OwnerAddress:   "ownerAddress",
-		TokenId:        "tokenId",
-		Nonce:          13,
-		Uri:            "col",
-		CollectionName: "col",
-		Price:          "1000",
-		TxHash:         "txHashWithdraw",
+		OwnerAddress: "ownerAddress",
+		TokenId:      "tokenId",
+		Nonce:        13,
+		Uri:          "col",
+		Price:        "1000",
+		TxHash:       "txHashWithdraw",
 	}
 	WithdrawAsset(withdrawArgs)
 
@@ -170,4 +167,19 @@ func Test_WithdrawAsset(t *testing.T) {
 		CollectionID: asset.CollectionID,
 	}
 	require.Equal(t, expectedAsset, *asset)
+}
+
+func connectToDb() {
+	storage.Connect(config.DatabaseConfig{
+		Dialect:       "postgres",
+		Host:          "localhost",
+		Port:          5432,
+		DbName:        "erdsea_db_test",
+		User:          "postgres",
+		Password:      "root",
+		SslMode:       "disable",
+		MaxOpenConns:  50,
+		MaxIdleConns:  10,
+		ShouldMigrate: true,
+	})
 }

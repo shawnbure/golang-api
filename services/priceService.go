@@ -3,17 +3,22 @@ package services
 import (
 	"encoding/json"
 	"errors"
-	logger "github.com/ElrondNetwork/elrond-go-logger"
-	"github.com/erdsea/erdsea-api/cache"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
+
+	"github.com/erdsea/erdsea-api/cache"
 )
 
 const (
+	USD                         = "USD"
+	USDTTicker                  = "USDT"
+	EGLDTicker                  = "EGLD"
 	EGLDPriceCacheKey           = "EGLDPrice"
-	binanceEGLDPriceUrl         = "https://api.binance.com/api/v3/ticker/price?symbol=EGLDUSDT"
+	binancePriceUrl             = "https://api.binance.com/api/v3/ticker/price?symbol=%s%s"
 	binanceResponseExpirePeriod = 10 * time.Minute
 )
 
@@ -22,18 +27,18 @@ type BinancePriceRequest struct {
 	Price  string `json:"price"`
 }
 
-var log = logger.GetOrCreate("priceService")
-
-func GetEGLDPrice() (float64, error) {
-	var price float64
-
-	errRead := cache.GetCacher().Get(EGLDPriceCacheKey, &price)
-	if errRead == nil {
-		return price, nil
+func GetPrice(from, to string) (float64, error) {
+	to = strings.ToUpper(to)
+	if strings.Contains(to, USD) {
+		to = USDTTicker
 	}
 
+	from = strings.ToUpper(from)
+
+	url := fmt.Sprintf(binancePriceUrl, from, to)
+
 	var bpr BinancePriceRequest
-	err := HttpGet(binanceEGLDPriceUrl, &bpr)
+	err := HttpGet(url, &bpr)
 	if err != nil {
 		log.Debug("binance request failed")
 		return -1, err
@@ -43,16 +48,31 @@ func GetEGLDPrice() (float64, error) {
 		return -1, errors.New("invalid response")
 	}
 
-	price, err = StrToFloat64(bpr.Price)
+	price, err := StrToFloat64(bpr.Price)
 	if err != nil {
 		log.Debug("could not parse price")
+		return -1, errors.New("could not parse price")
 	}
 
-	if err == nil {
-		errSet := cache.GetCacher().Set(EGLDPriceCacheKey, price, binanceResponseExpirePeriod)
-		if errSet != nil {
-			log.Debug("could not cache result", errSet)
-		}
+	return price, err
+}
+
+func GetEGLDPrice() (float64, error) {
+	var price float64
+
+	errRead := cache.GetCacher().Get(EGLDPriceCacheKey, &price)
+	if errRead == nil {
+		return price, nil
+	}
+
+	price, err := GetPrice(EGLDTicker, USDTTicker)
+	if err != nil {
+		return price, err
+	}
+
+	errSet := cache.GetCacher().Set(EGLDPriceCacheKey, price, binanceResponseExpirePeriod)
+	if errSet != nil {
+		log.Debug("could not cache result", errSet)
 	}
 
 	return price, err

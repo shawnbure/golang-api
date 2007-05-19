@@ -1,225 +1,148 @@
 package services
 
 import (
-	"fmt"
+	logger "github.com/ElrondNetwork/elrond-go-logger"
 	"github.com/erdsea/erdsea-api/data"
 	"github.com/erdsea/erdsea-api/storage"
 )
 
-type ListAssetArgs struct {
-	OwnerAddress   string
-	TokenId        string
-	Nonce          uint64
-	Uri            string
-	CollectionName string
-	Price          string
-	TxHash         string
-}
-
-func (args *ListAssetArgs) ToString() string {
-	return fmt.Sprintf(""+
-		"OwnerAddress = %s\n"+
-		"TokenId = %s\n"+
-		"Nonce = %d\n"+
-		"Uri = %s\n"+
-		"CollectionName = %s\n"+
-		"Price = %s\n"+
-		"TxHash = %s\n",
-		args.OwnerAddress,
-		args.TokenId,
-		args.Nonce,
-		args.Uri,
-		args.CollectionName,
-		args.Price,
-		args.TxHash)
-}
-
-type BuyAssetArgs struct {
-	OwnerAddress   string
-	BuyerAddress   string
-	TokenId        string
-	Nonce          uint64
-	Uri            string
-	CollectionName string
-	Price          string
-	TxHash         string
-}
-
-func (args *BuyAssetArgs) ToString() string {
-	return fmt.Sprintf(""+
-		"OwnerAddress = %s\n"+
-		"BuyerAddress = %s\n"+
-		"TokenId = %s\n"+
-		"Nonce = %d\n"+
-		"Uri = %s\n"+
-		"CollectionName = %s\n"+
-		"Price = %s\n"+
-		"TxHash = %s\n",
-		args.OwnerAddress,
-		args.BuyerAddress,
-		args.TokenId,
-		args.Nonce,
-		args.Uri,
-		args.CollectionName,
-		args.Price,
-		args.TxHash)
-}
-
-type WithdrawAssetArgs struct {
-	OwnerAddress   string
-	TokenId        string
-	Nonce          uint64
-	Uri            string
-	CollectionName string
-	Price          string
-	TxHash         string
-}
-
-func (args *WithdrawAssetArgs) ToString() string {
-	return fmt.Sprintf(""+
-		"OwnerAddress = %s\n"+
-		"TokenId = %s\n"+
-		"Nonce = %d\n"+
-		"Uri = %s\n"+
-		"CollectionName = %s\n"+
-		"Price = %s\n"+
-		"TxHash = %s\n",
-		args.OwnerAddress,
-		args.TokenId,
-		args.Nonce,
-		args.Uri,
-		args.CollectionName,
-		args.Price,
-		args.TxHash)
-}
+var log = logger.GetOrCreate("services")
 
 func ListAsset(args ListAssetArgs) {
 	ownerAccount, err := GetOrCreateAccount(args.OwnerAddress)
 	if err != nil {
-		printError(err)
+		log.Debug("could not get or create account", "err", err)
 		return
 	}
 
-	collection, err := storage.GetCollectionByName(args.CollectionName)
+	collection, err := storage.GetCollectionByTokenId(args.TokenId)
 	if err != nil {
-		printError(err)
+		log.Debug("could not get collection", "err", err)
 		return
 	}
 
 	asset := data.Asset{
-		TokenID:      args.TokenId,
-		Nonce:        args.Nonce,
-		Price:        args.Price,
-		Link:         args.Uri,
-		Listed:       true,
-		OwnerId:      ownerAccount.ID,
-		CollectionID: collection.ID,
+		TokenID:          args.TokenId,
+		Nonce:            args.Nonce,
+		Price:            args.Price,
+		RoyaltiesPercent: args.RoyaltiesPercent,
+		Link:             args.Uri,
+		CreatedAt:        args.Timestamp,
+		Listed:           true,
+		OwnerId:          ownerAccount.ID,
+		CollectionID:     collection.ID,
 	}
 
 	existingAsset, err := storage.GetAssetByTokenIdAndNonce(args.TokenId, args.Nonce)
+
+	var innerErr error
 	if err == nil {
 		asset.ID = existingAsset.ID
-		err = storage.UpdateAsset(&asset)
+		innerErr = storage.UpdateAsset(&asset)
 	} else {
-		err = storage.AddNewAsset(&asset)
+		innerErr = storage.AddNewAsset(&asset)
 	}
-	if err != nil {
-		printError(err)
+
+	if innerErr != nil {
+		log.Debug("could not create or update asset", "err", innerErr)
 		return
 	}
 
 	transaction := data.Transaction{
-		Hash:     args.TxHash,
-		Type:     "List",
-		Price:    args.Price,
-		SellerID: ownerAccount.ID,
-		BuyerID:  0,
-		AssetID:  asset.ID,
+		Hash:      args.TxHash,
+		Type:      data.ListAsset,
+		Price:     args.Price,
+		Timestamp: args.Timestamp,
+		SellerID:  ownerAccount.ID,
+		BuyerID:   0,
+		AssetID:   asset.ID,
 	}
 
-	err = storage.AddNewTransaction(&transaction)
-	if err != nil {
-		printError(err)
-		return
-	}
+	addNewTransaction(&transaction)
 }
 
 func BuyAsset(args BuyAssetArgs) {
 	ownerAccount, err := storage.GetAccountByAddress(args.OwnerAddress)
 	if err != nil {
-		printError(err)
+		log.Debug("could not get owner account", "err", err)
 		return
 	}
 
 	buyerAccount, err := GetOrCreateAccount(args.BuyerAddress)
 	if err != nil {
-		printError(err)
+		log.Debug("could not get or create account", "err", err)
 		return
 	}
 
 	asset, err := storage.GetAssetByTokenIdAndNonce(args.TokenId, args.Nonce)
 	if err != nil {
-		printError(err)
+		log.Debug("could not get asset", "err", err)
 		return
 	}
 
 	asset.Listed = false
+	// This was to be reset since the asset will no longer be on the marketplace.
+	// Could have been kept like this, but bugs may appear when trying when querying.
 	asset.OwnerId = 0
 	err = storage.UpdateAsset(asset)
 	if err != nil {
-		printError(err)
+		log.Debug("could not update asset", "err", err)
 		return
 	}
 
 	transaction := data.Transaction{
-		Hash:     args.TxHash,
-		Type:     "Buy",
-		Price:    args.Price,
-		SellerID: ownerAccount.ID,
-		BuyerID:  buyerAccount.ID,
-		AssetID:  asset.ID,
+		Hash:      args.TxHash,
+		Type:      data.BuyAsset,
+		Price:     args.Price,
+		Timestamp: args.Timestamp,
+		SellerID:  ownerAccount.ID,
+		BuyerID:   buyerAccount.ID,
+		AssetID:   asset.ID,
 	}
 
-	err = storage.AddNewTransaction(&transaction)
-	if err != nil {
-		printError(err)
-		return
-	}
+	addNewTransaction(&transaction)
 }
 
 func WithdrawAsset(args WithdrawAssetArgs) {
 	ownerAccount, err := storage.GetAccountByAddress(args.OwnerAddress)
 	if err != nil {
-		printError(err)
+		log.Debug("could not get owner account", err)
 		return
 	}
 
 	asset, err := storage.GetAssetByTokenIdAndNonce(args.TokenId, args.Nonce)
 	if err != nil {
-		printError(err)
+		log.Debug("could not get asset", "err", err)
 		return
 	}
 
 	asset.Listed = false
+	// This was to be reset since the asset will no longer be on the marketplace.
+	// Could have been kept like this, but bugs may appear when trying when querying.
 	asset.OwnerId = 0
 	err = storage.UpdateAsset(asset)
 	if err != nil {
-		printError(err)
+		log.Debug("could not update asset", "err", err)
 		return
 	}
 
 	transaction := data.Transaction{
-		Hash:     args.TxHash,
-		Type:     "Withdraw",
-		Price:    args.Price,
-		SellerID: 0,
-		BuyerID:  ownerAccount.ID,
-		AssetID:  asset.ID,
+		Hash:      args.TxHash,
+		Type:      data.WithdrawAsset,
+		Price:     args.Price,
+		Timestamp: args.Timestamp,
+		SellerID:  0,
+		BuyerID:   ownerAccount.ID,
+		AssetID:   asset.ID,
 	}
 
-	err = storage.AddNewTransaction(&transaction)
+	addNewTransaction(&transaction)
+}
+
+func addNewTransaction(tx *data.Transaction) {
+	err := storage.AddNewTransaction(tx)
 	if err != nil {
-		printError(err)
+		log.Debug("could not create new transaction", "err", err)
 		return
 	}
 }

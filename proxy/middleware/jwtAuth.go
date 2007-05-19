@@ -17,7 +17,7 @@ const (
 	bearerSplitOn = "Bearer "
 	authHeaderKey = "Authorization"
 
-	addressKey = "address"
+	AddressKey = "address"
 )
 
 var returnUnauthorized = func(c *gin.Context, errMessage string) {
@@ -47,7 +47,7 @@ func Authorization(secret string) gin.HandlerFunc {
 			return
 		}
 
-		c.Set(addressKey, claims.Address)
+		c.Set(AddressKey, claims.Address)
 		c.Next()
 	}
 }

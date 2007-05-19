@@ -76,6 +76,25 @@ func GetCollectionByName(name string) (*data.Collection, error) {
 	return &collection, nil
 }
 
+func GetCollectionByTokenId(tokenId string) (*data.Collection, error) {
+	var collection data.Collection
+
+	database, err := GetDBOrError()
+	if err != nil {
+		return nil, err
+	}
+
+	txRead := database.Find(&collection, "token_id = ?", tokenId)
+	if txRead.Error != nil {
+		return nil, txRead.Error
+	}
+	if txRead.RowsAffected == 0 {
+		return nil, gorm.ErrRecordNotFound
+	}
+
+	return &collection, nil
+}
+
 func GetCollectionsWithOffsetLimit(offset int, limit int) ([]data.Collection, error) {
 	var collections []data.Collection
 
