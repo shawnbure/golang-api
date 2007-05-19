@@ -71,7 +71,7 @@ func (e *EventProcessor) isEventAccepted(ev data.Event) bool {
 	return e.addressSet[ev.Address] && e.identifiersSet[ev.Identifier]
 }
 
-func (e* EventProcessor) onEventCollectionRegister(event data.Event) {
+func (e *EventProcessor) onEventCollectionRegister(event data.Event) {
 	creatorAddress := decodeAddressFromTopic(event.Topics[0])
 	tokenId := decodeStringFromTopic(event.Topics[1])
 	collectionName := decodeStringFromTopic(event.Topics[2])
@@ -80,14 +80,14 @@ func (e* EventProcessor) onEventCollectionRegister(event data.Event) {
 	fmt.Println(creatorAddress, tokenId, collectionName, timestamp)
 }
 
-func (e* EventProcessor) onEventPutNftForSale(event data.Event) {
+func (e *EventProcessor) onEventPutNftForSale(event data.Event) {
 
 }
 
-func (e* EventProcessor) onEventBuyNft(event data.Event) {
+func (e *EventProcessor) onEventBuyNft(event data.Event) {
 
 }
 
-func (e* EventProcessor) onEventWithdrawNft(event data.Event) {
+func (e *EventProcessor) onEventWithdrawNft(event data.Event) {
 
 }
