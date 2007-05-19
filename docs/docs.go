@@ -123,6 +123,67 @@ var doc = `{
                 }
             }
         },
+        "/accounts/{userAddress}/assets/{offset}/{limit}": {
+            "get": {
+                "description": "Retrieves a list of assets. Unsorted.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "accounts"
+                ],
+                "summary": "Gets assets for a user address.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user address",
+                        "name": "userAddress",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "offset",
+                        "name": "offset",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "limit",
+                        "name": "limit",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/data.Asset"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/accounts/{userAddress}/cover": {
             "get": {
                 "description": "Retrieves an account cover image. It will be sent as base64 encoding (sdt, raw) of its byte representation.",
@@ -1091,7 +1152,7 @@ var doc = `{
         },
         "/transactions/address/{address}/{offset}/{limit}": {
             "get": {
-                "description": "Retrieves transactions for an address. Unordered.",
+                "description": "Retrieves transactions for a user address. Unordered.",
                 "consumes": [
                     "application/json"
                 ],
@@ -1101,12 +1162,12 @@ var doc = `{
                 "tags": [
                     "transactions"
                 ],
-                "summary": "Gets transaction for an address.",
+                "summary": "Gets transaction for a user address.",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "address",
-                        "name": "address",
+                        "description": "user address",
+                        "name": "userAddress",
                         "in": "path",
                         "required": true
                     },

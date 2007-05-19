@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/erdsea/erdsea-api/config"
@@ -17,6 +18,7 @@ const (
 	accountByUserAddressEndpoint = "/:userAddress"
 	accountProfileEndpoint       = "/:userAddress/profile"
 	accountCoverEndpoint         = "/:userAddress/cover"
+	accountAssetsEndpoint		 = "/:userAddress/assets/:offset/:limit"
 )
 
 type accountsHandler struct {
@@ -34,6 +36,8 @@ func NewAccountsHandler(groupHandler *groupHandler, authCfg config.AuthConfig) {
 
 		{Method: http.MethodGet, Path: accountCoverEndpoint, HandlerFunc: handler.getAccountCover},
 		{Method: http.MethodPost, Path: accountCoverEndpoint, HandlerFunc: handler.setAccountCover},
+
+		{Method: http.MethodGet, Path: accountAssetsEndpoint, HandlerFunc: handler.getAccountAssets},
 	}
 
 	endpointGroupHandler := EndpointGroupHandler{
@@ -226,4 +230,48 @@ func (handler *accountsHandler) setAccountCover(c *gin.Context) {
 	}
 
 	data.JsonResponse(c, http.StatusOK, "", "")
+}
+
+// @Summary Gets assets for a user address.
+// @Description Retrieves a list of assets. Unsorted.
+// @Tags accounts
+// @Accept json
+// @Produce json
+// @Param userAddress path string true "user address"
+// @Param offset path int true "offset"
+// @Param limit path int true "limit"
+// @Success 200 {object} []data.Asset
+// @Failure 400 {object} data.ApiResponse
+// @Failure 404 {object} data.ApiResponse
+// @Router /accounts/{userAddress}/assets/{offset}/{limit} [get]
+func (handler *accountsHandler) getAccountAssets(c *gin.Context) {
+	userAddress := c.Param("userAddress")
+	offsetStr := c.Param("offset")
+	limitStr := c.Param("limit")
+
+	offset, err := strconv.Atoi(offsetStr)
+	if err != nil {
+		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil {
+		data.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	account, err := storage.GetAccountByAddress(userAddress)
+	if err != nil {
+		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	assets, err := storage.GetAssetsByOwnerIdWithOffsetLimit(account.ID, offset, limit)
+	if err != nil {
+		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	data.JsonResponse(c, http.StatusOK, assets, "")
 }

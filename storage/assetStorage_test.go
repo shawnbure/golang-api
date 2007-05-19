@@ -81,7 +81,7 @@ func Test_GetAssetsOwnedBy(t *testing.T) {
 	err = AddAsset(&otherAsset)
 	require.Nil(t, err)
 
-	assetsRead, err := GetAssetsOwnedBy(ownerId)
+	assetsRead, err := GetAssetsByOwnerIdWithOffsetLimit(ownerId, 0, 100)
 	require.Nil(t, err)
 	require.GreaterOrEqual(t, len(assetsRead), 2)
 
