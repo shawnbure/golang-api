@@ -34,9 +34,7 @@ func NewAuthService(cfg config.AuthConfig) (*AuthService, error) {
 }
 
 func (a *AuthService) CreateToken(pubkey, sig, msg []byte) (string, string, error) {
-	erdMsg := crypto.ComputeElrondSignableMessage(msg)
-
-	err := crypto.VerifySignature(pubkey, erdMsg, sig)
+	err := crypto.VerifySignature(pubkey, msg, sig)
 	if err != nil {
 		return "", "", err
 	}

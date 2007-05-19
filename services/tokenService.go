@@ -205,6 +205,11 @@ func GetExtendedTokenData(tokenId string, nonce uint64) (*dtos.ExtendedTokenDto,
 		return nil, err
 	}
 
+	creator, err := storage.GetAccountById(collection.CreatorID)
+	if err != nil {
+		return nil, err
+	}
+
 	collStats, err := collstats.GetStatisticsForTokenId(tokenId)
 	if err != nil {
 		collStats = &dtos.CollectionStatistics{}
@@ -215,6 +220,8 @@ func GetExtendedTokenData(tokenId string, nonce uint64) (*dtos.ExtendedTokenDto,
 		*collection,
 		owner.Name,
 		owner.Address,
+		creator.Name,
+		creator.Address,
 		*collStats,
 	)
 }
@@ -248,7 +255,6 @@ func ConstructNewTokenFromListArgs(args ListTokenArgs) entities.Token {
 	} else {
 		token.TokenName = args.TokenName
 		token.ImageLink = args.FirstLink
-		token.Attributes = datatypes.JSON(args.Attributes)
 	}
 
 	return token

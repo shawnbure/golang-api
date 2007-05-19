@@ -7,7 +7,6 @@ import (
 	"github.com/erdsea/erdsea-api/config"
 	"github.com/erdsea/erdsea-api/data/dtos"
 	"github.com/erdsea/erdsea-api/formatter"
-	"github.com/erdsea/erdsea-api/proxy/middleware"
 	"github.com/erdsea/erdsea-api/stats/collstats"
 	"github.com/erdsea/erdsea-api/storage"
 	"github.com/gin-gonic/gin"
@@ -37,7 +36,7 @@ func NewTxTemplateHandler(groupHandler *groupHandler, authCfg config.AuthConfig,
 
 	endpointGroupHandler := EndpointGroupHandler{
 		Root:             baseFormatEndpoint,
-		Middlewares:      []gin.HandlerFunc{middleware.Authorization(authCfg.JwtSecret)},
+		Middlewares:      []gin.HandlerFunc{},
 		EndpointHandlers: endpoints,
 	}
 
