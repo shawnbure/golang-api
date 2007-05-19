@@ -20,6 +20,7 @@ type Collection struct {
 	Flags                    datatypes.JSON `json:"flags"`
 	ProfileImageLink         string         `json:"profileImageLink"`
 	CoverImageLink           string         `json:"coverImageLink"`
+	IsVerified               bool           `json:"isVerified"`
 
 	CreatorID uint64 `json:"creatorId"`
 }

@@ -3218,6 +3218,9 @@ var doc = `{
                 "instagramLink": {
                     "type": "string"
                 },
+                "isVerified": {
+                    "type": "boolean"
+                },
                 "mintPricePerTokenNominal": {
                     "type": "number"
                 },

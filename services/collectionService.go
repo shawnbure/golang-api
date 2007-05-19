@@ -33,7 +33,6 @@ const (
 	MintInfoSetNxKeyFormat         = "MintInfoNX:%s"
 	MintInfoSetNxExpirePeriod      = 6 * time.Second
 	MintInfoBucketName             = "MintInfo"
-	VerifiedFlag                   = "Verified"
 )
 
 type MintInfo struct {
@@ -374,10 +373,6 @@ func checkValidInputOnCreate(request *CreateCollectionRequest) error {
 		if len(flag) > MaxFlagLen {
 			return errors.New("flag too long")
 		}
-
-		if flag == VerifiedFlag {
-			return errors.New("cannot set verified flag")
-		}
 	}
 
 	return nil
@@ -415,10 +410,6 @@ func checkValidInputOnUpdate(request *UpdateCollectionRequest) error {
 	for _, flag := range request.Flags {
 		if len(flag) > MaxFlagLen {
 			return errors.New("flag too long")
-		}
-
-		if flag == VerifiedFlag {
-			return errors.New("cannot set verified flag")
 		}
 	}
 
