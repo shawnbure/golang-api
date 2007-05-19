@@ -61,9 +61,9 @@ func (h *eventsHandler) pushEvents(c *gin.Context) {
 	log.Println("received events at:", time.Now().Unix())
 	log.Println("batch events hash:", blockEvents.Hash)
 
-	//if blockEvents.Events != nil {
-	//	h.processor.OnEvents(blockEvents.Events)
-	//}
+	if blockEvents.Events != nil {
+		h.processor.OnEvents(blockEvents)
+	}
 
 	dtos.JsonResponse(c, http.StatusOK, nil, "")
 }

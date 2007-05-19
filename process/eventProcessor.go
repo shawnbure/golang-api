@@ -8,13 +8,21 @@ import (
 	"github.com/erdsea/erdsea-api/services"
 )
 
+var log = logger.GetOrCreate("EventProcessor")
+
+const (
+	putNFTForSaleIdentifier = "putNftForSale"
+
+	buyNFTIdentifier = "buyNft"
+
+	withdrawNFTIdentifier = "withdrawNft"
+)
+
 type EventProcessor struct {
 	addressSet     map[string]bool
 	identifiersSet map[string]bool
 	eventsPool     chan []entities.Event
 }
-
-var log = logger.GetOrCreate("EventProcessor")
 
 func NewEventProcessor(addresses []string, identifiers []string) *EventProcessor {
 	addrSet := map[string]bool{}
@@ -43,21 +51,21 @@ func (e *EventProcessor) PoolWorker() {
 	for eventArray := range e.eventsPool {
 		for _, event := range eventArray {
 			switch event.Identifier {
-			case "putNftForSale":
+			case putNFTForSaleIdentifier:
 				e.onEventPutNftForSale(event)
-			case "buyNft":
+			case buyNFTIdentifier:
 				e.onEventBuyNft(event)
-			case "withdrawNft":
+			case withdrawNFTIdentifier:
 				e.onEventWithdrawNft(event)
 			}
 		}
 	}
 }
 
-func (e *EventProcessor) OnEvents(events []entities.Event) {
+func (e *EventProcessor) OnEvents(blockEvents entities.BlockEvents) {
 	var filterableEvents []entities.Event
 
-	for _, event := range events {
+	for _, event := range blockEvents.Events {
 		if e.isEventAccepted(event) {
 			filterableEvents = append(filterableEvents, event)
 		}
@@ -66,8 +74,6 @@ func (e *EventProcessor) OnEvents(events []entities.Event) {
 	if len(filterableEvents) > 0 {
 		e.eventsPool <- filterableEvents
 	}
-
-	return
 }
 
 func (e *EventProcessor) isEventAccepted(ev entities.Event) bool {
@@ -90,8 +96,9 @@ func (e *EventProcessor) onEventPutNftForSale(event entities.Event) {
 		TxHash:           decodeTxHashFromTopic(event.Topics[12]),
 	}
 
+	// TODO: if printing the args obj is not intended, marshaling should be rm
 	eventJson, err := json.Marshal(args)
-	if err != nil {
+	if err == nil {
 		log.Debug("onEventPutNftForSale", string(eventJson))
 	}
 
@@ -110,7 +117,7 @@ func (e *EventProcessor) onEventBuyNft(event entities.Event) {
 	}
 
 	eventJson, err := json.Marshal(args)
-	if err != nil {
+	if err == nil {
 		log.Debug("onEventBuyNft", string(eventJson))
 	}
 
@@ -128,7 +135,7 @@ func (e *EventProcessor) onEventWithdrawNft(event entities.Event) {
 	}
 
 	eventJson, err := json.Marshal(args)
-	if err != nil {
+	if err == nil {
 		log.Debug("onEventWithdrawNft", string(eventJson))
 	}
 
