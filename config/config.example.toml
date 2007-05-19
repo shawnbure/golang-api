@@ -34,6 +34,9 @@
     StartAuctionGasLimit = 20_000_000
     PlaceBidGasLimit = 20_000_000
     EndAuctionGasLimit = 20_000_000
+    DepositGasLimit = 10_000_000
+    WithdrawGasLimit = 10_000_000
+    WithdrawCreatorRoyalties = 10_000_000
 
 [Database]
     Dialect = "postgres"
