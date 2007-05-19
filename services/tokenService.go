@@ -207,7 +207,7 @@ func GetExtendedTokenData(tokenId string, nonce uint64) (*dtos.ExtendedTokenDto,
 
 	collStats, err := collstats.GetStatisticsForTokenId(tokenId)
 	if err != nil {
-		return nil, err
+		collStats = &dtos.CollectionStatistics{}
 	}
 
 	return dtos.CreateExtendedTokenDto(

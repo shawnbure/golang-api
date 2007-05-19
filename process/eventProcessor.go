@@ -82,7 +82,7 @@ func (e *EventProcessor) onEventPutNftForSale(event entities.Event) {
 		TokenName:        decodeStringFromTopic(event.Topics[4]),
 		FirstLink:        decodeStringFromTopic(event.Topics[5]),
 		LastLink:         decodeStringFromTopic(event.Topics[6]),
-		Hash:             decodeStringFromTopic(event.Topics[7]),
+		Hash:             decodeHexStringOrEmptyWhenZeroFromTopic(event.Topics[7]),
 		Attributes:       decodeStringFromTopic(event.Topics[8]),
 		Price:            decodeBigUintFromTopic(event.Topics[9]),
 		RoyaltiesPercent: decodeU64FromTopic(event.Topics[10]),
