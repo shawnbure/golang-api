@@ -161,9 +161,9 @@ definitions:
         type: object
       floorPrice:
         type: number
-      itemsCount:
+      itemsTotal:
         type: integer
-      ownersCount:
+      ownersTotal:
         type: integer
       volumeTraded:
         type: number

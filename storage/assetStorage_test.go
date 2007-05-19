@@ -175,7 +175,6 @@ func Test_GetAssetsByCollectionIdWithOffsetLimit(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, len(assets), 2)
 
-
 	attrs2 := map[string]string{"background": "dark", "hair": "green"}
 	assets2, err := GetAssetsByCollectionIdWithOffsetLimit(coll.ID, 0, 100, attrs2)
 	require.Nil(t, err)

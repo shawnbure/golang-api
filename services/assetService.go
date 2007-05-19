@@ -3,13 +3,14 @@ package services
 import (
 	"encoding/json"
 	"errors"
-	"github.com/erdsea/erdsea-api/data/dtos"
 	"gorm.io/datatypes"
 	"math/big"
 	"strconv"
 
 	logger "github.com/ElrondNetwork/elrond-go-logger"
+	"github.com/erdsea/erdsea-api/data/dtos"
 	"github.com/erdsea/erdsea-api/data/entities"
+	collection2 "github.com/erdsea/erdsea-api/stats/collstats"
 	"github.com/erdsea/erdsea-api/storage"
 )
 
@@ -208,7 +209,7 @@ func GetExtendedTokenData(tokenId string, nonce uint64) (*dtos.ExtendedTokenDto,
 		}
 	}
 
-	collStats, err := GetStatisticsForCollection(collection.ID)
+	collStats, err := collection2.GetStatisticsForTokenId(tokenId)
 	if err != nil {
 		return nil, err
 	}
