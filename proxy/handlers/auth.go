@@ -50,11 +50,11 @@ func NewAuthHandler(groupHandler *groupHandler, authService services.AuthService
 	groupHandler.AddEndpointGroupHandler(endpointGroupHandler)
 }
 
-// @Summary access credentials
-// @Description creates an access credentials
+// @Summary Access credentials
+// @Description Creates an access credentials
 // @Tags auth
-// @Accept  json
-// @Produce  json
+// @Accept json
+// @Produce json
 // @Param tokenRequest body createTokenRequest true "create credentials request"
 // @Success 200 {object} tokenPayload
 // @Failure 400 {object} data.ApiResponse
@@ -98,11 +98,11 @@ func (h *authHandler) createAccessToken(c *gin.Context) {
 	}, "")
 }
 
-// @Summary refresh credentials
-// @Description refreshes the access credentials
+// @Summary Refresh credentials
+// @Description Refreshes the access credentials
 // @Tags auth
-// @Accept  json
-// @Produce  json
+// @Accept json
+// @Produce json
 // @Param refreshRequest body tokenPayload true "refresh credentials request"
 // @Success 200 {object} tokenPayload
 // @Failure 400 {object} data.ApiResponse

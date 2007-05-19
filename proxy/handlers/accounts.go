@@ -45,18 +45,39 @@ func NewAccountsHandler(groupHandler *groupHandler, authCfg config.AuthConfig) {
 	groupHandler.AddEndpointGroupHandler(endpointGroupHandler)
 }
 
+// @Summary Get account by user address
+// @Description Retrieves an account by an elrond user address (erd1...)
+// @Tags accounts
+// @Accept json
+// @Produce json
+// @Param userAddress path string true "user address"
+// @Success 200 {object} data.Account
+// @Failure 404 {object} data.ApiResponse
+// @Router /accounts/{userAddress} [get]
 func (handler *accountsHandler) get(c *gin.Context) {
 	userAddress := c.Param("userAddress")
 
 	account, err := storage.GetAccountByAddress(userAddress)
 	if err != nil {
-		data.JsonResponse(c, http.StatusInternalServerError, nil, "could not get price")
+		data.JsonResponse(c, http.StatusNotFound, nil, "could not get price")
 		return
 	}
 
 	data.JsonResponse(c, http.StatusOK, account, "")
 }
 
+// @Summary Set account information
+// @Description Sets an account settable information
+// @Tags accounts
+// @Accept json
+// @Produce json
+// @Param userAddress path string true "user address"
+// @Param setAccountRequest body services.SetAccountRequest true "account info"
+// @Success 200 {object} data.Account
+// @Failure 400 {object} data.ApiResponse
+// @Failure 401 {object} data.ApiResponse
+// @Failure 500 {object} data.ApiResponse
+// @Router /accounts/{userAddress} [post]
 func (handler *accountsHandler) set(c *gin.Context) {
 	var request services.SetAccountRequest
 	userAddress := c.Param("userAddress")
@@ -91,18 +112,39 @@ func (handler *accountsHandler) set(c *gin.Context) {
 	data.JsonResponse(c, http.StatusOK, account, "")
 }
 
+// @Summary Get account profile image
+// @Description Retrieves an account profile image. It will be sent as base64 encoding (sdt, raw) of its byte representation.
+// @Tags accounts
+// @Accept json
+// @Produce json
+// @Param userAddress path string true "user address"
+// @Success 200 {object} string
+// @Failure 404 {object} data.ApiResponse
+// @Router /accounts/{userAddress}/profile [get]
 func (handler *accountsHandler) getAccountProfile(c *gin.Context) {
 	userAddress := c.Param("userAddress")
 
 	image, err := services.GetAccountProfileImage(userAddress)
 	if err != nil {
-		data.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
 	data.JsonResponse(c, http.StatusOK, &image, "")
 }
 
+// @Summary Set account profile image
+// @Description Expects base64 encoding (sdt, raw) of the image representation. Returns empty string. Max size of byte array is 512KB.
+// @Tags accounts
+// @Accept json
+// @Produce json
+// @Param userAddress path string true "user address"
+// @Param image body string true "base64 encoded image"
+// @Success 200 {object} string
+// @Failure 400 {object} data.ApiResponse
+// @Failure 401 {object} data.ApiResponse
+// @Failure 500 {object} data.ApiResponse
+// @Router /accounts/{userAddress}/profile [post]
 func (handler *accountsHandler) setAccountProfile(c *gin.Context) {
 	var imageBase64 string
 	userAddress := c.Param("userAddress")
@@ -128,18 +170,39 @@ func (handler *accountsHandler) setAccountProfile(c *gin.Context) {
 	data.JsonResponse(c, http.StatusOK, "", "")
 }
 
+// @Summary Get account cover image
+// @Description Retrieves an account cover image. It will be sent as base64 encoding (sdt, raw) of its byte representation.
+// @Tags accounts
+// @Accept json
+// @Produce json
+// @Param userAddress path string true "user address"
+// @Success 200 {object} string
+// @Failure 404 {object} data.ApiResponse
+// @Router /accounts/{userAddress}/cover [get]
 func (handler *accountsHandler) getAccountCover(c *gin.Context) {
 	userAddress := c.Param("userAddress")
 
 	image, err := services.GetAccountCoverImage(userAddress)
 	if err != nil {
-		data.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		data.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
 	data.JsonResponse(c, http.StatusOK, &image, "")
 }
 
+// @Summary Set account cover image
+// @Description Expects base64 encoding (sdt, raw) of the image representation. Returns empty string. Max size of byte array is 1MB.
+// @Tags accounts
+// @Accept json
+// @Produce json
+// @Param userAddress path string true "user address"
+// @Param image body string true "base64 encoded image"
+// @Success 200 {object} string
+// @Failure 400 {object} data.ApiResponse
+// @Failure 401 {object} data.ApiResponse
+// @Failure 500 {object} data.ApiResponse
+// @Router /accounts/{userAddress}/cover [post]
 func (handler *accountsHandler) setAccountCover(c *gin.Context) {
 	var imageBase64 string
 	userAddress := c.Param("userAddress")

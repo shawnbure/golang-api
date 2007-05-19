@@ -28,9 +28,294 @@ var doc = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/assets/token/{tokenId}/nonce/{nonce}": {
+        "/accounts/{userAddress}": {
             "get": {
-                "description": "retrieves an asset by tokenId and nonce",
+                "description": "Retrieves an account by an elrond user address (erd1...)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "accounts"
+                ],
+                "summary": "Get account by user address",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user address",
+                        "name": "userAddress",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/data.Account"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Sets an account settable information",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "accounts"
+                ],
+                "summary": "Set account information",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user address",
+                        "name": "userAddress",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "account info",
+                        "name": "setAccountRequest",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/services.SetAccountRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/data.Account"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/accounts/{userAddress}/cover": {
+            "get": {
+                "description": "Retrieves an account cover image. It will be sent as base64 encoding (sdt, raw) of its byte representation.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "accounts"
+                ],
+                "summary": "Get account cover image",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user address",
+                        "name": "userAddress",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Expects base64 encoding (sdt, raw) of the image representation. Returns empty string. Max size of byte array is 1MB.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "accounts"
+                ],
+                "summary": "Set account cover image",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user address",
+                        "name": "userAddress",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "base64 encoded image",
+                        "name": "image",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "primitive"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/accounts/{userAddress}/profile": {
+            "get": {
+                "description": "Retrieves an account profile image. It will be sent as base64 encoding (sdt, raw) of its byte representation.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "accounts"
+                ],
+                "summary": "Get account profile image",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user address",
+                        "name": "userAddress",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Expects base64 encoding (sdt, raw) of the image representation. Returns empty string. Max size of byte array is 512KB.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "accounts"
+                ],
+                "summary": "Set account profile image",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user address",
+                        "name": "userAddress",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "base64 encoded image",
+                        "name": "image",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "primitive"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/assets/{tokenId}/{nonce}": {
+            "get": {
+                "description": "Retrieves an asset by tokenId and nonce",
                 "consumes": [
                     "application/json"
                 ],
@@ -40,7 +325,7 @@ var doc = `{
                 "tags": [
                     "assets"
                 ],
-                "summary": "get asset by token by id and nonce",
+                "summary": "Get asset by token by id and nonce",
                 "parameters": [
                     {
                         "type": "string",
@@ -70,8 +355,8 @@ var doc = `{
                             "$ref": "#/definitions/data.ApiResponse"
                         }
                     },
-                    "500": {
-                        "description": "Internal Server Error",
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/data.ApiResponse"
                         }
@@ -81,7 +366,7 @@ var doc = `{
         },
         "/auth/access": {
             "post": {
-                "description": "creates an access credentials",
+                "description": "Creates an access credentials",
                 "consumes": [
                     "application/json"
                 ],
@@ -91,7 +376,7 @@ var doc = `{
                 "tags": [
                     "auth"
                 ],
-                "summary": "access credentials",
+                "summary": "Access credentials",
                 "parameters": [
                     {
                         "description": "create credentials request",
@@ -127,7 +412,7 @@ var doc = `{
         },
         "/auth/refresh": {
             "post": {
-                "description": "refreshes the access credentials",
+                "description": "Refreshes the access credentials",
                 "consumes": [
                     "application/json"
                 ],
@@ -137,7 +422,7 @@ var doc = `{
                 "tags": [
                     "auth"
                 ],
-                "summary": "refresh credentials",
+                "summary": "Refresh credentials",
                 "parameters": [
                     {
                         "description": "refresh credentials request",
@@ -170,9 +455,1024 @@ var doc = `{
                     }
                 }
             }
+        },
+        "/collections/create": {
+            "post": {
+                "description": "Creates a collection with given info.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "collections"
+                ],
+                "summary": "Creates a collection.",
+                "parameters": [
+                    {
+                        "description": "collection info",
+                        "name": "createCollectionRequest",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/services.CreateCollectionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/data.Collection"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    },
+                    "505": {
+                        "description": "HTTP Version Not Supported",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/collections/list/{offset}/{limit}": {
+            "get": {
+                "description": "Retrieves a list of collections. Unsorted.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "collections"
+                ],
+                "summary": "Gets collections.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "offset",
+                        "name": "offset",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "limit",
+                        "name": "limit",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/data.Collection"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/collections/{collectionName}": {
+            "get": {
+                "description": "Retrieves a collection by its name.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "collections"
+                ],
+                "summary": "Gets collection by name.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "collection name",
+                        "name": "collectionName",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/data.Collection"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Sets info for a collection.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "collections"
+                ],
+                "summary": "Set collection info.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "collection name",
+                        "name": "collectionName",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "collection info",
+                        "name": "updateCollectionRequest",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/services.UpdateCollectionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/data.Collection"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/collections/{collectionName}/assets/{offset}/{limit}": {
+            "get": {
+                "description": "Retrieves the assets of a collection. Unsorted.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "collections"
+                ],
+                "summary": "Get collection assets.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "collection name",
+                        "name": "collectionName",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "offset",
+                        "name": "offset",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "limit",
+                        "name": "limit",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/data.Asset"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/collections/{collectionName}/cover": {
+            "get": {
+                "description": "Retrieves a collection cover image. It will be sent as base64 encoding (sdt, raw) of its byte representation.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "collections"
+                ],
+                "summary": "Get collection cover image",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "collection name",
+                        "name": "collectionName",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Expects base64 encoding (sdt, raw) of the image representation. Returns empty string. Max size of byte array is 1MB.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "collections"
+                ],
+                "summary": "Set collection cover image",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "collection name",
+                        "name": "collectionName",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "base64 encoded image",
+                        "name": "image",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "primitive"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/collections/{collectionName}/profile": {
+            "get": {
+                "description": "Retrieves a collection cover image. It will be sent as base64 encoding (sdt, raw) of its byte representation.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "collections"
+                ],
+                "summary": "Get collection profile image",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "collection name",
+                        "name": "collectionName",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Expects base64 encoding (sdt, raw) of the image representation. Returns empty string. Max size of byte array is 1MB.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "collections"
+                ],
+                "summary": "Set collection profile image",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "collection name",
+                        "name": "collectionName",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "base64 encoded image",
+                        "name": "image",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "primitive"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/collections/{collectionName}/statistics": {
+            "post": {
+                "description": "Gets statistics for a collection. It will be cached for 10 minutes.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "collections"
+                ],
+                "summary": "Gets collection statistics.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "collection name",
+                        "name": "collectionName",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/services.CollectionStatistics"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/egld_price": {
+            "get": {
+                "description": "Retrieves EGLD price in dollars. Price taken from Binance. Cached for 15 minutes.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "egld_price"
+                ],
+                "summary": "Gets EGLD price in dollars.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/search/accounts/{accountName}": {
+            "get": {
+                "description": "Searches for accounts by name. Cached for 20 minutes. Limit 5 elements.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "search"
+                ],
+                "summary": "Search accounts by name.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "search string",
+                        "name": "accountName",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/data.Account"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/search/collections/{collectionName}": {
+            "get": {
+                "description": "Searches for collections by name. Cached for 20 minutes. Limit 5 elements.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "search"
+                ],
+                "summary": "Search collections by name.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "search string",
+                        "name": "collectionName",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/data.Collection"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/search/{searchString}": {
+            "get": {
+                "description": "Searches for collections by name and accounts by name. Cached for 20 minutes. Limit 5 elements for each.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "search"
+                ],
+                "summary": "General search by string.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "search string",
+                        "name": "searchString",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.GeneralSearchResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/transactions/address/{address}/{offset}/{limit}": {
+            "get": {
+                "description": "Retrieves transactions for an address. Unordered.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "transactions"
+                ],
+                "summary": "Gets transaction for an address.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "address",
+                        "name": "address",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "offset",
+                        "name": "offset",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "limit",
+                        "name": "limit",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/data.Transaction"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/transactions/asset/{tokenId}/{nonce}/{offset}/{limit}": {
+            "get": {
+                "description": "Retrieves transactions for an asset. Unordered.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "transactions"
+                ],
+                "summary": "Gets transaction for an asset.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "token id",
+                        "name": "tokenId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "nonce",
+                        "name": "nonce",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "offset",
+                        "name": "offset",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "limit",
+                        "name": "limit",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/data.Transaction"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/transactions/list/{offset}/{limit}": {
+            "get": {
+                "description": "Retrieves transactions. Unordered.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "transactions"
+                ],
+                "summary": "Gets transaction list.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "offset",
+                        "name": "offset",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "limit",
+                        "name": "limit",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/data.Transaction"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/tx-template/buy-nft/{userAddress}/{tokenId}/{nonce}/{price}": {
+            "get": {
+                "description": "Retrieves tx-template for NFT buy. Only account nonce and signature must be added afterwards.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tx-template"
+                ],
+                "summary": "Gets tx-template for NFT buy.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "user address",
+                        "name": "userAddress",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "token id",
+                        "name": "tokenId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "nonce",
+                        "name": "nonce",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "number",
+                        "description": "price",
+                        "name": "price",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/formatter.Transaction"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/tx-template/list-nft/{userAddress}/{tokenId}/{nonce}/{price}": {
+            "get": {
+                "description": "Retrieves tx-template for NFT list. Only account nonce and signature must be added afterwards.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tx-template"
+                ],
+                "summary": "Gets tx-template for NFT list.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "user address",
+                        "name": "userAddress",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "token id",
+                        "name": "tokenId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "nonce",
+                        "name": "nonce",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "number",
+                        "description": "price",
+                        "name": "price",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/formatter.Transaction"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/tx-template/withdraw-nft/{userAddress}/{tokenId}/{nonce}": {
+            "get": {
+                "description": "Retrieves tx-template for NFT withdraw. Only account nonce and signature must be added afterwards.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tx-template"
+                ],
+                "summary": "Gets tx-template for NFT withdraw.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "user address",
+                        "name": "userAddress",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "token id",
+                        "name": "tokenId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "nonce",
+                        "name": "nonce",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/formatter.Transaction"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/data.ApiResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "data.Account": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "instagramLink": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "twitterLink": {
+                    "type": "string"
+                },
+                "website": {
+                    "type": "string"
+                }
+            }
+        },
         "data.ApiResponse": {
             "type": "object",
             "properties": {
@@ -217,6 +1517,120 @@ var doc = `{
                 }
             }
         },
+        "data.Collection": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "integer"
+                },
+                "creatorID": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "discordLink": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "instagramLink": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "priority": {
+                    "type": "integer"
+                },
+                "telegramLink": {
+                    "type": "string"
+                },
+                "tokenID": {
+                    "type": "string"
+                },
+                "twitterLink": {
+                    "type": "string"
+                },
+                "website": {
+                    "type": "string"
+                }
+            }
+        },
+        "data.Transaction": {
+            "type": "object",
+            "properties": {
+                "assetID": {
+                    "type": "integer"
+                },
+                "buyerID": {
+                    "type": "integer"
+                },
+                "collectionID": {
+                    "type": "integer"
+                },
+                "hash": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "priceNominal": {
+                    "type": "number"
+                },
+                "sellerID": {
+                    "type": "integer"
+                },
+                "timestamp": {
+                    "type": "integer"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "formatter.Transaction": {
+            "type": "object",
+            "properties": {
+                "chainID": {
+                    "type": "string"
+                },
+                "data": {
+                    "type": "string"
+                },
+                "gasLimit": {
+                    "type": "integer"
+                },
+                "gasPrice": {
+                    "type": "integer"
+                },
+                "nonce": {
+                    "type": "integer"
+                },
+                "options": {
+                    "type": "integer"
+                },
+                "receiver": {
+                    "type": "string"
+                },
+                "sender": {
+                    "type": "string"
+                },
+                "signature": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "integer"
+                }
+            }
+        },
+        "handlers.GeneralSearchResponse": {
+            "type": "object"
+        },
         "handlers.createTokenRequest": {
             "type": "object",
             "properties": {
@@ -238,6 +1652,98 @@ var doc = `{
                     "type": "string"
                 },
                 "refreshToken": {
+                    "type": "string"
+                }
+            }
+        },
+        "services.CollectionStatistics": {
+            "type": "object",
+            "properties": {
+                "floorPrice": {
+                    "type": "number"
+                },
+                "itemsCount": {
+                    "type": "integer"
+                },
+                "ownersCount": {
+                    "type": "integer"
+                },
+                "volumeTraded": {
+                    "type": "number"
+                }
+            }
+        },
+        "services.CreateCollectionRequest": {
+            "type": "object",
+            "properties": {
+                "collectionName": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "discordLink": {
+                    "type": "string"
+                },
+                "instagramLink": {
+                    "type": "string"
+                },
+                "telegramLink": {
+                    "type": "string"
+                },
+                "tokenId": {
+                    "type": "string"
+                },
+                "twitterLink": {
+                    "type": "string"
+                },
+                "userAddress": {
+                    "type": "string"
+                },
+                "website": {
+                    "type": "string"
+                }
+            }
+        },
+        "services.SetAccountRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "instagramLink": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "twitterLink": {
+                    "type": "string"
+                },
+                "website": {
+                    "type": "string"
+                }
+            }
+        },
+        "services.UpdateCollectionRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "discordLink": {
+                    "type": "string"
+                },
+                "instagramLink": {
+                    "type": "string"
+                },
+                "telegramLink": {
+                    "type": "string"
+                },
+                "twitterLink": {
+                    "type": "string"
+                },
+                "website": {
                     "type": "string"
                 }
             }

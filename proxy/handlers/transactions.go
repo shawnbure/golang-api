@@ -39,6 +39,17 @@ func NewTransactionsHandler(groupHandler *groupHandler, authCfg config.AuthConfi
 	groupHandler.AddEndpointGroupHandler(endpointGroupHandler)
 }
 
+// @Summary Gets transaction list.
+// @Description Retrieves transactions. Unordered.
+// @Tags transactions
+// @Accept json
+// @Produce json
+// @Param offset path int true "offset"
+// @Param limit path int true "limit"
+// @Success 200 {object} []data.Transaction
+// @Failure 400 {object} data.ApiResponse
+// @Failure 404 {object} data.ApiResponse
+// @Router /transactions/list/{offset}/{limit} [get]
 func (handler *transactionsHandler) getList(c *gin.Context) {
 	offsetStr := c.Param("offset")
 	limitStr := c.Param("limit")
@@ -64,6 +75,19 @@ func (handler *transactionsHandler) getList(c *gin.Context) {
 	data.JsonResponse(c, http.StatusOK, transactions, "")
 }
 
+// @Summary Gets transaction for an asset.
+// @Description Retrieves transactions for an asset. Unordered.
+// @Tags transactions
+// @Accept json
+// @Produce json
+// @Param tokenId path string true "token id"
+// @Param nonce path int true "nonce"
+// @Param offset path int true "offset"
+// @Param limit path int true "limit"
+// @Success 200 {object} []data.Transaction
+// @Failure 400 {object} data.ApiResponse
+// @Failure 404 {object} data.ApiResponse
+// @Router /transactions/asset/{tokenId}/{nonce}/{offset}/{limit} [get]
 func (handler *transactionsHandler) getByAsset(c *gin.Context) {
 	tokenId := c.Param("tokenId")
 	nonceString := c.Param("nonce")
@@ -103,6 +127,18 @@ func (handler *transactionsHandler) getByAsset(c *gin.Context) {
 	data.JsonResponse(c, http.StatusOK, transactions, "")
 }
 
+// @Summary Gets transaction for an address.
+// @Description Retrieves transactions for an address. Unordered.
+// @Tags transactions
+// @Accept json
+// @Produce json
+// @Param address path int true "address"
+// @Param offset path int true "offset"
+// @Param limit path int true "limit"
+// @Success 200 {object} []data.Transaction
+// @Failure 400 {object} data.ApiResponse
+// @Failure 404 {object} data.ApiResponse
+// @Router /transactions/address/{address}/{offset}/{limit} [get]
 func (handler *transactionsHandler) getByAddress(c *gin.Context) {
 	address := c.Param("address")
 	offsetStr := c.Param("offset")

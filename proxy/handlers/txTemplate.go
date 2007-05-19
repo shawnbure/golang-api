@@ -42,6 +42,18 @@ func NewTxTemplateHandler(groupHandler *groupHandler, authCfg config.AuthConfig,
 	groupHandler.AddEndpointGroupHandler(endpointGroupHandler)
 }
 
+// @Summary Gets tx-template for NFT list.
+// @Description Retrieves tx-template for NFT list. Only account nonce and signature must be added afterwards.
+// @Tags tx-template
+// @Accept json
+// @Produce json
+// @Param userAddress path int true "user address"
+// @Param tokenId path int true "token id"
+// @Param nonce path int true "nonce"
+// @Param price path float64 true "price"
+// @Success 200 {object} formatter.Transaction
+// @Failure 400 {object} data.ApiResponse
+// @Router /tx-template/list-nft/{userAddress}/{tokenId}/{nonce}/{price} [get]
 func (handler *txTemplateHandler) getListNftTemplate(c *gin.Context) {
 	userAddress := c.Param("userAddress")
 	tokenId := c.Param("tokenId")
@@ -69,6 +81,18 @@ func (handler *txTemplateHandler) getListNftTemplate(c *gin.Context) {
 	data.JsonResponse(c, http.StatusOK, template, "")
 }
 
+// @Summary Gets tx-template for NFT buy.
+// @Description Retrieves tx-template for NFT buy. Only account nonce and signature must be added afterwards.
+// @Tags tx-template
+// @Accept json
+// @Produce json
+// @Param userAddress path int true "user address"
+// @Param tokenId path int true "token id"
+// @Param nonce path int true "nonce"
+// @Param price path float64 true "price"
+// @Success 200 {object} formatter.Transaction
+// @Failure 400 {object} data.ApiResponse
+// @Router /tx-template/buy-nft/{userAddress}/{tokenId}/{nonce}/{price} [get]
 func (handler *txTemplateHandler) getBuyNftTemplate(c *gin.Context) {
 	userAddress := c.Param("userAddress")
 	tokenId := c.Param("tokenId")
@@ -92,6 +116,17 @@ func (handler *txTemplateHandler) getBuyNftTemplate(c *gin.Context) {
 	data.JsonResponse(c, http.StatusOK, template, "")
 }
 
+// @Summary Gets tx-template for NFT withdraw.
+// @Description Retrieves tx-template for NFT withdraw. Only account nonce and signature must be added afterwards.
+// @Tags tx-template
+// @Accept json
+// @Produce json
+// @Param userAddress path int true "user address"
+// @Param tokenId path int true "token id"
+// @Param nonce path int true "nonce"
+// @Success 200 {object} formatter.Transaction
+// @Failure 400 {object} data.ApiResponse
+// @Router /tx-template/withdraw-nft/{userAddress}/{tokenId}/{nonce} [get]
 func (handler *txTemplateHandler) getWithdrawNftTemplate(c *gin.Context) {
 	userAddress := c.Param("userAddress")
 	tokenId := c.Param("tokenId")
