@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"github.com/erdsea/erdsea-api/stats/collstats"
 	"net/http"
 	"strconv"
 
@@ -274,24 +275,17 @@ func (handler *tokensHandler) refresh(c *gin.Context) {
 		return
 	}
 
-	tokenCacheInfo, err := services.GetOrAddTokenCacheInfo(tokenId, nonce)
+	collectionCacheInfo, err := collstats.GetOrAddCollectionCacheInfo(tokenId)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
 
+	proxy := handler.blockchainConfig.ProxyUrl
 	jwtAddress := c.GetString(middleware.AddressKey)
-	token, err := storage.GetTokenById(tokenCacheInfo.TokenDbId)
-	if err != nil {
-		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
-		return
-	}
-
-	if token.CollectionID == 0 {
-		services.TryRefreshCollectionId(token)
-	}
-
-	metadata, err := services.RefreshMetadata(handler.blockchainConfig.ProxyUrl, token, jwtAddress, handler.blockchainConfig.MarketplaceAddress)
+	collectionId := collectionCacheInfo.CollectionId
+	marketplace := handler.blockchainConfig.MarketplaceAddress
+	metadata, err := services.AddOrRefreshToken(tokenId, nonce, collectionId, jwtAddress, proxy, marketplace)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, "")
 		return

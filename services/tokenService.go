@@ -38,11 +38,15 @@ type AvailableToken struct {
 	} `json:"token"`
 }
 
+type NftProxyReponseToken struct {
+	Balance   string   `json:"balance"`
+	Royalties string   `json:"royalties"`
+	Uris      []string `json:"uris"`
+}
+
 type NftProxyResponse struct {
 	Data struct {
-		TokenData struct {
-			Uris []string `json:"uris"`
-		} `json:"tokenData"`
+		TokenData NftProxyReponseToken `json:"tokenData"`
 	} `json:"data"`
 	Error string `json:"error"`
 	Code  string `json:"code"`
@@ -62,10 +66,11 @@ type TokenCacheInfo struct {
 }
 
 const (
-	minPriceUnit            = 1000
-	minPercentUnit          = 1000
-	minPercentRoyaltiesUnit = 100
-	minPriceDecimals        = 15
+	minPriceUnit               = 1000
+	minPercentUnit             = 1000
+	minPercentRoyaltiesUnit    = 100
+	minPriceDecimals           = 15
+	maxPercentRoyaltiesAllowed = 1000
 
 	maxTokenLinkResponseSize = 2048
 	maxTokenNumAvailableSize = 25
@@ -76,7 +81,7 @@ const (
 	UrlResponseCacheKeyFormat = "Url:%s"
 	UrlResponseExpirePeriod   = 5 * time.Minute
 
-	RefreshMetadataSetNxKeyFormat    = "Refresh:%d"
+	RefreshMetadataSetNxKeyFormat    = "Refresh:%s-%d"
 	RefreshMetadataSetNxExpirePeriod = 15 * time.Minute
 )
 
@@ -669,6 +674,19 @@ func TryGetMetadataLink(blockchainProxy string, address string, tokenId string, 
 	return string(link), err
 }
 
+func TryGetTokenResponse(blockchainProxy string, address string, tokenId string, nonce uint64) (NftProxyReponseToken, error) {
+	proxyRequest := fmt.Sprintf(NftProxyRequestFormat, blockchainProxy, address, tokenId, nonce)
+
+	var proxyResponse NftProxyResponse
+	err := HttpGet(proxyRequest, &proxyResponse)
+	if err != nil {
+		log.Debug("binance request failed")
+		return NftProxyReponseToken{}, err
+	}
+
+	return proxyResponse.Data.TokenData, err
+}
+
 func ConstructOwnedTokensFromTokens(tokens []entities.Token) []dtos.OwnedTokenDto {
 	tokenIds := make(map[string]bool)
 	for _, token := range tokens {
@@ -722,24 +740,27 @@ func TryGetResponseCached(url string) (string, error) {
 	return metadataBytes, nil
 }
 
-func TryRefreshCollectionId(token *entities.Token) {
-	collection, err := collstats.GetOrAddCollectionCacheInfo(token.TokenID)
-	if err != nil {
-		return
-	}
-
-	token.CollectionID = collection.CollectionId
-	err = storage.UpdateToken(token)
-	if err != nil {
-		log.Debug("could not update token", "err", err.Error())
-	}
-}
-
-func RefreshMetadata(blockchainProxy string, token *entities.Token, ownerAddress string, marketplaceAddress string) (datatypes.JSON, error) {
+func AddOrRefreshToken(
+	tokenId string,
+	nonce uint64,
+	collectionId uint64,
+	userAddress string,
+	blockchainProxy string,
+	marketplaceAddress string,
+) (datatypes.JSON, error) {
 	redisClient := cache.GetRedis()
 	redisContext := cache.GetContext()
 
-	refreshKey := fmt.Sprintf(RefreshMetadataSetNxKeyFormat, token.ID)
+	tokenIsInDb := false
+	attributes := datatypes.JSON("")
+	emptyAttributes := datatypes.JSON("")
+	token, err := storage.GetTokenByTokenIdAndNonce(tokenId, nonce)
+	if err == nil {
+		tokenIsInDb = true
+		attributes = token.Attributes
+	}
+
+	refreshKey := fmt.Sprintf(RefreshMetadataSetNxKeyFormat, tokenId, nonce)
 	ok, err := redisClient.SetNX(redisContext, refreshKey, true, RefreshMetadataSetNxExpirePeriod).Result()
 	if err != nil {
 		log.Debug("set nx resulted in error", err)
@@ -747,46 +768,78 @@ func RefreshMetadata(blockchainProxy string, token *entities.Token, ownerAddress
 
 	shouldTry := ok == true && err == nil
 	if !shouldTry {
-		return JsonOrEmpty(token.Attributes), nil
+		return JsonOrEmpty(attributes), nil
 	}
 
-	refreshedMetadataLink := false
-	if len(token.MetadataLink) == 0 {
-		link, innerErr := TryGetMetadataLink(blockchainProxy, ownerAddress, token.TokenID, token.Nonce)
+	if !tokenIsInDb {
+		token = &entities.Token{
+			TokenID:      tokenId,
+			Nonce:        nonce,
+			CreatedAt:    uint64(time.Now().Unix()),
+			Status:       entities.None,
+			CollectionID: collectionId,
+			Attributes:   datatypes.JSON(""),
+		}
+	}
+
+	tokenProxyResponse, err := TryGetTokenResponse(blockchainProxy, userAddress, tokenId, nonce)
+	if err != nil {
+		var innerErr error
+		tokenProxyResponse, innerErr = TryGetTokenResponse(blockchainProxy, marketplaceAddress, tokenId, nonce)
 		if innerErr != nil {
-			log.Debug("could not get metadata link from ownerAddress")
-			log.Debug("trying to get from marketplaceAddress")
-			link, innerErr = TryGetMetadataLink(blockchainProxy, marketplaceAddress, token.TokenID, token.Nonce)
-			if innerErr != nil {
-				log.Debug("could not get metadata link from marketplaceAddress")
-			} else {
-				refreshedMetadataLink = true
-				token.MetadataLink = link
-			}
-		} else {
-			refreshedMetadataLink = true
-			token.MetadataLink = link
+			return emptyAttributes, innerErr
 		}
 	}
 
-	attrs := datatypes.JSON("")
-	refreshedAttributes := false
-	if len(token.MetadataLink) > 0 {
-		attrs = GetAttributesFromMetadata(token.MetadataLink)
-		if len(attrs) != 0 {
-			refreshedAttributes = string(attrs) != string(token.Attributes)
-			token.Attributes = attrs
-		}
+	if len(tokenProxyResponse.Uris) == 0 {
+		return emptyAttributes, errors.New("no uris")
 	}
 
-	if refreshedMetadataLink || refreshedAttributes {
-		innerErr := storage.UpdateToken(token)
+	metadataLink := ""
+	if len(tokenProxyResponse.Uris) >= 2 {
+		metadataLink = tokenProxyResponse.Uris[1]
+	}
+
+	if len(tokenProxyResponse.Royalties) == 0 {
+		tokenProxyResponse.Royalties = "0"
+	}
+
+	royalties, err := strconv.Atoi(tokenProxyResponse.Royalties)
+	if err != nil {
+		return emptyAttributes, nil
+	}
+
+	royaltiesNominal := GetRoyaltiesPercentNominal(uint64(royalties))
+	if royalties > maxPercentRoyaltiesAllowed {
+		return emptyAttributes, nil
+	}
+
+	token.RoyaltiesPercent = royaltiesNominal
+	token.ImageLink = tokenProxyResponse.Uris[0]
+	token.MetadataLink = metadataLink
+
+	newAttributes := GetAttributesFromMetadata(metadataLink)
+	if len(newAttributes) != 0 {
+		token.Attributes = newAttributes
+	}
+
+	var innerErr error
+	if tokenIsInDb {
+		innerErr = storage.UpdateToken(token)
 		if innerErr != nil {
 			log.Debug("could not update token")
 		}
+	} else {
+		innerErr = storage.AddToken(token)
+		if innerErr != nil {
+			log.Debug("could not add token")
+		}
+	}
+	if innerErr != nil {
+		return emptyAttributes, nil
 	}
 
-	return attrs, nil
+	return JsonOrEmpty(token.Attributes), nil
 }
 
 func JsonOrEmpty(value datatypes.JSON) datatypes.JSON {
