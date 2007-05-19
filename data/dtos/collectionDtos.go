@@ -24,4 +24,7 @@ type AttributeStat struct {
 type ExtendedCollectionDto struct {
 	Collection entities.Collection  `json:"collection"`
 	Statistics CollectionStatistics `json:"statistics"`
+
+	CreatorName          string `json:"creatorName"`
+	CreatorWalletAddress string `json:"creatorWalletAddress"`
 }

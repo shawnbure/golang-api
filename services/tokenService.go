@@ -3,13 +3,18 @@ package services
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"gorm.io/datatypes"
 	"math/big"
 	"strconv"
+	"strings"
 
 	logger "github.com/ElrondNetwork/elrond-go-logger"
+	"github.com/boltdb/bolt"
+	"github.com/erdsea/erdsea-api/cache"
 	"github.com/erdsea/erdsea-api/data/dtos"
 	"github.com/erdsea/erdsea-api/data/entities"
+	"github.com/erdsea/erdsea-api/proxy/handlers"
 	"github.com/erdsea/erdsea-api/stats/collstats"
 	"github.com/erdsea/erdsea-api/storage"
 )
@@ -20,7 +25,10 @@ type TokenLinkResponse struct {
 	Attributes []dtos.Attribute `json:"attributes"`
 }
 
-var log = logger.GetOrCreate("services")
+type TokenCacheInfo struct {
+	TokenDbId uint64
+	TokenName string
+}
 
 const (
 	minPriceUnit            = 1000
@@ -31,7 +39,13 @@ const (
 	maxTokenLinkResponseSize = 1024
 )
 
-var baseExp = big.NewInt(10)
+var (
+	TokenIdToDbIdCacheInfo = []byte("tokenToId")
+
+	baseExp = big.NewInt(10)
+
+	log = logger.GetOrCreate("services")
+)
 
 func ListToken(args ListTokenArgs) {
 	priceNominal, err := GetPriceNominal(args.Price)
@@ -64,6 +78,11 @@ func ListToken(args ListTokenArgs) {
 		token.OwnerId = ownerAccount.ID
 		token.CollectionID = collectionId
 		innerErr = storage.AddToken(token)
+
+		_, cacheErr := AddTokenToCache(token.TokenID, token.Nonce, token.TokenName, token.ID)
+		if cacheErr != nil {
+			log.Error("could not add token to cache")
+		}
 	} else {
 		token.Listed = true
 		token.PriceString = args.Price
@@ -323,4 +342,128 @@ func AddTransaction(tx *entities.Transaction) {
 		log.Debug("could not create new transaction", "err", err)
 		return
 	}
+}
+
+func AddTokenToCache(tokenId string, nonce uint64, tokenName string, tokenDbId uint64) (*TokenCacheInfo, error) {
+	db := cache.GetBolt()
+	cacheInfo := TokenCacheInfo{
+		TokenDbId: tokenDbId,
+		TokenName: tokenName,
+	}
+
+	entryBytes, err := json.Marshal(&cacheInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	err = db.Update(func(tx *bolt.Tx) error {
+		bucket, innerErr := tx.CreateBucketIfNotExists(TokenIdToDbIdCacheInfo)
+		if innerErr != nil {
+			return innerErr
+		}
+
+		key := fmt.Sprintf("%s-%d", tokenId, nonce)
+		innerErr = bucket.Put([]byte(key), entryBytes)
+		return innerErr
+	})
+
+	return &cacheInfo, nil
+}
+
+func GetTokenCacheInfo(tokenId string, nonce uint64) (*TokenCacheInfo, error) {
+	db := cache.GetBolt()
+
+	var bytes []byte
+	err := db.View(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket(TokenIdToDbIdCacheInfo)
+		if bucket == nil {
+			return errors.New("no bucket for token cache")
+		}
+
+		key := fmt.Sprintf("%s-%d", tokenId, nonce)
+		bytes = bucket.Get([]byte(key))
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	var cacheInfo TokenCacheInfo
+	err = json.Unmarshal(bytes, &cacheInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	return &cacheInfo, nil
+}
+
+func GetOrAddTokenCacheInfo(tokenId string, nonce uint64) (*TokenCacheInfo, error) {
+	cacheInfo, err := GetTokenCacheInfo(tokenId, nonce)
+	if err != nil {
+		token, innerErr := storage.GetTokenByTokenIdAndNonce(tokenId, nonce)
+		if innerErr != nil {
+			return nil, innerErr
+		}
+
+		cacheInfo, innerErr = AddTokenToCache(tokenId, nonce, token.TokenName, token.ID)
+		if innerErr != nil {
+			return nil, innerErr
+		}
+	}
+
+	return cacheInfo, nil
+}
+
+func GetAvailableTokens(args handlers.AvailableTokensRequest) handlers.AvailableTokensResponse {
+	var response handlers.AvailableTokensResponse
+
+	for _, token := range args.Tokens {
+		parts := strings.Split(token, "-")
+		if len(parts) != 3 {
+			continue
+		}
+
+		tokenId := parts[0] + "-" + parts[1]
+		nonce, err := strconv.ParseUint(parts[2], 10, 64)
+		if err != nil {
+			continue
+		}
+
+		tokenName := ""
+		tokenAvailable := false
+		tokenCacheInfo, err := GetOrAddTokenCacheInfo(tokenId, nonce)
+		if err == nil {
+			tokenAvailable = true
+			tokenName = tokenCacheInfo.TokenName
+		}
+
+		collectionName := ""
+		collectionCacheInfo, err := collstats.GetOrAddCollectionCacheInfo(tokenId)
+		if err == nil {
+			collectionName = collectionCacheInfo.CollectionName
+		}
+
+		response.Tokens[token] = handlers.AvailableToken{
+			Collection: struct {
+				Id   string `json:"id"`
+				Name string `json:"name"`
+			}{
+				Id:   tokenId,
+				Name: collectionName,
+			},
+			Token: struct {
+				Id        string `json:"id"`
+				Nonce     uint64 `json:"nonce"`
+				Name      string `json:"name"`
+				Available bool   `json:"available"`
+			}{
+				Id:        tokenId,
+				Nonce:     nonce,
+				Name:      tokenName,
+				Available: tokenAvailable,
+			},
+		}
+	}
+
+	return response
 }

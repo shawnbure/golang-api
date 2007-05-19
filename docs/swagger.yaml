@@ -26,6 +26,10 @@ definitions:
     properties:
       collection:
         $ref: '#/definitions/entities.Collection'
+      creatorName:
+        type: string
+      creatorWalletAddress:
+        type: string
       statistics:
         $ref: '#/definitions/dtos.CollectionStatistics'
     type: object
@@ -163,6 +167,41 @@ definitions:
         type: string
       version:
         type: integer
+    type: object
+  handlers.AvailableToken:
+    properties:
+      collection:
+        properties:
+          id:
+            type: string
+          name:
+            type: string
+        type: object
+      token:
+        properties:
+          available:
+            type: boolean
+          id:
+            type: string
+          name:
+            type: string
+          nonce:
+            type: integer
+        type: object
+    type: object
+  handlers.AvailableTokensRequest:
+    properties:
+      tokens:
+        items:
+          type: string
+        type: array
+    type: object
+  handlers.AvailableTokensResponse:
+    properties:
+      tokens:
+        additionalProperties:
+          $ref: '#/definitions/handlers.AvailableToken'
+        type: object
     type: object
   handlers.GeneralSearchResponse:
     properties:
@@ -1185,6 +1224,32 @@ paths:
       summary: Get token by id and nonce
       tags:
       - tokens
+  /tokens/available:
+    get:
+      consumes:
+      - application/json
+      description: Get available tokens and some collection info
+      parameters:
+      - description: request
+        in: body
+        name: availableTokensRequest
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.AvailableTokensRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.AvailableTokensResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.ApiResponse'
+      summary: Get available tokens
+      tags:
+      - tokens
   /transactions/account/{accountId}/{offset}/{limit}:
     get:
       consumes:
@@ -1313,7 +1378,7 @@ paths:
         in: path
         name: tokenId
         required: true
-        type: integer
+        type: string
       - description: offset
         in: path
         name: offset
