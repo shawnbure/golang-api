@@ -21,8 +21,8 @@ import (
 )
 
 var (
-	TokenSearchCacheKeyFormat     = "TokenSearch:%s"
-	TokenSearchExpirePeriod       = 5 * time.Minute
+	TokenSearchCacheKeyFormat = "TokenSearch:%s"
+	TokenSearchExpirePeriod   = 5 * time.Minute
 )
 
 type AvailableTokensRequest struct {
@@ -90,6 +90,9 @@ const (
 
 	RefreshMetadataSetNxKeyFormat    = "Refresh:%s-%d"
 	RefreshMetadataSetNxExpirePeriod = 15 * time.Minute
+
+	ipfsProtocolURLPrefix = "ipfs://"
+	ipfsDefaultGatewayURL = "https://ipfs.io/ipfs/%s"
 )
 
 var (
@@ -463,11 +466,11 @@ func GetAttributesFromMetadata(link string) datatypes.JSON {
 
 	responseRaw, err := HttpGetRaw(link)
 	if err != nil {
-		log.Debug("could not get metadata response", "link", link, "err", err)
+		log.Error("could not get metadata response", "link", link, "err", err.Error())
 		return emptyResponse
 	}
 	if len(responseRaw) > maxTokenLinkResponseSize {
-		log.Debug("response too long for link", "link", link)
+		log.Error("response too long for link", "link", link)
 		return emptyResponse
 	}
 
@@ -670,7 +673,7 @@ func TryGetMetadataLink(blockchainProxy string, address string, tokenId string, 
 	var proxyResponse NftProxyResponse
 	err := HttpGet(proxyRequest, &proxyResponse)
 	if err != nil {
-		log.Debug("binance request failed")
+		log.Error("get metadata link request failed", "tokenID", tokenId, "nonce", nonce, "err", err.Error())
 		return "", err
 	}
 	if len(proxyResponse.Data.TokenData.Uris) < 2 {
@@ -678,7 +681,16 @@ func TryGetMetadataLink(blockchainProxy string, address string, tokenId string, 
 	}
 
 	link, err := base64.StdEncoding.DecodeString(proxyResponse.Data.TokenData.Uris[1])
-	return string(link), err
+	linkStr := string(link)
+	if strings.HasPrefix(linkStr, ipfsProtocolURLPrefix) {
+		parsedUrl := fmt.Sprintf(
+			ipfsDefaultGatewayURL,
+			strings.Replace(linkStr, ipfsProtocolURLPrefix, "", 1),
+		)
+		linkStr = parsedUrl
+	}
+
+	return linkStr, err
 }
 
 func TryGetTokenResponse(blockchainProxy string, address string, tokenId string, nonce uint64) (NftProxyReponseToken, error) {
@@ -687,7 +699,7 @@ func TryGetTokenResponse(blockchainProxy string, address string, tokenId string,
 	var proxyResponse NftProxyResponse
 	err := HttpGet(proxyRequest, &proxyResponse)
 	if err != nil {
-		log.Debug("binance request failed")
+		log.Debug("get token request failed")
 		return NftProxyReponseToken{}, err
 	}
 
@@ -780,11 +792,11 @@ func AddOrRefreshToken(
 
 	if !tokenIsInDb {
 		token = &entities.Token{
-			TokenID:      tokenId,
-			Nonce:        nonce,
-			CreatedAt:    uint64(time.Now().Unix()),
-			Status:       entities.None,
-			Attributes:   datatypes.JSON(""),
+			TokenID:    tokenId,
+			Nonce:      nonce,
+			CreatedAt:  uint64(time.Now().Unix()),
+			Status:     entities.None,
+			Attributes: datatypes.JSON(""),
 		}
 	}
 
