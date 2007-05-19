@@ -1158,7 +1158,7 @@ var doc = `{
         },
         "/search/accounts/{accountName}": {
             "get": {
-                "description": "Searches for accounts by name. Cached for 20 minutes. Limit 5 elements.",
+                "description": "Searches for accounts by name. Cached for 5 minutes. Limit 5 elements.",
                 "consumes": [
                     "application/json"
                 ],
@@ -1199,7 +1199,7 @@ var doc = `{
         },
         "/search/collections/{collectionName}": {
             "get": {
-                "description": "Searches for collections by name. Cached for 20 minutes. Limit 5 elements.",
+                "description": "Searches for collections by name. Cached for 5 minutes. Limit 5 elements.",
                 "consumes": [
                     "application/json"
                 ],
@@ -1238,9 +1238,50 @@ var doc = `{
                 }
             }
         },
+        "/search/tokens/{tokenId}": {
+            "get": {
+                "description": "Searches for tokens by tokenId. Cached for 5 minutes. Limit 5 elements.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "search"
+                ],
+                "summary": "Search tokens by tokenId.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "search string",
+                        "name": "accountName",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entities.Token"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/search/{searchString}": {
             "get": {
-                "description": "Searches for collections by name and accounts by name. Cached for 20 minutes. Limit 5 elements for each.",
+                "description": "Searches for collections by name and accounts by name. Cached for 5 minutes. Limit 5 elements for each.",
                 "consumes": [
                     "application/json"
                 ],
@@ -3497,6 +3538,12 @@ var doc = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/entities.Collection"
+                    }
+                },
+                "tokens": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entities.Token"
                     }
                 }
             }

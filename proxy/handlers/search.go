@@ -14,6 +14,7 @@ const (
 	generalSearchEndpoint     = "/:searchString"
 	collectionsSearchEndpoint = "/collections/:collectionName"
 	accountsSearchEndpoint    = "/accounts/:accountName"
+	tokensSearchEndpoint      = "/tokens/:tokenId"
 
 	SearchCategoryLimit = 5
 )
@@ -21,6 +22,7 @@ const (
 type GeneralSearchResponse struct {
 	Accounts    []entities.Account
 	Collections []entities.Collection
+	Tokens      []entities.Token
 }
 
 type searchHandler struct {
@@ -33,6 +35,7 @@ func NewSearchHandler(groupHandler *groupHandler) {
 		{Method: http.MethodGet, Path: generalSearchEndpoint, HandlerFunc: handler.search},
 		{Method: http.MethodGet, Path: collectionsSearchEndpoint, HandlerFunc: handler.collectionSearch},
 		{Method: http.MethodGet, Path: accountsSearchEndpoint, HandlerFunc: handler.accountSearch},
+		{Method: http.MethodGet, Path: tokensSearchEndpoint, HandlerFunc: handler.tokenSearch},
 	}
 
 	endpointGroupHandler := EndpointGroupHandler{
@@ -45,7 +48,7 @@ func NewSearchHandler(groupHandler *groupHandler) {
 }
 
 // @Summary General search by string.
-// @Description Searches for collections by name and accounts by name. Cached for 20 minutes. Limit 5 elements for each.
+// @Description Searches for collections by name and accounts by name. Cached for 5 minutes. Limit 5 elements for each.
 // @Tags search
 // @Accept json
 // @Produce json
@@ -68,15 +71,22 @@ func (handler *searchHandler) search(c *gin.Context) {
 		return
 	}
 
+	tokens, err := services.GetTokensWithTokenIdAlike(searchString, SearchCategoryLimit)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		return
+	}
+
 	response := GeneralSearchResponse{
 		Accounts:    accounts,
 		Collections: collections,
+		Tokens:      tokens,
 	}
 	dtos.JsonResponse(c, http.StatusOK, response, "")
 }
 
 // @Summary Search collections by name.
-// @Description Searches for collections by name. Cached for 20 minutes. Limit 5 elements.
+// @Description Searches for collections by name. Cached for 5 minutes. Limit 5 elements.
 // @Tags search
 // @Accept json
 // @Produce json
@@ -97,7 +107,7 @@ func (handler *searchHandler) collectionSearch(c *gin.Context) {
 }
 
 // @Summary Search accounts by name.
-// @Description Searches for accounts by name. Cached for 20 minutes. Limit 5 elements.
+// @Description Searches for accounts by name. Cached for 5 minutes. Limit 5 elements.
 // @Tags search
 // @Accept json
 // @Produce json
@@ -115,4 +125,25 @@ func (handler *searchHandler) accountSearch(c *gin.Context) {
 	}
 
 	dtos.JsonResponse(c, http.StatusOK, accounts, "")
+}
+
+// @Summary Search tokens by tokenId.
+// @Description Searches for tokens by tokenId. Cached for 5 minutes. Limit 5 elements.
+// @Tags search
+// @Accept json
+// @Produce json
+// @Param accountName path string true "search string"
+// @Success 200 {object} []entities.Token
+// @Failure 500 {object} dtos.ApiResponse
+// @Router /search/tokens/{tokenId} [get]
+func (handler *searchHandler) tokenSearch(c *gin.Context) {
+	tokenId := c.Param("tokenId")
+
+	tokens, err := services.GetTokensWithTokenIdAlike(tokenId, SearchCategoryLimit)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		return
+	}
+
+	dtos.JsonResponse(c, http.StatusOK, tokens, "")
 }

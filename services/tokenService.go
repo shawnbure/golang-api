@@ -20,6 +20,11 @@ import (
 	"github.com/erdsea/erdsea-api/storage"
 )
 
+var (
+	TokenSearchCacheKeyFormat     = "TokenSearch:%s"
+	TokenSearchExpirePeriod       = 5 * time.Minute
+)
+
 type AvailableTokensRequest struct {
 	Tokens []string `json:"tokens"`
 }
@@ -866,4 +871,32 @@ func JsonOrEmpty(value datatypes.JSON) datatypes.JSON {
 	}
 
 	return datatypes.JSON("")
+}
+
+func GetTokensWithTokenIdAlike(tokenId string, limit int) ([]entities.Token, error) {
+	var byteArray []byte
+	var tokenArray []entities.Token
+
+	cacheKey := fmt.Sprintf(TokenSearchCacheKeyFormat, tokenId)
+	err := cache.GetCacher().Get(cacheKey, &byteArray)
+	if err == nil {
+		err = json.Unmarshal(byteArray, &tokenArray)
+		return tokenArray, err
+	}
+
+	searchName := "%" + tokenId + "%"
+	tokenArray, err = storage.GetTokensWithTokenIdAlikeWithLimit(searchName, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	byteArray, err = json.Marshal(tokenArray)
+	if err == nil {
+		err = cache.GetCacher().Set(cacheKey, byteArray, TokenSearchExpirePeriod)
+		if err != nil {
+			log.Debug("could not set cache", "err", err)
+		}
+	}
+
+	return tokenArray, nil
 }

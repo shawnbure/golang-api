@@ -219,3 +219,19 @@ func GetTokensWithOffsetLimit(
 
 	return tokens, nil
 }
+
+func GetTokensWithTokenIdAlikeWithLimit(tokenId string, limit int) ([]entities.Token, error) {
+	var tokens []entities.Token
+
+	database, err := GetDBOrError()
+	if err != nil {
+		return nil, err
+	}
+
+	txRead := database.Limit(limit).Where("token_id ILIKE ?", tokenId).Find(&tokens)
+	if txRead.Error != nil {
+		return nil, txRead.Error
+	}
+
+	return tokens, nil
+}
