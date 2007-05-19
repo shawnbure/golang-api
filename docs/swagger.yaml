@@ -426,11 +426,6 @@ definitions:
       website:
         type: string
     type: object
-  services.MetadataRelayRequest:
-    properties:
-      url:
-        type: string
-    type: object
   services.MintInfo:
     properties:
       maxSupply:
@@ -1492,13 +1487,6 @@ paths:
       consumes:
       - application/json
       description: Make request with ?url=link
-      parameters:
-      - description: the url
-        in: body
-        name: payload
-        required: true
-        schema:
-          $ref: '#/definitions/services.MetadataRelayRequest'
       produces:
       - application/json
       responses:

@@ -1302,17 +1302,6 @@ var doc = `{
                     "tokens"
                 ],
                 "summary": "Gets metadata link response. Cached.",
-                "parameters": [
-                    {
-                        "description": "the url",
-                        "name": "payload",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/services.MetadataRelayRequest"
-                        }
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -3526,14 +3515,6 @@ var doc = `{
                     "type": "string"
                 },
                 "website": {
-                    "type": "string"
-                }
-            }
-        },
-        "services.MetadataRelayRequest": {
-            "type": "object",
-            "properties": {
-                "url": {
                     "type": "string"
                 }
             }

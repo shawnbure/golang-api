@@ -241,7 +241,6 @@ func (handler *tokensHandler) getBids(c *gin.Context) {
 // @Tags tokens
 // @Accept json
 // @Produce json
-// @Param payload body services.MetadataRelayRequest true "the url"
 // @Success 200 {object} string
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 404 {object} dtos.ApiResponse

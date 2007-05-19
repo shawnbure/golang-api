@@ -720,7 +720,7 @@ func TryGetResponseCached(url string) (string, error) {
 	return metadataBytes, nil
 }
 
-func RefreshMetadata(blockchainProxy string, token *entities.Token, ownerAddress string) (string, error) {
+func RefreshMetadata(blockchainProxy string, token *entities.Token, ownerAddress string) (datatypes.JSON, error) {
 	redisClient := cache.GetRedis()
 	redisContext := cache.GetContext()
 
@@ -732,7 +732,7 @@ func RefreshMetadata(blockchainProxy string, token *entities.Token, ownerAddress
 
 	shouldTry := ok == true && err == nil
 	if !shouldTry {
-		return string(token.Attributes), nil
+		return token.Attributes, nil
 	}
 
 	refreshedMetadataLink := false
@@ -760,5 +760,5 @@ func RefreshMetadata(blockchainProxy string, token *entities.Token, ownerAddress
 		}
 	}
 
-	return string(attrs), nil
+	return attrs, nil
 }
