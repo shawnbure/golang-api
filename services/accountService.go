@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/boltdb/bolt"
 	"github.com/erdsea/erdsea-api/cache"
 	"github.com/erdsea/erdsea-api/data/entities"
 	"github.com/erdsea/erdsea-api/storage"
@@ -20,16 +21,21 @@ type CreateAccountRequest struct {
 }
 
 type SetAccountRequest struct {
-	Name          string `json:"name"`
 	Description   string `json:"description"`
 	Website       string `json:"website"`
 	TwitterLink   string `json:"twitterLink"`
 	InstagramLink string `json:"instagramLink"`
 }
 
+type AccountCacheInfo struct {
+	AccountId   uint64
+	AccountName string
+}
+
 var (
-	AccountSearchCacheKeyFormat = "AccountSearch:%s"
-	AccountSearchExpirePeriod   = 20 * time.Minute
+	AccountSearchCacheKeyFormat     = "AccountSearch:%s"
+	AccountSearchExpirePeriod       = 20 * time.Minute
+	WalletAddressToAccountCacheInfo = []byte("walletToAcc")
 )
 
 func GetOrCreateAccount(address string) (*entities.Account, error) {
@@ -43,6 +49,11 @@ func GetOrCreateAccount(address string) (*entities.Account, error) {
 		err = storage.AddAccount(account)
 		if err != nil {
 			return nil, err
+		}
+
+		_, err = AddAccountToCache(account.Address, account.ID, account.Name)
+		if err != nil {
+			log.Debug("could not add account to cache")
 		}
 	}
 
@@ -61,6 +72,15 @@ func CreateAccount(request *CreateAccountRequest) (*entities.Account, error) {
 	}
 
 	err := storage.AddAccount(&account)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = AddAccountToCache(account.Address, account.ID, account.Name)
+	if err != nil {
+		log.Debug("could not add account to cache")
+	}
+
 	return &account, err
 }
 
@@ -69,7 +89,6 @@ func UpdateAccount(account *entities.Account, request *SetAccountRequest) error 
 	account.InstagramLink = request.InstagramLink
 	account.TwitterLink = request.TwitterLink
 	account.Website = request.Website
-	account.Name = request.Name
 	return storage.UpdateAccount(account)
 }
 
@@ -99,4 +118,50 @@ func GetAccountsWithNameAlike(name string, limit int) ([]entities.Account, error
 	}
 
 	return accountArray, nil
+}
+
+func AddAccountToCache(walletAddress string, accountId uint64, accountName string) (*AccountCacheInfo, error) {
+	db := cache.GetBolt()
+	cacheInfo := AccountCacheInfo{
+		AccountId:   accountId,
+		AccountName: accountName,
+	}
+
+	entryBytes, err := json.Marshal(&cacheInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	err = db.Update(func(tx *bolt.Tx) error {
+		_, innerErr := tx.CreateBucketIfNotExists(WalletAddressToAccountCacheInfo)
+		if innerErr != nil {
+			return innerErr
+		}
+
+		innerErr = tx.Bucket(WalletAddressToAccountCacheInfo).Put([]byte(walletAddress), entryBytes)
+		return innerErr
+	})
+
+	return &cacheInfo, nil
+}
+
+func GetAccountCacheInfo(walletAddress string) (*AccountCacheInfo, error) {
+	db := cache.GetBolt()
+
+	var bytes []byte
+	err := db.View(func(tx *bolt.Tx) error {
+		bytes = tx.Bucket(WalletAddressToAccountCacheInfo).Get([]byte(walletAddress))
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	var cacheInfo AccountCacheInfo
+	err = json.Unmarshal(bytes, &cacheInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	return &cacheInfo, nil
 }
