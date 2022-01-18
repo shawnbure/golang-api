@@ -5,8 +5,8 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/erdsea/erdsea-api/config"
-	"github.com/erdsea/erdsea-api/data/entities"
+	"github.com/ENFT-DAO/youbei-api/config"
+	"github.com/ENFT-DAO/youbei-api/data/entities"
 	"gorm.io/datatypes"
 )
 

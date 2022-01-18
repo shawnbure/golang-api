@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/erdsea/erdsea-api/cache"
-	"github.com/erdsea/erdsea-api/data/entities"
-	"github.com/erdsea/erdsea-api/storage"
+	"github.com/ENFT-DAO/youbei-api/cache"
+	"github.com/ENFT-DAO/youbei-api/data/entities"
+	"github.com/ENFT-DAO/youbei-api/storage"
 	"github.com/stretchr/testify/require"
 )
 

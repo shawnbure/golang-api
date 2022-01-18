@@ -4,7 +4,7 @@ import (
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 
-	"github.com/erdsea/erdsea-api/data/entities"
+	"github.com/ENFT-DAO/youbei-api/data/entities"
 )
 
 func AddCollection(collection *entities.Collection) error {

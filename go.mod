@@ -1,4 +1,4 @@
-module github.com/erdsea/erdsea-api
+module github.com/ENFT-DAO/youbei-api
 
 go 1.16
 

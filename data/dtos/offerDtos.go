@@ -1,6 +1,6 @@
 package dtos
 
-import "github.com/erdsea/erdsea-api/data/entities"
+import "github.com/ENFT-DAO/youbei-api/data/entities"
 
 type OfferDto struct {
 	entities.Offer `json:"offer"`

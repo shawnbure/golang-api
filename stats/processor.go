@@ -3,8 +3,8 @@ package stats
 import (
 	"encoding/json"
 
-	"github.com/erdsea/erdsea-api/data/dtos"
-	"github.com/erdsea/erdsea-api/storage"
+	"github.com/ENFT-DAO/youbei-api/data/dtos"
+	"github.com/ENFT-DAO/youbei-api/storage"
 )
 
 type CollectionMetadata struct {

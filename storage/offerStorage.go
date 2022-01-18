@@ -3,7 +3,7 @@ package storage
 import (
 	"gorm.io/gorm"
 
-	"github.com/erdsea/erdsea-api/data/entities"
+	"github.com/ENFT-DAO/youbei-api/data/entities"
 )
 
 func AddOffer(p *entities.Offer) error {
@@ -42,7 +42,7 @@ func DeleteOffersForTokenId(tokenDbId uint64) error {
 	return nil
 }
 
-func DeleteOfferByOfferorForTokenId(offerorAddress string, tokenDbId uint64,) error {
+func DeleteOfferByOfferorForTokenId(offerorAddress string, tokenDbId uint64) error {
 	var proffer entities.Offer
 
 	database, err := GetDBOrError()

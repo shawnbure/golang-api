@@ -3,9 +3,9 @@ package services
 import (
 	"encoding/hex"
 
+	"github.com/ENFT-DAO/youbei-api/config"
+	"github.com/ENFT-DAO/youbei-api/crypto"
 	"github.com/ElrondNetwork/elrond-sdk-erdgo/data"
-	"github.com/erdsea/erdsea-api/config"
-	"github.com/erdsea/erdsea-api/crypto"
 )
 
 type AuthService struct {

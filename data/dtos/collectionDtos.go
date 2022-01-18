@@ -3,7 +3,7 @@ package dtos
 import (
 	"gorm.io/datatypes"
 
-	"github.com/erdsea/erdsea-api/data/entities"
+	"github.com/ENFT-DAO/youbei-api/data/entities"
 )
 
 type CollectionStatistics struct {

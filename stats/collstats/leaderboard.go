@@ -3,8 +3,8 @@ package collstats
 import (
 	"errors"
 
-	"github.com/erdsea/erdsea-api/cache"
-	"github.com/erdsea/erdsea-api/data/dtos"
+	"github.com/ENFT-DAO/youbei-api/cache"
+	"github.com/ENFT-DAO/youbei-api/data/dtos"
 	"github.com/go-redis/redis/v8"
 )
 

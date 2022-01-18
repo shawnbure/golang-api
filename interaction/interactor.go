@@ -4,10 +4,10 @@ import (
 	"net/http"
 	"sync"
 
+	"github.com/ENFT-DAO/youbei-api/config"
 	logger "github.com/ElrondNetwork/elrond-go-logger"
 	"github.com/ElrondNetwork/elrond-sdk-erdgo/blockchain"
 	"github.com/ElrondNetwork/elrond-sdk-erdgo/data"
-	"github.com/erdsea/erdsea-api/config"
 )
 
 var log = logger.GetOrCreate("interaction")

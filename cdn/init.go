@@ -4,8 +4,8 @@ import (
 	"errors"
 	"sync"
 
+	"github.com/ENFT-DAO/youbei-api/config"
 	logger "github.com/ElrondNetwork/elrond-go-logger"
-	"github.com/erdsea/erdsea-api/config"
 )
 
 var (

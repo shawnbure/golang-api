@@ -5,8 +5,8 @@ import (
 	"encoding/hex"
 	"testing"
 
-	"github.com/erdsea/erdsea-api/config"
-	"github.com/erdsea/erdsea-api/crypto"
+	"github.com/ENFT-DAO/youbei-api/config"
+	"github.com/ENFT-DAO/youbei-api/crypto"
 	"github.com/stretchr/testify/require"
 )
 

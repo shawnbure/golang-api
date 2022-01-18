@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/erdsea/erdsea-api/cache"
+	"github.com/ENFT-DAO/youbei-api/cache"
 )
 
 const (

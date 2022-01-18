@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/erdsea/erdsea-api/cdn"
-	"github.com/erdsea/erdsea-api/data/dtos"
+	"github.com/ENFT-DAO/youbei-api/cdn"
+	"github.com/ENFT-DAO/youbei-api/data/dtos"
 	"github.com/gin-gonic/gin"
 )
 

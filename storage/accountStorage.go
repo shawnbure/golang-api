@@ -3,7 +3,7 @@ package storage
 import (
 	"gorm.io/gorm"
 
-	"github.com/erdsea/erdsea-api/data/entities"
+	"github.com/ENFT-DAO/youbei-api/data/entities"
 )
 
 func AddAccount(account *entities.Account) error {

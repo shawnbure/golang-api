@@ -13,7 +13,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/erdsea/erdsea-api/config"
+	"github.com/ENFT-DAO/youbei-api/config"
 )
 
 var (

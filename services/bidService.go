@@ -1,9 +1,9 @@
 package services
 
 import (
-	"github.com/erdsea/erdsea-api/data/dtos"
-	"github.com/erdsea/erdsea-api/data/entities"
-	"github.com/erdsea/erdsea-api/storage"
+	"github.com/ENFT-DAO/youbei-api/data/dtos"
+	"github.com/ENFT-DAO/youbei-api/data/entities"
+	"github.com/ENFT-DAO/youbei-api/storage"
 )
 
 func PlaceBid(args PlaceBidArgs) (*entities.Bid, error) {

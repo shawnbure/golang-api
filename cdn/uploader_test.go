@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/erdsea/erdsea-api/config"
+	"github.com/ENFT-DAO/youbei-api/config"
 	"github.com/stretchr/testify/require"
 )
 

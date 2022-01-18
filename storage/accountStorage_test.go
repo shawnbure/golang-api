@@ -3,7 +3,7 @@ package storage
 import (
 	"testing"
 
-	"github.com/erdsea/erdsea-api/data/entities"
+	"github.com/ENFT-DAO/youbei-api/data/entities"
 	"github.com/stretchr/testify/require"
 )
 

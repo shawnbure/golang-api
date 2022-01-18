@@ -5,12 +5,12 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/erdsea/erdsea-api/alerts/tg"
-	"github.com/erdsea/erdsea-api/config"
-	_ "github.com/erdsea/erdsea-api/docs"
-	"github.com/erdsea/erdsea-api/process"
-	"github.com/erdsea/erdsea-api/proxy/handlers"
-	"github.com/erdsea/erdsea-api/services"
+	"github.com/ENFT-DAO/youbei-api/alerts/tg"
+	"github.com/ENFT-DAO/youbei-api/config"
+	_ "github.com/ENFT-DAO/youbei-api/docs"
+	"github.com/ENFT-DAO/youbei-api/process"
+	"github.com/ENFT-DAO/youbei-api/proxy/handlers"
+	"github.com/ENFT-DAO/youbei-api/services"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )

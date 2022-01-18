@@ -2,11 +2,12 @@ package process
 
 import (
 	"context"
-	"github.com/erdsea/erdsea-api/alerts/tg"
-	"github.com/erdsea/erdsea-api/cache"
-	"github.com/erdsea/erdsea-api/config"
-	"github.com/erdsea/erdsea-api/data/entities"
 	"testing"
+
+	"github.com/ENFT-DAO/youbei-api/alerts/tg"
+	"github.com/ENFT-DAO/youbei-api/cache"
+	"github.com/ENFT-DAO/youbei-api/config"
+	"github.com/ENFT-DAO/youbei-api/data/entities"
 )
 
 var cacheCfg = config.CacheConfig{

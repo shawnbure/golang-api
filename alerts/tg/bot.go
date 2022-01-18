@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/erdsea/erdsea-api/config"
+	"github.com/ENFT-DAO/youbei-api/config"
 	tb "gopkg.in/tucnak/telebot.v2"
 )
 

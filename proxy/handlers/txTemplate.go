@@ -4,11 +4,11 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/erdsea/erdsea-api/config"
-	"github.com/erdsea/erdsea-api/data/dtos"
-	"github.com/erdsea/erdsea-api/formatter"
-	"github.com/erdsea/erdsea-api/stats/collstats"
-	"github.com/erdsea/erdsea-api/storage"
+	"github.com/ENFT-DAO/youbei-api/config"
+	"github.com/ENFT-DAO/youbei-api/data/dtos"
+	"github.com/ENFT-DAO/youbei-api/formatter"
+	"github.com/ENFT-DAO/youbei-api/stats/collstats"
+	"github.com/ENFT-DAO/youbei-api/storage"
 	"github.com/gin-gonic/gin"
 )
 

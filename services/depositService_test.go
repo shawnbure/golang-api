@@ -3,8 +3,8 @@ package services
 import (
 	"testing"
 
-	"github.com/erdsea/erdsea-api/cache"
-	"github.com/erdsea/erdsea-api/config"
+	"github.com/ENFT-DAO/youbei-api/cache"
+	"github.com/ENFT-DAO/youbei-api/config"
 	"github.com/stretchr/testify/require"
 )
 
@@ -17,7 +17,7 @@ func Test_UpdateDeposit(t *testing.T) {
 	cache.InitCacher(cacheCfg)
 
 	err := UpdateDeposit(DepositUpdateArgs{
-		Owner: "erd1",
+		Owner:  "erd1",
 		Amount: "100000000000000000000",
 	})
 	require.Nil(t, err)

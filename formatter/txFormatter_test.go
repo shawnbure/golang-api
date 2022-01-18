@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/ENFT-DAO/youbei-api/config"
 	"github.com/ElrondNetwork/elrond-sdk-erdgo/data"
-	"github.com/erdsea/erdsea-api/config"
 	"github.com/stretchr/testify/require"
 )
 
@@ -73,7 +73,7 @@ func TestTxFormatter_MintTokensTxTemplate(t *testing.T) {
 	)
 
 	require.True(t, strings.EqualFold(tx.Data, "mintTokens@05"))
-	require.Equal(t, tx.Value, fmt.Sprintf("%f", 1.1 * 5))
+	require.Equal(t, tx.Value, fmt.Sprintf("%f", 1.1*5))
 }
 
 func defaultConfig() config.BlockchainConfig {

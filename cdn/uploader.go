@@ -3,9 +3,9 @@ package cdn
 import (
 	"context"
 
+	"github.com/ENFT-DAO/youbei-api/config"
 	"github.com/cloudinary/cloudinary-go"
 	"github.com/cloudinary/cloudinary-go/api/uploader"
-	"github.com/erdsea/erdsea-api/config"
 )
 
 type cloudyUploader struct {

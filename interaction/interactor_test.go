@@ -5,14 +5,14 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/erdsea/erdsea-api/config"
+	"github.com/ENFT-DAO/youbei-api/config"
 	"github.com/stretchr/testify/require"
 )
 
 func Test_SimpleQuery(t *testing.T) {
 	cfg := config.BlockchainConfig{
-		ProxyUrl:            "https://devnet-gateway.elrond.com",
-		ChainID:             "D",
+		ProxyUrl: "https://devnet-gateway.elrond.com",
+		ChainID:  "D",
 	}
 
 	InitBlockchainInteractor(cfg)

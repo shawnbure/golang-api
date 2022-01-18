@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/erdsea/erdsea-api/alerts/tg"
+	"github.com/ENFT-DAO/youbei-api/alerts/tg"
 )
 
 const (

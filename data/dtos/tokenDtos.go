@@ -1,7 +1,7 @@
 package dtos
 
 import (
-	"github.com/erdsea/erdsea-api/data/entities"
+	"github.com/ENFT-DAO/youbei-api/data/entities"
 )
 
 type ExtendedTokenDto struct {

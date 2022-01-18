@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/erdsea/erdsea-api/crypto"
-	"github.com/erdsea/erdsea-api/data/dtos"
+	"github.com/ENFT-DAO/youbei-api/crypto"
+	"github.com/ENFT-DAO/youbei-api/data/dtos"
 	"github.com/gin-gonic/gin"
 )
 

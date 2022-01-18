@@ -1,18 +1,19 @@
 package services
 
 import (
-	"gorm.io/datatypes"
 	"strconv"
 	"testing"
 	"time"
 
-	"github.com/erdsea/erdsea-api/cache"
-	"github.com/erdsea/erdsea-api/config"
-	"github.com/erdsea/erdsea-api/data/dtos"
-	"github.com/erdsea/erdsea-api/data/entities"
-	"github.com/erdsea/erdsea-api/interaction"
-	"github.com/erdsea/erdsea-api/stats"
-	"github.com/erdsea/erdsea-api/storage"
+	"gorm.io/datatypes"
+
+	"github.com/ENFT-DAO/youbei-api/cache"
+	"github.com/ENFT-DAO/youbei-api/config"
+	"github.com/ENFT-DAO/youbei-api/data/dtos"
+	"github.com/ENFT-DAO/youbei-api/data/entities"
+	"github.com/ENFT-DAO/youbei-api/interaction"
+	"github.com/ENFT-DAO/youbei-api/stats"
+	"github.com/ENFT-DAO/youbei-api/storage"
 	"github.com/stretchr/testify/require"
 )
 

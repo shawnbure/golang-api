@@ -6,9 +6,9 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/ENFT-DAO/youbei-api/cache"
+	"github.com/ENFT-DAO/youbei-api/interaction"
 	"github.com/ElrondNetwork/elrond-sdk-erdgo/data"
-	"github.com/erdsea/erdsea-api/cache"
-	"github.com/erdsea/erdsea-api/interaction"
 )
 
 var (
@@ -95,7 +95,7 @@ func DoGetDepositVmQuery(marketplaceAddress string, address string) (string, err
 
 	addressHex := hex.EncodeToString(addressDecoded.AddressBytes())
 	result, err := bi.DoVmQuery(marketplaceAddress, GetDepositView, []string{addressHex})
-	if err != nil || len(result) == 0{
+	if err != nil || len(result) == 0 {
 		return "", nil
 	}
 

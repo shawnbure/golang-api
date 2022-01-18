@@ -3,7 +3,7 @@ package collstats
 import (
 	"testing"
 
-	"github.com/erdsea/erdsea-api/cache"
+	"github.com/ENFT-DAO/youbei-api/cache"
 	"github.com/stretchr/testify/require"
 )
 

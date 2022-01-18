@@ -3,8 +3,8 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/erdsea/erdsea-api/data/dtos"
-	"github.com/erdsea/erdsea-api/services"
+	"github.com/ENFT-DAO/youbei-api/data/dtos"
+	"github.com/ENFT-DAO/youbei-api/services"
 	"github.com/gin-gonic/gin"
 )
 

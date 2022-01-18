@@ -3,8 +3,8 @@ package services
 import (
 	"testing"
 
-	"github.com/erdsea/erdsea-api/cache"
-	"github.com/erdsea/erdsea-api/config"
+	"github.com/ENFT-DAO/youbei-api/cache"
+	"github.com/ENFT-DAO/youbei-api/config"
 	"github.com/stretchr/testify/require"
 )
 
