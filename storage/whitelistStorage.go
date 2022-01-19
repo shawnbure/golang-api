@@ -26,6 +26,10 @@ func AddWhitelist(whitelist *entities.Whitelist) error {
 func GetWhitelistById(id uint64) (*entities.Whitelist, error) {
 	var whitelist entities.Whitelist
 
+	if id == 0 {
+		return &whitelist, nil
+	}
+
 	database, err := GetDBOrError()
 	if err != nil {
 		return nil, err
@@ -61,7 +65,7 @@ func GetWhitelistByAddress(address string) (*entities.Whitelist, error) {
 	return &whitelist, nil
 }
 
-func GetWhitelistsByCollectionId(collectionId uint64) ([]entities.Whitelist, error) {
+func GetWhitelistsByCollectionID(collectionID uint64) ([]entities.Whitelist, error) {
 	var whitelists []entities.Whitelist
 
 	database, err := GetDBOrError()
@@ -69,10 +73,43 @@ func GetWhitelistsByCollectionId(collectionId uint64) ([]entities.Whitelist, err
 		return nil, err
 	}
 
-	txRead := database.Find(&whitelists, "collectionId = ?", collectionId)
+	txRead := database.Find(&whitelists, "collectionID = ?", collectionID)
 	if txRead.Error != nil {
 		return nil, txRead.Error
 	}
 
 	return whitelists, nil
+}
+
+func UpdateWhitelist(whitelist *entities.Whitelist) error {
+	database, err := GetDBOrError()
+	if err != nil {
+		return err
+	}
+
+	txCreate := database.Save(&whitelist)
+	if txCreate.Error != nil {
+		return txCreate.Error
+	}
+	if txCreate.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+
+	return nil
+}
+
+func UpdateWhitelistAmountWhereId(whitelistID uint64, amount uint64) error {
+	database, err := GetDBOrError()
+	if err != nil {
+		return err
+	}
+
+	tx := database.Table("whitelist").Where("ID = ?", whitelistID).Update("amount", amount)
+	if tx.Error != nil {
+		return tx.Error
+	}
+	if tx.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
 }

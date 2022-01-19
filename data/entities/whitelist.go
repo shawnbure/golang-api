@@ -1,14 +1,14 @@
 package entities
 
 type Whitelist struct {
-	ID           uint64        `gorm:"primaryKey" json:"id"` //PK
-	CollectionID uint64        `json:"collectionId"`         //FK to the
-	Address      string        `json:"address"`
-	Amount       uint64        `json:"amount"`
-	Type         WhitelistType `json:"type"`
+	ID           uint64 `gorm:"primaryKey" json:"id"` //PK
+	CollectionID uint64 `json:"collectionId"`         //FK to the
+	Address      string `json:"address"`
+	Amount       uint64 `json:"amount"`
+	Type         uint64 `json:"type"`
+	CreatedAt    uint64 `json:"createdAt"`
+	ModifiedAt   uint64 `json:"modifiedAt"`
 }
-
-type WhitelistType int64
 
 const (
 	WhitelistType_none     = 0

@@ -26,7 +26,7 @@ type Collection struct {
 	CreatorID uint64 `json:"creatorId"`
 }
 
-type CollectionType int64
+type CollectionType uint64
 
 const (
 	CollectionType_none        = 0

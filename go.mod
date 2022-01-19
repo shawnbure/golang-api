@@ -1,6 +1,6 @@
 module github.com/ENFT-DAO/youbei-api
 
-go 1.16
+go 1.16 
 
 require (
 	github.com/ElrondNetwork/elrond-go-core v1.0.1-0.20210721164025-65cf7f169349
