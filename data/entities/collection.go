@@ -21,14 +21,12 @@ type Collection struct {
 	ProfileImageLink         string         `json:"profileImageLink"`
 	CoverImageLink           string         `json:"coverImageLink"`
 	IsVerified               bool           `json:"isVerified"`
-	Type                     CollectionType `json:"type"`
+	Type                     uint64         `json:"type"`
 
 	CreatorID uint64 `json:"creatorId"`
 }
 
-type CollectionType uint64
-
 const (
-	CollectionType_none        = 0
-	CollectionType_whitelisted = 1
+	Collection_type_none        = 0
+	Collection_type_whitelisted = 1
 )

@@ -14,19 +14,11 @@ type SetWhitelistRequest struct {
 	Type         uint64 `json:"type"`
 }
 
-func GetOrCreateWhitelist(address string) (*entities.Whitelist, error) {
+func GetWhitelist(address string) (*entities.Whitelist, error) {
 	whitelist, err := storage.GetWhitelistByAddress(address)
-	if err != nil {
-		whitelist = &entities.Whitelist{
-			Address:    address,
-			CreatedAt:  uint64(time.Now().Unix()),
-			ModifiedAt: uint64(time.Now().Unix()),
-		}
 
-		err = storage.AddWhitelist(whitelist)
-		if err != nil {
-			return nil, err
-		}
+	if err != nil {
+		return nil, err
 	}
 
 	return whitelist, nil

@@ -83,6 +83,7 @@ func GetWhitelistsByCollectionID(collectionID uint64) ([]entities.Whitelist, err
 
 func UpdateWhitelist(whitelist *entities.Whitelist) error {
 	database, err := GetDBOrError()
+
 	if err != nil {
 		return err
 	}

@@ -5,16 +5,17 @@ type Whitelist struct {
 	CollectionID uint64 `json:"collectionId"`         //FK to the
 	Address      string `json:"address"`
 	Amount       uint64 `json:"amount"`
-	Type         uint64 `json:"type"`
+	Type         uint64 `json:"type"` // use the Const defined below
 	CreatedAt    uint64 `json:"createdAt"`
 	ModifiedAt   uint64 `json:"modifiedAt"`
 }
 
+//This is used in the Whitelist 'Type' variable
 const (
-	WhitelistType_none     = 0
-	WhitelistType_buy      = 1
-	WhitelistType_mint     = 2
-	WhitelistType_buy_mint = 3
+	Whitelist_type_none     = 0
+	Whitelist_type_buy      = 1
+	Whitelist_type_mint     = 2
+	Whitelist_type_buy_mint = 3
 )
 
 //test
