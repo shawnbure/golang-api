@@ -140,7 +140,7 @@ func (handler *collectionsHandler) getList(c *gin.Context) {
 // @Tags collections
 // @Accept json
 // @Produce json
-// @Param collectionId path string true "collection id"
+// @Param collectionId path string true "colle`ction id"
 // @Success 200 {object} dtos.ExtendedCollectionDto
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 404 {object} dtos.ApiResponse
