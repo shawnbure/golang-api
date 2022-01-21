@@ -17,6 +17,8 @@ const (
 	WhitelistType_buy_mint = 3
 )
 
+//test
+
 /*
 
 	1. Add a whitelist check in the collection table
