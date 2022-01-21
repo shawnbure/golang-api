@@ -20,6 +20,8 @@ var corsHeaders = []string{
 	"Content-Length",
 	"Content-Type",
 	"Authorization",
+	"X-Requested-With",
+	"Accept",
 }
 
 var ctx = context.Background()
@@ -29,7 +31,7 @@ type webServer struct {
 	generalConfig *config.GeneralConfig
 }
 
-// @title erdsea-api
+// @title youbei-api
 // @version 1.0
 // @termsOfService http://swagger.io/terms/
 
@@ -42,6 +44,7 @@ func NewWebServer(cfg *config.GeneralConfig) (*webServer, error) {
 	corsCfg := cors.DefaultConfig()
 	corsCfg.AllowHeaders = corsHeaders
 	corsCfg.AllowAllOrigins = true
+
 	router.Use(cors.New(corsCfg))
 
 	groupHandler := handlers.NewGroupHandler()
