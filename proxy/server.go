@@ -4,7 +4,6 @@ import (
 	"context"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/ENFT-DAO/youbei-api/alerts/tg"
 	"github.com/ENFT-DAO/youbei-api/config"
@@ -21,25 +20,6 @@ var corsHeaders = []string{
 	"Content-Length",
 	"Content-Type",
 	"Authorization",
-	"X-Requested-With",
-	"Accept",
-	"Accept-Encoding",
-	"X-CSRF-Token",
-	"Cache-Control",
-}
-
-var corsMethods = []string{
-	"GET",
-	"HEAD",
-	"POST",
-	"PUT",
-	"DELETE",
-	"OPTIONS",
-	"PATCH",
-}
-
-var corsOrigins = []string{
-	"https://*.youbei.io",
 }
 
 var ctx = context.Background()
@@ -60,30 +40,10 @@ type webServer struct {
 func NewWebServer(cfg *config.GeneralConfig) (*webServer, error) {
 
 	router := gin.Default()
-
-	//corsCfg := cors.DefaultConfig()
-	//corsCfg.AllowWildcard = true //allows widcards in the origin domain
-	//corsCfg.AllowHeaders = corsHeaders
-	//corsCfg.AllowMethods = corsMethods
-	//corsCfg.AllowAllOrigins = true
-	//corsCfg.AllowOrigins = corsOrigins
-
-	//router.Use(cors.New(corsCfg))
-
-	router.Use(cors.New(cors.Config{
-		AllowWildcard:    true, //allows widcards in the origin domain
-		AllowOrigins:     corsOrigins,
-		AllowMethods:     corsMethods,
-		AllowHeaders:     corsHeaders,
-		ExposeHeaders:    []string{"Content-Length"},
-		AllowCredentials: true,
-		/*
-			AllowOriginFunc: func(origin string) bool {
-				return origin == "https://github.com"
-			},
-		*/
-		MaxAge: 12 * time.Hour,
-	}))
+	corsCfg := cors.DefaultConfig()
+	corsCfg.AllowHeaders = corsHeaders
+	corsCfg.AllowAllOrigins = true
+	router.Use(cors.New(corsCfg))
 
 	groupHandler := handlers.NewGroupHandler()
 
