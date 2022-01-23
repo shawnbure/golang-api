@@ -162,7 +162,7 @@ func (handler *txTemplateHandler) getBuyNftTemplate(c *gin.Context) {
 		} else if whitelist.Amount == uint64(0) {
 
 			//throw an error : "You already bought the allocated amount for the whitelist"
-			dtos.JsonResponse(c, http.StatusBadRequest, nil, "You already bought the allocated amount for the whitelis.")
+			dtos.JsonResponse(c, http.StatusBadRequest, nil, "You already bought the allocated amount for the whitelist.")
 			return
 		} else {
 
