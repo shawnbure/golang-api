@@ -62,7 +62,7 @@ VERSION:
 	generalConfigFile = cli.StringFlag{
 		Name:  "general-config",
 		Usage: "The path for the general config",
-		Value: "./config/config.toml",
+		Value: getWorkingDirectory("config/config.toml"),
 	}
 
 	workingDirectory = cli.StringFlag{
@@ -89,6 +89,16 @@ func main() {
 		log.Error(err.Error())
 		panic(err)
 	}
+}
+
+func getWorkingDirectory(param string) string {
+
+	dir, dir_err := os.Getwd()
+	if dir_err != nil {
+		log.Error(dir_err.Error())
+		panic(dir_err)
+	}
+	return dir + "/" + param
 }
 
 func startProxy(ctx *cli.Context) error {
