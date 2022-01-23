@@ -99,13 +99,13 @@ func UpdateWhitelist(whitelist *entities.Whitelist) error {
 	return nil
 }
 
-func UpdateWhitelistAmountWhereId(whitelistID uint64, amount uint64) error {
+func UpdateWhitelistAmountByAddress(amount uint64, address string) error {
 	database, err := GetDBOrError()
 	if err != nil {
 		return err
 	}
 
-	tx := database.Table("whitelist").Where("ID = ?", whitelistID).Update("amount", amount)
+	tx := database.Table("whitelists").Where("address = ?", address).Update("amount", amount)
 	if tx.Error != nil {
 		return tx.Error
 	}
