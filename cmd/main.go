@@ -22,7 +22,7 @@ import (
 
 const (
 	defaultLogsPath    = "logs"
-	logFilePrefix      = "erdsea"
+	logFilePrefix      = "youbei"
 	logFileLifeSpanSec = 86400
 )
 
@@ -46,7 +46,7 @@ VERSION:
    {{.Version}}
    {{end}}
 `
-	log = logger.GetOrCreate("erdsea-api")
+	log = logger.GetOrCreate("youbei-api")
 
 	logLevel = cli.StringFlag{
 		Name:  "log-level",
@@ -75,7 +75,7 @@ VERSION:
 func main() {
 	app := cli.NewApp()
 	cli.AppHelpTemplate = cliHelpTemplate
-	app.Name = "erdsea-api"
+	app.Name = "youbei-api"
 	app.Flags = []cli.Flag{
 		logLevel,
 		logSaveFile,
@@ -92,7 +92,7 @@ func main() {
 }
 
 func startProxy(ctx *cli.Context) error {
-	log.Info("starting erdsea-api proxy...")
+	log.Info("starting youbei-api proxy...")
 
 	fileLogging, err := initLogger(ctx)
 	if err != nil {
@@ -115,7 +115,7 @@ func startProxy(ctx *cli.Context) error {
 	server := api.Run()
 
 	waitForGracefulShutdown(server)
-	log.Debug("closing erdsea-api proxy...")
+	log.Debug("closing youbei-api proxy...")
 	if !check.IfNil(fileLogging) {
 		err = fileLogging.Close()
 		if err != nil {
