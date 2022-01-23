@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/ENFT-DAO/youbei-api/config"
 	"github.com/ENFT-DAO/youbei-api/data/dtos"
@@ -12,8 +13,9 @@ import (
 )
 
 const (
-	baseWhitelistEndpoint = "/whitelist"
-	whitelistByAddress    = "/:address"
+	baseWhitelistEndpoint    = "/whitelists"
+	whitelistByAddress       = "/:address"
+	whitelistByAddressAmount = "/:address/:amount"
 )
 
 type whitelistHandler struct {
@@ -24,7 +26,8 @@ func NewWhitelistHandler(groupHandler *groupHandler, authCfg config.AuthConfig, 
 	handler := &whitelistHandler{blockchainCfg: blockchainCfg}
 
 	endpoints := []EndpointHandler{
-		{Method: http.MethodPost, Path: whitelistByAddress, HandlerFunc: handler.set},
+		{Method: http.MethodPost, Path: whitelistByAddress, HandlerFunc: handler.GetWhitelistByAddress},
+		{Method: http.MethodPost, Path: whitelistByAddressAmount, HandlerFunc: handler.UpdateWhitelistAmountByAddress},
 	}
 	endpointGroupHandler := EndpointGroupHandler{
 		Root:             baseCollectionsEndpoint,
@@ -46,9 +49,10 @@ func NewWhitelistHandler(groupHandler *groupHandler, authCfg config.AuthConfig, 
 // @Failure 404 {object} dtos.ApiResponse
 // @Failure 500 {object} dtos.ApiResponse
 // @Router /collections/{collectionId} [post]
-func (handler *whitelistHandler) set(c *gin.Context) {
+func (handler *whitelistHandler) UpdateWhitelistAmountByAddress(c *gin.Context) {
 	var request services.SetWhitelistRequest
 	address := c.Param("address")
+	strAmount := c.Param("amount")
 
 	err := c.BindJSON(&request)
 	if err != nil {
@@ -62,7 +66,16 @@ func (handler *whitelistHandler) set(c *gin.Context) {
 		return
 	}
 
-	err = services.UpdateWhitelist(whitelist, &request)
+	//parse the string amount to Uint amount
+	amount, err := strconv.ParseUint(strAmount, 10, 64)
+
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	//err = services.UpdateWhitelistAmountByAddress(amount, address)
+	err = storage.UpdateWhitelistAmountByAddress(amount, address)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
@@ -85,7 +98,7 @@ func (handler *whitelistHandler) set(c *gin.Context) {
 func (handler *whitelistHandler) GetWhitelistByAddress(c *gin.Context) {
 	address := c.Param("address")
 
-	whitelist, err := storage.GetWhitelistByAddress(address)
+	whitelist, err := services.GetWhitelist(address) //storage.GetWhitelistByAddress(address)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return

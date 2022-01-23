@@ -52,3 +52,7 @@ func UpdateWhitelist(whitelist *entities.Whitelist, request *SetWhitelistRequest
 
 	return storage.UpdateWhitelist(whitelist)
 }
+
+func UpdateWhitelistAmountByAddress(amount uint64, address string) error {
+	return storage.UpdateWhitelistAmountByAddress(amount, address)
+}
