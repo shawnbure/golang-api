@@ -4,8 +4,11 @@ import (
 	"net/http"
 	"strconv"
 
+	"gorm.io/gorm"
+
 	"github.com/ENFT-DAO/youbei-api/config"
 	"github.com/ENFT-DAO/youbei-api/data/dtos"
+	"github.com/ENFT-DAO/youbei-api/data/entities"
 	"github.com/ENFT-DAO/youbei-api/formatter"
 	"github.com/ENFT-DAO/youbei-api/stats/collstats"
 	"github.com/ENFT-DAO/youbei-api/storage"
@@ -137,6 +140,39 @@ func (handler *txTemplateHandler) getBuyNftTemplate(c *gin.Context) {
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
+	}
+
+	collection, errCollection := storage.GetCollectionByTokenId(tokenId)
+
+	if errCollection != nil { //check if there is an error in getting the collection by token id
+
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, errCollection.Error())
+		return
+	} else if collection.Type == entities.Collection_type_whitelisted { //collection type is "whitelisted"
+
+		//Henry - add the check for whitelist here
+		whitelist, errWhitelist := storage.GetWhitelistByAddress(userAddress)
+
+		//TODO: check if it exist for whitelist, if not, enter in "Not part of the whitelist"
+		if errWhitelist == gorm.ErrRecordNotFound {
+
+			//throw error message "Not Part of the Whitelist"
+			dtos.JsonResponse(c, http.StatusBadRequest, nil, "Sorry, you are not part of the whitelist.")
+			return
+		} else if whitelist.Amount == uint64(0) {
+
+			//throw an error : "You already bought the allocated amount for the whitelist"
+			dtos.JsonResponse(c, http.StatusBadRequest, nil, "You already bought the allocated amount for the whitelist.")
+			return
+		} else {
+
+			//deduct the amount by 1
+			newAmount := whitelist.Amount - 1
+
+			//update it
+			storage.UpdateWhitelistAmountByAddress(uint64(newAmount), userAddress)
+		}
+
 	}
 
 	template := handler.txFormatter.NewBuyNftTxTemplate(userAddress, tokenId, nonce, priceStr)
