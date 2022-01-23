@@ -20,8 +20,6 @@ var corsHeaders = []string{
 	"Content-Length",
 	"Content-Type",
 	"Authorization",
-	"X-Requested-With",
-	"Accept",
 }
 
 var ctx = context.Background()
@@ -40,11 +38,11 @@ type webServer struct {
 
 // @host localhost:5000
 func NewWebServer(cfg *config.GeneralConfig) (*webServer, error) {
+
 	router := gin.Default()
 	corsCfg := cors.DefaultConfig()
 	corsCfg.AllowHeaders = corsHeaders
 	corsCfg.AllowAllOrigins = true
-
 	router.Use(cors.New(corsCfg))
 
 	groupHandler := handlers.NewGroupHandler()
