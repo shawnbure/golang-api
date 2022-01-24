@@ -34,3 +34,5 @@ cmd/main
 cmd/cmd
 
 aws.pem
+
+main
