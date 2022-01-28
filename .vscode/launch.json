@@ -9,7 +9,7 @@
             "type": "go",
             "request": "launch",
             "mode": "auto",
-            "env":{"CGO_CFLAGS":"-Wundef-prefix","GOOS":"darwin","SDKROOT":"/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk","GOARCH":"amd64"},
+            "env":{"CFLAGS":"-Wno-undef-prefix","CGO_CFLAGS":"-Wno-undef-prefix","GOOS":"darwin","GOARCH":"arm64"},
             "program": "${workspaceFolder}/cmd/main.go",
             "cwd": "./"
         }
