@@ -1,5 +1,5 @@
 [ConnectorApi]
-    Address = "localhost:8080"
+    Address = "0.0.0.0:8080"
     Username = ""
     Password = ""
     Addresses = [
@@ -55,6 +55,7 @@
 [Database]
     Dialect = "postgres"
     Host = "localhost"
+    # ConnectionName= "youbei-339521:us-central1:youbei-dev"
     Port = 5432
     DbName = "youbei-api"
     User = "youbei"
