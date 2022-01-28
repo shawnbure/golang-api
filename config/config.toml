@@ -1,5 +1,5 @@
 [ConnectorApi]
-    Address = "localhost:5000"
+    Address = "localhost:8080"
     Username = ""
     Password = ""
     Addresses = [
@@ -56,9 +56,9 @@
     Dialect = "postgres"
     Host = "localhost"
     Port = 5432
-    DbName = "youbei_test"
-    User = "dbmasteruser"
-    Password = "-JVx`g,m$tz;T9{c^s&Q%Zs>i7dGt}O)"
+    DbName = "youbei-api"
+    User = "youbei"
+    Password = "youbei"#"-JVx`g,m$tz;T9{c^s&Q%Zs>i7dGt}O)"
     SslMode = "disable"
     MaxOpenConns = 50
     MaxIdleConns = 10
