@@ -38,8 +38,8 @@ jobs:
         run: |
           export HOME=/home/amir
           export TAG=`echo $GITHUB_REF | awk -F/ '{print $NF}'`
-          sudo docker system prune -f
-          sudo docker build -t "$REGISTRY_HOSTNAME"/"$PROJECT_ID"/"$IMAGE":"$TAG"  \
+          docker system prune -f
+          docker build -t "$REGISTRY_HOSTNAME"/"$PROJECT_ID"/"$IMAGE":"$TAG"  \
             --build-arg GITHUB_SHA="$GITHUB_SHA" \
             --build-arg GITHUB_REF="$GITHUB_REF" .
 
@@ -48,9 +48,9 @@ jobs:
         run: |
           export TAG=`echo $GITHUB_REF | awk -F/ '{print $NF}'`
           echo $TAG
-          sudo docker push "$REGISTRY_HOSTNAME"/"$PROJECT_ID"/"$IMAGE":"$TAG"
-          sudo docker rmi -f $IMAGE:latest
-          sudo docker tag "$REGISTRY_HOSTNAME"/"$PROJECT_ID"/"$IMAGE":"$TAG" $IMAGE:latest
+          docker push "$REGISTRY_HOSTNAME"/"$PROJECT_ID"/"$IMAGE":"$TAG"
+          docker rmi -f $IMAGE:latest
+          docker tag "$REGISTRY_HOSTNAME"/"$PROJECT_ID"/"$IMAGE":"$TAG" $IMAGE:latest
       - name: Deploy to Cloud Run
         id: deploy
         uses: google-github-actions/deploy-cloudrun@v0
