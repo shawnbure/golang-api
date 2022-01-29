@@ -27,7 +27,9 @@ func Connect(cfg config.DatabaseConfig) {
 		if err != nil {
 			panic(err)
 		}
-		dbURI := fmt.Sprintf("user=%s password=%s database=%s host=%s/%s", cfg.User, cfg.Password, cfg.DbName, "/cloudsql", cfg.ConnectionName)
+		// dbURI := fmt.Sprintf("user=%s password=%s database=%s host=%s/%s", cfg.User, cfg.Password, cfg.DbName, "/cloudsql", cfg.ConnectionName)
+		dbURI := fmt.Sprintf("%s:%s@unix(/%s/%s)/%s?parseTime=true", cfg.User, cfg.Password, "/cloudsql", cfg.ConnectionName, cfg.DbName)
+
 		storeDSN := fmt.Sprintf("user=%s host=%s port=%d database=%s password=%s sslmode=disable TimeZone=Etc/UTC",
 			cfg.User,
 			cfg.Host,
