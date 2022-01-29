@@ -18,7 +18,7 @@ services:
         - "5432"
       environment:
         POSTGRES_DB: "youbei-api"
-        POSTGRES_USER: "youbei"
+        POSTGRES_USER: "youbei-api"
         POSTGRES_PASSWORD: "youbei"
         POSTGRES_HOST_AUTH_METHOD: trust
       volumes:

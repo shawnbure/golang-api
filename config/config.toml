@@ -58,7 +58,7 @@
     # ConnectionName= "youbei-339521:us-central1:youbei-dev"
     Port = 5432
     DbName = "youbei-api"
-    User = "youbei"
+    User = "youbei-api"
     Password = "youbei"#"-JVx`g,m$tz;T9{c^s&Q%Zs>i7dGt}O)"
     SslMode = "disable"
     MaxOpenConns = 50
@@ -67,7 +67,7 @@
 
 [Auth]
     JwtSecret = "jwtSecret"
-    JwtIssuer = "localhost:5000"
+    JwtIssuer = "localhost:8080"
     JwtKeySeedHex = "d6592724167553acf9c8cba9a7dbc7f514efc757d7906546cecfdfc5d4c2e8d1"
     JwtExpiryMins = 1440
 
@@ -92,5 +92,5 @@
     ApiSecret = "fIFsn9UK3_BMSe4qOIAzqQ3eoZY"
     #Selector = "cloudy"
     Selector = "local"
-    BaseUrl = "http://localhost:5000/image/"
-    RootDir = "/home/ubuntu/pics"
+    BaseUrl = "http://localhost:8080/image/"
+    RootDir = "./pics"

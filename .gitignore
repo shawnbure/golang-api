@@ -4,6 +4,8 @@
 *.exe
 *.exe~
 *.so
+*.cover
+*.profile
 
 # Testing
 *.test
@@ -36,5 +38,5 @@ cmd/cmd
 aws.pem
 
 main
-
+./pics
 .DS_Store
