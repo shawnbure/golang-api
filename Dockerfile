@@ -16,7 +16,6 @@ ADD . /app
 ## directory
 WORKDIR /app
 
-RUN git config --global --add url."https://$REPO_TOKEN@github.com".insteadOf "https://github.com"
 RUN go mod vendor
 
 RUN export CGO_CPPFLAGS="-I /usr/local/include"

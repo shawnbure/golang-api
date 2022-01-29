@@ -36,12 +36,10 @@ jobs:
           gcloud auth configure-docker
       - name: Build
         run: |
-          export HOME=/home/anasvsfs
-          git config --global --add url."https://$REPO_TOKEN@github.com".insteadOf "https://github.com"
+          export HOME=/home/amir
           export TAG=`echo $GITHUB_REF | awk -F/ '{print $NF}'`
           docker system prune -f
           docker build -t "$REGISTRY_HOSTNAME"/"$PROJECT_ID"/"$IMAGE":"$TAG"  \
-            --build-arg REPO_TOKEN="$REPO_TOKEN" \
             --build-arg GITHUB_SHA="$GITHUB_SHA" \
             --build-arg GITHUB_REF="$GITHUB_REF" .
 
