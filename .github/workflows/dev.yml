@@ -26,7 +26,7 @@ jobs:
       - id: 'auth'
         uses: 'google-github-actions/auth@v0'
         with:
-          workload_identity_provider: 'projects/youbei-339521/locations/global/workloadIdentityPools/dev-youbei-github/providers/dev-github-provider'
+          workload_identity_provider: 'projects/232956162006/locations/global/workloadIdentityPools/dev-youbei-github/providers/dev-github-provider'
           service_account: 'cloudrun@youbei-339521.iam.gserviceaccount.com'
       # - name: gcloud
       #   uses: google-github-actions/setup-gcloud@v0
