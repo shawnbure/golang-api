@@ -36,3 +36,5 @@ cmd/cmd
 aws.pem
 
 main
+
+.DS_Store
