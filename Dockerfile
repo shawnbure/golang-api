@@ -23,4 +23,4 @@ RUN export CGO_CPPFLAGS="-I /usr/local/include"
 
 ENV TZ=UTC
 
-RUN CGO_ENABLED=1 GOOS=linux go build -ldflags $CGO_CPPFLAGS -a -installsuffix cgo -o youbei-api cmd
+RUN CGO_ENABLED=1 GOOS=linux go build -ldflags $CGO_CPPFLAGS -a -installsuffix cgo -o youbei-api ./cmd
