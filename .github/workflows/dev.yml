@@ -17,6 +17,9 @@ jobs:
   deploy:
     runs-on: dev
     name: deploy
+    permissions:
+      contents: 'read'
+      id-token: 'write'
     steps:
       - name: Checkout
         uses: actions/checkout@v2
