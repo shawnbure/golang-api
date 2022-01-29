@@ -51,7 +51,7 @@ jobs:
           docker tag "$REGISTRY_HOSTNAME"/"$PROJECT_ID"/"$IMAGE":"$TAG" $IMAGE:latest
       - name: Deploy to Cloud Run
         id: deploy
-        uses: google-github-actions/deploy-cloudrun@main
+        uses: google-github-actions/deploy-cloudrun@v0
         with:
           service: dev-youbei-api
           image: ${{ env.REGISTRY_HOSTNAME}}/${{env.PROJECT_ID}}/${{env.IMAGE}}:dev
