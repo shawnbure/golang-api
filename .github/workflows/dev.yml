@@ -28,8 +28,8 @@ jobs:
         with:
           workload_identity_provider: 'projects/youbei-339521/locations/global/workloadIdentityPools/dev-youbei-github/providers/dev-github-provider'
           service_account: 'cloudrun@youbei-339521.iam.gserviceaccount.com'
-      - name: gcloud
-        uses: google-github-actions/setup-gcloud@v0
+      # - name: gcloud
+      #   uses: google-github-actions/setup-gcloud@v0
       - run: |
           # Set up docker to authenticate
           # via gcloud command-line tool.
