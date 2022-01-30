@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"os"
 	"time"
 
 	"cloud.google.com/go/storage"
@@ -49,7 +48,6 @@ func (cu *cloudyUploader) UploadBase64(ctx context.Context, b64Img, imgID string
 
 	ctx, cancel := context.WithTimeout(ctx, time.Second*50)
 	defer cancel()
-	log.Info(os.Getenv("GOOGLE_APPLICATION_CREDENTIALS"))
 	// Upload an object with storage.Writer.
 	wc := cu.cl.Bucket(cu.bucketName).Object(cu.uploadPath + imgID).NewWriter(ctx)
 	if _, err := io.Copy(wc, buf); err != nil {
