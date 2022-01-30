@@ -99,12 +99,15 @@ type MonitorConfig struct {
 }
 
 type CDNConfig struct {
-	Name      string
-	ApiKey    string
-	ApiSecret string
-	Selector  string
-	BaseUrl   string
-	RootDir   string
+	Name       string
+	ProjectID  string
+	BucketName string
+	UploadPath string
+	// ApiKey    string
+	// ApiSecret string
+	Selector string
+	BaseUrl  string
+	RootDir  string
 }
 
 func (d DatabaseConfig) Url() string {

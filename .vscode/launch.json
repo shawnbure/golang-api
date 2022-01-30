@@ -9,7 +9,7 @@
             "type": "go",
             "request": "launch",
             "mode": "auto",
-            "env":{"CFLAGS":"-Wno-undef-prefix","CGO_CFLAGS":"-Wno-undef-prefix","GOOS":"darwin","GOARCH":"arm64"},
+            "env":{"CFLAGS":"-Wno-undef-prefix","CGO_CFLAGS":"-Wno-undef-prefix","GOOS":"darwin","GOARCH":"arm64","GOOGLE_APPLICATION_CREDENTIALS":"./config/youbei-339521-92c28a408747.json"},
             "program": "${workspaceFolder}/cmd/main.go",
             "cwd": "./"
         }
