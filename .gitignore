@@ -4,6 +4,8 @@
 *.exe
 *.exe~
 *.so
+*.cover
+*.profile
 
 # Testing
 *.test
@@ -25,8 +27,8 @@
 vendor
 cmd/notifier
 
-config/config.toml
-config.toml
+#config/config.toml
+#config.toml
 
 cache/bolt.db
 bolt.db
@@ -36,3 +38,5 @@ cmd/cmd
 aws.pem
 
 main
+./pics
+.DS_Store

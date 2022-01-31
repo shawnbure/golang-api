@@ -83,7 +83,6 @@ func main() {
 		workingDirectory,
 	}
 	app.Action = startProxy
-
 	err := app.Run(os.Args)
 	if err != nil {
 		log.Error(err.Error())
