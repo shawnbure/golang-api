@@ -236,6 +236,9 @@ func setMintInfoCache(contractAddress string) (*MintInfo, error) {
 	}
 
 	totalSoldHex := hex.EncodeToString(result[1])
+	if len(result[1]) == 0 {
+		totalSoldHex = "0"
+	}
 	totalSold, err := strconv.ParseUint(totalSoldHex, 16, 64)
 	if err != nil {
 		return nil, err
@@ -307,12 +310,12 @@ func getTokensRegisteredByUser(userAddress string, blockchainProxy string) ([]st
 	var resp ProxyRegisteredNFTsResponse
 
 	url := fmt.Sprintf(RegisteredNFTsBaseFormat, blockchainProxy, userAddress)
-	err := cache.GetCacher().Get(url, &resp)
-	if err == nil {
-		return resp.Data.Tokens, nil
-	}
+	// err := cache.GetCacher().Get(url, &resp)
+	// if err == nil {
+	// 	return resp.Data.Tokens, nil
+	// }
 
-	err = HttpGet(url, &resp)
+	err := HttpGet(url, &resp)
 	if err != nil {
 		return nil, err
 	}

@@ -603,7 +603,7 @@ func (handler *txTemplateHandler) getDeployNFTTemplate(c *gin.Context) {
 		return
 	}
 
-	saleStart, err := strconv.ParseUint(saleStartStr, 10, 16)
+	saleStart, err := strconv.ParseUint(saleStartStr, 10, 64)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
