@@ -283,7 +283,7 @@ func connectToDb() {
 		Dialect:       "postgres",
 		Host:          "localhost",
 		Port:          5432,
-		DbName:        "erdsea_db_test",
+		DbName:        "youbei_dev",
 		User:          "postgres",
 		Password:      "root",
 		SslMode:       "disable",

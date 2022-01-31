@@ -98,6 +98,8 @@ func (h *accountsHandler) set(c *gin.Context) {
 	var request services.SetAccountRequest
 	walletAddress := c.Param("walletAddress")
 
+	//dtos.JsonResponse(c, http.StatusInternalServerError, nil, "Henry test error account-handlers")
+
 	err := c.BindJSON(&request)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, "cannot bind request")

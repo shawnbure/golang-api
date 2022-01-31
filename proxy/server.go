@@ -43,6 +43,7 @@ func NewWebServer(cfg *config.GeneralConfig) (*webServer, error) {
 	corsCfg := cors.DefaultConfig()
 	corsCfg.AllowHeaders = corsHeaders
 	corsCfg.AllowAllOrigins = true
+	//corsCfg.a
 	router.Use(cors.New(corsCfg))
 
 	groupHandler := handlers.NewGroupHandler()

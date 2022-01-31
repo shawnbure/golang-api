@@ -73,16 +73,22 @@ type ProxyRegisteredNFTsResponse struct {
 }
 
 func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) (*entities.Collection, error) {
+	//return nil, errors.New("before Validation")
 	err := checkValidInputOnCreate(request)
 	if err != nil {
 		return nil, err
 	}
+
+	//return nil, errors.New("After Validation")
 
 	bytes, err := json.Marshal(request.Flags)
 	if err != nil {
 		return nil, err
 	}
 
+	//return nil, errors.New("After jsonMarshal")
+
+	//uncommment
 	tokensRegisteredByUser, err := getTokensRegisteredByUser(request.UserAddress, blockchainProxy)
 	if err != nil {
 		return nil, err
