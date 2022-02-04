@@ -42,18 +42,17 @@ type MintInfo struct {
 }
 
 type CreateCollectionRequest struct {
-	UserAddress             string   `json:"userAddress"`
-	Name                    string   `json:"collectionName"`
-	TokenId                 string   `json:"tokenId"`
-	Description             string   `json:"description"`
-	Website                 string   `json:"website"`
-	DiscordLink             string   `json:"discordLink"`
-	TwitterLink             string   `json:"twitterLink"`
-	InstagramLink           string   `json:"instagramLink"`
-	TelegramLink            string   `json:"telegramLink"`
-	Flags                   []string `json:"flags"`
-	ContractAddress         string   `json:"contractAddress"`
-	MintPricePerTokenString string   `json:"mintPricePerTokenString"`
+	UserAddress     string   `json:"userAddress"`
+	Name            string   `json:"collectionName"`
+	TokenId         string   `json:"tokenId"`
+	Description     string   `json:"description"`
+	Website         string   `json:"website"`
+	DiscordLink     string   `json:"discordLink"`
+	TwitterLink     string   `json:"twitterLink"`
+	InstagramLink   string   `json:"instagramLink"`
+	TelegramLink    string   `json:"telegramLink"`
+	Flags           []string `json:"flags"`
+	ContractAddress string   `json:"contractAddress"`
 }
 
 type UpdateCollectionRequest struct {
@@ -118,11 +117,16 @@ func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) 
 	// ContractAddress
 	// nominal price
 
-	mintPricePerTokenNominalrequest, err := strconv.ParseFloat(request.MintPricePerTokenString, 64)
+	/*
+		mintPricePerTokenNominalrequest, err := strconv.ParseFloat(request.MintPricePerTokenString, 64)
 
-	if err != nil {
-		mintPricePerTokenNominalrequest = 0.1
-	}
+		if err != nil {
+			mintPricePerTokenNominalrequest = 0.1
+		}
+	*/
+
+	const strMintPricePerToken = "0.01"
+	const fMintPricePerTokenNominal = 0.01
 
 	collection := &entities.Collection{
 		ID:                       0,
@@ -136,8 +140,8 @@ func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) 
 		TelegramLink:             request.TelegramLink,
 		Flags:                    datatypes.JSON(bytes),
 		ContractAddress:          request.ContractAddress,
-		MintPricePerTokenString:  request.MintPricePerTokenString,
-		MintPricePerTokenNominal: mintPricePerTokenNominalrequest,
+		MintPricePerTokenString:  strMintPricePerToken,
+		MintPricePerTokenNominal: fMintPricePerTokenNominal,
 		CreatorID:                account.ID,
 		CreatedAt:                uint64(time.Now().Unix()),
 	}
