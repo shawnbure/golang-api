@@ -4,7 +4,7 @@ type Whitelist struct {
 	ID           uint64 `gorm:"primaryKey" json:"id"` //PK
 	CollectionID uint64 `json:"collectionId"`         //FK to the
 	Address      string `json:"address"`
-	Amount       uint64 `json:"amount"`
+	Amount       uint64 `json:"amount"  gorm:"default:1"`
 	Type         uint64 `json:"type"` // use the Const defined below
 	CreatedAt    uint64 `json:"createdAt"`
 	ModifiedAt   uint64 `json:"modifiedAt"`
