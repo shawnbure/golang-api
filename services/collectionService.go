@@ -42,16 +42,18 @@ type MintInfo struct {
 }
 
 type CreateCollectionRequest struct {
-	UserAddress   string   `json:"userAddress"`
-	Name          string   `json:"collectionName"`
-	TokenId       string   `json:"tokenId"`
-	Description   string   `json:"description"`
-	Website       string   `json:"website"`
-	DiscordLink   string   `json:"discordLink"`
-	TwitterLink   string   `json:"twitterLink"`
-	InstagramLink string   `json:"instagramLink"`
-	TelegramLink  string   `json:"telegramLink"`
-	Flags         []string `json:"flags"`
+	UserAddress             string   `json:"userAddress"`
+	Name                    string   `json:"collectionName"`
+	TokenId                 string   `json:"tokenId"`
+	Description             string   `json:"description"`
+	Website                 string   `json:"website"`
+	DiscordLink             string   `json:"discordLink"`
+	TwitterLink             string   `json:"twitterLink"`
+	InstagramLink           string   `json:"instagramLink"`
+	TelegramLink            string   `json:"telegramLink"`
+	Flags                   []string `json:"flags"`
+	contractAddress         string   `json:"contractAddress"`
+	MintPricePerTokenString string   `json:"mintPricePerTokenString"`
 }
 
 type UpdateCollectionRequest struct {
@@ -116,6 +118,12 @@ func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) 
 	// ContractAddress
 	// nominal price
 
+	mintPricePerTokenNominalrequest, err := strconv.ParseFloat(request.MintPricePerTokenString, 64)
+
+	if err != nil {
+		mintPricePerTokenNominalrequest = 0.1
+	}
+
 	collection := &entities.Collection{
 		ID:                       0,
 		Name:                     standardizedName,
@@ -127,8 +135,9 @@ func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) 
 		InstagramLink:            request.InstagramLink,
 		TelegramLink:             request.TelegramLink,
 		Flags:                    datatypes.JSON(bytes),
-		ContractAddress:          "ContractAddressGoesHere",
-		MintPricePerTokenNominal: 1,
+		ContractAddress:          request.contractAddress,
+		MintPricePerTokenString:  request.MintPricePerTokenString,
+		MintPricePerTokenNominal: mintPricePerTokenNominalrequest,
 		CreatorID:                account.ID,
 		CreatedAt:                uint64(time.Now().Unix()),
 	}
