@@ -52,7 +52,7 @@ type CreateCollectionRequest struct {
 	InstagramLink           string   `json:"instagramLink"`
 	TelegramLink            string   `json:"telegramLink"`
 	Flags                   []string `json:"flags"`
-	contractAddress         string   `json:"contractAddress"`
+	ContractAddress         string   `json:"contractAddress"`
 	MintPricePerTokenString string   `json:"mintPricePerTokenString"`
 }
 
@@ -135,12 +135,15 @@ func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) 
 		InstagramLink:            request.InstagramLink,
 		TelegramLink:             request.TelegramLink,
 		Flags:                    datatypes.JSON(bytes),
-		ContractAddress:          request.contractAddress,
+		ContractAddress:          request.ContractAddress,
 		MintPricePerTokenString:  request.MintPricePerTokenString,
 		MintPricePerTokenNominal: mintPricePerTokenNominalrequest,
 		CreatorID:                account.ID,
 		CreatedAt:                uint64(time.Now().Unix()),
 	}
+
+	fmt.Println("request.contractAddress" + request.ContractAddress)
+	fmt.Println("collection.ContractAddress" + collection.ContractAddress)
 
 	err = storage.AddCollection(collection)
 	if err != nil {
