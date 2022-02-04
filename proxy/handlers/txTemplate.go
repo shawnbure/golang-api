@@ -535,6 +535,8 @@ func (handler *txTemplateHandler) getMintNftTxTemplate(c *gin.Context) {
 		return
 	}
 
+	//create to DB
+
 	template := handler.txFormatter.NewMintNftsTxTemplate(
 		userAddress,
 		collection.ContractAddress,
@@ -633,6 +635,8 @@ func (handler *txTemplateHandler) getDeployNFTTemplate(c *gin.Context) {
 		saleStart,
 		metadataBase,
 	)
+
+	//TODO: Grab this response erd SC address
 	dtos.JsonResponse(c, http.StatusOK, template, "")
 }
 

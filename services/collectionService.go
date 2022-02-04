@@ -113,19 +113,24 @@ func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) 
 		return nil, err
 	}
 
+	// ContractAddress
+	// nominal price
+
 	collection := &entities.Collection{
-		ID:            0,
-		Name:          standardizedName,
-		TokenID:       request.TokenId,
-		Description:   request.Description,
-		Website:       request.Website,
-		DiscordLink:   request.DiscordLink,
-		TwitterLink:   request.TwitterLink,
-		InstagramLink: request.InstagramLink,
-		TelegramLink:  request.TelegramLink,
-		Flags:         datatypes.JSON(bytes),
-		CreatorID:     account.ID,
-		CreatedAt:     uint64(time.Now().Unix()),
+		ID:                       0,
+		Name:                     standardizedName,
+		TokenID:                  request.TokenId,
+		Description:              request.Description,
+		Website:                  request.Website,
+		DiscordLink:              request.DiscordLink,
+		TwitterLink:              request.TwitterLink,
+		InstagramLink:            request.InstagramLink,
+		TelegramLink:             request.TelegramLink,
+		Flags:                    datatypes.JSON(bytes),
+		ContractAddress:          "ContractAddressGoesHere",
+		MintPricePerTokenNominal: 1,
+		CreatorID:                account.ID,
+		CreatedAt:                uint64(time.Now().Unix()),
 	}
 
 	err = storage.AddCollection(collection)
