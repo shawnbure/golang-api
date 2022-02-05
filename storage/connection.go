@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"database/sql"
 	"errors"
 	"fmt"
 	"sync"
@@ -23,10 +22,6 @@ var (
 
 func Connect(cfg config.DatabaseConfig) {
 	once.Do(func() {
-		sqlDb, err := sql.Open(cfg.Dialect, cfg.Url())
-		if err != nil {
-			panic(err)
-		}
 		dbURI := fmt.Sprintf("user=%s password=%s database=%s host=%s/%s", cfg.User, cfg.Password, cfg.DbName, "/cloudsql", cfg.ConnectionName)
 
 		storeDSN := fmt.Sprintf("user=%s host=%s port=%d database=%s password=%s sslmode=disable TimeZone=Etc/UTC",
@@ -35,12 +30,11 @@ func Connect(cfg config.DatabaseConfig) {
 			cfg.Port,
 			cfg.DbName,
 			cfg.Password)
-		sqlDb.SetMaxOpenConns(cfg.MaxOpenConns)
-		sqlDb.SetMaxIdleConns(cfg.MaxIdleConns)
 
 		if cfg.ConnectionName != "" {
 			storeDSN = dbURI
 		}
+		var err error
 		db, err = gorm.Open(postgres.Open(storeDSN), &gorm.Config{})
 		if err != nil {
 			panic(err)
