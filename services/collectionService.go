@@ -125,8 +125,8 @@ func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) 
 		}
 	*/
 
-	const strMintPricePerToken = "0.01"
-	const fMintPricePerTokenNominal = 0.01
+	const strMintPricePerToken = "0.0"
+	const fMintPricePerTokenNominal = 0.0
 
 	collection := &entities.Collection{
 		ID:                       0,
