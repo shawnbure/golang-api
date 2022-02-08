@@ -23,6 +23,26 @@ func AddSessionState(sesionState *entities.SessionState) error {
 	return nil
 }
 
+func GetSessionStateByAccountId(accountId uint64, stateType uint64) (*entities.SessionState, error) {
+
+	var sessionState entities.SessionState
+
+	database, err := GetDBOrError()
+	if err != nil {
+		return nil, err
+	}
+
+	txRead := database.Find(&sessionState, "account_id = ? AND state_type = ?", accountId, stateType)
+	if txRead.Error != nil {
+		return nil, txRead.Error
+	}
+	if txRead.RowsAffected == 0 {
+		return nil, gorm.ErrRecordNotFound
+	}
+
+	return &sessionState, nil
+}
+
 func UpdateSessionState(sessionState *entities.SessionState) error {
 	database, err := GetDBOrError()
 
