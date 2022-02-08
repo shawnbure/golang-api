@@ -85,6 +85,11 @@ func TryMigrate() error {
 		return err
 	}
 
+	err = db.AutoMigrate(&entities.SessionState{})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
