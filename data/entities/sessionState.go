@@ -3,7 +3,7 @@ package entities
 type SessionState struct {
 	ID        uint64 `gorm:"primaryKey" json:"id"`
 	AccountID uint64 `json:"accountId"`
-	Type      uint64 `json:"type"`
+	StateType uint64 `json:"type"`
 	JSONData  string `json:"jsonData"`
 	CreatedAt uint64 `json:"createdAt"`
 }
