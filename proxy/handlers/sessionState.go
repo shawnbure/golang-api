@@ -29,8 +29,8 @@ func NewSessionStatesHandler(groupHandler *groupHandler, authCfg config.AuthConf
 
 	endpoints := []EndpointHandler{
 		{Method: http.MethodPost, Path: sessionStatesCreateEndpoint, HandlerFunc: handler.create},
-		{Method: http.MethodPost, Path: sessionStatesCreateEndpoint, HandlerFunc: handler.retrieve},
-		{Method: http.MethodPost, Path: sessionStatesCreateEndpoint, HandlerFunc: handler.update},
+		{Method: http.MethodPost, Path: sessionStatesRetreiveEndpoint, HandlerFunc: handler.retrieve},
+		{Method: http.MethodPost, Path: sessionStatesUpdateEndpoint, HandlerFunc: handler.update},
 		{Method: http.MethodPost, Path: sessionStatesDeleteEndpoint, HandlerFunc: handler.delete},
 	}
 	endpointGroupHandler := EndpointGroupHandler{
