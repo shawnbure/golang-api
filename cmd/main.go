@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/ed25519"
 	"crypto/x509"
+	"encoding/hex"
 	"encoding/pem"
 	"fmt"
 	"io/ioutil"
@@ -91,7 +92,21 @@ func main() {
 	nB := big.NewInt(int64(1)).Bytes()
 	totB := append(tB, nB...)
 	signature := ed25519.Sign(edPkey, totB)
-	fmt.Println(ed25519.Verify([]byte("0x302a300506032b6570032100032ddada91af480433dd79f8bbad2ef089547e5608b69328071b6cd5c79e6f9d"), totB, signature))
+	fmt.Println(edPkey.Public())
+	fmt.Println(string(edPkey.Public().(ed25519.PublicKey)))
+	pub, _ := pem.Decode([]byte(`-----BEGIN PUBLIC KEY-----
+MCowBQYDK2VwAyEAAy3a2pGvSAQz3Xn4u60u8IlUflYItpMoBxts1ceeb50=
+-----END PUBLIC KEY-----
+`))
+	// uDec, _ := base64.RawStdEncoding.DecodeString("MCowBQYDK2VwAyEAAy3a2pGvSAQz3Xn4u60u8IlUflYItpMoBxts1ceeb50=")
+	//MCowBQYDK2VwAyEAAy3a2pGvSAQz3Xn4u60u8IlUflYItpMoBxts1ceeb50=
+	// pub, _ := hex.DecodeString("302a300506032b6570032100032ddada91af480433dd79f8bbad2ef089547e5608b69328071b6cd5c79e6f9d")
+	str := hex.EncodeToString(pub.Bytes)
+	fmt.Println(str)
+	bb, er := x509.ParsePKIXPublicKey(pub.Bytes)
+	str = hex.EncodeToString(bb.(ed25519.PublicKey))
+	fmt.Println(str)
+	fmt.Println(ed25519.Verify(bb.(ed25519.PublicKey), totB, signature))
 
 	// f, _ := os.Open("config/whitelist-priv.pem")
 	// fbytes, _ := ioutil.ReadAll(f)
