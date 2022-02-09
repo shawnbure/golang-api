@@ -43,6 +43,7 @@ func TestTxFormatter_NewBuyNftTxTemplate(t *testing.T) {
 		"erd17s2pz8qrds6ake3qwheezgy48wzf7dr5nhdpuu2h4rr4mt5rt9ussj7xzh",
 		"LKMEX-85ea13",
 		2,
+		"", // signature TODO
 		"4096",
 	)
 
