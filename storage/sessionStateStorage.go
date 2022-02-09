@@ -35,7 +35,7 @@ func AddSessionState(sesionState *entities.SessionState) error {
 	return nil
 }
 
-func GetSessionStateById(id uint64) (*entities.SessionState, error) {
+func GetSessionStateByAddressByStateType(address string, stateType uint64) (*entities.SessionState, error) {
 
 	var sessionState entities.SessionState
 
@@ -44,27 +44,7 @@ func GetSessionStateById(id uint64) (*entities.SessionState, error) {
 		return nil, err
 	}
 
-	txRead := database.Find(&sessionState, id)
-	if txRead.Error != nil {
-		return nil, txRead.Error
-	}
-	if txRead.RowsAffected == 0 {
-		return nil, gorm.ErrRecordNotFound
-	}
-
-	return &sessionState, nil
-}
-
-func GetSessionStateByAccountIdByStateType(accountId uint64, stateType uint64) (*entities.SessionState, error) {
-
-	var sessionState entities.SessionState
-
-	database, err := GetDBOrError()
-	if err != nil {
-		return nil, err
-	}
-
-	txRead := database.Find(&sessionState, "account_id = ? AND state_type = ?", accountId, stateType)
+	txRead := database.Find(&sessionState, "address = ? AND state_type = ?", address, stateType)
 	if txRead.Error != nil {
 		return nil, txRead.Error
 	}
@@ -93,7 +73,7 @@ func UpdateSessionState(sessionState *entities.SessionState) error {
 	return nil
 }
 
-func DeleteSessionStateForAccountIdStateType(accountId uint64, stateType uint64) error {
+func DeleteSessionStateForAddressStateType(address string, stateType uint64) error {
 	var sessionStates []entities.SessionState
 
 	database, err := GetDBOrError()
@@ -101,7 +81,7 @@ func DeleteSessionStateForAccountIdStateType(accountId uint64, stateType uint64)
 		return err
 	}
 
-	txCreate := database.Delete(sessionStates, "account_id = ? AND state_type = ?", accountId, stateType)
+	txCreate := database.Delete(sessionStates, "address = ? AND state_type = ?", address, stateType)
 	if txCreate.Error != nil {
 		return txCreate.Error
 	}

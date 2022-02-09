@@ -9,13 +9,13 @@ import (
 )
 
 type CreateUpdateSessionStateRequest struct {
-	AccountId uint64 `json:"accountId"`
+	Address   string `json:"address"`
 	StateType uint64 `json:"stateType"`
 	JsonData  string `json:"jsonData"`
 }
 
 type RetreiveDeleteSessionStateRequest struct {
-	AccountId uint64 `json:"accountId"`
+	Address   string `json:"address"`
 	StateType uint64 `json:"stateType"`
 }
 
@@ -27,7 +27,7 @@ func CreateSessionState(request *CreateUpdateSessionStateRequest) (*entities.Ses
 
 	sessionState := &entities.SessionState{
 		ID:        0,
-		AccountID: request.AccountId,
+		Address:   request.Address,
 		StateType: request.StateType,
 		JsonData:  request.JsonData,
 		CreatedAt: uint64(time.Now().Unix()),
@@ -43,9 +43,19 @@ func CreateSessionState(request *CreateUpdateSessionStateRequest) (*entities.Ses
 	return sessionState, nil
 }
 
+func RetrieveSessionState(request *RetreiveDeleteSessionStateRequest) (*entities.SessionState, error) {
+
+	sessionState, err := storage.GetSessionStateByAddressByStateType(request.Address, request.StateType)
+	if err != nil {
+		return nil, err
+	}
+
+	return sessionState, nil
+}
+
 func UpdateSessionState(sessionState *entities.SessionState, request *CreateUpdateSessionStateRequest) error {
 
-	sessionState.AccountID = request.AccountId
+	sessionState.Address = request.Address
 	sessionState.StateType = request.StateType
 	sessionState.JsonData = request.JsonData
 
@@ -59,7 +69,7 @@ func UpdateSessionState(sessionState *entities.SessionState, request *CreateUpda
 
 func DeleteSessionState(request *RetreiveDeleteSessionStateRequest) (string, error) {
 
-	err := storage.DeleteSessionStateForAccountIdStateType(request.AccountId, request.StateType)
+	err := storage.DeleteSessionStateForAddressStateType(request.Address, request.StateType)
 
 	if err != nil {
 		log.Debug("could not delete Sesion State", "err", err)

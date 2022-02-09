@@ -86,7 +86,7 @@ func (handler *stateSessionsHandler) update(c *gin.Context) {
 		return
 	}
 
-	sessionState, err := storage.GetSessionStateByAccountIdByStateType(request.AccountId, request.StateType)
+	sessionState, err := storage.GetSessionStateByAddressByStateType(request.Address, request.StateType)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
@@ -116,7 +116,7 @@ func (handler *stateSessionsHandler) delete(c *gin.Context) {
 	}
 
 	fmt.Println("proxy handler > sessionState: delete")
-	fmt.Println(request.AccountId)
+	fmt.Println(request.Address)
 	fmt.Println(request.StateType)
 
 	strResult, err := services.DeleteSessionState(&request)
