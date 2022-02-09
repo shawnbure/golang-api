@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	//"fmt"
 	"net/http"
 	"strconv"
 
@@ -19,6 +20,7 @@ const (
 	baseTokensEndpoint               = "/tokens"
 	tokenByTokenIdAndNonceEndpoint   = "/:tokenId/:nonce"
 	availableTokensEndpoint          = "/available"
+	tokenCreateEndpoint              = "/create"
 	offersForTokenIdAndNonceEndpoint = "/:tokenId/:nonce/offers/:offset/:limit"
 	bidsForTokenIdAndNonceEndpoint   = "/:tokenId/:nonce/bids/:offset/:limit"
 	refreshTokenMetadataEndpoint     = "/:tokenId/:nonce/refresh"
@@ -34,12 +36,22 @@ type tokensHandler struct {
 	blockchainConfig config.BlockchainConfig
 }
 
-func NewTokensHandler(groupHandler *groupHandler, cfg config.BlockchainConfig) {
-	handler := &tokensHandler{
-		blockchainConfig: cfg,
-	}
+func NewTokensHandler(groupHandler *groupHandler, authCfg config.AuthConfig, cfg config.BlockchainConfig) {
+	handler := &tokensHandler{blockchainConfig: cfg}
 
 	endpoints := []EndpointHandler{
+		{Method: http.MethodPost, Path: tokenCreateEndpoint, HandlerFunc: handler.create},
+	}
+
+	endpointGroupHandler := EndpointGroupHandler{
+		Root:             baseTokensEndpoint,
+		Middlewares:      []gin.HandlerFunc{middleware.Authorization(authCfg.JwtSecret)},
+		EndpointHandlers: endpoints,
+	}
+
+	groupHandler.AddEndpointGroupHandler(endpointGroupHandler)
+
+	publicEndpoints := []EndpointHandler{
 		{Method: http.MethodGet, Path: tokenByTokenIdAndNonceEndpoint, HandlerFunc: handler.getByTokenIdAndNonce},
 		{Method: http.MethodPost, Path: availableTokensEndpoint, HandlerFunc: handler.getAvailableTokens},
 		{Method: http.MethodGet, Path: offersForTokenIdAndNonceEndpoint, HandlerFunc: handler.getOffers},
@@ -49,13 +61,48 @@ func NewTokensHandler(groupHandler *groupHandler, cfg config.BlockchainConfig) {
 		{Method: http.MethodPost, Path: tokensListMetadataEndpoint, HandlerFunc: handler.getList},
 	}
 
-	endpointGroupHandler := EndpointGroupHandler{
+	publicEndpointGroupHandler := EndpointGroupHandler{
 		Root:             baseTokensEndpoint,
 		Middlewares:      []gin.HandlerFunc{},
-		EndpointHandlers: endpoints,
+		EndpointHandlers: publicEndpoints,
+	}
+	groupHandler.AddEndpointGroupHandler(publicEndpointGroupHandler)
+}
+
+// @Summary Creates a token.
+// @Description Creates a token with given info.
+// @Tags token
+// @Accept json
+// @Produce json
+// @Param createTokenRequest body services.CreateTokenRequest true "token info"
+// @Success 200 {object} entities.Collection
+// @Failure 400 {object} dtos.ApiResponse
+// @Failure 401 {object} dtos.ApiResponse
+// @Failure 500 {object} dtos.ApiResponse
+// @Router /tokens/create [post]
+func (handler *tokensHandler) create(c *gin.Context) {
+	var request services.CreateTokenRequest
+
+	err := c.BindJSON(&request)
+	if err != nil {
+		//fmt.Printf(err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
 	}
 
-	groupHandler.AddEndpointGroupHandler(endpointGroupHandler)
+	jwtAddress := c.GetString(middleware.AddressKey)
+	if jwtAddress != strconv.FormatUint(request.UserAddress, 10) {
+		dtos.JsonResponse(c, http.StatusUnauthorized, nil, "jwt and request addresses differ")
+		return
+	}
+
+	token, err := services.CreateToken(&request, handler.blockchainConfig.ProxyUrl)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		return
+	}
+
+	dtos.JsonResponse(c, http.StatusOK, token, "")
 }
 
 // @Summary Get token by id and nonce

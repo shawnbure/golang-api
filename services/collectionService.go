@@ -27,6 +27,7 @@ const (
 	MaxLinkLen                     = 100
 	MaxDescLen                     = 1000
 	RegisteredNFTsBaseFormat       = "%s/address/%s/registered-nfts"
+	GetNFTBaseFormat               = "%s/account/%s/nfts/%s"
 	HttpResponseExpirePeriod       = 10 * time.Minute
 	CollectionSearchCacheKeyFormat = "CollectionSearch:%s"
 	CollectionSearchExpirePeriod   = 20 * time.Minute
