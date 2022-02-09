@@ -8,24 +8,18 @@ import (
 	"github.com/ENFT-DAO/youbei-api/storage"
 )
 
-type CreateSessionStateRequest struct {
+type CreateUpdateSessionStateRequest struct {
 	AccountId uint64 `json:"accountId"`
 	StateType uint64 `json:"stateType"`
 	JsonData  string `json:"jsonData"`
 }
 
-type UpdateSessionStateRequest struct {
-	AccountId uint64 `json:"accountId"`
-	StateType uint64 `json:"stateType"`
-	JsonData  string `json:"jsonData"`
-}
-
-type DeleteSessionStateRequest struct {
+type RetreiveDeleteSessionStateRequest struct {
 	AccountId uint64 `json:"accountId"`
 	StateType uint64 `json:"stateType"`
 }
 
-func CreateSessionState(request *CreateSessionStateRequest) (*entities.SessionState, error) {
+func CreateSessionState(request *CreateUpdateSessionStateRequest) (*entities.SessionState, error) {
 
 	fmt.Println("CreateSessionState 1")
 
@@ -49,11 +43,21 @@ func CreateSessionState(request *CreateSessionStateRequest) (*entities.SessionSt
 	return sessionState, nil
 }
 
-func DeleteSessionState(request *DeleteSessionStateRequest) (string, error) {
+func UpdateSessionState(sessionState *entities.SessionState, request *CreateUpdateSessionStateRequest) error {
 
-	fmt.Println("services > sessionState: delete")
-	fmt.Println(request.AccountId)
-	fmt.Println(request.StateType)
+	sessionState.AccountID = request.AccountId
+	sessionState.StateType = request.StateType
+	sessionState.JsonData = request.JsonData
+
+	err := storage.UpdateSessionState(sessionState)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func DeleteSessionState(request *RetreiveDeleteSessionStateRequest) (string, error) {
 
 	err := storage.DeleteSessionStateForAccountIdStateType(request.AccountId, request.StateType)
 

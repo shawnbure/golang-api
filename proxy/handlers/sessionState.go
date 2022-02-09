@@ -8,13 +8,16 @@ import (
 	"github.com/ENFT-DAO/youbei-api/data/dtos"
 	"github.com/ENFT-DAO/youbei-api/proxy/middleware"
 	"github.com/ENFT-DAO/youbei-api/services"
+	"github.com/ENFT-DAO/youbei-api/storage"
 	"github.com/gin-gonic/gin"
 )
 
 const (
-	baseSessionStatesEndpoint   = "/session-states"
-	sessionStatesCreateEndpoint = "/create"
-	sessionStatesDeleteEndpoint = "/delete"
+	baseSessionStatesEndpoint     = "/session-states"
+	sessionStatesCreateEndpoint   = "/create"
+	sessionStatesRetreiveEndpoint = "/retrieve"
+	sessionStatesUpdateEndpoint   = "/update"
+	sessionStatesDeleteEndpoint   = "/delete"
 )
 
 type stateSessionsHandler struct {
@@ -26,6 +29,8 @@ func NewSessionStatesHandler(groupHandler *groupHandler, authCfg config.AuthConf
 
 	endpoints := []EndpointHandler{
 		{Method: http.MethodPost, Path: sessionStatesCreateEndpoint, HandlerFunc: handler.create},
+		{Method: http.MethodPost, Path: sessionStatesCreateEndpoint, HandlerFunc: handler.retrieve},
+		{Method: http.MethodPost, Path: sessionStatesCreateEndpoint, HandlerFunc: handler.update},
 		{Method: http.MethodPost, Path: sessionStatesDeleteEndpoint, HandlerFunc: handler.delete},
 	}
 	endpointGroupHandler := EndpointGroupHandler{
@@ -36,8 +41,17 @@ func NewSessionStatesHandler(groupHandler *groupHandler, authCfg config.AuthConf
 	groupHandler.AddEndpointGroupHandler(endpointGroupHandler)
 }
 
+/*
+	collection, err := storage.GetCollectionById(cacheInfo.CollectionId)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+*/
+
 func (handler *stateSessionsHandler) create(c *gin.Context) {
-	var request services.CreateSessionStateRequest
+	var request services.CreateUpdateSessionStateRequest
 
 	err := c.BindJSON(&request)
 	if err != nil {
@@ -59,8 +73,41 @@ func (handler *stateSessionsHandler) create(c *gin.Context) {
 	dtos.JsonResponse(c, http.StatusOK, sessionState, "")
 }
 
+func (handler *stateSessionsHandler) retrieve(c *gin.Context) {
+
+}
+
+func (handler *stateSessionsHandler) update(c *gin.Context) {
+	var request services.CreateUpdateSessionStateRequest
+
+	err := c.BindJSON(&request)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	sessionState, err := storage.GetSessionStateByAccountIdByStateType(request.AccountId, request.StateType)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	fmt.Println("request.JsonData: " + request.JsonData)
+	//fmt.Println("request.AccountID: " + request.AccountId)
+	//fmt.Println("request.JsonData: " + request.JsonData)
+
+	err = services.UpdateSessionState(sessionState, &request)
+	if err != nil {
+		fmt.Println("error: " + err.Error())
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		return
+	}
+
+	dtos.JsonResponse(c, http.StatusOK, sessionState, "")
+}
+
 func (handler *stateSessionsHandler) delete(c *gin.Context) {
-	var request services.DeleteSessionStateRequest
+	var request services.RetreiveDeleteSessionStateRequest
 
 	err := c.BindJSON(&request)
 	if err != nil {
