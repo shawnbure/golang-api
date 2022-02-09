@@ -14,11 +14,20 @@ type CreateSessionStateRequest struct {
 	JsonData  string `json:"jsonData"`
 }
 
+type UpdateSessionStateRequest struct {
+	AccountId uint64 `json:"accountId"`
+	StateType uint64 `json:"stateType"`
+	JsonData  string `json:"jsonData"`
+}
+
+type DeleteSessionStateRequest struct {
+	AccountId uint64 `json:"accountId"`
+	StateType uint64 `json:"stateType"`
+}
+
 func CreateSessionState(request *CreateSessionStateRequest) (*entities.SessionState, error) {
 
 	fmt.Println("CreateSessionState 1")
-
-	//string(request.AccountId)
 
 	fmt.Println("request.AccountId: " + request.JsonData)
 
@@ -40,10 +49,17 @@ func CreateSessionState(request *CreateSessionStateRequest) (*entities.SessionSt
 	return sessionState, nil
 }
 
-func DeleteSessionState(accountId uint64, stateType uint64) {
-	err := storage.DeleteSessionStateForAccountIdStateType(accountId, stateType)
+func DeleteSessionState(request *DeleteSessionStateRequest) (string, error) {
+
+	fmt.Println("services > sessionState: delete")
+	fmt.Println(request.AccountId)
+	fmt.Println(request.StateType)
+
+	err := storage.DeleteSessionStateForAccountIdStateType(request.AccountId, request.StateType)
 
 	if err != nil {
-		log.Debug("could not delete proffers for token", "err", err)
+		log.Debug("could not delete Sesion State", "err", err)
 	}
+
+	return "Successful Delete", err
 }

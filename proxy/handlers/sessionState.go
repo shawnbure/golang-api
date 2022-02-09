@@ -3,7 +3,6 @@ package handlers
 import (
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/ENFT-DAO/youbei-api/config"
 	"github.com/ENFT-DAO/youbei-api/data/dtos"
@@ -13,9 +12,9 @@ import (
 )
 
 const (
-	baseSessionStatesEndpoint   = "/sessionStates"
+	baseSessionStatesEndpoint   = "/session-states"
 	sessionStatesCreateEndpoint = "/create"
-	sessionStatesDeleteEndpoint = "/delete/:accountId/:stateType"
+	sessionStatesDeleteEndpoint = "/delete"
 )
 
 type stateSessionsHandler struct {
@@ -40,12 +39,19 @@ func NewSessionStatesHandler(groupHandler *groupHandler, authCfg config.AuthConf
 func (handler *stateSessionsHandler) create(c *gin.Context) {
 	var request services.CreateSessionStateRequest
 
+	err := c.BindJSON(&request)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
 	fmt.Println("request.JsonData: " + request.JsonData)
 	//fmt.Println("request.AccountID: " + request.AccountId)
 	//fmt.Println("request.JsonData: " + request.JsonData)
 
 	sessionState, err := services.CreateSessionState(&request)
 	if err != nil {
+		fmt.Println("error: " + err.Error())
 		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
 	}
@@ -54,16 +60,25 @@ func (handler *stateSessionsHandler) create(c *gin.Context) {
 }
 
 func (handler *stateSessionsHandler) delete(c *gin.Context) {
-	accountId := c.Param("accountId")
-	stateType := c.Param("stateType")
+	var request services.DeleteSessionStateRequest
 
-	//DeleteSessionStateForAccountIdStateType
+	err := c.BindJSON(&request)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
 
-	iAccountId, _ := strconv.ParseUint(accountId, 10, 64)
-	iStateType, _ := strconv.ParseUint(stateType, 10, 64)
+	fmt.Println("proxy handler > sessionState: delete")
+	fmt.Println(request.AccountId)
+	fmt.Println(request.StateType)
 
-	services.DeleteSessionState(iAccountId, iStateType)
+	strResult, err := services.DeleteSessionState(&request)
+	if err != nil {
+		fmt.Println("error: " + err.Error())
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		return
+	}
 
-	dtos.JsonResponse(c, http.StatusOK, nil, "")
+	dtos.JsonResponse(c, http.StatusOK, strResult, "")
 
 }
