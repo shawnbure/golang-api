@@ -85,6 +85,9 @@ func NewWebServer(cfg *config.GeneralConfig) (*webServer, error) {
 	handlers.NewAuthHandler(groupHandler, *authService)
 	handlers.NewTokensHandler(groupHandler, cfg.Blockchain)
 	handlers.NewCollectionsHandler(groupHandler, cfg.Auth, cfg.Blockchain)
+
+	handlers.NewSessionStatesHandler(groupHandler, cfg.Auth, cfg.Blockchain)
+
 	handlers.NewTransactionsHandler(groupHandler)
 	handlers.NewTxTemplateHandler(groupHandler, cfg.Blockchain)
 	handlers.NewPriceHandler(groupHandler)
@@ -94,6 +97,8 @@ func NewWebServer(cfg *config.GeneralConfig) (*webServer, error) {
 	handlers.NewDepositsHandler(groupHandler, cfg.Blockchain)
 	handlers.NewRoyaltiesHandler(groupHandler, cfg.Blockchain)
 	handlers.NewImageHandler(groupHandler)
+
+	//
 
 	groupHandler.RegisterEndpoints(router)
 

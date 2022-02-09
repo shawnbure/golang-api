@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/ENFT-DAO/youbei-api/config"
 	"github.com/ENFT-DAO/youbei-api/data/dtos"
@@ -12,7 +14,8 @@ import (
 
 const (
 	baseSessionStatesEndpoint   = "/sessionStates"
-	SessionStatesCreateEndpoint = "/create"
+	sessionStatesCreateEndpoint = "/create"
+	sessionStatesDeleteEndpoint = "/delete/:accountId/:stateType"
 )
 
 type stateSessionsHandler struct {
@@ -23,10 +26,11 @@ func NewSessionStatesHandler(groupHandler *groupHandler, authCfg config.AuthConf
 	handler := &stateSessionsHandler{blockchainCfg: blockchainCfg}
 
 	endpoints := []EndpointHandler{
-		{Method: http.MethodPost, Path: SessionStatesCreateEndpoint, HandlerFunc: handler.create},
+		{Method: http.MethodPost, Path: sessionStatesCreateEndpoint, HandlerFunc: handler.create},
+		{Method: http.MethodPost, Path: sessionStatesDeleteEndpoint, HandlerFunc: handler.delete},
 	}
 	endpointGroupHandler := EndpointGroupHandler{
-		Root:             baseCollectionsEndpoint,
+		Root:             baseSessionStatesEndpoint,
 		Middlewares:      []gin.HandlerFunc{middleware.Authorization(authCfg.JwtSecret)},
 		EndpointHandlers: endpoints,
 	}
@@ -36,11 +40,30 @@ func NewSessionStatesHandler(groupHandler *groupHandler, authCfg config.AuthConf
 func (handler *stateSessionsHandler) create(c *gin.Context) {
 	var request services.CreateSessionStateRequest
 
-	collection, err := services.CreateSessionState(&request)
+	fmt.Println("request.JsonData: " + request.JsonData)
+	//fmt.Println("request.AccountID: " + request.AccountId)
+	//fmt.Println("request.JsonData: " + request.JsonData)
+
+	sessionState, err := services.CreateSessionState(&request)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
 	}
 
-	dtos.JsonResponse(c, http.StatusOK, collection, "")
+	dtos.JsonResponse(c, http.StatusOK, sessionState, "")
+}
+
+func (handler *stateSessionsHandler) delete(c *gin.Context) {
+	accountId := c.Param("accountId")
+	stateType := c.Param("stateType")
+
+	//DeleteSessionStateForAccountIdStateType
+
+	iAccountId, _ := strconv.ParseUint(accountId, 10, 64)
+	iStateType, _ := strconv.ParseUint(stateType, 10, 64)
+
+	services.DeleteSessionState(iAccountId, iStateType)
+
+	dtos.JsonResponse(c, http.StatusOK, nil, "")
+
 }

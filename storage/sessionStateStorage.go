@@ -1,24 +1,36 @@
 package storage
 
 import (
+	"fmt"
+
 	"gorm.io/gorm"
 
 	"github.com/ENFT-DAO/youbei-api/data/entities"
 )
 
 func AddSessionState(sesionState *entities.SessionState) error {
+
+	fmt.Println("AddSessionState 1")
+
 	database, err := GetDBOrError()
 	if err != nil {
 		return err
 	}
 
+	fmt.Println("AddSessionState 2")
+
 	txCreate := database.Create(&sesionState)
 	if txCreate.Error != nil {
 		return txCreate.Error
 	}
+
+	fmt.Println("AddSessionState3")
+
 	if txCreate.RowsAffected == 0 {
 		return gorm.ErrRecordNotFound
 	}
+
+	fmt.Println("AddSessionState 4")
 
 	return nil
 }
