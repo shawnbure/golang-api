@@ -27,7 +27,7 @@ const (
 	MaxLinkLen                     = 100
 	MaxDescLen                     = 1000
 	RegisteredNFTsBaseFormat       = "%s/address/%s/registered-nfts"
-	GetNFTBaseFormat               = "%s/account/%s/nfts/%s"
+	GetNFTBaseFormat               = "%s/nfts/%s-%s" //example https://devnet-api.elrond.com/nfts/AMIR-55a2ea-01
 	HttpResponseExpirePeriod       = 10 * time.Minute
 	CollectionSearchCacheKeyFormat = "CollectionSearch:%s"
 	CollectionSearchExpirePeriod   = 20 * time.Minute

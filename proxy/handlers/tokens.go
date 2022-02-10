@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	//"fmt"
 	"net/http"
 	"strconv"
 
@@ -85,18 +84,17 @@ func (handler *tokensHandler) create(c *gin.Context) {
 
 	err := c.BindJSON(&request)
 	if err != nil {
-		//fmt.Printf(err.Error())
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
 
 	jwtAddress := c.GetString(middleware.AddressKey)
-	if jwtAddress != strconv.FormatUint(request.UserAddress, 10) {
+	if jwtAddress != request.UserAddress {
 		dtos.JsonResponse(c, http.StatusUnauthorized, nil, "jwt and request addresses differ")
 		return
 	}
 
-	token, err := services.CreateToken(&request, handler.blockchainConfig.ProxyUrl)
+	token, err := services.CreateToken(&request, handler.blockchainConfig.ApiUrl)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return

@@ -27,24 +27,24 @@ var (
 )
 
 type CreateTokenRequest struct {
-	UserAddress         uint64   `json:"userAddress"`
-	TokenID             string   `json:"tokenId"`
-	Nonce               uint64   `json:"nonce"`
-	PriceString         string   `json:"priceString"`
-	PriceNominal        float64  `json:"priceNominal"`
-	RoyaltiesPercent    float64  `json:"royaltiesPercent"`
-	MetadataLink        string   `json:"metadataLink"`
-	CreatedAt           uint64   `json:"createdAt"`
-	Status              string   `json:"state"`
-	Attributes          []string `json:"attributes"`
-	TokenName           string   `json:"tokenName"`
-	ImageLink           string   `json:"imageLink"`
-	Hash                string   `json:"hash"`
-	LastBuyPriceNominal float64  `json:"lastBuyPriceNominal"`
-	AuctionStartTime    uint64   `json:"auctionStartTime"`
-	AuctionDeadline     uint64   `json:"auctionDeadline"`
-	OwnerId             uint64   `json:"ownerId"`
-	CollectionID        uint64   `json:"collectionId,omitempty"`
+	UserAddress string `json:"walletAddress"`
+	TokenID     string `json:"tokenName"`
+	Nonce       string `json:"tokenNonce"`
+}
+
+type NonFungibleToken struct {
+	Identifier string         `json:"identifier"`
+	Collection string         `json:"collection"`
+	Name       string         `json:"name"`
+	Nonce      uint64         `json:"nonce"`
+	Creator    string         `json:"creator"`
+	Owner      string         `json:"owner"`
+	Url        string         `json:"url"`
+	Hash       string         `json:"hash"`
+	Royalties  float64        `json:"royalties"`
+	Uris       []string       `json:"uris"`
+	Metadata   datatypes.JSON `json:"metadata"`
+	Ticker     string         `json:"ticker"`
 }
 
 type AvailableTokensRequest struct {
@@ -134,41 +134,46 @@ var (
 	tooManyTokensError = errors.New("too many tokens")
 )
 
-func CreateToken(request *CreateTokenRequest, blockchainProxy string) (*entities.Token, error) {
+func CreateToken(request *CreateTokenRequest, blockchainApi string) (*entities.Token, error) {
 
-	bytes, err := json.Marshal(request.Attributes)
+	//get collection_id, contract address and owner_id (account_id)
+	collection, err := storage.GetCollectionByTokenId(request.TokenID)
+	if err != nil {
+		return nil, errors.New("no collection found")
+	}
+
+	//get contract data
+	//fmt.Printf("%v\n", collection.ContractAddress)
+	//price, err := interaction.GetBlockchainInteractor().DoVmQuery(collection.ContractAddress, "getPrice", nil)
+
+	//get token data
+	tokenData, err := getTokenByNonce(request.TokenID, request.Nonce, blockchainApi)
 	if err != nil {
 		return nil, err
 	}
+
+	//decode image and metadata uri
+	imageURI, err := base64.StdEncoding.DecodeString(tokenData.Uris[0])
+	metadataURI, err := base64.StdEncoding.DecodeString(tokenData.Uris[1])
 
 	token := &entities.Token{
-
-		Nonce:            request.Nonce,
-		PriceString:      request.PriceString,
-		PriceNominal:     request.PriceNominal,
-		RoyaltiesPercent: request.RoyaltiesPercent,
-		MetadataLink:     request.MetadataLink,
+		Nonce:            tokenData.Nonce,
+		OwnerId:          collection.CreatorID,
+		CollectionID:     collection.ID,
+		TokenID:          tokenData.Collection,
+		RoyaltiesPercent: tokenData.Royalties,
+		ImageLink:        string(imageURI),
+		MetadataLink:     string(metadataURI),
 		CreatedAt:        uint64(time.Now().Unix()),
-		Status:           entities.TokenStatus(request.Status),
-		Attributes:       datatypes.JSON(bytes),
-		TokenName:        request.TokenName,
-		ImageLink:        request.ImageLink,
-		Hash:             request.Hash,
-		AuctionStartTime: request.AuctionStartTime,
-		AuctionDeadline:  request.AuctionDeadline,
-		OwnerId:          request.OwnerId,
-		CollectionID:     request.CollectionID,
-	}
+		Attributes:       datatypes.JSON(tokenData.Metadata),
+		TokenName:        tokenData.Name,
+		Hash:             tokenData.Hash,
+		//Status:           entities.TokenStatus(request.Status),
+		//PriceString:      tokenData..PriceString,
+		//PriceNominal:     request.PriceNominal,
+		//AuctionStartTime: request.AuctionStartTime,
+		//AuctionDeadline:  request.AuctionDeadline,
 
-	//fmt.Println("request.contractAddress" + request.ContractAddress)
-	//fmt.Println("collection.ContractAddress" + collection.ContractAddress)
-
-	tokenByNonce, err := getTokenByNonce(request.TokenName, request.Nonce, blockchainProxy)
-	if err != nil {
-		return nil, err
-	}
-	if !contains(tokenByNonce, request.TokenName) {
-		return nil, errors.New("token not found")
 	}
 
 	err = storage.AddToken(token)
@@ -177,28 +182,34 @@ func CreateToken(request *CreateTokenRequest, blockchainProxy string) (*entities
 	}
 
 	return token, nil
+
 }
 
-func getTokenByNonce(tokenName string, tokenNonce uint64, blockchainProxy string) ([]string, error) {
-	var resp ProxyTokenResponse
+func getTokenByNonce(tokenName string, tokenNonce string, blockchainApi string) (NonFungibleToken, error) {
+	//var resp ProxyTokenResponse
+	var token NonFungibleToken
 
-	url := fmt.Sprintf(GetNFTBaseFormat, blockchainProxy, tokenName, strconv.FormatUint(tokenNonce, 10))
-	// err := cache.GetCacher().Get(url, &resp)
-	// if err == nil {
-	// 	return resp.Data.Tokens, nil
-	// }
+	url := fmt.Sprintf(GetNFTBaseFormat, blockchainApi, tokenName, tokenNonce)
 
-	err := HttpGet(url, &resp)
+	//err := HttpGet(url, &resp)
+	response, err := HttpGetRaw(url)
 	if err != nil {
-		return nil, err
+		return token, err
 	}
 
-	err = cache.GetCacher().Set(url, resp, HttpResponseExpirePeriod)
+	err = json.Unmarshal([]byte(response), &token)
 	if err != nil {
-		log.Debug("could not cache response", "err", err)
+		return token, err
 	}
 
-	return resp.Data.Token, nil
+	return token, nil
+
+	//err = cache.GetCacher().Set(url, resp, HttpResponseExpirePeriod)
+	//if err != nil {
+	//	log.Debug("could not cache response", "err", err)
+	//}
+
+	//return response.Data.Token, nil
 }
 
 func ListToken(args ListTokenArgs, blockchainProxy string, marketplaceAddress string) {
