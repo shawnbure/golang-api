@@ -106,7 +106,9 @@ MCowBQYDK2VwAyEAAy3a2pGvSAQz3Xn4u60u8IlUflYItpMoBxts1ceeb50=
 	bb, er := x509.ParsePKIXPublicKey(pub.Bytes)
 	str = hex.EncodeToString(bb.(ed25519.PublicKey))
 	fmt.Println(str)
-	fmt.Println(ed25519.Verify(bb.(ed25519.PublicKey), totB, signature))
+
+	pu, _ := hex.DecodeString("032ddada91af480433dd79f8bbad2ef089547e5608b69328071b6cd5c79e6f9d")
+	fmt.Println(ed25519.Verify(pu, totB, signature))
 
 	// f, _ := os.Open("config/whitelist-priv.pem")
 	// fbytes, _ := ioutil.ReadAll(f)
