@@ -74,7 +74,22 @@ func (handler *stateSessionsHandler) create(c *gin.Context) {
 }
 
 func (handler *stateSessionsHandler) retrieve(c *gin.Context) {
+	var request services.RetreiveDeleteSessionStateRequest
 
+	err := c.BindJSON(&request)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	sessionState, err := storage.GetSessionStateByAddressByStateType(request.Address, request.StateType)
+	if err != nil {
+		fmt.Println("GetSessionStateByAddressByStateType - RETRIEVE ERROR")
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	dtos.JsonResponse(c, http.StatusOK, sessionState, "")
 }
 
 func (handler *stateSessionsHandler) update(c *gin.Context) {
