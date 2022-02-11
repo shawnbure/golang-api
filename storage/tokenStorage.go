@@ -81,7 +81,7 @@ func GetTokenByTokenIdAndNonce(tokenId string, nonce uint64) (*entities.Token, e
 	return &token, nil
 }
 
-func GetTokensByOwnerIdWithOffsetLimit(ownerId uint64, offset int, limit int) ([]entities.Token, error) {
+func GetTokensByOwnerIdWithOffsetLimit(ownerId uint64, filter entities.QueryFilter, offset int, limit int) ([]entities.Token, error) {
 	var tokens []entities.Token
 
 	database, err := GetDBOrError()
@@ -89,7 +89,11 @@ func GetTokensByOwnerIdWithOffsetLimit(ownerId uint64, offset int, limit int) ([
 		return nil, err
 	}
 
-	txRead := database.Offset(offset).Limit(limit).Find(&tokens, "owner_id = ?", ownerId)
+	txRead := database.
+		Offset(offset).
+		Limit(limit).
+		Where(filter.Query, filter.Values...).
+		Find(&tokens, "owner_id = ?", ownerId)
 	if txRead.Error != nil {
 		return nil, txRead.Error
 	}

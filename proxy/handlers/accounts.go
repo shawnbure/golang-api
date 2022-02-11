@@ -7,6 +7,7 @@ import (
 
 	"github.com/ENFT-DAO/youbei-api/config"
 	"github.com/ENFT-DAO/youbei-api/data/dtos"
+	"github.com/ENFT-DAO/youbei-api/data/entities"
 	"github.com/ENFT-DAO/youbei-api/proxy/middleware"
 	"github.com/ENFT-DAO/youbei-api/services"
 	"github.com/ENFT-DAO/youbei-api/storage"
@@ -16,7 +17,7 @@ import (
 const (
 	baseAccountsEndpoint       = "/accounts"
 	accountByIdEndpoint        = "/:walletAddress"
-	accountTokensEndpoint      = "/:walletAddress/tokens/:offset/:limit"
+	accountTokensEndpoint      = "/:walletAddress/tokens/"
 	accountCollectionsEndpoint = "/:walletAddress/collections/:offset/:limit"
 	accountProfileEndpoint     = "/:walletAddress/profile"
 	accountCoverEndpoint       = "/:walletAddress/cover"
@@ -222,16 +223,25 @@ func (h *accountsHandler) setAccountCover(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param walletAddress path string true "wallet address"
-// @Param offset path uint true "offset"
-// @Param limit path uint true "limit"
+// @Query offset path uint true "offset"
+// @Query limit path uint true "limit"
+// @Query filter path string true "filter"
 // @Success 200 {object} []dtos.OwnedTokenDto
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 404 {object} dtos.ApiResponse
-// @Router /accounts/{walletAddress}/tokens/{offset}/{limit} [get]
+// @Router /accounts/{walletAddress}/tokens/ [get]
 func (h *accountsHandler) getAccountTokens(c *gin.Context) {
-	offsetStr := c.Param("offset")
-	limitStr := c.Param("limit")
+	offsetStr := c.Query("offset")
+	limitStr := c.Query("limit")
 	walletAddress := c.Param("walletAddress")
+	filter := c.Query("filter")
+	// convert filter query string into query sql clauses
+	querySQL, queryValues, err := services.ConvertFilterToQuery("tokens", filter)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+	sqlFilter := entities.QueryFilter{Query: querySQL, Values: queryValues}
 
 	cacheInfo, err := services.GetOrAddAccountCacheInfo(walletAddress)
 	if err != nil {
@@ -257,7 +267,7 @@ func (h *accountsHandler) getAccountTokens(c *gin.Context) {
 		return
 	}
 
-	tokens, err := storage.GetTokensByOwnerIdWithOffsetLimit(cacheInfo.AccountId, int(offset), int(limit))
+	tokens, err := storage.GetTokensByOwnerIdWithOffsetLimit(cacheInfo.AccountId, sqlFilter, int(offset), int(limit))
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
