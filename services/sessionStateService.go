@@ -1,7 +1,6 @@
 package services
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/ENFT-DAO/youbei-api/data/entities"
@@ -19,11 +18,17 @@ type RetreiveDeleteSessionStateRequest struct {
 	StateType uint64 `json:"stateType"`
 }
 
+func RefreshCreateOrUpdateSessionState(request *CreateUpdateSessionStateRequest) error {
+
+	err := storage.RefreshCreateOrUpdateSessionState(request.Address, request.StateType, request.JsonData)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func CreateSessionState(request *CreateUpdateSessionStateRequest) (*entities.SessionState, error) {
-
-	fmt.Println("CreateSessionState 1")
-
-	fmt.Println("request.AccountId: " + request.JsonData)
 
 	sessionState := &entities.SessionState{
 		ID:        0,
@@ -33,9 +38,7 @@ func CreateSessionState(request *CreateUpdateSessionStateRequest) (*entities.Ses
 		CreatedAt: uint64(time.Now().Unix()),
 	}
 
-	fmt.Println("CreateSessionState 2")
-
-	err := storage.AddSessionState(sessionState)
+	err := storage.CreateSessionState(sessionState)
 	if err != nil {
 		return nil, err
 	}
