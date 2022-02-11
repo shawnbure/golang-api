@@ -29,6 +29,7 @@ type ConnectorApiConfig struct {
 type BlockchainConfig struct {
 	GasPrice                             uint64
 	ProxyUrl                             string
+	ApiUrl                               string
 	ChainID                              string
 	PemPath                              string
 	MarketplaceAddress                   string
