@@ -90,6 +90,11 @@ func TryMigrate() error {
 		return err
 	}
 
+	err = db.AutoMigrate(&entities.MarketPlaceStat{})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

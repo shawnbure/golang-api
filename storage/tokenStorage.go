@@ -66,7 +66,22 @@ func UpdateToken(token *entities.Token) error {
 
 	return nil
 }
+func UpdateTokenWhere(token *entities.Token, where string, args ...interface{}) error {
+	database, err := GetDBOrError()
+	if err != nil {
+		return err
+	}
 
+	txCreate := database.Where(where, args...).Updates(&token)
+	if txCreate.Error != nil {
+		return txCreate.Error
+	}
+	if txCreate.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+
+	return nil
+}
 func GetTokenById(id uint64) (*entities.Token, error) {
 	var token entities.Token
 
