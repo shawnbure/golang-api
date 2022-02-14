@@ -97,6 +97,7 @@ func HttpGet(url string, castTarget interface{}) error {
 	if err != nil {
 		return nil
 	}
+
 	return json.Unmarshal(respBytes, castTarget)
 }
 
