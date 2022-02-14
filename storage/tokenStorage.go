@@ -129,7 +129,7 @@ func GetTokensOnSaleByOwnerIdWithOffsetLimit(ownerId uint64, offset int, limit i
 		return nil, err
 	}
 
-	txRead := database.Offset(offset).Limit(limit).Find(&tokens, "owner_id = ? AND on_sale = 1", ownerId)
+	txRead := database.Offset(offset).Limit(limit).Find(&tokens, "owner_id = ? AND on_sale = true", ownerId)
 	if txRead.Error != nil {
 		return nil, txRead.Error
 	}
