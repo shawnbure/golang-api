@@ -45,6 +45,7 @@ type NonFungibleToken struct {
 	Uris       []string       `json:"uris"`
 	Metadata   datatypes.JSON `json:"metadata"`
 	Ticker     string         `json:"ticker"`
+	OnSale     bool           `json:"onsale"`
 }
 
 type AvailableTokensRequest struct {
@@ -168,6 +169,7 @@ func CreateToken(request *CreateTokenRequest, blockchainApi string) (*entities.T
 		Attributes:       datatypes.JSON(tokenData.Metadata),
 		TokenName:        tokenData.Name,
 		Hash:             tokenData.Hash,
+		OnSale:           true,
 		//Status:           entities.TokenStatus(request.Status),
 		//PriceString:      tokenData..PriceString,
 		//PriceNominal:     request.PriceNominal,
