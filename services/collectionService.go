@@ -199,6 +199,17 @@ func UpdateCollection(collection *entities.Collection, request *UpdateCollection
 	return nil
 }
 
+func GetAllCollections() ([]entities.Collection, error) {
+	//var collectionArray []entities.Collection
+
+	collectionArray, err := storage.GetAllCollections()
+	if err != nil {
+		return nil, err
+	}
+
+	return collectionArray, nil
+}
+
 func GetCollectionsWithNameAlike(name string, limit int) ([]entities.Collection, error) {
 	var byteArray []byte
 	var collectionArray []entities.Collection
