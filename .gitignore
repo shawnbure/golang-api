@@ -40,3 +40,4 @@ aws.pem
 main
 ./pics
 .DS_Store
+__debug_bin
