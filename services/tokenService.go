@@ -143,15 +143,14 @@ func CreateToken(request *CreateTokenRequest, blockchainApi string) (*entities.T
 		return nil, errors.New("no collection found")
 	}
 
-	//get contract data
-	//fmt.Printf("%v\n", collection.ContractAddress)
-	//price, err := interaction.GetBlockchainInteractor().DoVmQuery(collection.ContractAddress, "getPrice", nil)
-
 	//get token data
 	tokenData, err := getTokenByNonce(request.TokenID, request.Nonce, blockchainApi)
 	if err != nil {
+		fmt.Printf("%v\n", err)
 		return nil, err
 	}
+
+	fmt.Printf("%v\n", &tokenData)
 
 	//decode image and metadata uri
 	imageURI, err := base64.StdEncoding.DecodeString(tokenData.Uris[0])

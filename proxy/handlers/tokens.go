@@ -19,7 +19,7 @@ const (
 	baseTokensEndpoint               = "/tokens"
 	tokenByTokenIdAndNonceEndpoint   = "/:tokenId/:nonce"
 	availableTokensEndpoint          = "/available"
-	tokenCreateEndpoint              = "/create"
+	tokenCreateEndpoint              = "/create/:walletAddress/:tokenName/:tokenNonce"
 	offersForTokenIdAndNonceEndpoint = "/:tokenId/:nonce/offers/:offset/:limit"
 	bidsForTokenIdAndNonceEndpoint   = "/:tokenId/:nonce/bids/:offset/:limit"
 	refreshTokenMetadataEndpoint     = "/:tokenId/:nonce/refresh"
@@ -79,6 +79,7 @@ func NewTokensHandler(groupHandler *groupHandler, authCfg config.AuthConfig, cfg
 // @Failure 401 {object} dtos.ApiResponse
 // @Failure 500 {object} dtos.ApiResponse
 // @Router /tokens/create [post]
+
 func (handler *tokensHandler) create(c *gin.Context) {
 	var request services.CreateTokenRequest
 
