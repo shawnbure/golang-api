@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/ENFT-DAO/youbei-api/data/entities"
@@ -51,6 +52,12 @@ func RefreshCreateOrUpdateSessionState(address string, stateType uint64, jsonDat
 
 		//set the json data
 		sessionState.JsonData = jsonData
+
+		if stateType == entities.SessionState_type_create_collection {
+
+			//check the JSON and see the steps - default
+			fmt.Println("inside")
+		}
 
 		//save / update
 		txCreate := database.Save(&sessionState)

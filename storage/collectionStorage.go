@@ -190,6 +190,22 @@ func GetCollectionsWithOffsetLimit(offset int, limit int, flags []string) ([]ent
 	return collections, nil
 }
 
+func GetAllCollections() ([]entities.Collection, error) {
+	var collections []entities.Collection
+
+	database, err := GetDBOrError()
+	if err != nil {
+		return nil, err
+	}
+
+	txRead := database.Order("created_at desc").Find(&collections)
+	if txRead.Error != nil {
+		return nil, txRead.Error
+	}
+
+	return collections, nil
+}
+
 func GetCollectionsWithNameAlikeWithLimit(name string, limit int) ([]entities.Collection, error) {
 	var collections []entities.Collection
 

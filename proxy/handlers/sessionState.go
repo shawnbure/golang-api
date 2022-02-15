@@ -53,14 +53,14 @@ func (handler *stateSessionsHandler) refreshCreateOrUpdateSessionState(c *gin.Co
 		return
 	}
 
-	sessionState, err := services.CreateSessionState(&request)
+	err = services.RefreshCreateOrUpdateSessionState(&request)
 	if err != nil {
 		fmt.Println("error: " + err.Error())
 		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
 	}
 
-	dtos.JsonResponse(c, http.StatusOK, sessionState, "")
+	dtos.JsonResponse(c, http.StatusOK, nil, "")
 }
 
 func (handler *stateSessionsHandler) create(c *gin.Context) {
