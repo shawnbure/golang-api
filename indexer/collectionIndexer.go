@@ -100,6 +100,7 @@ package indexer
 // 					fmt.Println(err.Error())
 // 					continue
 // 				}
+// 				// get collection tx and check mint transactions
 
 // 			}
 // 		}

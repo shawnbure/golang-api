@@ -1,9 +1,12 @@
 package handlers
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"net/http"
+	"net/url"
 	"strconv"
+	"strings"
 
 	"github.com/ENFT-DAO/youbei-api/stats/collstats"
 
@@ -288,9 +291,20 @@ func (handler *tokensHandler) getBids(c *gin.Context) {
 // @Failure 404 {object} dtos.ApiResponse
 // @Router /tokens/metadata/relay [get]
 func (handler *tokensHandler) relayMetadataResponse(c *gin.Context) {
-	url := c.Query("url")
+	urlStr := c.Query("url")
+	urlDec, err := url.QueryUnescape(urlStr)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+	urlParts := strings.Split(urlDec, "/")
+	decodedUrl, err := hex.DecodeString(urlParts[0])
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
 
-	responseBytes, err := services.TryGetResponseCached(url)
+	responseBytes, err := services.TryGetResponseCached(string(decodedUrl) + "/" + urlParts[1] + ".json")
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
