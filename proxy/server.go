@@ -59,6 +59,11 @@ func NewWebServer(cfg *config.GeneralConfig) (*webServer, error) {
 	if err != nil {
 		return nil, err
 	}
+	// collectionIndexer, err := indexer.NewCollectionIndexer(cfg.Blockchain.DeployerAddress)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// go collectionIndexer.StartWorker()
 	go marketPlaceIndexer.StartWorker()
 	observerMonitor := process.NewObserverMonitor(
 		bot,
