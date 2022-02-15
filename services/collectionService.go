@@ -136,8 +136,6 @@ func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) 
 		mintPricePerTokenNominalrequest = 0.1
 	}
 
-	//fmt.Println("mintPricePerTokenNominalrequest: " + mintPricePerTokenNominalrequest);
-
 	collection := &entities.Collection{
 		ID:                       0,
 		Name:                     standardizedName,
@@ -155,9 +153,6 @@ func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) 
 		CreatorID:                account.ID,
 		CreatedAt:                uint64(time.Now().Unix()),
 	}
-
-	fmt.Println("request.contractAddress" + request.ContractAddress)
-	fmt.Println("collection.ContractAddress" + collection.ContractAddress)
 
 	err = storage.AddCollection(collection)
 	if err != nil {

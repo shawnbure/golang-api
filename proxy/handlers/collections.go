@@ -138,6 +138,7 @@ func (handler *collectionsHandler) getList(c *gin.Context) {
 }
 
 func (handler *collectionsHandler) getAll(c *gin.Context) {
+
 	collections, err := services.GetAllCollections()
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
