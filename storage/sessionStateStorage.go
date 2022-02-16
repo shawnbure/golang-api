@@ -119,7 +119,7 @@ func GetSessionStateByAddressByStateType(address string, stateType uint64) (*ent
 			ID:        0,
 			Address:   address,
 			StateType: stateType,
-			JsonData:  "{ \"step\": 1, \"tokenID\": \"Empty\", \"scAddress\": \"Empty\" }",
+			JsonData:  "{ \"step\": 1, \"tokenID\": \"Empty\", \"scAddress\": \"Empty\", \"price\": 0 }",
 			CreatedAt: uint64(time.Now().Unix()),
 		}
 
