@@ -1,7 +1,7 @@
 on:
   push:
     branches:
-      - dev
+      - amir-dev
 env:
   GITHUB_SHA: ${{ github.sha }}
   GITHUB_REF: ${{ github.ref }}

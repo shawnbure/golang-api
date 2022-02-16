@@ -82,7 +82,7 @@ func Test_GetTokensOwnedBy(t *testing.T) {
 	err = AddToken(&otherToken)
 	require.Nil(t, err)
 
-	tokensRead, err := GetTokensByOwnerIdWithOffsetLimit(ownerId, 0, 100)
+	tokensRead, err := GetTokensByOwnerIdWithOffsetLimit(ownerId, entities.QueryFilter{}, 0, 100)
 	require.Nil(t, err)
 	require.GreaterOrEqual(t, len(tokensRead), 2)
 

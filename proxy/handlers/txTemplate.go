@@ -1,7 +1,15 @@
 package handlers
 
 import (
+	"crypto/ed25519"
+	"crypto/x509"
+	"encoding/hex"
+	"encoding/pem"
+	"fmt"
+	"io/ioutil"
+	"math/big"
 	"net/http"
+	"os"
 	"strconv"
 
 	"gorm.io/gorm"
@@ -174,8 +182,23 @@ func (handler *txTemplateHandler) getBuyNftTemplate(c *gin.Context) {
 		}
 
 	}
-
-	template := handler.txFormatter.NewBuyNftTxTemplate(userAddress, tokenId, nonce, priceStr)
+	f, _ := os.Open("config/whitelist-priv.pem")
+	fbytes, _ := ioutil.ReadAll(f)
+	block, _ := pem.Decode(fbytes)
+	pkey, er := x509.ParsePKCS8PrivateKey(block.Bytes)
+	if er != nil {
+		panic(er)
+	}
+	edPkey := pkey.(ed25519.PrivateKey)
+	tB := []byte(tokenId)
+	nB := big.NewInt(int64(nonce)).Bytes()
+	totB := append(tB, nB...)
+	pu, _ := hex.DecodeString("032ddada91af480433dd79f8bbad2ef089547e5608b69328071b6cd5c79e6f9d")
+	signature := ed25519.Sign(edPkey, totB)
+	fmt.Println(signature)
+	sig, _ := hex.DecodeString("933892b16788a3443dc4529b1154b2723191ca0e94bc4ab5ac51e4e8f8b58cb84efa1ff0114705b26a27f1882e5e3e552e638da5b6a6a5d5aecdf15f56583a03")
+	fmt.Println(ed25519.Verify(pu, totB, sig))
+	template := handler.txFormatter.NewBuyNftTxTemplate(userAddress, tokenId, nonce, sig, priceStr)
 	dtos.JsonResponse(c, http.StatusOK, template, "")
 }
 

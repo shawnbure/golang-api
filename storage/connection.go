@@ -95,6 +95,11 @@ func TryMigrate() error {
 		return err
 	}
 
+	err = db.AutoMigrate(&entities.DeployerStat{})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

@@ -59,6 +59,11 @@ func NewWebServer(cfg *config.GeneralConfig) (*webServer, error) {
 	if err != nil {
 		return nil, err
 	}
+	// collectionIndexer, err := indexer.NewCollectionIndexer(cfg.Blockchain.DeployerAddress)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// go collectionIndexer.StartWorker()
 	go marketPlaceIndexer.StartWorker()
 	observerMonitor := process.NewObserverMonitor(
 		bot,
@@ -115,6 +120,24 @@ func NewWebServer(cfg *config.GeneralConfig) (*webServer, error) {
 }
 
 func (w *webServer) Run() *http.Server {
+
+	// ep := blockchain.NewElrondProxy("https://devnet-gateway.elrond.com", nil)
+
+	// vmRequest := &data.VmValueRequest{
+	// 	Address:    "erd1qqqqqqqqqqqqqpgqgmv7tw2a9lvcyxw2wrmskevvc0955cagy4wsrapmzg",
+	// 	FuncName:   "getPrice",
+	// 	CallerAddr: "erd1p39zv9xw5ftpfxy9s9afzkjaafadk9na44fput904luqgmpmh8rsrtwufq",
+	// 	CallValue:  "",
+	// 	Args:       nil,
+	// }
+	// response, err := ep.ExecuteVMQuery(vmRequest)
+	// if err != nil {
+	// 	log.Fatal("error executing vm query", "error", err)
+	// }
+	// bytes := response.Data.ReturnData[0]
+	// num := big.NewInt(0).SetBytes(bytes)
+	// log.Print("response", "contract version", num)
+
 	address := w.generalConfig.ConnectorApi.Address
 	if !strings.Contains(address, ":") {
 		panic("bad address")
