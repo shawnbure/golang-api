@@ -81,6 +81,7 @@ func NewTokensHandler(groupHandler *groupHandler, authCfg config.AuthConfig, cfg
 // @Router /tokens/create [post]
 
 func (handler *tokensHandler) create(c *gin.Context) {
+
 	var request services.CreateTokenRequest
 
 	err := c.BindJSON(&request)
