@@ -150,11 +150,13 @@ func CreateToken(request *CreateTokenRequest, blockchainApi string) (*entities.T
 		return nil, err
 	}
 
-	fmt.Printf("%v\n", &tokenData)
+	imageURI := []byte{}
+	metadataURI := []byte{}
 
-	//decode image and metadata uri
-	imageURI, err := base64.StdEncoding.DecodeString(tokenData.Uris[0])
-	metadataURI, err := base64.StdEncoding.DecodeString(tokenData.Uris[1])
+	if len(tokenData.Uris) > 0 {
+		imageURI, err = base64.StdEncoding.DecodeString(tokenData.Uris[0])
+		metadataURI, err = base64.StdEncoding.DecodeString(tokenData.Uris[1])
+	}
 
 	token := &entities.Token{
 		Nonce:            tokenData.Nonce,
@@ -191,6 +193,8 @@ func getTokenByNonce(tokenName string, tokenNonce string, blockchainApi string) 
 	var token NonFungibleToken
 
 	url := fmt.Sprintf(GetNFTBaseFormat, blockchainApi, tokenName, tokenNonce)
+
+	fmt.Print(url)
 
 	//err := HttpGet(url, &resp)
 	response, err := HttpGetRaw(url)
