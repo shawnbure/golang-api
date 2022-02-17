@@ -1,16 +1,9 @@
 package handlers
 
 import (
-	"crypto/ed25519"
-	"crypto/x509"
-	"encoding/hex"
-	"encoding/pem"
-	"fmt"
-	"io/ioutil"
-	"math/big"
 	"net/http"
-	"os"
 	"strconv"
+	"time"
 
 	"gorm.io/gorm"
 
@@ -167,7 +160,7 @@ func (handler *txTemplateHandler) getBuyNftTemplate(c *gin.Context) {
 			//throw error message "Not Part of the Whitelist"
 			dtos.JsonResponse(c, http.StatusBadRequest, nil, "Sorry, you are not part of the whitelist.")
 			return
-		} else if whitelist.Amount == uint64(0) {
+		} else if whitelist.Amount == 0 {
 
 			//throw an error : "You already bought the allocated amount for the whitelist"
 			dtos.JsonResponse(c, http.StatusBadRequest, nil, "You already bought the allocated amount for the whitelist.")
@@ -182,23 +175,8 @@ func (handler *txTemplateHandler) getBuyNftTemplate(c *gin.Context) {
 		}
 
 	}
-	f, _ := os.Open("config/whitelist-priv.pem")
-	fbytes, _ := ioutil.ReadAll(f)
-	block, _ := pem.Decode(fbytes)
-	pkey, er := x509.ParsePKCS8PrivateKey(block.Bytes)
-	if er != nil {
-		panic(er)
-	}
-	edPkey := pkey.(ed25519.PrivateKey)
-	tB := []byte(tokenId)
-	nB := big.NewInt(int64(nonce)).Bytes()
-	totB := append(tB, nB...)
-	pu, _ := hex.DecodeString("032ddada91af480433dd79f8bbad2ef089547e5608b69328071b6cd5c79e6f9d")
-	signature := ed25519.Sign(edPkey, totB)
-	fmt.Println(signature)
-	sig, _ := hex.DecodeString("933892b16788a3443dc4529b1154b2723191ca0e94bc4ab5ac51e4e8f8b58cb84efa1ff0114705b26a27f1882e5e3e552e638da5b6a6a5d5aecdf15f56583a03")
-	fmt.Println(ed25519.Verify(pu, totB, sig))
-	template := handler.txFormatter.NewBuyNftTxTemplate(userAddress, tokenId, nonce, sig, priceStr)
+
+	template := handler.txFormatter.NewBuyNftTxTemplate(userAddress, tokenId, nonce, []byte(""), priceStr)
 	dtos.JsonResponse(c, http.StatusOK, template, "")
 }
 
@@ -558,7 +536,36 @@ func (handler *txTemplateHandler) getMintNftTxTemplate(c *gin.Context) {
 		return
 	}
 
-	//create to DB
+	wl, err := storage.GetWhitelistByAddress(userAddress)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err := storage.AddWhitelist(&entities.Whitelist{CollectionID: collection.ID,
+				Address:    userAddress,
+				Amount:     1,
+				Type:       entities.Whitelist_type_mint,
+				CreatedAt:  uint64(time.Now().UnixMilli()),
+				ModifiedAt: uint64(time.Now().UnixMilli()),
+			})
+			if err != nil {
+				dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+				return
+			}
+		} else {
+			dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+			return
+		}
+	}
+
+	if wl.Amount == 0 {
+		dtos.JsonResponse(c, http.StatusBadRequest, gin.H{"message": "not allowed, reached minting limit"}, err.Error())
+		return
+	}
+	wl.Amount--
+	err = storage.UpdateWhitelist(wl)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		return
+	}
 
 	template := handler.txFormatter.NewMintNftsTxTemplate(
 		userAddress,

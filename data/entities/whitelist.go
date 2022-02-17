@@ -6,8 +6,8 @@ type Whitelist struct {
 	Address      string `json:"address"`
 	Amount       uint64 `json:"amount"  gorm:"default:1"`
 	Type         uint64 `json:"type"` // use the Const defined below
-	CreatedAt    uint64 `json:"createdAt"`
-	ModifiedAt   uint64 `json:"modifiedAt"`
+	CreatedAt    uint64 `json:"createdAt" gorm:"autoCreateTime:milli"`
+	ModifiedAt   uint64 `json:"modifiedAt" gorm:"autoUpdateTime:milli"` // Set to current unix seconds on updaing or if it is zero on creating
 }
 
 //This is used in the Whitelist 'Type' variable
