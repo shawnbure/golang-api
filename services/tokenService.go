@@ -192,9 +192,17 @@ func getTokenByNonce(tokenName string, tokenNonce string, blockchainApi string) 
 	//var resp ProxyTokenResponse
 	var token NonFungibleToken
 
-	url := fmt.Sprintf(GetNFTBaseFormat, blockchainApi, tokenName, tokenNonce)
+	intNonce, err := strconv.ParseUint(tokenNonce, 10, 64)
+	hexNonce := fmt.Sprintf("%X", intNonce)
 
-	fmt.Print(url)
+	//Couldn't sort out padding and this quick check will work
+	if len(hexNonce) == 1 {
+		hexNonce = "0" + hexNonce
+	}
+
+	url := fmt.Sprintf(GetNFTBaseFormat, blockchainApi, tokenName, hexNonce)
+
+	//fmt.Print(url)
 
 	//err := HttpGet(url, &resp)
 	response, err := HttpGetRaw(url)
