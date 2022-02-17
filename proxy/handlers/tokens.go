@@ -22,7 +22,7 @@ const (
 	baseTokensEndpoint               = "/tokens"
 	tokenByTokenIdAndNonceEndpoint   = "/:tokenId/:nonce"
 	availableTokensEndpoint          = "/available"
-	tokenCreateEndpoint              = "/create"
+	tokenCreateEndpoint              = "/create/:walletAddress/:tokenName/:tokenNonce"
 	offersForTokenIdAndNonceEndpoint = "/:tokenId/:nonce/offers/:offset/:limit"
 	bidsForTokenIdAndNonceEndpoint   = "/:tokenId/:nonce/bids/:offset/:limit"
 	refreshTokenMetadataEndpoint     = "/:tokenId/:nonce/refresh"
@@ -54,6 +54,7 @@ func NewTokensHandler(groupHandler *groupHandler, authCfg config.AuthConfig, cfg
 	groupHandler.AddEndpointGroupHandler(endpointGroupHandler)
 
 	publicEndpoints := []EndpointHandler{
+		//{Method: http.MethodPost, Path: tokenCreateEndpoint, HandlerFunc: handler.create},
 		{Method: http.MethodGet, Path: tokenByTokenIdAndNonceEndpoint, HandlerFunc: handler.getByTokenIdAndNonce},
 		{Method: http.MethodPost, Path: availableTokensEndpoint, HandlerFunc: handler.getAvailableTokens},
 		{Method: http.MethodGet, Path: offersForTokenIdAndNonceEndpoint, HandlerFunc: handler.getOffers},
@@ -82,14 +83,22 @@ func NewTokensHandler(groupHandler *groupHandler, authCfg config.AuthConfig, cfg
 // @Failure 401 {object} dtos.ApiResponse
 // @Failure 500 {object} dtos.ApiResponse
 // @Router /tokens/create [post]
+
 func (handler *tokensHandler) create(c *gin.Context) {
+
 	var request services.CreateTokenRequest
 
-	err := c.BindJSON(&request)
-	if err != nil {
-		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
-		return
-	}
+	request.UserAddress = c.Param("walletAddress")
+	request.TokenID = c.Param("tokenName")
+	request.Nonce = c.Param("tokenNonce")
+	/*
+		err := c.BindJSON(&request)
+		if err != nil {
+			fmt.Printf("%+v\n", err)
+			dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+			return
+		}
+	*/
 
 	jwtAddress := c.GetString(middleware.AddressKey)
 	if jwtAddress != request.UserAddress {

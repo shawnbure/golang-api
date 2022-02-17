@@ -140,6 +140,22 @@ func GetTokensByOwnerIdWithOffsetLimit(ownerId uint64, filter entities.QueryFilt
 	return tokens, nil
 }
 
+func GetTokensOnSaleByOwnerIdWithOffsetLimit(ownerId uint64, offset int, limit int) ([]entities.Token, error) {
+	var tokens []entities.Token
+
+	database, err := GetDBOrError()
+	if err != nil {
+		return nil, err
+	}
+
+	txRead := database.Offset(offset).Limit(limit).Find(&tokens, "owner_id = ? AND on_sale = true", ownerId)
+	if txRead.Error != nil {
+		return nil, txRead.Error
+	}
+
+	return tokens, nil
+}
+
 func GetTokensByCollectionId(collectionId uint64) ([]entities.Token, error) {
 	var tokens []entities.Token
 

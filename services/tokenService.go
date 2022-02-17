@@ -45,6 +45,7 @@ type NonFungibleToken struct {
 	Uris       []string       `json:"uris"`
 	Metadata   datatypes.JSON `json:"metadata"`
 	Ticker     string         `json:"ticker"`
+	OnSale     bool           `json:"onsale"`
 }
 
 type AvailableTokensRequest struct {
@@ -142,19 +143,20 @@ func CreateToken(request *CreateTokenRequest, blockchainApi string) (*entities.T
 		return nil, errors.New("no collection found")
 	}
 
-	//get contract data
-	//fmt.Printf("%v\n", collection.ContractAddress)
-	//price, err := interaction.GetBlockchainInteractor().DoVmQuery(collection.ContractAddress, "getPrice", nil)
-
 	//get token data
 	tokenData, err := getTokenByNonce(request.TokenID, request.Nonce, blockchainApi)
 	if err != nil {
+		fmt.Printf("%v\n", err)
 		return nil, err
 	}
 
-	//decode image and metadata uri
-	imageURI, err := base64.StdEncoding.DecodeString(tokenData.Uris[0])
-	metadataURI, err := base64.StdEncoding.DecodeString(tokenData.Uris[1])
+	imageURI := []byte{}
+	metadataURI := []byte{}
+
+	if len(tokenData.Uris) > 0 {
+		imageURI, err = base64.StdEncoding.DecodeString(tokenData.Uris[0])
+		metadataURI, err = base64.StdEncoding.DecodeString(tokenData.Uris[1])
+	}
 
 	token := &entities.Token{
 		Nonce:            tokenData.Nonce,
@@ -168,6 +170,7 @@ func CreateToken(request *CreateTokenRequest, blockchainApi string) (*entities.T
 		Attributes:       datatypes.JSON(tokenData.Metadata),
 		TokenName:        tokenData.Name,
 		Hash:             tokenData.Hash,
+		OnSale:           true,
 		//Status:           entities.TokenStatus(request.Status),
 		//PriceString:      tokenData..PriceString,
 		//PriceNominal:     request.PriceNominal,
@@ -189,7 +192,17 @@ func getTokenByNonce(tokenName string, tokenNonce string, blockchainApi string) 
 	//var resp ProxyTokenResponse
 	var token NonFungibleToken
 
-	url := fmt.Sprintf(GetNFTBaseFormat, blockchainApi, tokenName, tokenNonce)
+	intNonce, err := strconv.ParseUint(tokenNonce, 10, 64)
+	hexNonce := fmt.Sprintf("%X", intNonce)
+
+	//Couldn't sort out padding and this quick check will work
+	if len(hexNonce) == 1 {
+		hexNonce = "0" + hexNonce
+	}
+
+	url := fmt.Sprintf(GetNFTBaseFormat, blockchainApi, tokenName, hexNonce)
+
+	//fmt.Print(url)
 
 	//err := HttpGet(url, &resp)
 	response, err := HttpGetRaw(url)
