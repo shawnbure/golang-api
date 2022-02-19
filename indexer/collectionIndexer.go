@@ -206,7 +206,7 @@ func (ci *CollectionIndexer) StartWorker() {
 								continue
 							}
 						}
-						token.Hash = colR["txHash"].(string)
+						token.MintTxHash = colR["txHash"].(string)
 					}
 				}
 			}

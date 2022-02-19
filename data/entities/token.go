@@ -16,6 +16,7 @@ type Token struct {
 	TokenName           string         `json:"tokenName"`
 	ImageLink           string         `json:"imageLink"`
 	Hash                string         `json:"hash"`
+	MintTxHash          string         `json:"mintTxHash"`
 	LastBuyPriceNominal float64        `json:"lastBuyPriceNominal"`
 	AuctionStartTime    uint64         `json:"auctionStartTime"`
 	AuctionDeadline     uint64         `json:"auctionDeadline"`
