@@ -41,3 +41,32 @@ type MarketPlaceNFT struct {
 	Metadata             JSONB          `json:"metadata"`
 	Ticker               string         `json:"ticker"`
 }
+
+type TransactionBC struct {
+	TxHash    string `json:"txHash"`
+	Nonce     uint64 `json:"none"`
+	Sender    string `json:"sender"`
+	Receiver  string `json:"receiver"`
+	Data      string `json:"data"`
+	Timestamp uint64 `json:"timestamp"`
+	Action    struct {
+		Category string `json:"category"`
+		Name     string `json:"name"`
+	} `json:"action"`
+	Results []struct {
+		Hash      string `json:"hash"`
+		Timestamp uint64 `json:"timestamp"`
+		Nonce     uint64 `json:"nonce"`
+		Data      string `json:"data"`
+	}
+}
+
+type SCResult struct {
+	Hash           string `json:"hash"`
+	Nonce          uint64 `json:"none"`
+	Sender         string `json:"sender"`
+	Receiver       string `json:"receiver"`
+	Data           string `json:"data"`
+	Timestamp      uint64 `json:"timestamp"`
+	OriginalTxHash string `json:"originalTxHash"`
+}

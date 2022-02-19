@@ -142,7 +142,7 @@ func (ci *CollectionIndexer) StartWorker() {
 				}
 				resp.Body.Close()
 				if resp.Status != "200 OK" {
-					fmt.Println("response not successful  get nfts deployer")
+					fmt.Println("response not successful  get nfts deployer", resp.Status)
 					continue
 				}
 
@@ -156,7 +156,7 @@ func (ci *CollectionIndexer) StartWorker() {
 				if len(ColResults) == 0 {
 					time.Sleep(time.Minute * 2)
 				}
-				for _, mint := range ColResults {
+				for _, colR := range ColResults {
 					name := (colR["action"].(map[string]interface{}))["name"].(string)
 					if name == "mintTokensThroughMarketplace" {
 						results := (colR["results"].([]interface{}))
@@ -175,27 +175,22 @@ func (ci *CollectionIndexer) StartWorker() {
 							continue
 						}
 						transferData := strings.Split(string(decodedData), "@")
-						hexByte, err := hex.DecodeString(transferData[4])
-						if err != nil {
-							fmt.Println(err.Error())
-							continue
-						}
-						byte32, err := bech32.ConvertBits(hexByte, 8, 5, true)
-						if err != nil {
-							fmt.Println(err.Error())
-							continue
-						}
-						bech32Addr, err := bech32.Encode("erd", byte32)
-						if err != nil {
-							fmt.Println(err.Error())
-							continue
-						}
+						// hexByte, err := hex.DecodeString(transferData[4])
+						// if err != nil {
+						// 	fmt.Println(err.Error())
+						// 	continue
+						// }
+						// byte32, err := bech32.ConvertBits(hexByte, 8, 5, true)
+						// if err != nil {
+						// 	fmt.Println(err.Error())
+						// 	continue
+						// }
+						// bech32Addr, err := bech32.Encode("erd", byte32)
+						// if err != nil {
+						// 	fmt.Println(err.Error())
+						// 	continue
+						// }
 						tokenIdByte, err := hex.DecodeString(transferData[1])
-						if err != nil {
-							fmt.Println(err.Error())
-							continue
-						}
-						col, err := storage.GetCollectionByTokenId(string(tokenIdByte))
 						if err != nil {
 							fmt.Println(err.Error())
 							continue
@@ -203,14 +198,15 @@ func (ci *CollectionIndexer) StartWorker() {
 						token, err := storage.GetTokenByTokenIdAndNonce(string(tokenIdByte)+"-"+string(nonceResArr[2]), nonce)
 						if err != nil {
 							if err == gorm.ErrRecordNotFound {
-								token.CollectionID = col.ID
-								// token.OwnerId = //
-								// storage.AddToken()
+
+								fmt.Println(err.Error())
+								continue
 							} else {
 								fmt.Println(err.Error())
 								continue
 							}
 						}
+						token.MintTxHash = colR["txHash"].(string)
 					}
 				}
 			}

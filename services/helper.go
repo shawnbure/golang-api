@@ -3,6 +3,8 @@ package services
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"strings"
 )
 
@@ -59,4 +61,36 @@ func ConvertFilterToQuery(tableName string, filter string) (string, []interface{
 		stm += query
 	}
 	return stm, values, nil
+}
+
+func GetResponse(url string) ([]byte, error) {
+	var client http.Client
+	req, err := http.
+		NewRequest("GET", url,
+			nil)
+
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil, fmt.Errorf("error creating request for get nfts marketplace")
+
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil, fmt.Errorf("error running request get nfts marketplace")
+
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println(err.Error())
+		resp.Body.Close()
+		return nil, fmt.Errorf("error readall response get nfts marketplace")
+	}
+	resp.Body.Close()
+	if resp.Status != "200 OK" {
+		return nil, fmt.Errorf("response not successful  get nfts marketplace", resp.Status, req.URL.RawPath)
+	}
+	return body, nil
 }
