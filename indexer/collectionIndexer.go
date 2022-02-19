@@ -142,7 +142,7 @@ func (ci *CollectionIndexer) StartWorker() {
 				}
 				resp.Body.Close()
 				if resp.Status != "200 OK" {
-					fmt.Println("response not successful  get nfts deployer")
+					fmt.Println("response not successful  get nfts deployer", resp.Status)
 					continue
 				}
 

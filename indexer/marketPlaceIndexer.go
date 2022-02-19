@@ -60,7 +60,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 		}
 		resp.Body.Close()
 		if resp.Status != "200 OK" {
-			fmt.Println("response not successful  get nfts marketplace")
+			fmt.Println("response not successful  get nfts marketplace", resp.Status)
 			continue
 		}
 		var NFTs []entities.MarketPlaceNFT
@@ -71,7 +71,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			continue
 		}
 		if len(NFTs) == 0 {
-			time.Sleep(time.Second * 2)
+			time.Sleep(time.Second * 10)
 			continue
 		}
 		for _, nft := range NFTs {
