@@ -557,7 +557,7 @@ func (handler *txTemplateHandler) getMintNftTxTemplate(c *gin.Context) {
 	}
 
 	if wl.Amount == 0 {
-		dtos.JsonResponse(c, http.StatusBadRequest, gin.H{"message": "not allowed, reached minting limit"}, err.Error())
+		dtos.JsonResponse(c, http.StatusBadRequest, gin.H{"message": "not allowed, reached minting limit"}, "not allowed, reached minting limit")
 		return
 	}
 	wl.Amount--
@@ -566,7 +566,24 @@ func (handler *txTemplateHandler) getMintNftTxTemplate(c *gin.Context) {
 		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
 	}
-
+	lastToken, err := storage.GetLastNonceTokenByCollectionId(collection.ID)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		return
+	}
+	err = storage.AddToken(&entities.Token{
+		TokenID:      tokenId,
+		Nonce:        lastToken.Nonce + 1,
+		MetadataLink: collection.MetaDataBaseURI,
+		ImageLink:    collection.TokenBaseURI,
+		TokenName:    collection.Name,
+		OwnerId:      collection.CreatorID,
+		OnSale:       false,
+	})
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		return
+	}
 	template := handler.txFormatter.NewMintNftsTxTemplate(
 		userAddress,
 		collection.ContractAddress,

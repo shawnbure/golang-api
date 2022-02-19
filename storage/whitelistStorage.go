@@ -65,6 +65,25 @@ func GetWhitelistByAddress(address string) (*entities.Whitelist, error) {
 	return &whitelist, nil
 }
 
+func GetWhitelistByAddressAndCol(address string, colID uint64) (*entities.Whitelist, error) {
+	var whitelist entities.Whitelist
+
+	database, err := GetDBOrError()
+	if err != nil {
+		return nil, err
+	}
+
+	txRead := database.Find(&whitelist, "address = ? AND collection_id =?", address, colID)
+	if txRead.Error != nil {
+		return nil, txRead.Error
+	}
+	if txRead.RowsAffected == 0 {
+		return nil, gorm.ErrRecordNotFound
+	}
+
+	return &whitelist, nil
+}
+
 func GetWhitelistsByCollectionID(collectionID uint64) ([]entities.Whitelist, error) {
 	var whitelists []entities.Whitelist
 

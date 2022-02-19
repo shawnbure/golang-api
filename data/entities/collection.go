@@ -25,6 +25,9 @@ type Collection struct {
 	CoverImageLink           string         `json:"coverImageLink"`
 	IsVerified               bool           `json:"isVerified"`
 	Type                     uint64         `json:"type"`
+	TokenBaseURI             string         `json:"tokenBaseURI"`
+	MaxSupply                uint64         `json:"maxSupply"`
+	MetaDataBaseURI          string         `json:"metaDataBaseURI"`
 
 	CreatorID uint64 `json:"creatorId"`
 }
