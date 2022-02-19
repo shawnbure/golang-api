@@ -4,6 +4,8 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"log"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -13,6 +15,8 @@ import (
 	"github.com/ENFT-DAO/youbei-api/storage"
 	"gorm.io/gorm"
 )
+
+var lerr *log.Logger = log.New(os.Stderr, "", 1)
 
 type MarketPlaceIndexer struct {
 	MarketPlaceAddr string `json:"marketPlaceAddr"`
@@ -30,8 +34,8 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			if err == gorm.ErrRecordNotFound {
 				marketStat, err = storage.CreateMarketPlaceStat()
 				if err != nil {
-					fmt.Println(err.Error())
-					fmt.Println("something went wrong creating marketstat")
+					lerr.Println(err.Error())
+					lerr.Println("something went wrong creating marketstat")
 					continue
 				}
 			}
@@ -41,15 +45,15 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			marketStat.LastIndex,
 		))
 		if err != nil {
-			fmt.Println(err.Error())
+			lerr.Println(err.Error())
 			continue
 		}
 
 		var txResult []entities.SCResult
 		err = json.Unmarshal(body, &txResult)
 		if err != nil {
-			fmt.Println(err.Error())
-			fmt.Println("error unmarshal nfts marketplace")
+			lerr.Println(err.Error())
+			lerr.Println("error unmarshal nfts marketplace")
 			continue
 		}
 
@@ -57,7 +61,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			var token entities.Token
 			data, err := base64.StdEncoding.DecodeString(tx.Data)
 			if err != nil {
-				fmt.Println(err.Error())
+				lerr.Println(err.Error())
 				continue
 			}
 			if !strings.Contains(string(data), "putNftForSale") {
@@ -65,18 +69,18 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			}
 			body, err := services.GetResponse(fmt.Sprintf("https://devnet-api.elrond.com/transactions?hashes=%s", tx.OriginalTxHash))
 			if err != nil {
-				fmt.Println(err.Error())
+				lerr.Println(err.Error())
 				continue
 			}
 			var txBody entities.TransactionBC
 			err = json.Unmarshal(body, &txBody)
 			if err != nil {
-				fmt.Println(err.Error())
+				lerr.Println(err.Error())
 				continue
 			}
 			data, err = base64.StdEncoding.DecodeString(tx.Data)
 			if err != nil {
-				fmt.Println(err.Error())
+				lerr.Println(err.Error())
 				continue
 			}
 			dataStr := string(data)
@@ -84,7 +88,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			tokenId := dataParts[1]
 			nonce, err := strconv.ParseUint(dataParts[2], 10, 64)
 			if err != nil {
-				fmt.Println(err.Error())
+				lerr.Println(err.Error())
 				continue
 			}
 			token.TokenID = tokenId
@@ -160,19 +164,19 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					// fmt.Println("token not added to db ", token.TokenID, fmt.Sprintf("nonce %d", token.Nonce))
 					continue
 				}
-				fmt.Println(err.Error())
-				fmt.Println("error updating token ", fmt.Sprintf("tokenID %d", token.ID))
+				lerr.Println(err.Error())
+				lerr.Println("error updating token ", fmt.Sprintf("tokenID %d", token.ID))
 				continue
 			}
 		}
 		newStat, err := storage.UpdateMarketPlaceIndexer(marketStat.LastIndex + 1)
 		if err != nil {
-			fmt.Println(err.Error())
-			fmt.Println("error update marketplace index nfts ")
+			lerr.Println(err.Error())
+			lerr.Println("error update marketplace index nfts ")
 			continue
 		}
 		if newStat.LastIndex <= marketStat.LastIndex {
-			fmt.Println("error something went wrong updating last index of marketplace  ")
+			lerr.Println("error something went wrong updating last index of marketplace  ")
 			continue
 		}
 	}
