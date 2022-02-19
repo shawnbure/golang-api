@@ -23,6 +23,7 @@ func NewMarketPlaceIndexer(marketPlaceAddr string) (*MarketPlaceIndexer, error) 
 func (mpi *MarketPlaceIndexer) StartWorker() {
 	client := &http.Client{}
 	for {
+		time.Sleep(time.Second * 10)
 		marketStat, err := storage.GetMarketPlaceIndexer()
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
@@ -30,6 +31,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				if err != nil {
 					fmt.Println(err.Error())
 					fmt.Println("something went wrong creating marketstat")
+					continue
 				}
 			}
 		}
@@ -60,7 +62,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 		}
 		resp.Body.Close()
 		if resp.Status != "200 OK" {
-			fmt.Println("response not successful  get nfts marketplace", resp.Status, req.URL.RawPath)
+			fmt.Println("response not successful  get nfts marketplace", resp.Status, req.URL.RawPath, mpi.MarketPlaceAddr, marketStat.LastIndex)
 			continue
 		}
 		var NFTs []entities.MarketPlaceNFT
@@ -71,7 +73,6 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			continue
 		}
 		if len(NFTs) == 0 {
-			time.Sleep(time.Second * 10)
 			continue
 		}
 		for _, nft := range NFTs {
@@ -147,7 +148,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					// }
 					// token.OwnerId = acc.ID
 					// fmt.Println("token not added to db ", token.TokenID, fmt.Sprintf("nonce %d", token.Nonce))
-					// continue
+					continue
 				}
 				fmt.Println(err.Error())
 				fmt.Println("error updating token ", fmt.Sprintf("tokenID %d", token.ID))
