@@ -172,6 +172,23 @@ func GetTokensByCollectionId(collectionId uint64) ([]entities.Token, error) {
 	return tokens, nil
 }
 
+func GetLastNonceTokenByCollectionId(collectionId uint64) (entities.Token, error) {
+	var token entities.Token
+
+	database, err := GetDBOrError()
+	if err != nil {
+		return token, err
+	}
+
+	txRead := database.
+		Order("nonce DESC").
+		First(&token, "collection_id = ?", collectionId)
+	if txRead.Error != nil {
+		return token, txRead.Error
+	}
+
+	return token, nil
+}
 func GetTokensByCollectionIdWithOffsetLimit(
 	collectionId uint64,
 	offset int,
