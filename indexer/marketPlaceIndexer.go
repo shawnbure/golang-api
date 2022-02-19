@@ -1,13 +1,15 @@
 package indexer
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/http"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/ENFT-DAO/youbei-api/data/entities"
+	"github.com/ENFT-DAO/youbei-api/services"
 	"github.com/ENFT-DAO/youbei-api/storage"
 	"gorm.io/gorm"
 )
@@ -21,7 +23,6 @@ func NewMarketPlaceIndexer(marketPlaceAddr string) (*MarketPlaceIndexer, error) 
 }
 
 func (mpi *MarketPlaceIndexer) StartWorker() {
-	client := &http.Client{}
 	for {
 		time.Sleep(time.Second * 10)
 		marketStat, err := storage.GetMarketPlaceIndexer()
@@ -35,52 +36,61 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				}
 			}
 		}
-		req, err := http.
-			NewRequest("GET",
-				fmt.Sprintf("https://devnet-api.elrond.com/accounts/%s/nfts?from=%d",
-					mpi.MarketPlaceAddr,
-					marketStat.LastIndex),
-				nil)
+		body, err := services.GetResponse(fmt.Sprintf("https://devnet-api.elrond.com/accounts/%s/sc-results?from=%d",
+			mpi.MarketPlaceAddr,
+			marketStat.LastIndex,
+		))
 		if err != nil {
 			fmt.Println(err.Error())
-			fmt.Println("error creating request for get nfts marketplace")
-			continue
-		}
-		resp, err := client.Do(req)
-		if err != nil {
-			fmt.Println(err.Error())
-			fmt.Println("error running request get nfts marketplace")
 			continue
 		}
 
-		body, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			fmt.Println(err.Error())
-			resp.Body.Close()
-			fmt.Println("error readall response get nfts marketplace")
-			continue
-		}
-		resp.Body.Close()
-		if resp.Status != "200 OK" {
-			fmt.Println("response not successful  get nfts marketplace", resp.Status, req.URL.RawPath, mpi.MarketPlaceAddr, marketStat.LastIndex)
-			continue
-		}
-		var NFTs []entities.MarketPlaceNFT
-		err = json.Unmarshal(body, &NFTs)
+		var txResult []entities.SCResult
+		err = json.Unmarshal(body, &txResult)
 		if err != nil {
 			fmt.Println(err.Error())
 			fmt.Println("error unmarshal nfts marketplace")
 			continue
 		}
-		if len(NFTs) == 0 {
-			continue
-		}
-		for _, nft := range NFTs {
+
+		for _, tx := range txResult {
 			var token entities.Token
-			token.TokenID = nft.Collection
-			token.Nonce = nft.Nonce
+			data, err := base64.StdEncoding.DecodeString(tx.Data)
+			if err != nil {
+				fmt.Println(err.Error())
+				continue
+			}
+			if !strings.Contains(string(data), "putNftForSale") {
+				continue
+			}
+			body, err := services.GetResponse(fmt.Sprintf("https://devnet-api.elrond.com/transactions?hashes=%s", tx.OriginalTxHash))
+			if err != nil {
+				fmt.Println(err.Error())
+				continue
+			}
+			var txBody entities.TransactionBC
+			err = json.Unmarshal(body, &txBody)
+			if err != nil {
+				fmt.Println(err.Error())
+				continue
+			}
+			data, err = base64.StdEncoding.DecodeString(tx.Data)
+			if err != nil {
+				fmt.Println(err.Error())
+				continue
+			}
+			dataStr := string(data)
+			dataParts := strings.Split(dataStr, "@")
+			tokenId := dataParts[1]
+			nonce, err := strconv.ParseUint(dataParts[2], 10, 64)
+			if err != nil {
+				fmt.Println(err.Error())
+				continue
+			}
+			token.TokenID = tokenId
+			token.Nonce = nonce
 			token.OnSale = true
-			err := storage.UpdateTokenWhere(&token, "token_id=? AND nonce=?", nft.Collection, nft.Nonce)
+			err = storage.UpdateTokenWhere(&token, "token_id=? AND nonce=?", tokenId, nonce)
 			if err != nil {
 				if err == gorm.ErrRecordNotFound {
 					// col, err := storage.GetCollectionByTokenId(nft.Collection)
