@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -54,7 +55,6 @@ func NewTokensHandler(groupHandler *groupHandler, authCfg config.AuthConfig, cfg
 	groupHandler.AddEndpointGroupHandler(endpointGroupHandler)
 
 	publicEndpoints := []EndpointHandler{
-		//{Method: http.MethodPost, Path: tokenCreateEndpoint, HandlerFunc: handler.create},
 		{Method: http.MethodGet, Path: tokenByTokenIdAndNonceEndpoint, HandlerFunc: handler.getByTokenIdAndNonce},
 		{Method: http.MethodPost, Path: availableTokensEndpoint, HandlerFunc: handler.getAvailableTokens},
 		{Method: http.MethodGet, Path: offersForTokenIdAndNonceEndpoint, HandlerFunc: handler.getOffers},
@@ -88,17 +88,12 @@ func (handler *tokensHandler) create(c *gin.Context) {
 
 	var request services.CreateTokenRequest
 
-	request.UserAddress = c.Param("walletAddress")
-	request.TokenID = c.Param("tokenName")
-	request.Nonce = c.Param("tokenNonce")
-	/*
-		err := c.BindJSON(&request)
-		if err != nil {
-			fmt.Printf("%+v\n", err)
-			dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
-			return
-		}
-	*/
+	err := c.BindJSON(&request)
+	if err != nil {
+		fmt.Printf("%+v\n", err)
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
 
 	jwtAddress := c.GetString(middleware.AddressKey)
 	if jwtAddress != request.UserAddress {

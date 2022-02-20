@@ -535,7 +535,6 @@ func (handler *txTemplateHandler) getMintNftTxTemplate(c *gin.Context) {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, "no contract address")
 		return
 	}
-
 	wl, err := storage.GetWhitelistByAddress(userAddress)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -566,14 +565,23 @@ func (handler *txTemplateHandler) getMintNftTxTemplate(c *gin.Context) {
 		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
 	}
+
+	//new collections will return 0 records, need to set nonce to 1
 	lastToken, err := storage.GetLastNonceTokenByCollectionId(collection.ID)
 	if err != nil {
-		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
-		return
+		if err == gorm.ErrRecordNotFound {
+			lastToken.Nonce = 1
+		} else {
+			dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+			return
+		}
+	} else {
+		//if this is a collection with tokens increment the nince
+		lastToken.Nonce = lastToken.Nonce + 1
 	}
 	err = storage.AddToken(&entities.Token{
 		TokenID:      tokenId,
-		Nonce:        lastToken.Nonce + 1,
+		Nonce:        lastToken.Nonce,
 		MetadataLink: collection.MetaDataBaseURI,
 		ImageLink:    collection.TokenBaseURI,
 		TokenName:    collection.Name,
