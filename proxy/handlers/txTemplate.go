@@ -1,6 +1,7 @@
 package handlers
 
 import (
+
 	"crypto/ed25519"
 	"encoding/pem"
 	"fmt"
@@ -8,7 +9,6 @@ import (
 
 	"crypto/x509"
 	"os"
-
 	"net/http"
 	"strconv"
 
@@ -144,6 +144,8 @@ func (handler *txTemplateHandler) getBuyNftTemplate(c *gin.Context) {
 	nonceStr := c.Param("nonce")
 	priceStr := c.Param("price")
 
+	fmt.Print(priceStr)
+
 	nonce, err := strconv.ParseUint(nonceStr, 10, 64)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
@@ -183,6 +185,7 @@ func (handler *txTemplateHandler) getBuyNftTemplate(c *gin.Context) {
 
 	}
 
+	//TODO: Address signature if needed for buyying. Added place holder for now.
 	template := handler.txFormatter.NewBuyNftTxTemplate(userAddress, tokenId, nonce, []byte(""), priceStr)
 	dtos.JsonResponse(c, http.StatusOK, template, "")
 }
@@ -543,6 +546,7 @@ func (handler *txTemplateHandler) getMintNftTxTemplate(c *gin.Context) {
 		return
 	}
 
+
 	//verify collectin is whitelist type, if address is white list, and if have enough to allocated to mint
 
 	//check the type in collection to see if it's a whitelist_minting
@@ -569,13 +573,14 @@ func (handler *txTemplateHandler) getMintNftTxTemplate(c *gin.Context) {
 		}
 
 		//have enough to mint,deduct the amount
-		if whitelist.Amount < iNumToken {
+		if whitelist.Amount >= iNumToken {
 
 			whitelist.Amount -= iNumToken
 
 			errWhitelist = storage.UpdateWhitelist(whitelist)
 			if errWhitelist != nil {
 				dtos.JsonResponse(c, http.StatusInternalServerError, nil, errWhitelist.Error())
+
 				return
 			}
 		} else {
@@ -583,14 +588,22 @@ func (handler *txTemplateHandler) getMintNftTxTemplate(c *gin.Context) {
 		}
 	}
 
+
 	lastToken, err := storage.GetLastNonceTokenByCollectionId(collection.ID)
 	if err != nil {
-		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
-		return
+		if err == gorm.ErrRecordNotFound {
+			lastToken.Nonce = 1
+		} else {
+			dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+			return
+		}
+	} else {
+		//if this is a collection with tokens increment the nince
+		lastToken.Nonce = lastToken.Nonce + 1
 	}
 	err = storage.AddToken(&entities.Token{
 		TokenID:      tokenId,
-		Nonce:        lastToken.Nonce + 1,
+		Nonce:        lastToken.Nonce,
 		MetadataLink: collection.MetaDataBaseURI,
 		ImageLink:    collection.TokenBaseURI,
 		TokenName:    collection.Name,
