@@ -1,9 +1,16 @@
 package handlers
 
 import (
+	"crypto/ed25519"
+	"encoding/pem"
+	"fmt"
+	"io/ioutil"
+
+	"crypto/x509"
+	"os"
+
 	"net/http"
 	"strconv"
-	"time"
 
 	"gorm.io/gorm"
 
@@ -536,36 +543,46 @@ func (handler *txTemplateHandler) getMintNftTxTemplate(c *gin.Context) {
 		return
 	}
 
-	wl, err := storage.GetWhitelistByAddress(userAddress)
-	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			err := storage.AddWhitelist(&entities.Whitelist{CollectionID: collection.ID,
-				Address:    userAddress,
-				Amount:     1,
-				Type:       entities.Whitelist_type_mint,
-				CreatedAt:  uint64(time.Now().UnixMilli()),
-				ModifiedAt: uint64(time.Now().UnixMilli()),
-			})
-			if err != nil {
-				dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+	//verify collectin is whitelist type, if address is white list, and if have enough to allocated to mint
+
+	//check the type in collection to see if it's a whitelist_minting
+	if collection.Type == entities.Collection_type_whitelisted {
+
+		//get the whitelist by userAddress
+		whitelist, errWhitelist := storage.GetWhitelistByAddress(userAddress)
+
+		//check if the whitelist look is invalid
+		if errWhitelist != nil {
+			if errWhitelist == gorm.ErrRecordNotFound {
+				dtos.JsonResponse(c, http.StatusBadRequest, nil, "Address not part of Whitelist")
+			} else {
+				dtos.JsonResponse(c, http.StatusInternalServerError, nil, errWhitelist.Error())
+			}
+		}
+
+		//convert numberOfToken string to int
+		iNumToken, errConv := strconv.ParseUint(numberOfTokensStr, 10, 64)
+
+		//check conversion error
+		if errConv != nil {
+			dtos.JsonResponse(c, http.StatusInternalServerError, nil, errConv.Error())
+		}
+
+		//have enough to mint,deduct the amount
+		if whitelist.Amount < iNumToken {
+
+			whitelist.Amount -= iNumToken
+
+			errWhitelist = storage.UpdateWhitelist(whitelist)
+			if errWhitelist != nil {
+				dtos.JsonResponse(c, http.StatusInternalServerError, nil, errWhitelist.Error())
 				return
 			}
 		} else {
-			dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
-			return
+			dtos.JsonResponse(c, http.StatusBadRequest, nil, "You are not allocated enough to mint this amount: "+numberOfTokensStr)
 		}
 	}
 
-	if wl.Amount == 0 {
-		dtos.JsonResponse(c, http.StatusBadRequest, gin.H{"message": "not allowed, reached minting limit"}, "not allowed, reached minting limit")
-		return
-	}
-	wl.Amount--
-	err = storage.UpdateWhitelist(wl)
-	if err != nil {
-		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
-		return
-	}
 	lastToken, err := storage.GetLastNonceTokenByCollectionId(collection.ID)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
@@ -584,11 +601,33 @@ func (handler *txTemplateHandler) getMintNftTxTemplate(c *gin.Context) {
 		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
 	}
+
+	//Signed Message Package
+
+	//get whitelist pem file
+	file, _ := os.Open("config/whitelist-priv.pem")
+	fileBytes, _ := ioutil.ReadAll(file)
+
+	block, _ := pem.Decode(fileBytes)
+	pkey, erPkey := x509.ParsePKCS8PrivateKey(block.Bytes)
+
+	if erPkey != nil {
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, erPkey.Error())
+	}
+
+	edPkey := pkey.(ed25519.PrivateKey)
+
+	message := tokenId + "" + fmt.Sprint(lastToken.Nonce+1)
+	msg := []byte(message)
+
+	signedMessage := ed25519.Sign(edPkey, msg)
+
 	template := handler.txFormatter.NewMintNftsTxTemplate(
 		userAddress,
 		collection.ContractAddress,
 		collection.MintPricePerTokenNominal,
 		numberOfTokens,
+		signedMessage,
 	)
 	dtos.JsonResponse(c, http.StatusOK, template, "")
 }
