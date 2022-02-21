@@ -1,14 +1,8 @@
 package handlers
 
 import (
-
-	"crypto/ed25519"
-	"encoding/pem"
 	"fmt"
-	"io/ioutil"
 
-	"crypto/x509"
-	"os"
 	"net/http"
 	"strconv"
 
@@ -546,7 +540,6 @@ func (handler *txTemplateHandler) getMintNftTxTemplate(c *gin.Context) {
 		return
 	}
 
-
 	//verify collectin is whitelist type, if address is white list, and if have enough to allocated to mint
 
 	//check the type in collection to see if it's a whitelist_minting
@@ -588,7 +581,6 @@ func (handler *txTemplateHandler) getMintNftTxTemplate(c *gin.Context) {
 		}
 	}
 
-
 	lastToken, err := storage.GetLastNonceTokenByCollectionId(collection.ID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -618,29 +610,29 @@ func (handler *txTemplateHandler) getMintNftTxTemplate(c *gin.Context) {
 	//Signed Message Package
 
 	//get whitelist pem file
-	file, _ := os.Open("config/whitelist-priv.pem")
-	fileBytes, _ := ioutil.ReadAll(file)
+	// file, _ := os.Open("config/whitelist-priv.pem")
+	// fileBytes, _ := ioutil.ReadAll(file)
 
-	block, _ := pem.Decode(fileBytes)
-	pkey, erPkey := x509.ParsePKCS8PrivateKey(block.Bytes)
+	// block, _ := pem.Decode(fileBytes)
+	// pkey, erPkey := x509.ParsePKCS8PrivateKey(block.Bytes)
 
-	if erPkey != nil {
-		dtos.JsonResponse(c, http.StatusInternalServerError, nil, erPkey.Error())
-	}
+	// if erPkey != nil {
+	// 	dtos.JsonResponse(c, http.StatusInternalServerError, nil, erPkey.Error())
+	// }
 
-	edPkey := pkey.(ed25519.PrivateKey)
+	// edPkey := pkey.(ed25519.PrivateKey)
 
-	message := tokenId + "" + fmt.Sprint(lastToken.Nonce+1)
-	msg := []byte(message)
+	// message := tokenId + "" + fmt.Sprint(lastToken.Nonce+1)
+	// msg := []byte(message)
 
-	signedMessage := ed25519.Sign(edPkey, msg)
+	// signedMessage := ed25519.Sign(edPkey, msg)
 
 	template := handler.txFormatter.NewMintNftsTxTemplate(
 		userAddress,
 		collection.ContractAddress,
 		collection.MintPricePerTokenNominal,
 		numberOfTokens,
-		signedMessage,
+		[]byte(""),
 	)
 	dtos.JsonResponse(c, http.StatusOK, template, "")
 }
