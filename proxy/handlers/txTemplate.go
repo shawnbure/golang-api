@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -137,6 +138,8 @@ func (handler *txTemplateHandler) getBuyNftTemplate(c *gin.Context) {
 	nonceStr := c.Param("nonce")
 	priceStr := c.Param("price")
 
+	fmt.Print(priceStr)
+
 	nonce, err := strconv.ParseUint(nonceStr, 10, 64)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
@@ -176,6 +179,7 @@ func (handler *txTemplateHandler) getBuyNftTemplate(c *gin.Context) {
 
 	}
 
+	//TODO: Address signature if needed for buyying. Added place holder for now.
 	template := handler.txFormatter.NewBuyNftTxTemplate(userAddress, tokenId, nonce, []byte(""), priceStr)
 	dtos.JsonResponse(c, http.StatusOK, template, "")
 }
