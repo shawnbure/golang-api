@@ -38,6 +38,8 @@ func TestVerifyForIncorrectPubKeyLength_ShouldErr(t *testing.T) {
 	sigBytes, _ := base64.StdEncoding.DecodeString(sig)
 	msg := []byte("msg")
 
+	//log.Printf(msg)
+
 	err := VerifySignature(pubKeyBytes, msg, sigBytes)
 	assert.Equal(t, ErrInvalidPublicKey, err)
 }

@@ -25,7 +25,7 @@ func Test_CreateAndRefreshBeforeExpireShouldNotWork(t *testing.T) {
 
 	service, err := NewAuthService(config.AuthConfig{
 		JwtSecret:     "supersecret",
-		JwtIssuer:     "localhost:5000",
+		JwtIssuer:     "localhost:8080",
 		JwtKeySeedHex: "d6592724167553acf9c8cba9a7dbc7f514efc757d7906546cecfdfc5d4c2e8d1",
 		JwtExpiryMins: 15,
 	})
@@ -63,7 +63,7 @@ func Test_CreateAndRefreshAfterExpireShouldWork(t *testing.T) {
 
 	service, err := NewAuthService(config.AuthConfig{
 		JwtSecret:     "supersecret",
-		JwtIssuer:     "localhost:5000",
+		JwtIssuer:     "localhost:8080",
 		JwtKeySeedHex: "d6592724167553acf9c8cba9a7dbc7f514efc757d7906546cecfdfc5d4c2e8d1",
 		JwtExpiryMins: -1,
 	})
