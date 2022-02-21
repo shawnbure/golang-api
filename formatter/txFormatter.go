@@ -100,8 +100,8 @@ func (f *TxFormatter) NewListNftTxTemplate(senderAddr string, tokenId string, no
 func (f *TxFormatter) NewBuyNftTxTemplate(senderAddr string, tokenId string, nonce uint64, signature []byte, price string) Transaction {
 	txData := buyNftEndpointName +
 		"@" + hex.EncodeToString([]byte(tokenId)) +
-		"@" + hex.EncodeToString(big.NewInt(int64(nonce)).Bytes()) +
-		"@" + hex.EncodeToString(signature)
+		"@" + hex.EncodeToString(big.NewInt(int64(nonce)).Bytes())
+	//+ "@" + hex.EncodeToString(signature)
 
 	return Transaction{
 		Nonce:     0,

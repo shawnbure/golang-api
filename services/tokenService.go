@@ -27,9 +27,14 @@ var (
 )
 
 type CreateTokenRequest struct {
-	UserAddress string `json:"walletAddress"`
-	TokenID     string `json:"tokenName"`
-	Nonce       string `json:"tokenNonce"`
+	UserAddress   string  `json:"walletAddress"`
+	TokenID       string  `json:"tokenName"`
+	Nonce         string  `json:"tokenNonce"`
+	Status        string  `json:"saleStatus"`
+	StringPrice   string  `json:"saleStringPrice"`
+	NominalPrice  float64 `json:"saleNominalPrice"`
+	SaleStartDate uint64  `json:"saleStartDate"`
+	SaleEndDate   uint64  `json:"saleEndDate"`
 }
 
 type NonFungibleToken struct {
@@ -45,7 +50,6 @@ type NonFungibleToken struct {
 	Uris       []string       `json:"uris"`
 	Metadata   datatypes.JSON `json:"metadata"`
 	Ticker     string         `json:"ticker"`
-	OnSale     bool           `json:"onsale"`
 }
 
 type AvailableTokensRequest struct {
@@ -158,6 +162,11 @@ func CreateToken(request *CreateTokenRequest, blockchainApi string) (*entities.T
 		metadataURI, err = base64.StdEncoding.DecodeString(tokenData.Uris[1])
 	}
 
+	//fmt.Printf("%v\n", token)
+	//fmt.Print("Status: " + token.Status)
+	//fmt.Print("PS: " + token.PriceString)
+	//fmt.Print("PN: " + String(token.PriceNominal))
+
 	token := &entities.Token{
 		Nonce:            tokenData.Nonce,
 		OwnerId:          collection.CreatorID,
@@ -171,12 +180,11 @@ func CreateToken(request *CreateTokenRequest, blockchainApi string) (*entities.T
 		TokenName:        tokenData.Name,
 		Hash:             tokenData.Hash,
 		OnSale:           true,
-		//Status:           entities.TokenStatus(request.Status),
-		//PriceString:      tokenData..PriceString,
-		//PriceNominal:     request.PriceNominal,
-		//AuctionStartTime: request.AuctionStartTime,
-		//AuctionDeadline:  request.AuctionDeadline,
-
+		Status:           entities.TokenStatus(request.Status),
+		PriceString:      request.StringPrice,
+		PriceNominal:     request.NominalPrice,
+		AuctionStartTime: request.SaleStartDate,
+		AuctionDeadline:  request.SaleEndDate,
 	}
 
 	err = storage.AddToken(token)
