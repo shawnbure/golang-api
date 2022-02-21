@@ -190,6 +190,41 @@ func GetCollectionsWithOffsetLimit(offset int, limit int, flags []string) ([]ent
 	return collections, nil
 }
 
+func GetAllCollections() ([]entities.Collection, error) {
+	var collections []entities.Collection
+
+	database, err := GetDBOrError()
+	if err != nil {
+		return nil, err
+	}
+
+	txRead := database.Order("created_at desc").Find(&collections)
+	if txRead.Error != nil {
+		return nil, txRead.Error
+	}
+
+	return collections, nil
+}
+
+/*
+func GetAllCollectionAccounts() ([]entities.CollectionAccount, error) {
+
+	var collections []entities.Collection
+
+	var collectionAccounts []entities.CollectionAccount
+
+	if err = db.Joins("JOIN artist_movies on artist_movies.artist_id=artists.id").
+		Joins("JOIN movies on artist_movies.movie_id=movies.id").Where("movies.title=?", "Nayagan").
+		Group("artists.id").Find(&collections).Error; err != nil {
+		log.Fatal(err)
+	}
+
+	for _, ar := range artists {
+		fmt.Println(ar.Name)
+	}
+}
+*/
+
 func GetCollectionsWithNameAlikeWithLimit(name string, limit int) ([]entities.Collection, error) {
 	var collections []entities.Collection
 

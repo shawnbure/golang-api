@@ -7,6 +7,7 @@ import (
 
 	"github.com/ENFT-DAO/youbei-api/config"
 	"github.com/ENFT-DAO/youbei-api/data/dtos"
+	"github.com/ENFT-DAO/youbei-api/data/entities"
 	"github.com/ENFT-DAO/youbei-api/proxy/middleware"
 	"github.com/ENFT-DAO/youbei-api/services"
 	"github.com/ENFT-DAO/youbei-api/storage"
@@ -14,13 +15,14 @@ import (
 )
 
 const (
-	baseAccountsEndpoint       = "/accounts"
-	accountByIdEndpoint        = "/:walletAddress"
-	accountTokensEndpoint      = "/:walletAddress/tokens/:offset/:limit"
-	accountCollectionsEndpoint = "/:walletAddress/collections/:offset/:limit"
-	accountProfileEndpoint     = "/:walletAddress/profile"
-	accountCoverEndpoint       = "/:walletAddress/cover"
-	imageEndpoint              = "/image/:filename"
+	baseAccountsEndpoint        = "/accounts"
+	accountByIdEndpoint         = "/:walletAddress"
+	accountTokensEndpoint       = "/:walletAddress/tokens/:offset/:limit"
+	accountTokensOnSaleEndpoint = "/:walletAddress/tokens/onsale/:offset/:limit"
+	accountCollectionsEndpoint  = "/:walletAddress/collections/:offset/:limit"
+	accountProfileEndpoint      = "/:walletAddress/profile"
+	accountCoverEndpoint        = "/:walletAddress/cover"
+	imageEndpoint               = "/image/:filename"
 )
 
 type accountsHandler struct {
@@ -44,6 +46,7 @@ func NewAccountsHandler(groupHandler *groupHandler, authCfg config.AuthConfig) {
 	publicEndpoints := []EndpointHandler{
 		{Method: http.MethodGet, Path: accountByIdEndpoint, HandlerFunc: handler.get},
 		{Method: http.MethodGet, Path: accountTokensEndpoint, HandlerFunc: handler.getAccountTokens},
+		{Method: http.MethodGet, Path: accountTokensOnSaleEndpoint, HandlerFunc: handler.getAccountTokensOnSale},
 		{Method: http.MethodGet, Path: accountCollectionsEndpoint, HandlerFunc: handler.getAccountCollections},
 	}
 	publicEndpointGroupHandler := EndpointGroupHandler{
@@ -97,6 +100,8 @@ func (h *accountsHandler) get(c *gin.Context) {
 func (h *accountsHandler) set(c *gin.Context) {
 	var request services.SetAccountRequest
 	walletAddress := c.Param("walletAddress")
+
+	//dtos.JsonResponse(c, http.StatusInternalServerError, nil, "Henry test error account-handlers")
 
 	err := c.BindJSON(&request)
 	if err != nil {
@@ -220,13 +225,73 @@ func (h *accountsHandler) setAccountCover(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param walletAddress path string true "wallet address"
+// @Query offset path uint true "offset"
+// @Query limit path uint true "limit"
+// @Query filter path string true "filter"
+// @Success 200 {object} []dtos.OwnedTokenDto
+// @Failure 400 {object} dtos.ApiResponse
+// @Failure 404 {object} dtos.ApiResponse
+// @Router /accounts/{walletAddress}/tokens/ [get]
+func (h *accountsHandler) getAccountTokens(c *gin.Context) {
+	offsetStr := c.Query("offset")
+	limitStr := c.Query("limit")
+	walletAddress := c.Param("walletAddress")
+	filter := c.Query("filter")
+	// convert filter query string into query sql clauses
+	querySQL, queryValues, err := services.ConvertFilterToQuery("tokens", filter)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+	sqlFilter := entities.QueryFilter{Query: querySQL, Values: queryValues}
+
+	cacheInfo, err := services.GetOrAddAccountCacheInfo(walletAddress)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	offset, err := strconv.ParseUint(offsetStr, 10, 0)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	limit, err := strconv.ParseUint(limitStr, 10, 0)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	err = ValidateLimit(limit)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	tokens, err := storage.GetTokensByOwnerIdWithOffsetLimit(cacheInfo.AccountId, sqlFilter, int(offset), int(limit))
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	ownedTokens := services.ConstructOwnedTokensFromTokens(tokens)
+	dtos.JsonResponse(c, http.StatusOK, ownedTokens, "")
+}
+
+// @Summary Gets tokens for an account.
+// @Description Retrieves a list of tokens. Unsorted.
+// @Tags accounts
+// @Accept json
+// @Produce json
+// @Param walletAddress path string true "wallet address"
 // @Param offset path uint true "offset"
 // @Param limit path uint true "limit"
 // @Success 200 {object} []dtos.OwnedTokenDto
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 404 {object} dtos.ApiResponse
 // @Router /accounts/{walletAddress}/tokens/{offset}/{limit} [get]
-func (h *accountsHandler) getAccountTokens(c *gin.Context) {
+func (h *accountsHandler) getAccountTokensOnSale(c *gin.Context) {
 	offsetStr := c.Param("offset")
 	limitStr := c.Param("limit")
 	walletAddress := c.Param("walletAddress")
@@ -255,7 +320,7 @@ func (h *accountsHandler) getAccountTokens(c *gin.Context) {
 		return
 	}
 
-	tokens, err := storage.GetTokensByOwnerIdWithOffsetLimit(cacheInfo.AccountId, int(offset), int(limit))
+	tokens, err := storage.GetTokensOnSaleByOwnerIdWithOffsetLimit(cacheInfo.AccountId, int(offset), int(limit))
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return

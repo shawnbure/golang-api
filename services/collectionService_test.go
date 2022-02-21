@@ -30,10 +30,10 @@ func Test_CreateCollection(T *testing.T) {
 	cache.InitCacher(config.CacheConfig{Url: "redis://localhost:6379"})
 
 	request := &CreateCollectionRequest{
-		UserAddress:   "erd17s2pz8qrds6ake3qwheezgy48wzf7dr5nhdpuu2h4rr4mt5rt9ussj7xzh",
-		Name:          "this name is unique",
-		TokenId:       "MYNFT-55f092",
-		Description:   "this description is flawless",
+		UserAddress:   "erd1ukmgly5c7wdkfvek0fswvjzqcgg3xypfsztuhc6krjzz9xrrmtxsv0cd84",
+		Name:          "thi nry",
+		TokenId:       "HENRY-dff511",
+		Description:   "henwame",
 		Website:       "this is a website",
 		DiscordLink:   "this is a discord link",
 		TwitterLink:   "this is a twitter link",

@@ -1,8 +1,8 @@
 package storage
 
 import (
-	"database/sql"
 	"errors"
+	"fmt"
 	"sync"
 
 	"gorm.io/driver/postgres"
@@ -22,17 +22,20 @@ var (
 
 func Connect(cfg config.DatabaseConfig) {
 	once.Do(func() {
-		sqlDb, err := sql.Open(cfg.Dialect, cfg.Url())
-		if err != nil {
-			panic(err)
+		dbURI := fmt.Sprintf("user=%s password=%s database=%s host=%s/%s", cfg.User, cfg.Password, cfg.DbName, "/cloudsql", cfg.ConnectionName)
+
+		storeDSN := fmt.Sprintf("user=%s host=%s port=%d database=%s password=%s sslmode=disable TimeZone=Etc/UTC",
+			cfg.User,
+			cfg.Host,
+			cfg.Port,
+			cfg.DbName,
+			cfg.Password)
+
+		if cfg.ConnectionName != "" {
+			storeDSN = dbURI
 		}
-
-		sqlDb.SetMaxOpenConns(cfg.MaxOpenConns)
-		sqlDb.SetMaxIdleConns(cfg.MaxIdleConns)
-
-		db, err = gorm.Open(postgres.New(postgres.Config{
-			Conn: sqlDb,
-		}))
+		var err error
+		db, err = gorm.Open(postgres.Open(storeDSN), &gorm.Config{})
 		if err != nil {
 			panic(err)
 		}
@@ -78,6 +81,21 @@ func TryMigrate() error {
 	}
 
 	err = db.AutoMigrate(&entities.Whitelist{})
+	if err != nil {
+		return err
+	}
+
+	err = db.AutoMigrate(&entities.SessionState{})
+	if err != nil {
+		return err
+	}
+
+	err = db.AutoMigrate(&entities.MarketPlaceStat{})
+	if err != nil {
+		return err
+	}
+
+	err = db.AutoMigrate(&entities.DeployerStat{})
 	if err != nil {
 		return err
 	}

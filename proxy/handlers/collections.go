@@ -28,6 +28,7 @@ const (
 	collectionCoverEndpoint    = "/:collectionId/cover"
 	collectionMintInfoEndpoint = "/:collectionId/mintInfo"
 	collectionRankingEndpoint  = "/rankings/:offset/:limit"
+	collectionAllEndpoint      = "/all"
 )
 
 type CollectionTokensQueryBody struct {
@@ -69,6 +70,7 @@ func NewCollectionsHandler(groupHandler *groupHandler, authCfg config.AuthConfig
 		{Method: http.MethodPost, Path: collectionTokensEndpoint, HandlerFunc: handler.getTokens},
 		{Method: http.MethodGet, Path: collectionMintInfoEndpoint, HandlerFunc: handler.getMintInfo},
 		{Method: http.MethodPost, Path: collectionRankingEndpoint, HandlerFunc: handler.getCollectionRankings},
+		{Method: http.MethodPost, Path: collectionAllEndpoint, HandlerFunc: handler.getAll},
 	}
 	publicEndpointGroupHandler := EndpointGroupHandler{
 		Root:             baseCollectionsEndpoint,
@@ -135,12 +137,23 @@ func (handler *collectionsHandler) getList(c *gin.Context) {
 	dtos.JsonResponse(c, http.StatusOK, collections, "")
 }
 
+func (handler *collectionsHandler) getAll(c *gin.Context) {
+
+	collections, err := services.GetAllCollections()
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	dtos.JsonResponse(c, http.StatusOK, collections, "")
+}
+
 // @Summary Gets collection by collection id.
 // @Description Retrieves a collection by id.
 // @Tags collections
 // @Accept json
 // @Produce json
-// @Param collectionId path string true "collection id"
+// @Param collectionId path string true "colle`ction id"
 // @Success 200 {object} dtos.ExtendedCollectionDto
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 404 {object} dtos.ApiResponse

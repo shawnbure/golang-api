@@ -11,4 +11,11 @@ type Account struct {
 	CreatedAt        uint64 `json:"createdAt"`
 	ProfileImageLink string `json:"profileImageLink"`
 	CoverImageLink   string `json:"coverImageLink"`
+	MintedCount      uint64 `json:"MintedCount" gorm:"default:0"`
+	MaxBatchMint     uint64 `json:"maxBatchMint" gorm:"default:10"`
+	MaxLifetimeMint  uint64 `json:"maxLifetimeMint" gorm:"default:10000"`
 }
+
+/*
+MaxBatchMint and MaxLifetimeMint
+*/

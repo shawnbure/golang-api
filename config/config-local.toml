@@ -1,0 +1,99 @@
+[ConnectorApi]
+    Address = "0.0.0.0:8080"
+    Username = ""
+    Password = ""
+    Addresses = [
+        "erd1qqqqqqqqqqqqqpgqhz4g5t6n7qkdupykngtp69ynw7ghcccry4wsx6423a",
+    ]
+    Identifiers = [
+        "putNftForSale",
+        "buyNft",
+        "withdrawNft",
+        "makeOffer",
+        "acceptOffer",
+        "cancelOffer",
+        "startAuction",
+        "placeBid",
+        "endAuction",
+        "deposit",
+        "withdraw",
+    ]
+
+[Blockchain]
+    ChainID = "local-testnet"
+    GasPrice = 1_000_000_000
+    PemPath = "config/dev-wallet-owner.pem"
+    ProxyUrl = "http://localhost:7950"
+    MarketplaceAddress = "erd1qqqqqqqqqqqqqpgqj5zftf3ef3gqm3gklcetpmxwg43rh8z2d8ss2e49aq"
+    DeployerAddress = "erd1qqqqqqqqqqqqqpgq6e592h0rr5knccrwglxxcc7zq00szmwhd8ss876q4g"
+    SystemSCAddress = "erd1qqqqqqqqqqqqqqqpqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqzllls8a5w6u"
+    ListNftGasLimit = 20_000_000
+    BuyNftGasLimit = 15_000_000
+    WithdrawNftGasLimit = 15_000_000
+    MintTokenGasLimit = 25_000_000
+    MakeOfferGasLimit = 20_000_000
+    AcceptOfferGasLimit = 20_000_000
+    CancelOfferGasLimit = 20_000_000
+    StartAuctionGasLimit = 20_000_000
+    PlaceBidGasLimit = 20_000_000
+    EndAuctionGasLimit = 20_000_000
+    DepositGasLimit = 10_000_000
+    WithdrawGasLimit = 10_000_000
+    WithdrawCreatorRoyaltiesGasLimit = 10_000_000
+    IssueNFTGasLimit = 60_000_000
+    DeployNFTTemplateGasLimit = 20_000_000
+    ChangeOwnerGasLimit = 20_000_000
+    SetSpecialRolesGasLimit = 60_000_000
+    IssueTokenEGLDCost = "0.05"
+    DeployNFTTemplateEGLDCost = "0"
+    WithdrawFromMinterGasLimit = 10_000_000
+    RequestWithdrawThroughMinterGasLimit = 50_000_000
+    NoFeeOnMintContracts = [
+        "erd1qqqqqqqqqqqqqpgqwt37h7vgwkfgql68nhfvx4l7ncpzmyndt3xqru6kf6"
+    ]
+
+[Database]
+    Dialect = "postgres"
+    Host = "localhost"
+    # ConnectionName= "youbei-339521:us-central1:youbei-dev"
+    Port = 5432
+    DbName = "youbei-api"
+    User = "youbei-api"
+    Password = "youbei2020"
+    SslMode = "disable"
+    MaxOpenConns = 50
+    MaxIdleConns = 10
+    ShouldMigrate = true
+
+[Auth]
+    JwtSecret = "jwtSecret"
+    JwtIssuer = "dev-api.youbei.io"
+    JwtKeySeedHex = "d6592724167553acf9c8cba9a7dbc7f514efc757d7906546cecfdfc5d4c2e8d1"
+    JwtExpiryMins = 1440
+
+[Cache]
+    Url = "redis://localhost:6379"
+
+[Swagger]
+    LocalDocRoute = "https://dev-api.youbei.io/swagger/doc.json"
+    Enabled = true
+
+[Bot]
+    Token = "bot_token"
+    RecID = "recipient_id"
+    Enable = false
+
+[Monitor]
+    ObserverMonitorEnable = false
+
+[CDN]
+    Name = "dev-youbei"
+    ProjectID = "youbei-339521"
+    BucketName = "dev.youbei.io"
+    UploadPath = "images/"
+    # ApiKey = "299768791129295"
+    # ApiSecret = "fIFsn9UK3_BMSe4qOIAzqQ3eoZY"
+    Selector = "cloudy"
+    # Selector = "local"
+    BaseUrl = "https://dev-api.youbei.io/image/"
+    RootDir = "/home/amir/pics"

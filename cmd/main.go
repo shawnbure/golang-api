@@ -22,7 +22,7 @@ import (
 
 const (
 	defaultLogsPath    = "logs"
-	logFilePrefix      = "erdsea"
+	logFilePrefix      = "youbei"
 	logFileLifeSpanSec = 86400
 )
 
@@ -46,7 +46,7 @@ VERSION:
    {{.Version}}
    {{end}}
 `
-	log = logger.GetOrCreate("erdsea-api")
+	log = logger.GetOrCreate("youbei-api")
 
 	logLevel = cli.StringFlag{
 		Name:  "log-level",
@@ -62,7 +62,7 @@ VERSION:
 	generalConfigFile = cli.StringFlag{
 		Name:  "general-config",
 		Usage: "The path for the general config",
-		Value: "./config/config.toml",
+		Value: getWorkingDirectory("config/config.toml"),
 	}
 
 	workingDirectory = cli.StringFlag{
@@ -74,8 +74,9 @@ VERSION:
 
 func main() {
 	app := cli.NewApp()
+
 	cli.AppHelpTemplate = cliHelpTemplate
-	app.Name = "erdsea-api"
+	app.Name = "youbei-api"
 	app.Flags = []cli.Flag{
 		logLevel,
 		logSaveFile,
@@ -83,7 +84,6 @@ func main() {
 		workingDirectory,
 	}
 	app.Action = startProxy
-
 	err := app.Run(os.Args)
 	if err != nil {
 		log.Error(err.Error())
@@ -91,8 +91,18 @@ func main() {
 	}
 }
 
+func getWorkingDirectory(param string) string {
+
+	dir, dir_err := os.Getwd()
+	if dir_err != nil {
+		log.Error(dir_err.Error())
+		panic(dir_err)
+	}
+	return dir + "/" + param
+}
+
 func startProxy(ctx *cli.Context) error {
-	log.Info("starting erdsea-api proxy...")
+	log.Info("starting youbei-api proxy...")
 
 	fileLogging, err := initLogger(ctx)
 	if err != nil {
@@ -115,7 +125,7 @@ func startProxy(ctx *cli.Context) error {
 	server := api.Run()
 
 	waitForGracefulShutdown(server)
-	log.Debug("closing erdsea-api proxy...")
+	log.Debug("closing youbei-api proxy...")
 	if !check.IfNil(fileLogging) {
 		err = fileLogging.Close()
 		if err != nil {

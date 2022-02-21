@@ -15,12 +15,36 @@ func AddToken(token *entities.Token) error {
 		return err
 	}
 
-	txCreate := database.Create(&token)
-	if txCreate.Error != nil {
-		return txCreate.Error
-	}
-	if txCreate.RowsAffected == 0 {
-		return gorm.ErrRecordNotFound
+	//verify the collection exists retun error if not
+
+	collectionCount := int64(0)
+	err = db.Model(&entities.Collection{}).
+		Where("id = ?", token.CollectionID).
+		Count(&collectionCount).
+		Error
+
+	if collectionCount > 0 {
+
+		//if the token does not exixts in the db create it return error
+		tokenCount := int64(0)
+		err = db.Model(token).
+			Where("token_id = ? AND nonce = ?", token.TokenID, token.Nonce).
+			Count(&tokenCount).
+			Error
+
+		if tokenCount == 0 {
+			txCreate := database.Create(&token)
+			if txCreate.Error != nil {
+				return txCreate.Error
+			}
+			if txCreate.RowsAffected == 0 {
+				return gorm.ErrRecordNotFound
+			}
+		} else {
+			return err
+		}
+	} else {
+		return err
 	}
 
 	return nil
@@ -42,7 +66,22 @@ func UpdateToken(token *entities.Token) error {
 
 	return nil
 }
+func UpdateTokenWhere(token *entities.Token, where string, args ...interface{}) error {
+	database, err := GetDBOrError()
+	if err != nil {
+		return err
+	}
 
+	txCreate := database.Where(where, args...).Updates(&token)
+	if txCreate.Error != nil {
+		return txCreate.Error
+	}
+	if txCreate.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+
+	return nil
+}
 func GetTokenById(id uint64) (*entities.Token, error) {
 	var token entities.Token
 
@@ -81,7 +120,7 @@ func GetTokenByTokenIdAndNonce(tokenId string, nonce uint64) (*entities.Token, e
 	return &token, nil
 }
 
-func GetTokensByOwnerIdWithOffsetLimit(ownerId uint64, offset int, limit int) ([]entities.Token, error) {
+func GetTokensByOwnerIdWithOffsetLimit(ownerId uint64, filter entities.QueryFilter, offset int, limit int) ([]entities.Token, error) {
 	var tokens []entities.Token
 
 	database, err := GetDBOrError()
@@ -89,7 +128,27 @@ func GetTokensByOwnerIdWithOffsetLimit(ownerId uint64, offset int, limit int) ([
 		return nil, err
 	}
 
-	txRead := database.Offset(offset).Limit(limit).Find(&tokens, "owner_id = ?", ownerId)
+	txRead := database.
+		Offset(offset).
+		Limit(limit).
+		Where(filter.Query, filter.Values...).
+		Find(&tokens, "owner_id = ?", ownerId)
+	if txRead.Error != nil {
+		return nil, txRead.Error
+	}
+
+	return tokens, nil
+}
+
+func GetTokensOnSaleByOwnerIdWithOffsetLimit(ownerId uint64, offset int, limit int) ([]entities.Token, error) {
+	var tokens []entities.Token
+
+	database, err := GetDBOrError()
+	if err != nil {
+		return nil, err
+	}
+
+	txRead := database.Offset(offset).Limit(limit).Find(&tokens, "owner_id = ? AND on_sale = true", ownerId)
 	if txRead.Error != nil {
 		return nil, txRead.Error
 	}
@@ -113,6 +172,23 @@ func GetTokensByCollectionId(collectionId uint64) ([]entities.Token, error) {
 	return tokens, nil
 }
 
+func GetLastNonceTokenByCollectionId(collectionId uint64) (entities.Token, error) {
+	var token entities.Token
+
+	database, err := GetDBOrError()
+	if err != nil {
+		return token, err
+	}
+
+	txRead := database.
+		Order("nonce DESC").
+		First(&token, "collection_id = ?", collectionId)
+	if txRead.Error != nil {
+		return token, txRead.Error
+	}
+
+	return token, nil
+}
 func GetTokensByCollectionIdWithOffsetLimit(
 	collectionId uint64,
 	offset int,

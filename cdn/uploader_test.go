@@ -17,9 +17,9 @@ func TestUploader_Upload(t *testing.T) {
 	t.Skip("cloudinary credentials required")
 
 	InitUploader(config.CDNConfig{
-		Name:      "",
-		ApiKey:    "",
-		ApiSecret: "",
+		Name: "",
+		// ApiKey:    "",
+		// ApiSecret: "",
 	})
 
 	upl, err := GetImageUploaderOrErr()

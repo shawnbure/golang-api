@@ -1,0 +1,60 @@
+on:
+  push:
+    branches:
+      - dev
+env:
+  GITHUB_SHA: ${{ github.sha }}
+  GITHUB_REF: ${{ github.ref }}
+  IMAGE: dev-youbei-api
+  SERVICE: dev-youbei-api
+  PROJECT_ID: youbei-339521
+  REGISTRY_HOSTNAME: gcr.io
+  HTTP_PORT: 5050
+  HTTP_PORT_EXPOSE: 5070
+  GOPRIVATE: "https://github.com/ENFT-DAO"
+  REPO_TOKEN: ${{ secrets.REPO_TOKEN}}
+jobs:
+  deploy:
+    runs-on: dev
+    name: deploy
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - id: 'auth'
+        uses: 'google-github-actions/auth@v0'
+        with:
+          workload_identity_provider: 'projects/232956162006/locations/global/workloadIdentityPools/dev-youbei-github/providers/dev-github-provider'
+          service_account: 'cloudrun@youbei-339521.iam.gserviceaccount.com'
+      # - name: gcloud
+      #   uses: google-github-actions/setup-gcloud@v0
+      - run: |
+          # Set up docker to authenticate
+          # via gcloud command-line tool.
+          gcloud auth configure-docker
+      - name: Build
+        run: |
+          export HOME=/home/amir
+          export TAG=`echo $GITHUB_REF | awk -F/ '{print $NF}'`
+          docker system prune -f
+          docker build -t "$REGISTRY_HOSTNAME"/"$PROJECT_ID"/"$IMAGE":"$TAG"  \
+            --build-arg GITHUB_SHA="$GITHUB_SHA" \
+            --build-arg GITHUB_REF="$GITHUB_REF" .
+
+      # Push the Docker image to Google Container Registry
+      - name: Publish
+        run: |
+          export TAG=`echo $GITHUB_REF | awk -F/ '{print $NF}'`
+          echo $TAG
+          docker push "$REGISTRY_HOSTNAME"/"$PROJECT_ID"/"$IMAGE":"$TAG"
+          docker rmi -f $IMAGE:latest
+          docker tag "$REGISTRY_HOSTNAME"/"$PROJECT_ID"/"$IMAGE":"$TAG" $IMAGE:latest
+      - name: Deploy to Cloud Run
+        id: deploy
+        uses: google-github-actions/deploy-cloudrun@v0
+        with:
+          service: dev-youbei-api
+          image: ${{ env.REGISTRY_HOSTNAME}}/${{env.PROJECT_ID}}/${{env.IMAGE}}:dev
+      

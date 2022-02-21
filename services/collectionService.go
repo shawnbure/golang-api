@@ -27,6 +27,7 @@ const (
 	MaxLinkLen                     = 100
 	MaxDescLen                     = 1000
 	RegisteredNFTsBaseFormat       = "%s/address/%s/registered-nfts"
+	GetNFTBaseFormat               = "%s/nfts/%s-%s" //example https://devnet-api.elrond.com/nfts/AMIR-55a2ea-01
 	HttpResponseExpirePeriod       = 10 * time.Minute
 	CollectionSearchCacheKeyFormat = "CollectionSearch:%s"
 	CollectionSearchExpirePeriod   = 20 * time.Minute
@@ -42,16 +43,18 @@ type MintInfo struct {
 }
 
 type CreateCollectionRequest struct {
-	UserAddress   string   `json:"userAddress"`
-	Name          string   `json:"collectionName"`
-	TokenId       string   `json:"tokenId"`
-	Description   string   `json:"description"`
-	Website       string   `json:"website"`
-	DiscordLink   string   `json:"discordLink"`
-	TwitterLink   string   `json:"twitterLink"`
-	InstagramLink string   `json:"instagramLink"`
-	TelegramLink  string   `json:"telegramLink"`
-	Flags         []string `json:"flags"`
+	UserAddress             string   `json:"userAddress"`
+	Name                    string   `json:"collectionName"`
+	TokenId                 string   `json:"tokenId"`
+	Description             string   `json:"description"`
+	Website                 string   `json:"website"`
+	DiscordLink             string   `json:"discordLink"`
+	TwitterLink             string   `json:"twitterLink"`
+	InstagramLink           string   `json:"instagramLink"`
+	TelegramLink            string   `json:"telegramLink"`
+	Flags                   []string `json:"flags"`
+	ContractAddress         string   `json:"contractAddress"`
+	MintPricePerTokenString string   `json:"mintPricePerTokenString"`
 }
 
 type UpdateCollectionRequest struct {
@@ -73,16 +76,22 @@ type ProxyRegisteredNFTsResponse struct {
 }
 
 func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) (*entities.Collection, error) {
+	//return nil, errors.New("before Validation")
 	err := checkValidInputOnCreate(request)
 	if err != nil {
 		return nil, err
 	}
+
+	//return nil, errors.New("After Validation")
 
 	bytes, err := json.Marshal(request.Flags)
 	if err != nil {
 		return nil, err
 	}
 
+	//return nil, errors.New("After jsonMarshal")
+
+	//uncommment
 	tokensRegisteredByUser, err := getTokensRegisteredByUser(request.UserAddress, blockchainProxy)
 	if err != nil {
 		return nil, err
@@ -107,19 +116,42 @@ func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) 
 		return nil, err
 	}
 
+	// ContractAddress
+	// nominal price
+
+	/*
+		mintPricePerTokenNominalrequest, err := strconv.ParseFloat(request.MintPricePerTokenString, 64)
+
+		if err != nil {
+			mintPricePerTokenNominalrequest = 0.1
+		}
+	*/
+
+	//strMintPricePerToken = request.MintPricePerTokenString
+	//const fMintPricePerTokenNominal = 0.0
+
+	mintPricePerTokenNominalrequest, err := strconv.ParseFloat(request.MintPricePerTokenString, 64)
+
+	if err != nil {
+		mintPricePerTokenNominalrequest = 0.1
+	}
+
 	collection := &entities.Collection{
-		ID:            0,
-		Name:          standardizedName,
-		TokenID:       request.TokenId,
-		Description:   request.Description,
-		Website:       request.Website,
-		DiscordLink:   request.DiscordLink,
-		TwitterLink:   request.TwitterLink,
-		InstagramLink: request.InstagramLink,
-		TelegramLink:  request.TelegramLink,
-		Flags:         datatypes.JSON(bytes),
-		CreatorID:     account.ID,
-		CreatedAt:     uint64(time.Now().Unix()),
+		ID:                       0,
+		Name:                     standardizedName,
+		TokenID:                  request.TokenId,
+		Description:              request.Description,
+		Website:                  request.Website,
+		DiscordLink:              request.DiscordLink,
+		TwitterLink:              request.TwitterLink,
+		InstagramLink:            request.InstagramLink,
+		TelegramLink:             request.TelegramLink,
+		Flags:                    datatypes.JSON(bytes),
+		ContractAddress:          request.ContractAddress,
+		MintPricePerTokenString:  request.MintPricePerTokenString,
+		MintPricePerTokenNominal: mintPricePerTokenNominalrequest,
+		CreatorID:                account.ID,
+		CreatedAt:                uint64(time.Now().Unix()),
 	}
 
 	err = storage.AddCollection(collection)
@@ -160,6 +192,17 @@ func UpdateCollection(collection *entities.Collection, request *UpdateCollection
 	}
 
 	return nil
+}
+
+func GetAllCollections() ([]entities.Collection, error) {
+	//var collectionArray []entities.Collection
+
+	collectionArray, err := storage.GetAllCollections()
+	if err != nil {
+		return nil, err
+	}
+
+	return collectionArray, nil
 }
 
 func GetCollectionsWithNameAlike(name string, limit int) ([]entities.Collection, error) {
@@ -236,6 +279,9 @@ func setMintInfoCache(contractAddress string) (*MintInfo, error) {
 	}
 
 	totalSoldHex := hex.EncodeToString(result[1])
+	if len(result[1]) == 0 {
+		totalSoldHex = "0"
+	}
 	totalSold, err := strconv.ParseUint(totalSoldHex, 16, 64)
 	if err != nil {
 		return nil, err
@@ -307,12 +353,12 @@ func getTokensRegisteredByUser(userAddress string, blockchainProxy string) ([]st
 	var resp ProxyRegisteredNFTsResponse
 
 	url := fmt.Sprintf(RegisteredNFTsBaseFormat, blockchainProxy, userAddress)
-	err := cache.GetCacher().Get(url, &resp)
-	if err == nil {
-		return resp.Data.Tokens, nil
-	}
+	// err := cache.GetCacher().Get(url, &resp)
+	// if err == nil {
+	// 	return resp.Data.Tokens, nil
+	// }
 
-	err = HttpGet(url, &resp)
+	err := HttpGet(url, &resp)
 	if err != nil {
 		return nil, err
 	}

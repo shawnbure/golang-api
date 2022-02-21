@@ -29,7 +29,7 @@ type webServer struct {
 	generalConfig *config.GeneralConfig
 }
 
-// @title erdsea-api
+// @title youbei-api
 // @version 1.0
 // @termsOfService http://swagger.io/terms/
 
@@ -38,10 +38,13 @@ type webServer struct {
 
 // @host localhost:5000
 func NewWebServer(cfg *config.GeneralConfig) (*webServer, error) {
+
 	router := gin.Default()
 	corsCfg := cors.DefaultConfig()
 	corsCfg.AllowHeaders = corsHeaders
 	corsCfg.AllowAllOrigins = true
+	//Access-Control-Allow-Origin
+	//corsCfg.a
 	router.Use(cors.New(corsCfg))
 
 	groupHandler := handlers.NewGroupHandler()
@@ -51,6 +54,16 @@ func NewWebServer(cfg *config.GeneralConfig) (*webServer, error) {
 		return nil, err
 	}
 
+	// marketPlaceIndexer, err := indexer.NewMarketPlaceIndexer(cfg.Blockchain.MarketplaceAddress)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// collectionIndexer, err := indexer.NewCollectionIndexer(cfg.Blockchain.DeployerAddress)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// go collectionIndexer.StartWorker()
+	// go marketPlaceIndexer.StartWorker()
 	observerMonitor := process.NewObserverMonitor(
 		bot,
 		ctx,
@@ -80,8 +93,11 @@ func NewWebServer(cfg *config.GeneralConfig) (*webServer, error) {
 	}
 
 	handlers.NewAuthHandler(groupHandler, *authService)
-	handlers.NewTokensHandler(groupHandler, cfg.Blockchain)
+	handlers.NewTokensHandler(groupHandler, cfg.Auth, cfg.Blockchain)
 	handlers.NewCollectionsHandler(groupHandler, cfg.Auth, cfg.Blockchain)
+
+	handlers.NewSessionStatesHandler(groupHandler, cfg.Auth, cfg.Blockchain)
+
 	handlers.NewTransactionsHandler(groupHandler)
 	handlers.NewTxTemplateHandler(groupHandler, cfg.Blockchain)
 	handlers.NewPriceHandler(groupHandler)
@@ -92,6 +108,8 @@ func NewWebServer(cfg *config.GeneralConfig) (*webServer, error) {
 	handlers.NewRoyaltiesHandler(groupHandler, cfg.Blockchain)
 	handlers.NewImageHandler(groupHandler)
 
+	//
+
 	groupHandler.RegisterEndpoints(router)
 
 	return &webServer{
@@ -101,6 +119,24 @@ func NewWebServer(cfg *config.GeneralConfig) (*webServer, error) {
 }
 
 func (w *webServer) Run() *http.Server {
+
+	// ep := blockchain.NewElrondProxy("https://devnet-gateway.elrond.com", nil)
+
+	// vmRequest := &data.VmValueRequest{
+	// 	Address:    "erd1qqqqqqqqqqqqqpgqgmv7tw2a9lvcyxw2wrmskevvc0955cagy4wsrapmzg",
+	// 	FuncName:   "getPrice",
+	// 	CallerAddr: "erd1p39zv9xw5ftpfxy9s9afzkjaafadk9na44fput904luqgmpmh8rsrtwufq",
+	// 	CallValue:  "",
+	// 	Args:       nil,
+	// }
+	// response, err := ep.ExecuteVMQuery(vmRequest)
+	// if err != nil {
+	// 	log.Fatal("error executing vm query", "error", err)
+	// }
+	// bytes := response.Data.ReturnData[0]
+	// num := big.NewInt(0).SetBytes(bytes)
+	// log.Print("response", "contract version", num)
+
 	address := w.generalConfig.ConnectorApi.Address
 	if !strings.Contains(address, ":") {
 		panic("bad address")

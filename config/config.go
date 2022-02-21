@@ -29,6 +29,7 @@ type ConnectorApiConfig struct {
 type BlockchainConfig struct {
 	GasPrice                             uint64
 	ProxyUrl                             string
+	ApiUrl                               string
 	ChainID                              string
 	PemPath                              string
 	MarketplaceAddress                   string
@@ -59,16 +60,17 @@ type BlockchainConfig struct {
 }
 
 type DatabaseConfig struct {
-	Dialect       string
-	Host          string
-	Port          uint16
-	DbName        string
-	User          string
-	Password      string
-	SslMode       string
-	MaxOpenConns  int
-	MaxIdleConns  int
-	ShouldMigrate bool
+	Dialect        string
+	Host           string
+	Port           uint16
+	DbName         string
+	User           string
+	Password       string
+	SslMode        string
+	ConnectionName string
+	MaxOpenConns   int
+	MaxIdleConns   int
+	ShouldMigrate  bool
 }
 
 type AuthConfig struct {
@@ -98,12 +100,15 @@ type MonitorConfig struct {
 }
 
 type CDNConfig struct {
-	Name      string
-	ApiKey    string
-	ApiSecret string
-	Selector  string
-	BaseUrl   string
-	RootDir   string
+	Name       string
+	ProjectID  string
+	BucketName string
+	UploadPath string
+	// ApiKey    string
+	// ApiSecret string
+	Selector string
+	BaseUrl  string
+	RootDir  string
 }
 
 func (d DatabaseConfig) Url() string {
