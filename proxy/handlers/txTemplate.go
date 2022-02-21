@@ -569,7 +569,7 @@ func (handler *txTemplateHandler) getMintNftTxTemplate(c *gin.Context) {
 		}
 
 		//have enough to mint,deduct the amount
-		if whitelist.Amount < iNumToken {
+		if whitelist.Amount >= iNumToken {
 
 			whitelist.Amount -= iNumToken
 
