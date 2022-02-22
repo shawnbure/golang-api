@@ -1,13 +1,7 @@
 package handlers
 
 import (
-	"crypto/ed25519"
-	"encoding/pem"
 	"fmt"
-	"io/ioutil"
-
-	"crypto/x509"
-	"os"
 
 	"net/http"
 	"strconv"
@@ -144,6 +138,8 @@ func (handler *txTemplateHandler) getBuyNftTemplate(c *gin.Context) {
 	nonceStr := c.Param("nonce")
 	priceStr := c.Param("price")
 
+	fmt.Print(priceStr)
+
 	nonce, err := strconv.ParseUint(nonceStr, 10, 64)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
@@ -183,6 +179,7 @@ func (handler *txTemplateHandler) getBuyNftTemplate(c *gin.Context) {
 
 	}
 
+	//TODO: Address signature if needed for buyying. Added place holder for now.
 	template := handler.txFormatter.NewBuyNftTxTemplate(userAddress, tokenId, nonce, []byte(""), priceStr)
 	dtos.JsonResponse(c, http.StatusOK, template, "")
 }
@@ -569,13 +566,14 @@ func (handler *txTemplateHandler) getMintNftTxTemplate(c *gin.Context) {
 		}
 
 		//have enough to mint,deduct the amount
-		if whitelist.Amount < iNumToken {
+		if whitelist.Amount >= iNumToken {
 
 			whitelist.Amount -= iNumToken
 
 			errWhitelist = storage.UpdateWhitelist(whitelist)
 			if errWhitelist != nil {
 				dtos.JsonResponse(c, http.StatusInternalServerError, nil, errWhitelist.Error())
+
 				return
 			}
 		} else {
@@ -585,12 +583,19 @@ func (handler *txTemplateHandler) getMintNftTxTemplate(c *gin.Context) {
 
 	lastToken, err := storage.GetLastNonceTokenByCollectionId(collection.ID)
 	if err != nil {
-		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
-		return
+		if err == gorm.ErrRecordNotFound {
+			lastToken.Nonce = 1
+		} else {
+			dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+			return
+		}
+	} else {
+		//if this is a collection with tokens increment the nince
+		lastToken.Nonce = lastToken.Nonce + 1
 	}
 	err = storage.AddToken(&entities.Token{
 		TokenID:      tokenId,
-		Nonce:        lastToken.Nonce + 1,
+		Nonce:        lastToken.Nonce,
 		MetadataLink: collection.MetaDataBaseURI,
 		ImageLink:    collection.TokenBaseURI,
 		TokenName:    collection.Name,
@@ -605,29 +610,29 @@ func (handler *txTemplateHandler) getMintNftTxTemplate(c *gin.Context) {
 	//Signed Message Package
 
 	//get whitelist pem file
-	file, _ := os.Open("config/whitelist-priv.pem")
-	fileBytes, _ := ioutil.ReadAll(file)
+	// file, _ := os.Open("config/whitelist-priv.pem")
+	// fileBytes, _ := ioutil.ReadAll(file)
 
-	block, _ := pem.Decode(fileBytes)
-	pkey, erPkey := x509.ParsePKCS8PrivateKey(block.Bytes)
+	// block, _ := pem.Decode(fileBytes)
+	// pkey, erPkey := x509.ParsePKCS8PrivateKey(block.Bytes)
 
-	if erPkey != nil {
-		dtos.JsonResponse(c, http.StatusInternalServerError, nil, erPkey.Error())
-	}
+	// if erPkey != nil {
+	// 	dtos.JsonResponse(c, http.StatusInternalServerError, nil, erPkey.Error())
+	// }
 
-	edPkey := pkey.(ed25519.PrivateKey)
+	// edPkey := pkey.(ed25519.PrivateKey)
 
-	message := tokenId + "" + fmt.Sprint(lastToken.Nonce+1)
-	msg := []byte(message)
+	// message := tokenId + "" + fmt.Sprint(lastToken.Nonce+1)
+	// msg := []byte(message)
 
-	signedMessage := ed25519.Sign(edPkey, msg)
+	// signedMessage := ed25519.Sign(edPkey, msg)
 
 	template := handler.txFormatter.NewMintNftsTxTemplate(
 		userAddress,
 		collection.ContractAddress,
 		collection.MintPricePerTokenNominal,
 		numberOfTokens,
-		signedMessage,
+		[]byte(""),
 	)
 	dtos.JsonResponse(c, http.StatusOK, template, "")
 }

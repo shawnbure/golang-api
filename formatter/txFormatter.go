@@ -100,8 +100,8 @@ func (f *TxFormatter) NewListNftTxTemplate(senderAddr string, tokenId string, no
 func (f *TxFormatter) NewBuyNftTxTemplate(senderAddr string, tokenId string, nonce uint64, signature []byte, price string) Transaction {
 	txData := buyNftEndpointName +
 		"@" + hex.EncodeToString([]byte(tokenId)) +
-		"@" + hex.EncodeToString(big.NewInt(int64(nonce)).Bytes()) +
-		"@" + hex.EncodeToString(signature)
+		"@" + hex.EncodeToString(big.NewInt(int64(nonce)).Bytes())
+	//+ "@" + hex.EncodeToString(signature)
 
 	return Transaction{
 		Nonce:     0,
@@ -349,11 +349,11 @@ func (f *TxFormatter) NewMintNftsTxTemplate(
 		endpointName = mintTokensEndpointName
 	}
 
-	gasLimit := f.config.MintTokenGasLimit * (numberOfTokens/8 + 1)
+	gasLimit := f.config.MintTokenGasLimit * (numberOfTokens/4 + 1)
 	totalPrice := fmt.Sprintf("%f", mintPricePerToken*float64(numberOfTokens))
 	txData := endpointName +
-		"@" + hex.EncodeToString(big.NewInt(int64(numberOfTokens)).Bytes()) +
-		"@" + hex.EncodeToString(signedMessage)
+		"@" + hex.EncodeToString(big.NewInt(int64(numberOfTokens)).Bytes()) /*+
+	"@" + hex.EncodeToString(signedMessage)*/
 
 	return Transaction{
 		Nonce:     0,
