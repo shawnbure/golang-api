@@ -56,7 +56,9 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			lerr.Println("error unmarshal nfts marketplace")
 			continue
 		}
-
+		if len(txResult) == 0 {
+			continue
+		}
 		for _, tx := range txResult {
 			var token entities.Token
 			data, err := base64.StdEncoding.DecodeString(tx.Data)

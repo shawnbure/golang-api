@@ -595,6 +595,7 @@ func (handler *txTemplateHandler) getMintNftTxTemplate(c *gin.Context) {
 	}
 	err = storage.AddToken(&entities.Token{
 		TokenID:      tokenId,
+		CollectionID: collection.ID,
 		Nonce:        lastToken.Nonce,
 		MetadataLink: collection.MetaDataBaseURI,
 		ImageLink:    collection.TokenBaseURI,

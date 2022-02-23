@@ -8,6 +8,7 @@ import (
 	"github.com/ENFT-DAO/youbei-api/alerts/tg"
 	"github.com/ENFT-DAO/youbei-api/config"
 	_ "github.com/ENFT-DAO/youbei-api/docs"
+	"github.com/ENFT-DAO/youbei-api/indexer"
 	"github.com/ENFT-DAO/youbei-api/process"
 	"github.com/ENFT-DAO/youbei-api/proxy/handlers"
 	"github.com/ENFT-DAO/youbei-api/services"
@@ -54,16 +55,16 @@ func NewWebServer(cfg *config.GeneralConfig) (*webServer, error) {
 		return nil, err
 	}
 
-	// marketPlaceIndexer, err := indexer.NewMarketPlaceIndexer(cfg.Blockchain.MarketplaceAddress)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// collectionIndexer, err := indexer.NewCollectionIndexer(cfg.Blockchain.DeployerAddress)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// go collectionIndexer.StartWorker()
-	// go marketPlaceIndexer.StartWorker()
+	marketPlaceIndexer, err := indexer.NewMarketPlaceIndexer(cfg.Blockchain.MarketplaceAddress)
+	if err != nil {
+		return nil, err
+	}
+	collectionIndexer, err := indexer.NewCollectionIndexer(cfg.Blockchain.DeployerAddress)
+	if err != nil {
+		return nil, err
+	}
+	go collectionIndexer.StartWorker()
+	go marketPlaceIndexer.StartWorker()
 	observerMonitor := process.NewObserverMonitor(
 		bot,
 		ctx,
