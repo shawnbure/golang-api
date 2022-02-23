@@ -8,7 +8,7 @@ env:
   IMAGE: youbei-api
   SERVICE: youbei-api
   PROJECT_ID: youbei-339521
-  REGISTRY_HOSTNAME: gcr.io
+  REGISTRY_HOSTNAME: us.gcr.io
   HTTP_PORT: 5050
   HTTP_PORT_EXPOSE: 5070
   GOPRIVATE: "https://github.com/ENFT-DAO"
@@ -23,6 +23,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Set env
+        run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
       - id: 'auth'
         uses: 'google-github-actions/auth@v0'
         with:
@@ -56,5 +58,5 @@ jobs:
         uses: google-github-actions/deploy-cloudrun@v0
         with:
           service: youbei-api
-          image: ${{ env.REGISTRY_HOSTNAME}}/${{env.PROJECT_ID}}/${{env.IMAGE}}
+          image: ${{ env.REGISTRY_HOSTNAME}}/${{env.PROJECT_ID}}/${{env.IMAGE}}:${{ env.RELEASE_VERSION }}
       
