@@ -154,28 +154,28 @@ func (handler *txTemplateHandler) getBuyNftTemplate(c *gin.Context) {
 		return
 	} else if collection.Type == entities.Collection_type_whitelisted { //collection type is "whitelisted"
 
-		//Henry - add the check for whitelist here
-		whitelist, errWhitelist := storage.GetWhitelistByAddress(userAddress)
+		// //Henry - add the check for whitelist here
+		// whitelist, errWhitelist := storage.GetWhitelistByAddress(userAddress)
 
-		//TODO: check if it exist for whitelist, if not, enter in "Not part of the whitelist"
-		if errWhitelist == gorm.ErrRecordNotFound {
+		// //TODO: check if it exist for whitelist, if not, enter in "Not part of the whitelist"
+		// if errWhitelist == gorm.ErrRecordNotFound {
 
-			//throw error message "Not Part of the Whitelist"
-			dtos.JsonResponse(c, http.StatusBadRequest, nil, "Sorry, you are not part of the whitelist.")
-			return
-		} else if whitelist.Amount == 0 {
+		// 	//throw error message "Not Part of the Whitelist"
+		// 	dtos.JsonResponse(c, http.StatusBadRequest, nil, "Sorry, you are not part of the whitelist.")
+		// 	return
+		// } else if whitelist.Amount == 0 {
 
-			//throw an error : "You already bought the allocated amount for the whitelist"
-			dtos.JsonResponse(c, http.StatusBadRequest, nil, "You already bought the allocated amount for the whitelist.")
-			return
-		} else {
+		// 	//throw an error : "You already bought the allocated amount for the whitelist"
+		// 	dtos.JsonResponse(c, http.StatusBadRequest, nil, "You already bought the allocated amount for the whitelist.")
+		// 	return
+		// } else {
 
-			//deduct the amount by 1
-			newAmount := whitelist.Amount - 1
+		// 	//deduct the amount by 1
+		// 	newAmount := whitelist.Amount - 1
 
-			//update it
-			storage.UpdateWhitelistAmountByAddress(uint64(newAmount), userAddress)
-		}
+		// 	//update it
+		// 	storage.UpdateWhitelistAmountByAddress(uint64(newAmount), userAddress)
+		// }
 
 	}
 
@@ -543,43 +543,43 @@ func (handler *txTemplateHandler) getMintNftTxTemplate(c *gin.Context) {
 	//verify collectin is whitelist type, if address is white list, and if have enough to allocated to mint
 
 	//check the type in collection to see if it's a whitelist_minting
-	if collection.Type == entities.Collection_type_whitelisted {
+	// if collection.Type == entities.Collection_type_whitelisted {
 
-		//get the whitelist by userAddress
-		whitelist, errWhitelist := storage.GetWhitelistByAddress(userAddress)
+	// 	//get the whitelist by userAddress
+	// 	whitelist, errWhitelist := storage.GetWhitelistByAddress(userAddress)
 
-		//check if the whitelist look is invalid
-		if errWhitelist != nil {
-			if errWhitelist == gorm.ErrRecordNotFound {
-				dtos.JsonResponse(c, http.StatusBadRequest, nil, "Address not part of Whitelist")
-			} else {
-				dtos.JsonResponse(c, http.StatusInternalServerError, nil, errWhitelist.Error())
-			}
-		}
+	// 	//check if the whitelist look is invalid
+	// 	if errWhitelist != nil {
+	// 		if errWhitelist == gorm.ErrRecordNotFound {
+	// 			dtos.JsonResponse(c, http.StatusBadRequest, nil, "Address not part of Whitelist")
+	// 		} else {
+	// 			dtos.JsonResponse(c, http.StatusInternalServerError, nil, errWhitelist.Error())
+	// 		}
+	// 	}
 
-		//convert numberOfToken string to int
-		iNumToken, errConv := strconv.ParseUint(numberOfTokensStr, 10, 64)
+	// 	//convert numberOfToken string to int
+	// 	iNumToken, errConv := strconv.ParseUint(numberOfTokensStr, 10, 64)
 
-		//check conversion error
-		if errConv != nil {
-			dtos.JsonResponse(c, http.StatusInternalServerError, nil, errConv.Error())
-		}
+	// 	//check conversion error
+	// 	if errConv != nil {
+	// 		dtos.JsonResponse(c, http.StatusInternalServerError, nil, errConv.Error())
+	// 	}
 
-		//have enough to mint,deduct the amount
-		if whitelist.Amount >= iNumToken {
+	// 	//have enough to mint,deduct the amount
+	// 	if whitelist.Amount >= iNumToken {
 
-			whitelist.Amount -= iNumToken
+	// 		whitelist.Amount -= iNumToken
 
-			errWhitelist = storage.UpdateWhitelist(whitelist)
-			if errWhitelist != nil {
-				dtos.JsonResponse(c, http.StatusInternalServerError, nil, errWhitelist.Error())
+	// 		errWhitelist = storage.UpdateWhitelist(whitelist)
+	// 		if errWhitelist != nil {
+	// 			dtos.JsonResponse(c, http.StatusInternalServerError, nil, errWhitelist.Error())
 
-				return
-			}
-		} else {
-			dtos.JsonResponse(c, http.StatusBadRequest, nil, "You are not allocated enough to mint this amount: "+numberOfTokensStr)
-		}
-	}
+	// 			return
+	// 		}
+	// 	} else {
+	// 		dtos.JsonResponse(c, http.StatusBadRequest, nil, "You are not allocated enough to mint this amount: "+numberOfTokensStr)
+	// 	}
+	// }
 
 	lastToken, err := storage.GetLastNonceTokenByCollectionId(collection.ID)
 	if err != nil {
