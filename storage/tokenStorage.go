@@ -101,6 +101,25 @@ func GetTokenById(id uint64) (*entities.Token, error) {
 	return &token, nil
 }
 
+func GetTokenByTokenIdAndNonceStr(tokenId string, nonce string) (*entities.Token, error) {
+	var token entities.Token
+
+	database, err := GetDBOrError()
+	if err != nil {
+		return nil, err
+	}
+
+	txRead := database.Find(&token, "token_id = ? AND nonce_str = ?", tokenId, nonce)
+	if txRead.Error != nil {
+		return nil, txRead.Error
+	}
+	if txRead.RowsAffected == 0 {
+		return nil, gorm.ErrRecordNotFound
+	}
+
+	return &token, nil
+}
+
 func GetTokenByTokenIdAndNonce(tokenId string, nonce uint64) (*entities.Token, error) {
 	var token entities.Token
 

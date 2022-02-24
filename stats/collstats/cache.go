@@ -19,7 +19,7 @@ import (
 var (
 	redisCollectionStatsKeyFormat = "CollStats:%s"
 	redisSetNXCollectionKeyFormat = "SetNxColl:%s"
-	redisSetNXCollectionExpire    = 15 * time.Minute
+	redisSetNXCollectionExpire    = 1 * time.Second
 	tokenIdToCollectionCacheInfo  = []byte("tokenToColl")
 
 	log = logger.GetOrCreate("stats")

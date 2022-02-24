@@ -79,7 +79,7 @@ func (ci *CollectionIndexer) StartWorker() {
 			continue
 		}
 		if len(ColResults) == 0 {
-			continue
+			goto colLoop
 		}
 		for _, colR := range ColResults {
 			name := (colR["action"].(map[string]interface{}))["name"].(string)
@@ -140,7 +140,7 @@ func (ci *CollectionIndexer) StartWorker() {
 			}
 
 		}
-
+	colLoop:
 		collections, err := storage.GetAllCollections()
 		if err != nil {
 			fmt.Errorf(err.Error())
@@ -168,7 +168,8 @@ func (ci *CollectionIndexer) StartWorker() {
 
 			req, err := http.
 				NewRequest("GET",
-					fmt.Sprintf("https://devnet-api.elrond.com/accounts/%s/transactions?from=%d&withScResults=true&withLogs=false",
+					fmt.Sprintf("%s/accounts/%s/transactions?from=%d&withScResults=true&withLogs=false",
+						ci.ElrondAPI,
 						collectionIndexer.CollectionAddr,
 						collectionIndexer.LastIndex),
 					nil)
@@ -263,41 +264,25 @@ func (ci *CollectionIndexer) StartWorker() {
 							fmt.Println(err.Error())
 							continue
 						}
-
-						userAddrByte, err := hex.DecodeString(transferData[4])
-						if err != nil {
-							fmt.Println(err.Error())
-							continue
-						}
-						byte32, err := bech32.ConvertBits(userAddrByte, 8, 5, true)
-						if err != nil {
-							fmt.Println(err.Error())
-							continue
-						}
-						userAddr, err := bech32.Encode("erd", byte32)
-						if err != nil {
-							fmt.Println(err.Error())
-							continue
-						}
 						for i := 0; i < count; i++ {
 							nonceStr := strconv.FormatInt(int64(nonce)+int64(count), 10)
 							tokenId := string(tokenIdByte) + "-" + nonceStr
-							_, err := storage.GetTokenByTokenIdAndNonce(tokenId, nonce+uint64(count))
+							_, err := storage.GetTokenByTokenIdAndNonceStr(tokenId, nonceStr)
 							if err != nil {
 								if err == gorm.ErrRecordNotFound {
-									lastToken, err := storage.GetLastNonceTokenByCollectionId(col.ID)
-									if err != nil {
-										if err == gorm.ErrRecordNotFound {
-											lastToken.Nonce = 1
-										} else {
-											fmt.Println(err.Error())
-											continue
-										}
-									} else {
-										//if this is a collection with tokens increment the nince
-										lastToken.Nonce = lastToken.Nonce + 1
-									}
-									acc, err := storage.GetAccountByAddress(string(userAddr))
+									// lastToken, err := storage.GetLastNonceTokenByCollectionId(col.ID)
+									// if err != nil {
+									// 	if err == gorm.ErrRecordNotFound {
+									// 		lastToken.Nonce = 1
+									// 	} else {
+									// 		fmt.Println(err.Error())
+									// 		continue
+									// 	}
+									// } else {
+									// 	//if this is a collection with tokens increment the nince
+									// 	lastToken.Nonce = lastToken.Nonce + 1
+									// }
+									acc, err := storage.GetAccountByAddress(rMap["receiver"].(string))
 									if err != nil {
 										fmt.Println(err.Error())
 										continue
@@ -311,7 +296,8 @@ func (ci *CollectionIndexer) StartWorker() {
 										TokenID:      string(tokenIdByte),
 										MintTxHash:   colR["txHash"].(string),
 										CollectionID: col.ID,
-										Nonce:        nonce + 1,
+										Nonce:        nonce,
+										NonceStr:     nonceResArr[2],
 										MetadataLink: string(metaURI) + "/" + nonceStr + ".json",
 										ImageLink:    string(imageURI) + "/" + nonceStr + ".png",
 										TokenName:    col.Name,
