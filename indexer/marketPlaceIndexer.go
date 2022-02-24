@@ -20,15 +20,16 @@ var lerr *log.Logger = log.New(os.Stderr, "", 1)
 
 type MarketPlaceIndexer struct {
 	MarketPlaceAddr string `json:"marketPlaceAddr"`
+	ElrondAPI       string `json:"elrondAPI"`
 }
 
-func NewMarketPlaceIndexer(marketPlaceAddr string) (*MarketPlaceIndexer, error) {
-	return &MarketPlaceIndexer{MarketPlaceAddr: marketPlaceAddr}, nil
+func NewMarketPlaceIndexer(marketPlaceAddr string, elrondAPI string) (*MarketPlaceIndexer, error) {
+	return &MarketPlaceIndexer{MarketPlaceAddr: marketPlaceAddr, ElrondAPI: elrondAPI}, nil
 }
 
 func (mpi *MarketPlaceIndexer) StartWorker() {
 	for {
-		time.Sleep(time.Second * 10)
+		time.Sleep(time.Second * 1)
 		marketStat, err := storage.GetMarketPlaceIndexer()
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
@@ -40,7 +41,8 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				}
 			}
 		}
-		body, err := services.GetResponse(fmt.Sprintf("https://devnet-api.elrond.com/accounts/%s/sc-results?from=%d",
+		body, err := services.GetResponse(fmt.Sprintf("%s/accounts/%s/sc-results?from=%d",
+			mpi.ElrondAPI,
 			mpi.MarketPlaceAddr,
 			marketStat.LastIndex,
 		))
@@ -69,7 +71,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			if !strings.Contains(string(data), "putNftForSale") {
 				continue
 			}
-			body, err := services.GetResponse(fmt.Sprintf("https://devnet-api.elrond.com/transactions?hashes=%s", tx.OriginalTxHash))
+			body, err := services.GetResponse(fmt.Sprintf("%s/transactions?hashes=%s", mpi.ElrondAPI, tx.OriginalTxHash))
 			if err != nil {
 				lerr.Println(err.Error())
 				continue

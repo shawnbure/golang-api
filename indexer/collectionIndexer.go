@@ -6,10 +6,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
 
+	"github.com/ENFT-DAO/youbei-api/data/entities"
 	"github.com/ENFT-DAO/youbei-api/storage"
 	"github.com/btcsuite/btcutil/bech32"
 	"gorm.io/gorm"
@@ -26,6 +28,7 @@ func NewCollectionIndexer(deployerAddr string) (*CollectionIndexer, error) {
 func (ci *CollectionIndexer) StartWorker() {
 	client := &http.Client{}
 	for {
+		log.Println("collection indexer loop")
 		// time.Sleep(time.Second * 5)
 		collections, err := storage.GetAllCollections()
 		if err != nil {
@@ -34,11 +37,22 @@ func (ci *CollectionIndexer) StartWorker() {
 			continue
 		}
 		for _, col := range collections {
+
 			collectionIndexer, err := storage.GetCollectionIndexer(col.ContractAddress)
 			if err != nil {
-				fmt.Errorf(err.Error())
-				fmt.Errorf("error running request get nfts deployer")
-				continue
+
+				if err == gorm.ErrRecordNotFound {
+					_, err = storage.CreateCollectionStat(col.ContractAddress)
+					if err != nil {
+						fmt.Errorf(err.Error())
+						fmt.Errorf("error running request get nfts deployer")
+						continue
+					}
+				} else {
+					fmt.Errorf(err.Error())
+					fmt.Errorf("error running request get nfts deployer")
+					continue
+				}
 			}
 			req, err := http.
 				NewRequest("GET",
@@ -89,38 +103,121 @@ func (ci *CollectionIndexer) StartWorker() {
 						fmt.Println("this tx wasn't good!", colR["originalTxHash"])
 						continue
 					}
-					result := results[2]
-					nonceRes := results[1].(map[string]interface{})["data"]
-					nonceResBytes, err := base64.RawStdEncoding.DecodeString(nonceRes.(string))
-					nonceResArr := strings.Split(string(nonceResBytes), "@")
-					nonce, err := strconv.ParseUint(nonceResArr[2], 10, 64)
-					if err != nil {
-						fmt.Println(err.Error())
-						continue
-					}
-					resultMap := result.(map[string]interface{})
-					decodedData, err := base64.RawStdEncoding.DecodeString(resultMap["data"].(string))
-					if err != nil {
-						fmt.Println(err.Error())
-						continue
-					}
-					transferData := strings.Split(string(decodedData), "@")
-					tokenIdByte, err := hex.DecodeString(transferData[1])
-					if err != nil {
-						fmt.Println(err.Error())
-						continue
-					}
-					token, err := storage.GetTokenByTokenIdAndNonce(string(tokenIdByte)+"-"+string(nonceResArr[2]), nonce)
-					if err != nil {
-						if err == gorm.ErrRecordNotFound {
-							fmt.Println(err.Error())
-							continue
-						} else {
+					for _, r := range results {
+						rMap := r.(map[string]interface{})
+						rMapData, err := base64.StdEncoding.DecodeString(rMap["data"].(string))
+						if err != nil {
 							fmt.Println(err.Error())
 							continue
 						}
+						if !strings.Contains(string(rMapData), "ESDTNFTTransfer") {
+							continue
+						}
+						result := r
+						nonceRes := result.(map[string]interface{})["data"]
+						fmt.Println(nonceRes)
+						nonceResBytes, err := base64.StdEncoding.DecodeString(nonceRes.(string))
+						if err != nil {
+							fmt.Println(err.Error())
+							continue
+						}
+						nonceResArr := strings.Split(string(nonceResBytes), "@")
+						nonceResString, err := hex.DecodeString(nonceResArr[2])
+						if err != nil {
+							fmt.Println(err.Error())
+							continue
+						}
+						countRes, err := hex.DecodeString(nonceResArr[3])
+						if err != nil {
+							fmt.Println(err.Error())
+							continue
+						}
+						// nonce, err := strconv.ParseUint(string(nonceResString[0]), 10, 64)
+						nonce := uint64(nonceResString[0])
+						count := int(countRes[0])
+						// if err != nil {
+						// 	fmt.Println(err.Error())
+						// 	continue
+						// }
+						resultMap := result.(map[string]interface{})
+						decodedData, err := base64.StdEncoding.DecodeString(resultMap["data"].(string))
+						if err != nil {
+							fmt.Println(err.Error())
+							continue
+						}
+						transferData := strings.Split(string(decodedData), "@")
+						tokenIdByte, err := hex.DecodeString(transferData[1])
+						if err != nil {
+							fmt.Println(err.Error())
+							continue
+						}
+
+						userAddrByte, err := hex.DecodeString(transferData[4])
+						if err != nil {
+							fmt.Println(err.Error())
+							continue
+						}
+						byte32, err := bech32.ConvertBits(userAddrByte, 8, 5, true)
+						if err != nil {
+							fmt.Println(err.Error())
+							continue
+						}
+						userAddr, err := bech32.Encode("erd", byte32)
+						if err != nil {
+							fmt.Println(err.Error())
+							continue
+						}
+						for i := 0; i < count; i++ {
+							nonceStr := strconv.FormatInt(int64(nonce)+int64(count), 10)
+							tokenId := string(tokenIdByte) + "-" + nonceStr
+							_, err := storage.GetTokenByTokenIdAndNonce(tokenId, nonce+uint64(count))
+							if err != nil {
+								if err == gorm.ErrRecordNotFound {
+									lastToken, err := storage.GetLastNonceTokenByCollectionId(col.ID)
+									if err != nil {
+										if err == gorm.ErrRecordNotFound {
+											lastToken.Nonce = 1
+										} else {
+											fmt.Println(err.Error())
+											continue
+										}
+									} else {
+										//if this is a collection with tokens increment the nince
+										lastToken.Nonce = lastToken.Nonce + 1
+									}
+									acc, err := storage.GetAccountByAddress(string(userAddr))
+									if err != nil {
+										fmt.Println(err.Error())
+										continue
+									}
+									price := colR["value"].(string)
+									priceFloat, err := strconv.ParseFloat(price, 64)
+									err = storage.AddToken(&entities.Token{
+										TokenID:      string(tokenIdByte),
+										MintTxHash:   colR["txHash"].(string),
+										CollectionID: col.ID,
+										Nonce:        nonce + 1,
+										MetadataLink: col.MetaDataBaseURI,
+										ImageLink:    col.TokenBaseURI,
+										TokenName:    col.Name,
+										OwnerId:      acc.ID,
+										OnSale:       false,
+										PriceString:  price,
+										PriceNominal: priceFloat,
+									})
+									if err != nil {
+										fmt.Errorf(err.Error())
+										continue
+									}
+								} else {
+									fmt.Println(err.Error())
+									continue
+								}
+							}
+						}
+
 					}
-					token.MintTxHash = colR["txHash"].(string)
+
 				}
 			}
 			collectionIndexer.LastIndex += 1
@@ -215,7 +312,6 @@ func (ci *CollectionIndexer) StartWorker() {
 							fmt.Println(err.Error())
 							continue
 						} else {
-							fmt.Println(err.Error())
 							continue
 						}
 					}

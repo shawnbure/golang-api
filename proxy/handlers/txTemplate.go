@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"gorm.io/gorm"
-
 	"github.com/ENFT-DAO/youbei-api/config"
 	"github.com/ENFT-DAO/youbei-api/data/dtos"
 	"github.com/ENFT-DAO/youbei-api/data/entities"
@@ -581,28 +579,6 @@ func (handler *txTemplateHandler) getMintNftTxTemplate(c *gin.Context) {
 	// 	}
 	// }
 
-	lastToken, err := storage.GetLastNonceTokenByCollectionId(collection.ID)
-	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			lastToken.Nonce = 1
-		} else {
-			dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
-			return
-		}
-	} else {
-		//if this is a collection with tokens increment the nince
-		lastToken.Nonce = lastToken.Nonce + 1
-	}
-	err = storage.AddToken(&entities.Token{
-		TokenID:      tokenId,
-		CollectionID: collection.ID,
-		Nonce:        lastToken.Nonce,
-		MetadataLink: collection.MetaDataBaseURI,
-		ImageLink:    collection.TokenBaseURI,
-		TokenName:    collection.Name,
-		OwnerId:      collection.CreatorID,
-		OnSale:       false,
-	})
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return

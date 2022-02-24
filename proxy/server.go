@@ -55,7 +55,7 @@ func NewWebServer(cfg *config.GeneralConfig) (*webServer, error) {
 		return nil, err
 	}
 
-	marketPlaceIndexer, err := indexer.NewMarketPlaceIndexer(cfg.Blockchain.MarketplaceAddress)
+	marketPlaceIndexer, err := indexer.NewMarketPlaceIndexer(cfg.Blockchain.MarketplaceAddress, cfg.Blockchain.ApiUrl)
 	if err != nil {
 		return nil, err
 	}
