@@ -19,10 +19,11 @@ import (
 
 type CollectionIndexer struct {
 	DeployerAddr string `json:"deployerAddr"`
+	ElrondAPI    string `json:"elrondApi"`
 }
 
-func NewCollectionIndexer(deployerAddr string) (*CollectionIndexer, error) {
-	return &CollectionIndexer{DeployerAddr: deployerAddr}, nil
+func NewCollectionIndexer(deployerAddr string, elrondAPI string) (*CollectionIndexer, error) {
+	return &CollectionIndexer{DeployerAddr: deployerAddr, ElrondAPI: elrondAPI}, nil
 }
 
 func (ci *CollectionIndexer) StartWorker() {
@@ -30,6 +31,116 @@ func (ci *CollectionIndexer) StartWorker() {
 	for {
 		log.Println("collection indexer loop")
 		// time.Sleep(time.Second * 5)
+		deployerStat, err := storage.GetDeployerStat(ci.DeployerAddr)
+		if err != nil {
+			if err == gorm.ErrRecordNotFound {
+				deployerStat, err = storage.CreateDeployerStat(ci.DeployerAddr)
+				if err != nil {
+					fmt.Println(err.Error())
+					fmt.Println("something went wrong creating marketstat")
+				}
+			}
+		}
+		req, err := http.
+			NewRequest("GET",
+				fmt.Sprintf("https://devnet-api.elrond.com/accounts/%s/transactions?from=%d&withScResults=true&withLogs=false",
+					ci.DeployerAddr,
+					deployerStat.LastIndex),
+				nil)
+		if err != nil {
+			fmt.Println(err.Error())
+			fmt.Println("error creating request for get nfts deployer")
+			continue
+		}
+		resp, err := client.Do(req)
+		if err != nil {
+			fmt.Println(err.Error())
+			fmt.Println("error running request get nfts deployer")
+			continue
+		}
+
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			fmt.Println(err.Error())
+			resp.Body.Close()
+			fmt.Println("error readall response get nfts deployer")
+			continue
+		}
+		resp.Body.Close()
+		if resp.Status != "200 OK" {
+			fmt.Println("response not successful  get nfts deployer")
+			continue
+		}
+		var ColResults []map[string]interface{}
+		err = json.Unmarshal(body, &ColResults)
+		if err != nil {
+			fmt.Println(err.Error())
+			fmt.Println("error unmarshal nfts deployer")
+			continue
+		}
+		if len(ColResults) == 0 {
+			continue
+		}
+		for _, colR := range ColResults {
+			name := (colR["action"].(map[string]interface{}))["name"].(string)
+			if name == "deployNFTTemplateContract" {
+				mainDataStr := colR["data"].(string)
+				mainData64Str, _ := base64.StdEncoding.DecodeString(mainDataStr)
+				mainDatas := strings.Split(string(mainData64Str), "@")
+				tokenIdHex := mainDatas[1]
+				imageLink, _ := hex.DecodeString(mainDatas[4])
+				metaLink, _ := hex.DecodeString(mainDatas[9])
+				results := (colR["results"].([]interface{}))
+				result := results[0]
+				data := result.(map[string]interface{})["data"].(string)
+				decodedData64, _ := base64.StdEncoding.DecodeString(data)
+				decodedData := strings.Split(string(decodedData64), "@")
+				hexByte, err := hex.DecodeString(decodedData[2])
+				if err != nil {
+					fmt.Println(err.Error())
+					continue
+				}
+				byte32, err := bech32.ConvertBits(hexByte, 8, 5, true)
+				if err != nil {
+					fmt.Println(err.Error())
+					continue
+				}
+				bech32Addr, err := bech32.Encode("erd", byte32)
+				if err != nil {
+					fmt.Println(err.Error())
+					continue
+				}
+				tokenId, err := hex.DecodeString(tokenIdHex)
+				dbCol, err := storage.GetCollectionByTokenId(string(tokenId))
+				if err != nil {
+					fmt.Println(err.Error())
+					continue
+				}
+				dbCol.MetaDataBaseURI = string(metaLink)
+				dbCol.TokenBaseURI = string(imageLink)
+				err = storage.UpdateCollection(dbCol)
+				if err != nil {
+					fmt.Println(err.Error())
+					continue
+				}
+				// get collection tx and check mint transactions
+				_, err = storage.GetCollectionIndexer(bech32Addr)
+				if err != nil {
+					if err == gorm.ErrRecordNotFound {
+						_, err = storage.CreateCollectionStat(bech32Addr)
+						if err != nil {
+							fmt.Println(err.Error())
+							continue
+						} else {
+							continue
+						}
+					}
+				}
+
+			}
+
+		}
+
 		collections, err := storage.GetAllCollections()
 		if err != nil {
 			fmt.Errorf(err.Error())
@@ -54,6 +165,7 @@ func (ci *CollectionIndexer) StartWorker() {
 					continue
 				}
 			}
+
 			req, err := http.
 				NewRequest("GET",
 					fmt.Sprintf("https://devnet-api.elrond.com/accounts/%s/transactions?from=%d&withScResults=true&withLogs=false",
@@ -192,13 +304,16 @@ func (ci *CollectionIndexer) StartWorker() {
 									}
 									price := colR["value"].(string)
 									priceFloat, err := strconv.ParseFloat(price, 64)
+									metaURI, err := hex.DecodeString(col.MetaDataBaseURI)
+									imageURI, err := hex.DecodeString(col.TokenBaseURI)
+
 									err = storage.AddToken(&entities.Token{
 										TokenID:      string(tokenIdByte),
 										MintTxHash:   colR["txHash"].(string),
 										CollectionID: col.ID,
 										Nonce:        nonce + 1,
-										MetadataLink: col.MetaDataBaseURI,
-										ImageLink:    col.TokenBaseURI,
+										MetadataLink: string(metaURI) + "/" + nonceStr + ".json",
+										ImageLink:    string(imageURI) + "/" + nonceStr + ".png",
 										TokenName:    col.Name,
 										OwnerId:      acc.ID,
 										OnSale:       false,
@@ -230,96 +345,7 @@ func (ci *CollectionIndexer) StartWorker() {
 				}
 			}
 		}
-		deployerStat, err := storage.GetDeployerStat(ci.DeployerAddr)
-		if err != nil {
-			if err == gorm.ErrRecordNotFound {
-				deployerStat, err = storage.CreateDeployerStat(ci.DeployerAddr)
-				if err != nil {
-					fmt.Println(err.Error())
-					fmt.Println("something went wrong creating marketstat")
-				}
-			}
-		}
-		req, err := http.
-			NewRequest("GET",
-				fmt.Sprintf("https://devnet-api.elrond.com/accounts/%s/transactions?from=%d&withScResults=true&withLogs=false",
-					ci.DeployerAddr,
-					deployerStat.LastIndex),
-				nil)
-		if err != nil {
-			fmt.Println(err.Error())
-			fmt.Println("error creating request for get nfts deployer")
-			continue
-		}
-		resp, err := client.Do(req)
-		if err != nil {
-			fmt.Println(err.Error())
-			fmt.Println("error running request get nfts deployer")
-			continue
-		}
 
-		body, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			fmt.Println(err.Error())
-			resp.Body.Close()
-			fmt.Println("error readall response get nfts deployer")
-			continue
-		}
-		resp.Body.Close()
-		if resp.Status != "200 OK" {
-			fmt.Println("response not successful  get nfts deployer")
-			continue
-		}
-		var ColResults []map[string]interface{}
-		err = json.Unmarshal(body, &ColResults)
-		if err != nil {
-			fmt.Println(err.Error())
-			fmt.Println("error unmarshal nfts deployer")
-			continue
-		}
-		if len(ColResults) == 0 {
-			continue
-		}
-		for _, colR := range ColResults {
-			name := (colR["action"].(map[string]interface{}))["name"].(string)
-			if name == "deployNFTTemplateContract" {
-				results := (colR["results"].([]interface{}))
-				result := results[0]
-				data := result.(map[string]interface{})["data"].(string)
-				decodedData64, _ := base64.StdEncoding.DecodeString(data)
-				decodedData := strings.Split(string(decodedData64), "@")
-				hexByte, err := hex.DecodeString(decodedData[2])
-				if err != nil {
-					fmt.Println(err.Error())
-					continue
-				}
-				byte32, err := bech32.ConvertBits(hexByte, 8, 5, true)
-				if err != nil {
-					fmt.Println(err.Error())
-					continue
-				}
-				bech32Addr, err := bech32.Encode("erd", byte32)
-				if err != nil {
-					fmt.Println(err.Error())
-					continue
-				}
-				// get collection tx and check mint transactions
-				_, err = storage.GetCollectionIndexer(bech32Addr)
-				if err != nil {
-					if err == gorm.ErrRecordNotFound {
-						_, err = storage.CreateCollectionStat(bech32Addr)
-						if err != nil {
-							fmt.Println(err.Error())
-							continue
-						} else {
-							continue
-						}
-					}
-				}
-
-			}
-
-		}
 		newStat, err := storage.UpdateDeployerIndexer(deployerStat.LastIndex+1, ci.DeployerAddr)
 		if err != nil {
 			fmt.Println(err.Error())
