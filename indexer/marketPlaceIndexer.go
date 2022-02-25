@@ -29,7 +29,7 @@ func NewMarketPlaceIndexer(marketPlaceAddr string, elrondAPI string) (*MarketPla
 
 func (mpi *MarketPlaceIndexer) StartWorker() {
 	for {
-		time.Sleep(time.Second * 1)
+		time.Sleep(time.Second * 2)
 		marketStat, err := storage.GetMarketPlaceIndexer()
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {

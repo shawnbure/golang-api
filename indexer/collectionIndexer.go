@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/ENFT-DAO/youbei-api/data/entities"
 	"github.com/ENFT-DAO/youbei-api/storage"
@@ -30,7 +31,7 @@ func (ci *CollectionIndexer) StartWorker() {
 	client := &http.Client{}
 	for {
 		log.Println("collection indexer loop")
-		// time.Sleep(time.Second * 5)
+		time.Sleep(time.Second * 2)
 		deployerStat, err := storage.GetDeployerStat(ci.DeployerAddr)
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
