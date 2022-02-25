@@ -14,8 +14,10 @@ import (
 	"time"
 
 	"github.com/ENFT-DAO/youbei-api/data/entities"
+	"github.com/ENFT-DAO/youbei-api/services"
 	"github.com/ENFT-DAO/youbei-api/storage"
 	"github.com/btcsuite/btcutil/bech32"
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
@@ -302,7 +304,28 @@ func (ci *CollectionIndexer) StartWorker() {
 									priceFloat, err := strconv.ParseFloat(price, 64)
 									metaURI, err := hex.DecodeString(col.MetaDataBaseURI)
 									imageURI, err := hex.DecodeString(col.TokenBaseURI)
-
+									attrbs, err := services.GetResponse(string(metaURI) + "/" + nonceStr + ".json")
+									if err != nil {
+										log.Println(err.Error())
+										continue
+									}
+									metadataJSON := make(map[string]interface{})
+									err = json.Unmarshal(attrbs, &metadataJSON)
+									if err != nil {
+										log.Println(err.Error())
+										continue
+									}
+									var attributes datatypes.JSON
+									attributesBytes, err := json.Marshal(metadataJSON["attributes"])
+									if err != nil {
+										log.Println(err.Error())
+										continue
+									}
+									err = json.Unmarshal(attributesBytes, &attributes)
+									if err != nil {
+										log.Println(err.Error())
+										continue
+									}
 									err = storage.AddToken(&entities.Token{
 										TokenID:      string(tokenIdByte),
 										MintTxHash:   colR["txHash"].(string),
@@ -312,6 +335,7 @@ func (ci *CollectionIndexer) StartWorker() {
 										MetadataLink: string(metaURI) + "/" + nonceStr + ".json",
 										ImageLink:    string(imageURI) + "/" + nonceStr + ".png",
 										TokenName:    col.Name,
+										Attributes:   attributes,
 										OwnerId:      acc.ID,
 										OnSale:       false,
 										PriceString:  price,

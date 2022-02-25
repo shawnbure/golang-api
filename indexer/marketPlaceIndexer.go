@@ -2,17 +2,19 @@ package indexer
 
 import (
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"log"
+	"math/big"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/ENFT-DAO/youbei-api/data/entities"
 	"github.com/ENFT-DAO/youbei-api/services"
 	"github.com/ENFT-DAO/youbei-api/storage"
+	"github.com/emurmotol/ethconv"
 	"gorm.io/gorm"
 )
 
@@ -77,12 +79,23 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				lerr.Println(err.Error())
 				continue
 			}
-			var txBody entities.TransactionBC
+			var txBody []entities.TransactionBC
 			err = json.Unmarshal(body, &txBody)
 			if err != nil {
 				lerr.Println(err.Error())
 				continue
 			}
+			mainTxDataStr := txBody[0].Data
+			mainTxData, err := base64.StdEncoding.DecodeString(mainTxDataStr)
+			if err != nil {
+				lerr.Println(err.Error())
+				continue
+			}
+			mainDataParts := strings.Split(string(mainTxData), "@")
+			hexTokenId := mainDataParts[1]
+			tokenId, err := hex.DecodeString(hexTokenId)
+			hexNonce := mainDataParts[2]
+			// nonce, err := hex.DecodeString(hexNonce)
 			data, err = base64.StdEncoding.DecodeString(tx.Data)
 			if err != nil {
 				lerr.Println(err.Error())
@@ -90,16 +103,16 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			}
 			dataStr := string(data)
 			dataParts := strings.Split(dataStr, "@")
-			tokenId := dataParts[1]
-			nonce, err := strconv.ParseUint(dataParts[2], 10, 64)
-			if err != nil {
-				lerr.Println(err.Error())
+			price, ok := big.NewInt(0).SetString(dataParts[1], 16)
+			if !ok {
+				lerr.Println("can not convert price", price, dataParts[1])
 				continue
 			}
-			token.TokenID = tokenId
-			token.Nonce = nonce
+			fprice, err := ethconv.FromWei(price, ethconv.Ether)
+			token.PriceString = fprice.String()
+			token.PriceNominal, _ = fprice.Float64()
 			token.OnSale = true
-			err = storage.UpdateTokenWhere(&token, "token_id=? AND nonce=?", tokenId, nonce)
+			err = storage.UpdateTokenWhere(&token, "token_id=? AND nonce_str=?", tokenId, hexNonce)
 			if err != nil {
 				if err == gorm.ErrRecordNotFound {
 					// col, err := storage.GetCollectionByTokenId(nft.Collection)
