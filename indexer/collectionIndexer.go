@@ -101,8 +101,8 @@ func (ci *CollectionIndexer) StartWorker() {
 				mainData64Str, _ := base64.StdEncoding.DecodeString(mainDataStr)
 				mainDatas := strings.Split(string(mainData64Str), "@")
 				tokenIdHex := mainDatas[1]
-				imageLink, _ := hex.DecodeString(mainDatas[4])
-				metaLink, _ := hex.DecodeString(mainDatas[9])
+				imageLink, _ := (mainDatas[4])
+				metaLink, _ := (mainDatas[9])
 				results := (colR["results"].([]interface{}))
 				result := results[0]
 				data := result.(map[string]interface{})["data"].(string)
