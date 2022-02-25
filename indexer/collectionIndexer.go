@@ -43,7 +43,8 @@ func (ci *CollectionIndexer) StartWorker() {
 		}
 		req, err := http.
 			NewRequest("GET",
-				fmt.Sprintf("https://devnet-api.elrond.com/accounts/%s/transactions?from=%d&withScResults=true&withLogs=false",
+				fmt.Sprintf("%s/accounts/%s/transactions?from=%d&withScResults=true&withLogs=false",
+					ci.ElrondAPI,
 					ci.DeployerAddr,
 					deployerStat.LastIndex),
 				nil)
