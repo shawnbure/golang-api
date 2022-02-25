@@ -16,6 +16,7 @@ const (
 	baseWhitelistEndpoint    = "/whitelists"
 	whitelistByAddress       = "/:address"
 	whitelistByAddressAmount = "/:address/:amount"
+	//whitelistBuyLimitByAddresses = "buy-limit/:contract-address/:user-address"
 )
 
 type whitelistHandler struct {
@@ -28,6 +29,7 @@ func NewWhitelistHandler(groupHandler *groupHandler, authCfg config.AuthConfig, 
 	endpoints := []EndpointHandler{
 		{Method: http.MethodPost, Path: whitelistByAddress, HandlerFunc: handler.GetWhitelistByAddress},
 		{Method: http.MethodPost, Path: whitelistByAddressAmount, HandlerFunc: handler.UpdateWhitelistAmountByAddress},
+		/*{Method: http.MethodPost, Path: whitelistLimitByAddresses, HandlerFunc: handler.GetWhitelistLimitByAddresses},*/
 	}
 	endpointGroupHandler := EndpointGroupHandler{
 		Root:             baseCollectionsEndpoint,
