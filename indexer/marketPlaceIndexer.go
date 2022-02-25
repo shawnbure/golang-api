@@ -42,7 +42,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				}
 			}
 		}
-		body, err := services.GetResponse(fmt.Sprintf("%s/accounts/%s/sc-results?from=%d",
+		body, err := services.GetResponse(fmt.Sprintf("%s/accounts/%s/sc-results?from=%d&order=asc",
 			mpi.ElrondAPI,
 			mpi.MarketPlaceAddr,
 			marketStat.LastIndex,
@@ -72,7 +72,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			if !strings.Contains(string(data), "putNftForSale") {
 				continue
 			}
-			body, err := services.GetResponse(fmt.Sprintf("%s/transactions?hashes=%s", mpi.ElrondAPI, tx.OriginalTxHash))
+			body, err := services.GetResponse(fmt.Sprintf("%s/transactions?hashes=%s&order=asc", mpi.ElrondAPI, tx.OriginalTxHash))
 			if err != nil {
 				lerr.Println(err.Error())
 				continue

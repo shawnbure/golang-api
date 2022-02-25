@@ -49,7 +49,7 @@ func (ci *CollectionIndexer) StartWorker() {
 		}
 		req, err := http.
 			NewRequest("GET",
-				fmt.Sprintf("%s/accounts/%s/transactions?from=%d&withScResults=true&withLogs=false",
+				fmt.Sprintf("%s/accounts/%s/transactions?from=%d&withScResults=true&withLogs=false&order=asc",
 					ci.ElrondAPI,
 					ci.DeployerAddr,
 					deployerStat.LastIndex),
@@ -179,7 +179,7 @@ func (ci *CollectionIndexer) StartWorker() {
 
 			req, err := http.
 				NewRequest("GET",
-					fmt.Sprintf("%s/accounts/%s/transactions?from=%d&withScResults=true&withLogs=false",
+					fmt.Sprintf("%s/accounts/%s/transactions?from=%d&withScResults=true&withLogs=false&order=asc",
 						ci.ElrondAPI,
 						collectionIndexer.CollectionAddr,
 						collectionIndexer.LastIndex),
@@ -337,7 +337,7 @@ func (ci *CollectionIndexer) StartWorker() {
 			if err != nil {
 				_, err := storage.UpdateCollectionIndexer(collectionIndexer.LastIndex, collectionIndexer.CollectionAddr)
 				if err != nil {
-					fmt.Errorf(err.Error())
+					log.Println(err.Error())
 					continue
 				}
 			}
