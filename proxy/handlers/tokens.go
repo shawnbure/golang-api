@@ -29,6 +29,7 @@ const (
 	refreshTokenMetadataEndpoint     = "/:tokenId/:nonce/refresh"
 	tokenMetadataRelayEndpoint       = "/metadata/relay"
 	tokensListMetadataEndpoint       = "/list/:offset/:limit"
+	whitelistBuyCountLimitEndpoint   = "/whitelist/buycountlimit"
 )
 
 type TokenListQueryBody struct {
@@ -62,6 +63,7 @@ func NewTokensHandler(groupHandler *groupHandler, authCfg config.AuthConfig, cfg
 		{Method: http.MethodGet, Path: tokenMetadataRelayEndpoint, HandlerFunc: handler.relayMetadataResponse},
 		{Method: http.MethodPost, Path: refreshTokenMetadataEndpoint, HandlerFunc: handler.refresh},
 		{Method: http.MethodPost, Path: tokensListMetadataEndpoint, HandlerFunc: handler.getList},
+		{Method: http.MethodPost, Path: whitelistBuyCountLimitEndpoint, HandlerFunc: handler.getWhitelistBuyCountLimit},
 	}
 
 	publicEndpointGroupHandler := EndpointGroupHandler{
@@ -428,4 +430,26 @@ func (handler *tokensHandler) getList(c *gin.Context) {
 	}
 
 	dtos.JsonResponse(c, http.StatusOK, tokens, "")
+}
+
+func (handler *tokensHandler) getWhitelistBuyCountLimit(c *gin.Context) {
+
+	var queries services.WhitelistBuyLimitCountRequest
+	err := c.BindJSON(&queries)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	fmt.Println("@@@@@@ queries.ContractAddress: " + queries.ContractAddress)
+	fmt.Println("@@@@@@ queries.UserAddress: " + queries.UserAddress)
+
+	strBuyCountLimit, err := services.GetWhitelistBuyCountLimit(queries.ContractAddress, queries.UserAddress)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		return
+	}
+
+	fmt.Println("strBuyCountLimit: " + strBuyCountLimit)
+	dtos.JsonResponse(c, http.StatusOK, strBuyCountLimit, "")
 }
