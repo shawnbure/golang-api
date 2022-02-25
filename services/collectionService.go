@@ -55,6 +55,9 @@ type CreateCollectionRequest struct {
 	Flags                   []string `json:"flags"`
 	ContractAddress         string   `json:"contractAddress"`
 	MintPricePerTokenString string   `json:"mintPricePerTokenString"`
+	TokenBaseURI            string   `json:"tokenBaseURI"`
+	MaxSupply               uint64   `json:"maxSupply"`
+	MetaDataBaseURI         string   `json:"metaDataBaseURI"`
 }
 
 type UpdateCollectionRequest struct {
