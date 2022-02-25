@@ -2,6 +2,7 @@ package services
 
 import (
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -15,9 +16,11 @@ import (
 	"github.com/ENFT-DAO/youbei-api/cache"
 	"github.com/ENFT-DAO/youbei-api/data/dtos"
 	"github.com/ENFT-DAO/youbei-api/data/entities"
+	"github.com/ENFT-DAO/youbei-api/interaction"
 	"github.com/ENFT-DAO/youbei-api/stats/collstats"
 	"github.com/ENFT-DAO/youbei-api/storage"
 	logger "github.com/ElrondNetwork/elrond-go-logger"
+	"github.com/ElrondNetwork/elrond-sdk-erdgo/data"
 	"github.com/boltdb/bolt"
 )
 
@@ -105,6 +108,11 @@ type AvailableTokensResponse struct {
 type TokenCacheInfo struct {
 	TokenDbId uint64
 	TokenName string
+}
+
+type WhitelistBuyLimitCountRequest struct {
+	ContractAddress string `json:"contractAddress"`
+	UserAddress     string `json:"userAddress"`
 }
 
 const (
@@ -1045,4 +1053,63 @@ func GetTokensWithTokenIdAlike(tokenId string, limit int) ([]entities.Token, err
 	}
 
 	return tokenArray, nil
+}
+
+func GetWhitelistBuyCountLimit(contractAddress string, userAddress string) (string, error) {
+	//localCacher := cache.GetLocalCacher()
+	//key := fmt.Sprintf(RoyaltiesLocalCacheKeyFormat, address)
+
+	//priceVal, errRead := localCacher.Get(key)
+	//if errRead == nil {
+	//	return priceVal.(float64), nil
+	//}
+
+	strBuyCountLimit, err := DoGetWhitelistBuyCountLimitVmQuery(contractAddress, userAddress)
+	if err != nil {
+		return "", err
+	}
+
+	return strBuyCountLimit, nil
+}
+
+func DoGetWhitelistBuyCountLimitVmQuery(contractAddress string, userAddress string) (string, error) {
+
+	bi := interaction.GetBlockchainInteractor()
+
+	//get the user address prep (decoded & Hexed)
+	userAddressDecoded, errUserAddress := data.NewAddressFromBech32String(userAddress)
+	if errUserAddress != nil {
+		return "", errUserAddress
+	}
+	userAddressHex := hex.EncodeToString(userAddressDecoded.AddressBytes())
+
+	//get the "buy_count" from SC
+	resultBuyCount, errBuyCount := bi.DoVmQuery(contractAddress, "GetBuyCount", []string{userAddressHex})
+	if errBuyCount != nil {
+		return "", errBuyCount
+	}
+
+	strBuyCount := "0"
+	if len(resultBuyCount) != 0 {
+		buyCount := big.NewInt(0).SetBytes(resultBuyCount[0])
+		buyCountBytes := buyCount.Bytes()
+		strBuyCount = hex.EncodeToString(buyCountBytes)
+	}
+
+	//get the "buy_limit" from SC
+	resultBuyLimit, errBuyLimit := bi.DoVmQuery(contractAddress, "getBuyLimit", []string{userAddressHex})
+
+	if errBuyLimit != nil {
+		return "", errBuyLimit
+	}
+
+	strBuyLimit := "0"
+	if len(resultBuyLimit) != 0 {
+		buyLimit := big.NewInt(0).SetBytes(resultBuyLimit[0])
+		buyLimitBytes := buyLimit.Bytes()
+		strBuyLimit = hex.EncodeToString(buyLimitBytes)
+	}
+
+	strBuyCountLimit := strBuyCount + "," + strBuyLimit
+	return strBuyCountLimit, nil
 }
