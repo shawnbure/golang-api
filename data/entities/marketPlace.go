@@ -48,6 +48,7 @@ type TransactionBC struct {
 	Sender    string `json:"sender"`
 	Receiver  string `json:"receiver"`
 	Data      string `json:"data"`
+	Status    string `json:"status`
 	Timestamp uint64 `json:"timestamp"`
 	Action    struct {
 		Category string `json:"category"`

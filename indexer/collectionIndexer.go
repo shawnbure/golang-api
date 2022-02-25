@@ -96,7 +96,7 @@ func (ci *CollectionIndexer) StartWorker() {
 		}
 		for _, colR := range ColResults {
 			name := (colR["action"].(map[string]interface{}))["name"].(string)
-			if name == "deployNFTTemplateContract" {
+			if name == "deployNFTTemplateContract" && colR["status"] != "fail" {
 				mainDataStr := colR["data"].(string)
 				mainData64Str, _ := base64.StdEncoding.DecodeString(mainDataStr)
 				mainDatas := strings.Split(string(mainData64Str), "@")
@@ -164,7 +164,6 @@ func (ci *CollectionIndexer) StartWorker() {
 
 			collectionIndexer, err := storage.GetCollectionIndexer(col.ContractAddress)
 			if err != nil {
-
 				if err == gorm.ErrRecordNotFound {
 					_, err = storage.CreateCollectionStat(col.ContractAddress)
 					if err != nil {
@@ -223,7 +222,7 @@ func (ci *CollectionIndexer) StartWorker() {
 			}
 			for _, colR := range ColResults {
 				name := (colR["action"].(map[string]interface{}))["name"].(string)
-				if name == "mintTokensThroughMarketplace" {
+				if name == "mintTokensThroughMarketplace" && colR["status"] != "fail" {
 					results := (colR["results"].([]interface{}))
 					if len(results) < 2 {
 						log.Println("this tx wasn't good!", colR["originalTxHash"])
@@ -278,7 +277,7 @@ func (ci *CollectionIndexer) StartWorker() {
 							continue
 						}
 						for i := 0; i < count; i++ {
-							nonceStr := strconv.FormatInt(int64(nonce)+int64(count), 10)
+							nonceStr := strconv.FormatInt(int64(nonce), 10)
 							tokenId := string(tokenIdByte) + "-" + nonceStr
 							_, err := storage.GetTokenByTokenIdAndNonceStr(tokenId, nonceStr)
 							if err != nil {
@@ -351,9 +350,7 @@ func (ci *CollectionIndexer) StartWorker() {
 								}
 							}
 						}
-
 					}
-
 				}
 			}
 			collectionIndexer.LastIndex += 1

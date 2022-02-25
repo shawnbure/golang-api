@@ -65,6 +65,21 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			continue
 		}
 		for _, tx := range txResult {
+			orgtxByte, err := services.GetResponse(fmt.Sprintf("%s/transactions/%s", mpi.ElrondAPI, tx.OriginalTxHash))
+			if err != nil {
+				lerr.Println(err.Error())
+				continue
+			}
+			var orgTx entities.TransactionBC
+			err = json.Unmarshal(orgtxByte, orgTx)
+			if err != nil {
+				lerr.Println(err.Error())
+				continue
+			}
+			if orgTx.Status == "fail" {
+				continue
+			}
+
 			var token entities.Token
 			data, err := base64.StdEncoding.DecodeString(tx.Data)
 			if err != nil {
