@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -21,14 +22,18 @@ import (
 type CollectionIndexer struct {
 	DeployerAddr string `json:"deployerAddr"`
 	ElrondAPI    string `json:"elrondApi"`
+	Logger       *log.Logger
 }
 
 func NewCollectionIndexer(deployerAddr string, elrondAPI string) (*CollectionIndexer, error) {
-	return &CollectionIndexer{DeployerAddr: deployerAddr, ElrondAPI: elrondAPI}, nil
+	l := log.New(os.Stderr, "", log.LUTC)
+	return &CollectionIndexer{DeployerAddr: deployerAddr, ElrondAPI: elrondAPI,
+		Logger: l}, nil
 }
 
 func (ci *CollectionIndexer) StartWorker() {
 	client := &http.Client{}
+	log := ci.Logger
 	for {
 		log.Println("collection indexer loop")
 		time.Sleep(time.Second * 2)
@@ -37,8 +42,8 @@ func (ci *CollectionIndexer) StartWorker() {
 			if err == gorm.ErrRecordNotFound {
 				deployerStat, err = storage.CreateDeployerStat(ci.DeployerAddr)
 				if err != nil {
-					fmt.Println(err.Error())
-					fmt.Println("something went wrong creating marketstat")
+					log.Println(err.Error())
+					log.Println("something went wrong creating marketstat")
 				}
 			}
 		}
@@ -50,34 +55,38 @@ func (ci *CollectionIndexer) StartWorker() {
 					deployerStat.LastIndex),
 				nil)
 		if err != nil {
-			fmt.Println(err.Error())
-			fmt.Println("error creating request for get nfts deployer")
+			log.Println(err.Error())
+			log.Println("error creating request for get nfts deployer")
 			continue
 		}
 		resp, err := client.Do(req)
 		if err != nil {
-			fmt.Println(err.Error())
-			fmt.Println("error running request get nfts deployer")
+			log.Println(err.Error())
+			log.Println("error running request get nfts deployer")
 			continue
 		}
 
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			fmt.Println(err.Error())
+			log.Println(err.Error())
 			resp.Body.Close()
-			fmt.Println("error readall response get nfts deployer")
+			log.Println("error readall response get nfts deployer")
 			continue
 		}
 		resp.Body.Close()
 		if resp.Status != "200 OK" {
-			fmt.Println("response not successful  get nfts deployer")
+			log.Println("response not successful  get nfts deployer ",
+				ci.ElrondAPI,
+				ci.DeployerAddr,
+				deployerStat.LastIndex,
+				string(body))
 			continue
 		}
 		var ColResults []map[string]interface{}
 		err = json.Unmarshal(body, &ColResults)
 		if err != nil {
-			fmt.Println(err.Error())
-			fmt.Println("error unmarshal nfts deployer")
+			log.Println(err.Error())
+			log.Println("error unmarshal nfts deployer")
 			continue
 		}
 		if len(ColResults) == 0 {
@@ -99,30 +108,30 @@ func (ci *CollectionIndexer) StartWorker() {
 				decodedData := strings.Split(string(decodedData64), "@")
 				hexByte, err := hex.DecodeString(decodedData[2])
 				if err != nil {
-					fmt.Println(err.Error())
+					log.Println(err.Error())
 					continue
 				}
 				byte32, err := bech32.ConvertBits(hexByte, 8, 5, true)
 				if err != nil {
-					fmt.Println(err.Error())
+					log.Println(err.Error())
 					continue
 				}
 				bech32Addr, err := bech32.Encode("erd", byte32)
 				if err != nil {
-					fmt.Println(err.Error())
+					log.Println(err.Error())
 					continue
 				}
 				tokenId, err := hex.DecodeString(tokenIdHex)
 				dbCol, err := storage.GetCollectionByTokenId(string(tokenId))
 				if err != nil {
-					fmt.Println(err.Error())
+					log.Println(err.Error())
 					continue
 				}
 				dbCol.MetaDataBaseURI = string(metaLink)
 				dbCol.TokenBaseURI = string(imageLink)
 				err = storage.UpdateCollection(dbCol)
 				if err != nil {
-					fmt.Println(err.Error())
+					log.Println(err.Error())
 					continue
 				}
 				// get collection tx and check mint transactions
@@ -131,7 +140,7 @@ func (ci *CollectionIndexer) StartWorker() {
 					if err == gorm.ErrRecordNotFound {
 						_, err = storage.CreateCollectionStat(bech32Addr)
 						if err != nil {
-							fmt.Println(err.Error())
+							log.Println(err.Error())
 							continue
 						} else {
 							continue
@@ -145,8 +154,8 @@ func (ci *CollectionIndexer) StartWorker() {
 	colLoop:
 		collections, err := storage.GetAllCollections()
 		if err != nil {
-			fmt.Errorf(err.Error())
-			fmt.Errorf("error running request get nfts deployer")
+			log.Println(err.Error())
+			log.Println("error running request get nfts deployer")
 			continue
 		}
 		for _, col := range collections {
@@ -157,13 +166,13 @@ func (ci *CollectionIndexer) StartWorker() {
 				if err == gorm.ErrRecordNotFound {
 					_, err = storage.CreateCollectionStat(col.ContractAddress)
 					if err != nil {
-						fmt.Errorf(err.Error())
-						fmt.Errorf("error running request get nfts deployer")
+						log.Println(err.Error())
+						log.Println("error running request get nfts deployer")
 						continue
 					}
 				} else {
-					fmt.Errorf(err.Error())
-					fmt.Errorf("error running request get nfts deployer")
+					log.Println(err.Error())
+					log.Println("error running request get nfts deployer")
 					continue
 				}
 			}
@@ -176,35 +185,35 @@ func (ci *CollectionIndexer) StartWorker() {
 						collectionIndexer.LastIndex),
 					nil)
 			if err != nil {
-				fmt.Println(err.Error())
-				fmt.Println("error creating request for get nfts deployer")
+				log.Println(err.Error())
+				log.Println("error creating request for get nfts deployer")
 				continue
 			}
 			resp, err := client.Do(req)
 			if err != nil {
-				fmt.Println(err.Error())
-				fmt.Println("error running request get nfts deployer")
+				log.Println(err.Error())
+				log.Println("error running request get nfts deployer")
 				continue
 			}
 
 			body, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
-				fmt.Println(err.Error())
+				log.Println(err.Error())
 				resp.Body.Close()
-				fmt.Println("error readall response get nfts deployer")
+				log.Println("error readall response get nfts deployer")
 				continue
 			}
 			resp.Body.Close()
 			if resp.Status != "200 OK" {
-				fmt.Println("response not successful  get nfts deployer", resp.Status)
+				log.Println("response not successful  get nfts deployer", resp.Status)
 				continue
 			}
 
 			var ColResults []map[string]interface{}
 			err = json.Unmarshal(body, &ColResults)
 			if err != nil {
-				fmt.Println(err.Error())
-				fmt.Println("error unmarshal nfts deployer")
+				log.Println(err.Error())
+				log.Println("error unmarshal nfts deployer")
 				continue
 			}
 			if len(ColResults) == 0 {
@@ -215,14 +224,14 @@ func (ci *CollectionIndexer) StartWorker() {
 				if name == "mintTokensThroughMarketplace" {
 					results := (colR["results"].([]interface{}))
 					if len(results) < 2 {
-						fmt.Println("this tx wasn't good!", colR["originalTxHash"])
+						log.Println("this tx wasn't good!", colR["originalTxHash"])
 						continue
 					}
 					for _, r := range results {
 						rMap := r.(map[string]interface{})
 						rMapData, err := base64.StdEncoding.DecodeString(rMap["data"].(string))
 						if err != nil {
-							fmt.Println(err.Error())
+							log.Println(err.Error())
 							continue
 						}
 						if !strings.Contains(string(rMapData), "ESDTNFTTransfer") {
@@ -233,18 +242,18 @@ func (ci *CollectionIndexer) StartWorker() {
 						fmt.Println(nonceRes)
 						nonceResBytes, err := base64.StdEncoding.DecodeString(nonceRes.(string))
 						if err != nil {
-							fmt.Println(err.Error())
+							log.Println(err.Error())
 							continue
 						}
 						nonceResArr := strings.Split(string(nonceResBytes), "@")
 						nonceResString, err := hex.DecodeString(nonceResArr[2])
 						if err != nil {
-							fmt.Println(err.Error())
+							log.Println(err.Error())
 							continue
 						}
 						countRes, err := hex.DecodeString(nonceResArr[3])
 						if err != nil {
-							fmt.Println(err.Error())
+							log.Println(err.Error())
 							continue
 						}
 						// nonce, err := strconv.ParseUint(string(nonceResString[0]), 10, 64)
@@ -257,13 +266,13 @@ func (ci *CollectionIndexer) StartWorker() {
 						resultMap := result.(map[string]interface{})
 						decodedData, err := base64.StdEncoding.DecodeString(resultMap["data"].(string))
 						if err != nil {
-							fmt.Println(err.Error())
+							log.Println(err.Error())
 							continue
 						}
 						transferData := strings.Split(string(decodedData), "@")
 						tokenIdByte, err := hex.DecodeString(transferData[1])
 						if err != nil {
-							fmt.Println(err.Error())
+							log.Println(err.Error())
 							continue
 						}
 						for i := 0; i < count; i++ {
@@ -286,7 +295,7 @@ func (ci *CollectionIndexer) StartWorker() {
 									// }
 									acc, err := storage.GetAccountByAddress(rMap["receiver"].(string))
 									if err != nil {
-										fmt.Println(err.Error())
+										log.Println(err.Error())
 										continue
 									}
 									price := colR["value"].(string)
@@ -309,11 +318,11 @@ func (ci *CollectionIndexer) StartWorker() {
 										PriceNominal: priceFloat,
 									})
 									if err != nil {
-										fmt.Errorf(err.Error())
+										log.Println(err.Error())
 										continue
 									}
 								} else {
-									fmt.Println(err.Error())
+									log.Println(err.Error())
 									continue
 								}
 							}

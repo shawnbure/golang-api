@@ -16,18 +16,19 @@ import (
 	"gorm.io/gorm"
 )
 
-var lerr *log.Logger = log.New(os.Stderr, "", 1)
-
 type MarketPlaceIndexer struct {
 	MarketPlaceAddr string `json:"marketPlaceAddr"`
 	ElrondAPI       string `json:"elrondAPI"`
+	Logger          *log.Logger
 }
 
 func NewMarketPlaceIndexer(marketPlaceAddr string, elrondAPI string) (*MarketPlaceIndexer, error) {
-	return &MarketPlaceIndexer{MarketPlaceAddr: marketPlaceAddr, ElrondAPI: elrondAPI}, nil
+	var lerr *log.Logger = log.New(os.Stderr, "", 1)
+	return &MarketPlaceIndexer{MarketPlaceAddr: marketPlaceAddr, ElrondAPI: elrondAPI, Logger: lerr}, nil
 }
 
 func (mpi *MarketPlaceIndexer) StartWorker() {
+	lerr := mpi.Logger
 	for {
 		time.Sleep(time.Second * 2)
 		marketStat, err := storage.GetMarketPlaceIndexer()
