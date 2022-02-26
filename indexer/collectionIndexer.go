@@ -54,15 +54,15 @@ func (ci *CollectionIndexer) StartWorker() {
 				}
 			}
 		}
-		res, err := services.GetResponse(
-			fmt.Sprintf("%s/accounts/%s/transactions?from=%d&withScResults=true&withLogs=false&order=asc",
-				ci.ElrondAPI,
-				ci.DeployerAddr,
-				deployerStat.LastIndex))
+		url := fmt.Sprintf("%s/accounts/%s/transactions?from=%d&withScResults=true&withLogs=false&order=asc",
+			ci.ElrondAPI,
+			ci.DeployerAddr,
+			deployerStat.LastIndex)
+		res, err := services.GetResponse(url)
 
 		if err != nil {
 			log.Println(err.Error())
-			log.Println("error response get nfts deployer")
+			log.Println(url)
 			continue
 		}
 		var ColResults []map[string]interface{}
