@@ -71,14 +71,14 @@ func GetResponse(url string) ([]byte, error) {
 
 	if err != nil {
 		fmt.Println(err.Error())
-		return nil, fmt.Errorf("error creating request for get nfts marketplace")
+		return nil, err
 
 	}
 
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err.Error())
-		return nil, fmt.Errorf("error running request get nfts marketplace")
+		return nil, err
 
 	}
 
@@ -86,11 +86,11 @@ func GetResponse(url string) ([]byte, error) {
 	if err != nil {
 		fmt.Println(err.Error())
 		resp.Body.Close()
-		return nil, fmt.Errorf("error readall response get nfts marketplace")
+		return nil, err
 	}
 	resp.Body.Close()
 	if resp.Status != "200 OK" {
-		return nil, fmt.Errorf("response not successful  get nfts marketplace", resp.Status, req.URL.RawPath)
+		return nil, fmt.Errorf(resp.Body.Close().Error(), resp.Status, req.URL.RawPath)
 	}
 	return body, nil
 }

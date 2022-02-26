@@ -59,7 +59,7 @@ func NewWebServer(cfg *config.GeneralConfig) (*webServer, error) {
 	if err != nil {
 		return nil, err
 	}
-	collectionIndexer, err := indexer.NewCollectionIndexer(cfg.Blockchain.DeployerAddress, cfg.Blockchain.ApiUrl)
+	collectionIndexer, err := indexer.NewCollectionIndexer(cfg.Blockchain.DeployerAddress, cfg.Blockchain.ApiUrl, cfg.Blockchain.CollectionAPIDelay)
 	if err != nil {
 		return nil, err
 	}
