@@ -22,17 +22,18 @@ type MarketPlaceIndexer struct {
 	MarketPlaceAddr string `json:"marketPlaceAddr"`
 	ElrondAPI       string `json:"elrondAPI"`
 	Logger          *log.Logger
+	Delay           time.Duration // delay between each call
 }
 
-func NewMarketPlaceIndexer(marketPlaceAddr string, elrondAPI string) (*MarketPlaceIndexer, error) {
+func NewMarketPlaceIndexer(marketPlaceAddr string, elrondAPI string, delay uint64) (*MarketPlaceIndexer, error) {
 	var lerr *log.Logger = log.New(os.Stderr, "", 1)
-	return &MarketPlaceIndexer{MarketPlaceAddr: marketPlaceAddr, ElrondAPI: elrondAPI, Logger: lerr}, nil
+	return &MarketPlaceIndexer{MarketPlaceAddr: marketPlaceAddr, ElrondAPI: elrondAPI, Logger: lerr, Delay: time.Duration(delay)}, nil
 }
 
 func (mpi *MarketPlaceIndexer) StartWorker() {
 	lerr := mpi.Logger
 	for {
-		time.Sleep(time.Second * 2)
+		time.Sleep(time.Second * mpi.Delay)
 		marketStat, err := storage.GetMarketPlaceIndexer()
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {

@@ -90,7 +90,7 @@ func GetResponse(url string) ([]byte, error) {
 	}
 	resp.Body.Close()
 	if resp.Status != "200 OK" {
-		return nil, fmt.Errorf(resp.Body.Close().Error(), resp.Status, req.URL.RawPath)
+		return nil, fmt.Errorf(resp.Status, req.URL.RawPath)
 	}
 	return body, nil
 }
