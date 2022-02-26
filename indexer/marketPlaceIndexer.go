@@ -26,7 +26,7 @@ type MarketPlaceIndexer struct {
 }
 
 func NewMarketPlaceIndexer(marketPlaceAddr string, elrondAPI string, delay uint64) (*MarketPlaceIndexer, error) {
-	var lerr *log.Logger = log.New(os.Stderr, "", 1)
+	lerr := log.New(os.Stderr, "", log.LUTC|log.LstdFlags|log.Lshortfile)
 	return &MarketPlaceIndexer{MarketPlaceAddr: marketPlaceAddr, ElrondAPI: elrondAPI, Logger: lerr, Delay: time.Duration(delay)}, nil
 }
 

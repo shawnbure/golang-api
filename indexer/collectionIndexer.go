@@ -27,7 +27,7 @@ type CollectionIndexer struct {
 }
 
 func NewCollectionIndexer(deployerAddr string, elrondAPI string, delay uint64) (*CollectionIndexer, error) {
-	l := log.New(os.Stderr, "", log.LUTC)
+	l := log.New(os.Stderr, "", log.LUTC|log.LstdFlags|log.Lshortfile)
 	return &CollectionIndexer{DeployerAddr: deployerAddr, ElrondAPI: elrondAPI,
 		Delay:  time.Duration(delay),
 		Logger: l}, nil
