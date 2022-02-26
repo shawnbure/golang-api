@@ -78,6 +78,9 @@ func (ci *CollectionIndexer) StartWorker() {
 		foundDeployedContracts += uint64(len(ColResults))
 
 		for _, colR := range ColResults {
+			if _, ok := colR["action"]; !ok {
+				continue
+			}
 			name := (colR["action"].(map[string]interface{}))["name"].(string)
 			if name == "deployNFTTemplateContract" && colR["status"] != "fail" {
 				mainDataStr := colR["data"].(string)
