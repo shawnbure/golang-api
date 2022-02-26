@@ -55,6 +55,9 @@ type CreateCollectionRequest struct {
 	Flags                   []string `json:"flags"`
 	ContractAddress         string   `json:"contractAddress"`
 	MintPricePerTokenString string   `json:"mintPricePerTokenString"`
+	TokenBaseURI            string   `json:"tokenBaseURI"`
+	MaxSupply               uint64   `json:"maxSupply"`
+	MetaDataBaseURI         string   `json:"metaDataBaseURI"`
 }
 
 type UpdateCollectionRequest struct {
@@ -92,6 +95,7 @@ func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) 
 	//return nil, errors.New("After jsonMarshal")
 
 	//uncommment
+
 	tokensRegisteredByUser, err := getTokensRegisteredByUser(request.UserAddress, blockchainProxy)
 	if err != nil {
 		return nil, err
@@ -150,6 +154,9 @@ func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) 
 		ContractAddress:          request.ContractAddress,
 		MintPricePerTokenString:  request.MintPricePerTokenString,
 		MintPricePerTokenNominal: mintPricePerTokenNominalrequest,
+		TokenBaseURI:             request.TokenBaseURI,
+		MetaDataBaseURI:          request.MetaDataBaseURI,
+		MaxSupply:                request.MaxSupply,
 		CreatorID:                account.ID,
 		CreatedAt:                uint64(time.Now().Unix()),
 	}
