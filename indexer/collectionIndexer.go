@@ -263,15 +263,15 @@ func (ci *CollectionIndexer) StartWorker() {
 									priceFloat, err := strconv.ParseFloat(price, 64)
 									metaURI := col.MetaDataBaseURI
 									imageURI := (col.TokenBaseURI)
-									if strings.Contains(".json", metaURI) {
+									if strings.Contains(metaURI, ".json") {
 										metaURI = strings.ReplaceAll(metaURI, ".json", "")
 									}
-									if !strings.Contains("https", metaURI) {
+									if !strings.Contains(metaURI, "https") {
 										log.Println("old link", metaURI)
 										b, _ := hex.DecodeString(metaURI)
 										metaURI = string(b)
 									}
-									if !strings.Contains("https", imageURI) {
+									if !strings.Contains(imageURI, "https") {
 										log.Println("old link", imageURI)
 										b, _ := hex.DecodeString(imageURI)
 										imageURI = string(b)
