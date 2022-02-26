@@ -151,7 +151,7 @@ func (ci *CollectionIndexer) StartWorker() {
 		for _, colObj := range colsToCheck {
 			col, err := storage.GetCollectionByTokenId(colObj.TokenID)
 			if err != nil {
-				log.Println("GetCollectionByTokenId", err.Error())
+				log.Println("GetCollectionByTokenId", err.Error(), colObj.TokenID)
 				continue
 			}
 			collectionIndexer, err := storage.GetCollectionIndexer(colObj.Addr)
@@ -260,9 +260,10 @@ func (ci *CollectionIndexer) StartWorker() {
 									priceFloat, err := strconv.ParseFloat(price, 64)
 									metaURI := col.MetaDataBaseURI
 									imageURI := (col.TokenBaseURI)
-									attrbs, err := services.GetResponse(string(metaURI) + "/" + nonceStr + ".json")
+									url = string(metaURI) + "/" + nonceStr + ".json"
+									attrbs, err := services.GetResponse(url)
 									if err != nil {
-										log.Println(err.Error())
+										log.Println(err.Error(), url)
 										continue
 									}
 									metadataJSON := make(map[string]interface{})
@@ -327,7 +328,7 @@ func (ci *CollectionIndexer) StartWorker() {
 			fmt.Println("error update deployer index nfts ")
 			continue
 		}
-		if newStat.LastIndex <= deployerStat.LastIndex {
+		if newStat.LastIndex < deployerStat.LastIndex {
 			fmt.Println("error something went wrong updating last index of deployer  ")
 			continue
 		}
