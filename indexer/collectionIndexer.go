@@ -163,12 +163,12 @@ func (ci *CollectionIndexer) StartWorker() {
 					_, err = storage.CreateCollectionStat(colObj.Addr)
 					if err != nil {
 						log.Println(err.Error())
-						log.Println("error running request get nfts deployer")
+						log.Println("error create colleciton indexer")
 						continue
 					}
 				} else {
 					log.Println(err.Error())
-					log.Println("error running request get nfts deployer")
+					log.Println("error getting collection indexer")
 					continue
 				}
 			}
@@ -262,7 +262,15 @@ func (ci *CollectionIndexer) StartWorker() {
 									price := colR["value"].(string)
 									priceFloat, err := strconv.ParseFloat(price, 64)
 									metaURI := col.MetaDataBaseURI
+									if !strings.Contains("https", metaURI) {
+										b, _ := hex.DecodeString(metaURI)
+										metaURI = string(b)
+									}
 									imageURI := (col.TokenBaseURI)
+									if !strings.Contains("https", imageURI) {
+										b, _ := hex.DecodeString(imageURI)
+										imageURI = string(b)
+									}
 									url = string(metaURI) + "/" + nonceStr + ".json"
 									attrbs, err := services.GetResponse(url)
 									if err != nil {
