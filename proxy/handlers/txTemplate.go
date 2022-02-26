@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"fmt"
+	"log"
+	"os"
 
 	"net/http"
 	"strconv"
@@ -40,11 +42,14 @@ const (
 
 type txTemplateHandler struct {
 	txFormatter formatter.TxFormatter
+	logErr      *log.Logger
 }
 
 func NewTxTemplateHandler(groupHandler *groupHandler, blockchainConfig config.BlockchainConfig) {
+	l := log.New(os.Stderr, "", log.LUTC|log.LstdFlags|log.Lshortfile)
 	handler := &txTemplateHandler{
 		txFormatter: formatter.NewTxFormatter(blockchainConfig),
+		logErr:      l,
 	}
 
 	endpoints := []EndpointHandler{
@@ -604,13 +609,18 @@ func (handler *txTemplateHandler) getMintNftTxTemplate(c *gin.Context) {
 
 	// signedMessage := ed25519.Sign(edPkey, msg)
 
-	template := handler.txFormatter.NewMintNftsTxTemplate(
+	template, err := handler.txFormatter.NewMintNftsTxTemplate(
 		userAddress,
 		collection.ContractAddress,
 		collection.MintPricePerTokenNominal,
 		numberOfTokens,
+		collection.TokenID,
 		[]byte(""),
 	)
+	if err != nil {
+		handler.logErr.Println(err.Error())
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, "mint failed")
+	}
 	dtos.JsonResponse(c, http.StatusOK, template, "")
 }
 
