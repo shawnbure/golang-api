@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 
 	"github.com/ENFT-DAO/youbei-api/stats/collstats"
 
@@ -309,7 +310,10 @@ func (handler *tokensHandler) relayMetadataResponse(c *gin.Context) {
 	// }
 
 	// responseBytes, err := services.TryGetResponseCached(string(decodedUrl) + "/" + urlParts[1] + ".json")
-	responseBytes, err := services.TryGetResponseCached(urlDec + ".json")
+	if !strings.Contains(urlDec, ".json") { //TODO remove .json should be starndard in SC
+		urlDec = urlDec + ".json"
+	}
+	responseBytes, err := services.TryGetResponseCached(urlDec)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
