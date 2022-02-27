@@ -36,6 +36,15 @@ func AddCollectionToCheck(col dtos.CollectionToCheck) error {
 	}
 	return nil
 }
+func RemoveCollectionToCheck(col dtos.CollectionToCheck) error {
+	redis := cache.GetRedis()
+	redisCtx := cache.GetContext()
+	cmd := redis.SRem(redisCtx, redisCollectionChange, fmt.Sprintf("%s,%s", col.CollectionAddr, col.TokenID))
+	if cmd.Err() != nil {
+		return cmd.Err()
+	}
+	return nil
+}
 func GetCollectionToCheck() ([]dtos.CollectionToCheck, error) {
 	redis := cache.GetRedis()
 	redisCtx := cache.GetContext()

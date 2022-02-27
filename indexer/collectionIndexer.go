@@ -37,6 +37,7 @@ func NewCollectionIndexer(deployerAddr string, elrondAPI string, delay uint64) (
 
 func (ci *CollectionIndexer) StartWorker() {
 	logErr := ci.Logger
+	resultNotAvailableCount := 0
 	var colsToCheck []dtos.CollectionToCheck
 	for {
 		var foundMintedTokens uint64 = 0
@@ -195,6 +196,19 @@ func (ci *CollectionIndexer) StartWorker() {
 			for _, colR := range ColResults {
 				name := (colR["action"].(map[string]interface{}))["name"].(string)
 				if name == "mintTokensThroughMarketplace" && colR["status"] != "fail" {
+					if _, ok := colR["results"]; !ok {
+						logErr.Println("results not available!")
+						if colR["status"] == "pending" {
+							time.Sleep(time.Second * 2)
+							goto colLoop
+						} else {
+							resultNotAvailableCount++
+							if resultNotAvailableCount > 3 {
+								resultNotAvailableCount = 0
+								continue
+							}
+						}
+					}
 					results := (colR["results"].([]interface{}))
 					if len(results) < 2 {
 						logErr.Println("this tx wasn't good!", colR["originalTxHash"])
@@ -323,6 +337,12 @@ func (ci *CollectionIndexer) StartWorker() {
 							}
 						}
 					}
+
+					err = collstats.RemoveCollectionToCheck(colObj)
+					if err != nil {
+						logErr.Println(err.Error())
+						continue
+					}
 				}
 			}
 			collectionIndexer.LastIndex += foundMintedTokens
@@ -335,15 +355,7 @@ func (ci *CollectionIndexer) StartWorker() {
 				}
 			}
 		}
-		_, err = collstats.ClearCollectionToCheck()
-		if err != nil {
-			if err != nil {
-				logErr.Println(err.Error())
-				logErr.Println("ClearCollectionToCheck ERR ")
-				continue
-			}
 
-		}
 		newStat, err := storage.UpdateDeployerIndexer(deployerStat.LastIndex+foundDeployedContracts, ci.DeployerAddr)
 		if err != nil {
 			logErr.Println(err.Error())
