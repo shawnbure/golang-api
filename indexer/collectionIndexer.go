@@ -42,7 +42,6 @@ func (ci *CollectionIndexer) StartWorker() {
 	resultNotAvailableCount := 0
 	var colsToCheck []dtos.CollectionToCheck
 	for {
-		var foundMintedTokens uint64 = 0
 		var foundDeployedContracts uint64 = 0
 		logErr.Println("collection indexer loop")
 		time.Sleep(time.Second * ci.Delay)
@@ -152,6 +151,8 @@ func (ci *CollectionIndexer) StartWorker() {
 			}
 		}
 		for _, colObj := range colsToCheck {
+			var foundMintedTokens uint64 = 0
+
 			col, err := storage.GetCollectionByTokenId(colObj.TokenID)
 			if err != nil {
 				logErr.Println("GetCollectionByTokenId", err.Error(), colObj.TokenID)
