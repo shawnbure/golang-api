@@ -322,8 +322,19 @@ func (handler *tokensHandler) relayMetadataResponse(c *gin.Context) {
 	var metadata dtos.MetadataLinkResponse
 	err = json.Unmarshal([]byte(responseBytes), &metadata)
 	if err != nil {
-		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
-		return
+		services.ClearResponseCached(urlDec)
+
+		responseBytes, err := services.TryGetResponseCached(urlDec)
+		if err != nil {
+			dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+			return
+		}
+		var metadata dtos.MetadataLinkResponse
+		err = json.Unmarshal([]byte(responseBytes), &metadata)
+		if err != nil {
+			dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+			return
+		}
 	}
 
 	dtos.JsonResponse(c, http.StatusOK, metadata, "")

@@ -874,6 +874,19 @@ func ConstructOwnedTokensFromTokens(tokens []entities.Token) []dtos.OwnedTokenDt
 	return ownedTokens
 }
 
+func ClearResponseCached(url string) error {
+	redis := cache.GetRedis()
+	redisCtx := cache.GetContext()
+	url = strings.TrimSpace(url)
+
+	key := fmt.Sprintf(UrlResponseCacheKeyFormat, url)
+	cmd := redis.Del(redisCtx, key)
+	_, err := cmd.Result()
+	if err != nil {
+		return nil
+	}
+	return err
+}
 func TryGetResponseCached(url string) (string, error) {
 	redis := cache.GetRedis()
 	redisCtx := cache.GetContext()
