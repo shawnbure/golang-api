@@ -367,7 +367,7 @@ func (ci *CollectionIndexer) StartWorker() {
 				}
 			}
 		}
-
+		colsToCheck = []dtos.CollectionToCheck{}
 		newStat, err := storage.UpdateDeployerIndexer(deployerStat.LastIndex+foundDeployedContracts, ci.DeployerAddr)
 		if err != nil {
 			logErr.Println(err.Error())
