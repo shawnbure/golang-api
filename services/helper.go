@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"math/big"
 	"net/http"
 	"strings"
 )
@@ -93,4 +94,21 @@ func GetResponse(url string) ([]byte, error) {
 		return nil, fmt.Errorf(resp.Status, req.URL.RawPath)
 	}
 	return body, nil
+}
+func TurnIntoBigInt18Dec(num int64) *big.Int {
+	bigNum := big.NewInt(num)
+	bigNum = bigNum.Mul(big.NewInt(10).Exp(big.NewInt(10), big.NewInt(18), nil), bigNum)
+	return bigNum
+}
+
+func TurnIntoBigInt8Dec(num int64) *big.Int {
+	bigNum := big.NewInt(num)
+	bigNum = bigNum.Mul(big.NewInt(10).Exp(big.NewInt(10), big.NewInt(8), nil), bigNum)
+	return bigNum
+}
+
+func TurnIntoBigIntNDec(num int64, decimal int64) *big.Int {
+	bigNum := big.NewInt(num)
+	bigNum = bigNum.Mul(big.NewInt(10).Exp(big.NewInt(10), big.NewInt(decimal), nil), bigNum)
+	return bigNum
 }

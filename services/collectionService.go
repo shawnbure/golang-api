@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math/big"
 	"strconv"
 	"strings"
 	"time"
@@ -133,7 +134,11 @@ func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) 
 
 	//strMintPricePerToken = request.MintPricePerTokenString
 	//const fMintPricePerTokenNominal = 0.0
-
+	priceBig, ok := big.NewInt(0).SetString(request.MintPricePerTokenString, 10)
+	if !ok {
+		return nil, errors.New("couldn't convert price string to blockchain unit")
+	}
+	priceBig.Mul(big.NewInt(0).Exp(big.NewInt(10), big.NewInt(18), big.NewInt(0)), priceBig)
 	mintPricePerTokenNominalrequest, err := strconv.ParseFloat(request.MintPricePerTokenString, 64)
 
 	if err != nil {
@@ -152,7 +157,7 @@ func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) 
 		TelegramLink:             request.TelegramLink,
 		Flags:                    datatypes.JSON(bytes),
 		ContractAddress:          request.ContractAddress,
-		MintPricePerTokenString:  request.MintPricePerTokenString,
+		MintPricePerTokenString:  priceBig.String(),
 		MintPricePerTokenNominal: mintPricePerTokenNominalrequest,
 		TokenBaseURI:             request.TokenBaseURI,
 		MetaDataBaseURI:          request.MetaDataBaseURI,

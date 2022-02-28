@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math/big"
 	"os"
 	"strconv"
 	"strings"
@@ -17,6 +18,7 @@ import (
 	"github.com/ENFT-DAO/youbei-api/stats/collstats"
 	"github.com/ENFT-DAO/youbei-api/storage"
 	"github.com/btcsuite/btcutil/bech32"
+	"github.com/emurmotol/ethconv"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
@@ -271,7 +273,17 @@ func (ci *CollectionIndexer) StartWorker() {
 										continue
 									}
 									price := colR["value"].(string)
-									priceFloat, err := strconv.ParseFloat(price, 64)
+									bigPrice, ok := big.NewInt(0).SetString(price, 10)
+									if !ok {
+										logErr.Println("conversion to bigInt failed for price")
+										continue
+									}
+									fprice, err := ethconv.FromWei(bigPrice, ethconv.Ether)
+									if err != nil {
+										logErr.Println(err.Error())
+										continue
+									}
+									priceFloat, _ := fprice.Float64()
 									metaURI := col.MetaDataBaseURI
 									imageURI := (col.TokenBaseURI)
 									if strings.Contains(metaURI, ".json") {
