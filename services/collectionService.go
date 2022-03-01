@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	TokenIdMaxLen                  = 15
+	TokenIdMaxLen                  = 16
 	MaxFlags                       = 10
 	MaxFlagLen                     = 25
 	MaxNameLen                     = 20
