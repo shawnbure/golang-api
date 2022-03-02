@@ -66,6 +66,7 @@ func InitCacher(cfg config.CacheConfig) {
 		}
 		redisdb := redis.NewClusterClient(&redis.ClusterOptions{
 			ClusterSlots:  clusterSlots,
+			ReadOnly:      true,
 			RouteRandomly: true,
 		})
 
