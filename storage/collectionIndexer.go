@@ -55,9 +55,10 @@ func UpdateCollectionIndexer(lastIndex uint64, collectionAddr string) (entities.
 	if err != nil {
 		return stat, err
 	}
-	stat.LastIndex = stat.LastIndex + 1
-	err = database.Updates(stat).
-		Where("id=?", stat.ID).Error
+	stat.LastIndex = lastIndex
+	err = database.Save(&stat).Error
+	// err = database.Updates(stat).
+	// 	Where("id=?", stat.ID).Error
 	if err != nil {
 		return stat, err
 	}

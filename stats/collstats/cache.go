@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"gorm.io/datatypes"
@@ -19,12 +21,75 @@ import (
 var (
 	redisCollectionStatsKeyFormat = "CollStats:%s"
 	redisSetNXCollectionKeyFormat = "SetNxColl:%s"
+	redisCollectionChange         = "coll_change_queue"
+	redisProccesingCollection     = "coll_change_queue-processing"
 	redisSetNXCollectionExpire    = 1 * time.Second
 	tokenIdToCollectionCacheInfo  = []byte("tokenToColl")
 
-	log = logger.GetOrCreate("stats")
+	log     = logger.GetOrCreate("stats")
+	counter = 0
 )
 
+func AddCollectionToCheck(col dtos.CollectionToCheck) error {
+	redis := cache.GetRedis()
+	redisCtx := cache.GetContext()
+	cmd := redis.SAdd(redisCtx, redisCollectionChange, fmt.Sprintf("%s,%s,%d", col.CollectionAddr, col.TokenID, counter))
+	if cmd.Err() != nil {
+		return cmd.Err()
+	}
+	counter++
+	return nil
+}
+func RemoveCollectionToCheck(col dtos.CollectionToCheck) error {
+	redis := cache.GetRedis()
+	redisCtx := cache.GetContext()
+	cmd := redis.SRem(redisCtx, redisCollectionChange, fmt.Sprintf("%s,%s,%d", col.CollectionAddr, col.TokenID, col.Counter))
+	if cmd.Err() != nil {
+		return cmd.Err()
+	}
+	return nil
+}
+func GetCollectionToCheck() ([]dtos.CollectionToCheck, error) {
+	redis := cache.GetRedis()
+	redisCtx := cache.GetContext()
+	var colToCheck []dtos.CollectionToCheck
+	cmd := redis.SMembers(redisCtx, redisCollectionChange)
+	cols, err := cmd.Result()
+	if err != nil {
+		return nil, err
+	}
+	// colData := strings.Split(cols, ",")
+	// col = dtos.CollectionToCheck{CollectionAddr: colData[0], TokenID: colData[1]}
+	for _, col := range cols {
+		colData := strings.Split(col, ",")
+		ci, err := strconv.Atoi(colData[2])
+		if err != nil {
+			return nil, err
+		}
+		colToCheck = append(colToCheck, dtos.CollectionToCheck{CollectionAddr: colData[0], TokenID: colData[1], Counter: ci})
+	}
+	return colToCheck, nil
+}
+func ClearCollectionToCheck() ([]dtos.CollectionToCheck, error) {
+	redis := cache.GetRedis()
+	redisCtx := cache.GetContext()
+	cmdCard := redis.SCard(redisCtx, redisCollectionChange)
+	size, err := cmdCard.Result()
+	if err != nil {
+		return nil, err
+	}
+	cmd := redis.SPopN(redisCtx, redisCollectionChange, size)
+	cols, err := cmd.Result()
+	if err != nil {
+		return nil, err
+	}
+	var colToCheck []dtos.CollectionToCheck
+	for _, col := range cols {
+		colData := strings.Split(col, ",")
+		colToCheck = append(colToCheck, dtos.CollectionToCheck{CollectionAddr: colData[0], TokenID: colData[1]})
+	}
+	return colToCheck, nil
+}
 func GetStatisticsForTokenId(tokenId string) (*dtos.CollectionStatistics, error) {
 	redis := cache.GetRedis()
 	redisCtx := cache.GetContext()

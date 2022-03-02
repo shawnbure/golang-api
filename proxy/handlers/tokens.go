@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -29,6 +28,7 @@ const (
 	refreshTokenMetadataEndpoint     = "/:tokenId/:nonce/refresh"
 	tokenMetadataRelayEndpoint       = "/metadata/relay"
 	tokensListMetadataEndpoint       = "/list/:offset/:limit"
+	whitelistBuyCountLimitEndpoint   = "/whitelist/buycountlimit"
 )
 
 type TokenListQueryBody struct {
@@ -62,6 +62,7 @@ func NewTokensHandler(groupHandler *groupHandler, authCfg config.AuthConfig, cfg
 		{Method: http.MethodGet, Path: tokenMetadataRelayEndpoint, HandlerFunc: handler.relayMetadataResponse},
 		{Method: http.MethodPost, Path: refreshTokenMetadataEndpoint, HandlerFunc: handler.refresh},
 		{Method: http.MethodPost, Path: tokensListMetadataEndpoint, HandlerFunc: handler.getList},
+		{Method: http.MethodPost, Path: whitelistBuyCountLimitEndpoint, HandlerFunc: handler.getWhitelistBuyCountLimit},
 	}
 
 	publicEndpointGroupHandler := EndpointGroupHandler{
@@ -301,14 +302,18 @@ func (handler *tokensHandler) relayMetadataResponse(c *gin.Context) {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
 	}
-	urlParts := strings.Split(urlDec, "/")
-	decodedUrl, err := hex.DecodeString(urlParts[0])
-	if err != nil {
-		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
-		return
-	}
+	// urlParts := strings.Split(urlDec, "/")
+	// decodedUrl, err := hex.DecodeString(urlParts[0])
+	// if err != nil {
+	// 	dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+	// 	return
+	// }
 
-	responseBytes, err := services.TryGetResponseCached(string(decodedUrl) + "/" + urlParts[1] + ".json")
+	// responseBytes, err := services.TryGetResponseCached(string(decodedUrl) + "/" + urlParts[1] + ".json")
+	if !strings.Contains(urlDec, ".json") { //TODO remove .json should be starndard in SC
+		urlDec = urlDec + ".json"
+	}
+	responseBytes, err := services.TryGetResponseCached(urlDec)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
@@ -317,8 +322,19 @@ func (handler *tokensHandler) relayMetadataResponse(c *gin.Context) {
 	var metadata dtos.MetadataLinkResponse
 	err = json.Unmarshal([]byte(responseBytes), &metadata)
 	if err != nil {
-		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
-		return
+		services.ClearResponseCached(urlDec)
+
+		responseBytes, err := services.TryGetResponseCached(urlDec)
+		if err != nil {
+			dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+			return
+		}
+		var metadata dtos.MetadataLinkResponse
+		err = json.Unmarshal([]byte(responseBytes), &metadata)
+		if err != nil {
+			dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+			return
+		}
 	}
 
 	dtos.JsonResponse(c, http.StatusOK, metadata, "")
@@ -428,4 +444,26 @@ func (handler *tokensHandler) getList(c *gin.Context) {
 	}
 
 	dtos.JsonResponse(c, http.StatusOK, tokens, "")
+}
+
+func (handler *tokensHandler) getWhitelistBuyCountLimit(c *gin.Context) {
+
+	var queries services.WhitelistBuyLimitCountRequest
+	err := c.BindJSON(&queries)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	fmt.Println("@@@@@@ queries.ContractAddress: " + queries.ContractAddress)
+	fmt.Println("@@@@@@ queries.UserAddress: " + queries.UserAddress)
+
+	strBuyCountLimit, err := services.GetWhitelistBuyCountLimit(queries.ContractAddress, queries.UserAddress)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		return
+	}
+
+	fmt.Println("strBuyCountLimit: " + strBuyCountLimit)
+	dtos.JsonResponse(c, http.StatusOK, strBuyCountLimit, "")
 }

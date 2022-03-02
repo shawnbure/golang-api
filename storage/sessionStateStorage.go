@@ -119,7 +119,8 @@ func GetSessionStateByAddressByStateType(address string, stateType uint64) (*ent
 			ID:        0,
 			Address:   address,
 			StateType: stateType,
-			JsonData:  "{ \"step\": 1, \"tokenID\": \"Empty\", \"scAddress\": \"Empty\", \"price\": 0 }",
+			JsonData:  "{ \"step\": 1, \"tokenID\": \"TokenIDEmpty\", \"scAddress\": \"SCAddressEmpty\", \"price\": 0, \"tokenBaseURI\": \"Empty\", \"metaDataBaseURI\": \"Empty\", \"maxSupply\": 0 }",
+			//JsonData:  "{ \"step\": 5, \"tokenID\": \"TESTTOKE-22\", \"scAddress\": \"00000000000000000500d8aa0fbd26b0df250c3dd7fdb9fa200e6b373419255d\", \"price\": 8, \"tokenBaseURI\": \"TestTokenBaseURI\", \"metaDataBaseURI\": \"TestMetaBaseURI\", \"maxSupply\": 88 }",
 			CreatedAt: uint64(time.Now().Unix()),
 		}
 

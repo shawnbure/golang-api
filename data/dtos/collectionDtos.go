@@ -6,6 +6,11 @@ import (
 	"github.com/ENFT-DAO/youbei-api/data/entities"
 )
 
+type CollectionToCheck struct {
+	CollectionAddr string `json:"collectionAddr"`
+	TokenID        string `json:"tokenId"`
+	Counter        int    `json:"counter"`
+}
 type CollectionStatistics struct {
 	ItemsTotal   uint64          `json:"itemsTotal"`
 	OwnersTotal  uint64          `json:"ownersTotal"`

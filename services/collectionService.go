@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math/big"
 	"strconv"
 	"strings"
 	"time"
@@ -20,7 +21,7 @@ import (
 )
 
 const (
-	TokenIdMaxLen                  = 15
+	TokenIdMaxLen                  = 17
 	MaxFlags                       = 10
 	MaxFlagLen                     = 25
 	MaxNameLen                     = 20
@@ -55,6 +56,9 @@ type CreateCollectionRequest struct {
 	Flags                   []string `json:"flags"`
 	ContractAddress         string   `json:"contractAddress"`
 	MintPricePerTokenString string   `json:"mintPricePerTokenString"`
+	TokenBaseURI            string   `json:"tokenBaseURI"`
+	MaxSupply               uint64   `json:"maxSupply"`
+	MetaDataBaseURI         string   `json:"metaDataBaseURI"`
 }
 
 type UpdateCollectionRequest struct {
@@ -92,6 +96,7 @@ func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) 
 	//return nil, errors.New("After jsonMarshal")
 
 	//uncommment
+
 	tokensRegisteredByUser, err := getTokensRegisteredByUser(request.UserAddress, blockchainProxy)
 	if err != nil {
 		return nil, err
@@ -129,7 +134,19 @@ func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) 
 
 	//strMintPricePerToken = request.MintPricePerTokenString
 	//const fMintPricePerTokenNominal = 0.0
-
+	floatPrice, ok := big.NewFloat(0).SetString(request.MintPricePerTokenString)
+	if !ok {
+		return nil, errors.New("couldn't convert price string to blockchain unit")
+	}
+	multiplier := new(big.Float)
+	multiplier.SetInt(big.NewInt(0).Exp(big.NewInt(10), big.NewInt(18), nil))
+	floatPrice.Mul(multiplier, floatPrice)
+	fmt.Println(floatPrice.String())
+	priceBig, _ := floatPrice.Int(nil)
+	// priceBig, ok := big.NewInt(0).Setint(uintPrice)
+	if !ok {
+		return nil, errors.New("couldn't convert price string to blockchain unit")
+	}
 	mintPricePerTokenNominalrequest, err := strconv.ParseFloat(request.MintPricePerTokenString, 64)
 
 	if err != nil {
@@ -148,8 +165,11 @@ func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) 
 		TelegramLink:             request.TelegramLink,
 		Flags:                    datatypes.JSON(bytes),
 		ContractAddress:          request.ContractAddress,
-		MintPricePerTokenString:  request.MintPricePerTokenString,
+		MintPricePerTokenString:  priceBig.String(),
 		MintPricePerTokenNominal: mintPricePerTokenNominalrequest,
+		TokenBaseURI:             request.TokenBaseURI,
+		MetaDataBaseURI:          request.MetaDataBaseURI,
+		MaxSupply:                request.MaxSupply,
 		CreatorID:                account.ID,
 		CreatedAt:                uint64(time.Now().Unix()),
 	}

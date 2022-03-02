@@ -2,34 +2,38 @@ package indexer
 
 import (
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"log"
+	"math/big"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/ENFT-DAO/youbei-api/data/entities"
 	"github.com/ENFT-DAO/youbei-api/services"
 	"github.com/ENFT-DAO/youbei-api/storage"
+	"github.com/emurmotol/ethconv"
 	"gorm.io/gorm"
 )
-
-var lerr *log.Logger = log.New(os.Stderr, "", 1)
 
 type MarketPlaceIndexer struct {
 	MarketPlaceAddr string `json:"marketPlaceAddr"`
 	ElrondAPI       string `json:"elrondAPI"`
+	Logger          *log.Logger
+	Delay           time.Duration // delay between each call
 }
 
-func NewMarketPlaceIndexer(marketPlaceAddr string, elrondAPI string) (*MarketPlaceIndexer, error) {
-	return &MarketPlaceIndexer{MarketPlaceAddr: marketPlaceAddr, ElrondAPI: elrondAPI}, nil
+func NewMarketPlaceIndexer(marketPlaceAddr string, elrondAPI string, delay uint64) (*MarketPlaceIndexer, error) {
+	lerr := log.New(os.Stderr, "", log.LUTC|log.LstdFlags|log.Lshortfile)
+	return &MarketPlaceIndexer{MarketPlaceAddr: marketPlaceAddr, ElrondAPI: elrondAPI, Logger: lerr, Delay: time.Duration(delay)}, nil
 }
 
 func (mpi *MarketPlaceIndexer) StartWorker() {
+	lerr := mpi.Logger
 	for {
-		time.Sleep(time.Second * 1)
+		time.Sleep(time.Second * mpi.Delay)
 		marketStat, err := storage.GetMarketPlaceIndexer()
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
@@ -41,7 +45,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				}
 			}
 		}
-		body, err := services.GetResponse(fmt.Sprintf("%s/accounts/%s/sc-results?from=%d",
+		body, err := services.GetResponse(fmt.Sprintf("%s/accounts/%s/sc-results?from=%d&order=asc",
 			mpi.ElrondAPI,
 			mpi.MarketPlaceAddr,
 			marketStat.LastIndex,
@@ -62,6 +66,21 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			continue
 		}
 		for _, tx := range txResult {
+			orgtxByte, err := services.GetResponse(fmt.Sprintf("%s/transactions/%s", mpi.ElrondAPI, tx.OriginalTxHash))
+			if err != nil {
+				lerr.Println(err.Error())
+				continue
+			}
+			var orgTx entities.TransactionBC
+			err = json.Unmarshal(orgtxByte, orgTx)
+			if err != nil {
+				lerr.Println(err.Error())
+				continue
+			}
+			if orgTx.Status == "fail" {
+				continue
+			}
+
 			var token entities.Token
 			data, err := base64.StdEncoding.DecodeString(tx.Data)
 			if err != nil {
@@ -71,17 +90,28 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			if !strings.Contains(string(data), "putNftForSale") {
 				continue
 			}
-			body, err := services.GetResponse(fmt.Sprintf("%s/transactions?hashes=%s", mpi.ElrondAPI, tx.OriginalTxHash))
+			body, err := services.GetResponse(fmt.Sprintf("%s/transactions?hashes=%s&order=asc", mpi.ElrondAPI, tx.OriginalTxHash))
 			if err != nil {
 				lerr.Println(err.Error())
 				continue
 			}
-			var txBody entities.TransactionBC
+			var txBody []entities.TransactionBC
 			err = json.Unmarshal(body, &txBody)
 			if err != nil {
 				lerr.Println(err.Error())
 				continue
 			}
+			mainTxDataStr := txBody[0].Data
+			mainTxData, err := base64.StdEncoding.DecodeString(mainTxDataStr)
+			if err != nil {
+				lerr.Println(err.Error())
+				continue
+			}
+			mainDataParts := strings.Split(string(mainTxData), "@")
+			hexTokenId := mainDataParts[1]
+			tokenId, err := hex.DecodeString(hexTokenId)
+			hexNonce := mainDataParts[2]
+			// nonce, err := hex.DecodeString(hexNonce)
 			data, err = base64.StdEncoding.DecodeString(tx.Data)
 			if err != nil {
 				lerr.Println(err.Error())
@@ -89,16 +119,16 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			}
 			dataStr := string(data)
 			dataParts := strings.Split(dataStr, "@")
-			tokenId := dataParts[1]
-			nonce, err := strconv.ParseUint(dataParts[2], 10, 64)
-			if err != nil {
-				lerr.Println(err.Error())
+			price, ok := big.NewInt(0).SetString(dataParts[1], 16)
+			if !ok {
+				lerr.Println("can not convert price", price, dataParts[1])
 				continue
 			}
-			token.TokenID = tokenId
-			token.Nonce = nonce
+			fprice, err := ethconv.FromWei(price, ethconv.Ether)
+			token.PriceString = fprice.String()
+			token.PriceNominal, _ = fprice.Float64()
 			token.OnSale = true
-			err = storage.UpdateTokenWhere(&token, "token_id=? AND nonce=?", tokenId, nonce)
+			err = storage.UpdateTokenWhere(&token, "token_id=? AND nonce_str=?", tokenId, hexNonce)
 			if err != nil {
 				if err == gorm.ErrRecordNotFound {
 					// col, err := storage.GetCollectionByTokenId(nft.Collection)

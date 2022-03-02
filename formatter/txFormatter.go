@@ -6,7 +6,9 @@ import (
 	"math/big"
 
 	"github.com/ENFT-DAO/youbei-api/config"
+	"github.com/ENFT-DAO/youbei-api/data/dtos"
 	"github.com/ENFT-DAO/youbei-api/services"
+	"github.com/ENFT-DAO/youbei-api/stats/collstats"
 	"github.com/ElrondNetwork/elrond-sdk-erdgo/data"
 )
 
@@ -342,8 +344,9 @@ func (f *TxFormatter) NewMintNftsTxTemplate(
 	contractAddress string,
 	mintPricePerToken float64,
 	numberOfTokens uint64,
+	tokenID string,
 	signedMessage []byte,
-) Transaction {
+) (Transaction, error) {
 	endpointName := mintTokensThroughMarketplaceEndpointName
 	if f.noFeeOnMintContracts[contractAddress] {
 		endpointName = mintTokensEndpointName
@@ -354,7 +357,10 @@ func (f *TxFormatter) NewMintNftsTxTemplate(
 	txData := endpointName +
 		"@" + hex.EncodeToString(big.NewInt(int64(numberOfTokens)).Bytes()) /*+
 	"@" + hex.EncodeToString(signedMessage)*/
-
+	err := collstats.AddCollectionToCheck(dtos.CollectionToCheck{CollectionAddr: contractAddress, TokenID: tokenID})
+	if err != nil {
+		return Transaction{}, err
+	}
 	return Transaction{
 		Nonce:     0,
 		Value:     totalPrice,
@@ -367,7 +373,7 @@ func (f *TxFormatter) NewMintNftsTxTemplate(
 		ChainID:   f.config.ChainID,
 		Version:   1,
 		Options:   0,
-	}
+	}, nil
 }
 
 func (f *TxFormatter) NewIssueNFTTxTemplate(

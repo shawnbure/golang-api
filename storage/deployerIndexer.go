@@ -49,7 +49,7 @@ func UpdateDeployerIndexer(lastIndex uint64, deployerAddr string) (entities.Depl
 	if err != nil {
 		return stat, err
 	}
-	stat.LastIndex = stat.LastIndex + 1
+	stat.LastIndex = lastIndex
 	err = database.Updates(stat).Where("id=?", stat.ID).Error
 	if err != nil {
 		return stat, err
