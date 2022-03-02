@@ -303,14 +303,14 @@ func (ci *CollectionIndexer) StartWorker() {
 										b, _ := hex.DecodeString(imageURI)
 										imageURI = string(b)
 									}
-									if strings.Contains(ci.ElrondAPI,"devnet"){
-										strings.Replace(imageURI,"https://gateway.pinata.cloud/ipfs/","https://devnet-media.elrond.com/nfts/asset/",1)
-									}else{
-										strings.Replace(imageURI,"https://gateway.pinata.cloud/ipfs/","https://media.elrond.com/nfts/asset/",1)
+									if strings.Contains(ci.ElrondAPI, "devnet") {
+										imageURI = strings.Replace(imageURI, "https://gateway.pinata.cloud/ipfs/", "https://devnet-media.elrond.com/nfts/asset/", 1)
+									} else {
+										imageURI = strings.Replace(imageURI, "https://gateway.pinata.cloud/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
 									}
 
 									url := fmt.Sprintf("%s/%s.json", metaURI, nonceStr)
-									tokenName := fmt.Sprintf("%s #%d",col.Name,int64(nonce))
+									tokenName := fmt.Sprintf("%s #%d", col.Name, int64(nonce))
 									attrbs, err := services.GetResponse(url)
 									if err != nil {
 										if strings.Contains(err.Error(), "429") || strings.Contains(err.Error(), "EOF") || strings.Contains(err.Error(), "deadline") {
@@ -363,7 +363,7 @@ func (ci *CollectionIndexer) StartWorker() {
 										NonceStr:     nonceResArr[2],
 										MetadataLink: string(metaURI) + "/" + nonceStr + ".json",
 										ImageLink:    string(imageURI) + "/" + nonceStr + ".png",
-										TokenName:    col.Name,
+										TokenName:    tokenName,
 										Attributes:   attributes,
 										OwnerId:      acc.ID,
 										OnSale:       false,
