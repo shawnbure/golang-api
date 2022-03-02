@@ -308,8 +308,8 @@ func (ci *CollectionIndexer) StartWorker() {
 									} else {
 										imageURI = strings.Replace(imageURI, "https://gateway.pinata.cloud/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
 									}
-
-									url := fmt.Sprintf("%s/%s.json", metaURI, nonceStr)
+									youbeiMeta := strings.Replace(metaURI, "https://gateway.pinata.cloud/ipfs/", "https://media.youbei.io/ipfs/", 1)
+									url := fmt.Sprintf("%s/%s.json", youbeiMeta, nonceStr)
 									tokenName := fmt.Sprintf("%s #%d", col.Name, int64(nonce))
 									attrbs, err := services.GetResponse(url)
 									if err != nil {
