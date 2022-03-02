@@ -154,6 +154,7 @@ func (ci *CollectionIndexer) StartWorker() {
 			}
 		}
 		for _, colObj := range colsToCheck {
+		singleColLoop:
 			var foundedTxsCount uint64 = 0
 
 			col, err := storage.GetCollectionByTokenId(colObj.TokenID)
@@ -393,6 +394,7 @@ func (ci *CollectionIndexer) StartWorker() {
 					continue
 				}
 			}
+			goto singleColLoop
 		}
 		colsToCheck = []dtos.CollectionToCheck{}
 		newStat, err := storage.UpdateDeployerIndexer(deployerStat.LastIndex+foundDeployedContracts, ci.DeployerAddr)
