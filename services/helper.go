@@ -7,6 +7,7 @@ import (
 	"math/big"
 	"net/http"
 	"strings"
+	"time"
 )
 
 // ConvertFilterToQuery converts a querystring conversion filter to a sql where clause
@@ -66,6 +67,7 @@ func ConvertFilterToQuery(tableName string, filter string) (string, []interface{
 
 func GetResponse(url string) ([]byte, error) {
 	var client http.Client
+	client.Timeout = time.Second * 5
 	req, err := http.
 		NewRequest("GET", url,
 			nil)

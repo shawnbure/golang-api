@@ -1096,8 +1096,20 @@ func DoGetWhitelistBuyCountLimitVmQuery(contractAddress string, userAddress stri
 	}
 	userAddressHex := hex.EncodeToString(userAddressDecoded.AddressBytes())
 
+	whiteListCheck, errWhiteListCheck := bi.DoVmQuery(contractAddress, "getBuyerWhiteListCheck", []string{})
+	if errWhiteListCheck != nil {
+		return "", errWhiteListCheck
+	}
+
+	if len(whiteListCheck) != 0 {
+		buyCount := big.NewInt(0).SetBytes(whiteListCheck[0])
+		if buyCount.String() != "1" {
+			strBuyCountLimit := "-1" + "," + "-1"
+			return strBuyCountLimit, nil
+		}
+	}
 	//get the "buy_count" from SC
-	resultBuyCount, errBuyCount := bi.DoVmQuery(contractAddress, "GetBuyCount", []string{userAddressHex})
+	resultBuyCount, errBuyCount := bi.DoVmQuery(contractAddress, "getBuyCount", []string{userAddressHex})
 	if errBuyCount != nil {
 		return "", errBuyCount
 	}
@@ -1105,8 +1117,7 @@ func DoGetWhitelistBuyCountLimitVmQuery(contractAddress string, userAddress stri
 	strBuyCount := "0"
 	if len(resultBuyCount) != 0 {
 		buyCount := big.NewInt(0).SetBytes(resultBuyCount[0])
-		buyCountBytes := buyCount.Bytes()
-		strBuyCount = hex.EncodeToString(buyCountBytes)
+		strBuyCount = buyCount.String()
 	}
 
 	//get the "buy_limit" from SC
@@ -1119,8 +1130,7 @@ func DoGetWhitelistBuyCountLimitVmQuery(contractAddress string, userAddress stri
 	strBuyLimit := "0"
 	if len(resultBuyLimit) != 0 {
 		buyLimit := big.NewInt(0).SetBytes(resultBuyLimit[0])
-		buyLimitBytes := buyLimit.Bytes()
-		strBuyLimit = hex.EncodeToString(buyLimitBytes)
+		strBuyLimit = buyLimit.String()
 	}
 
 	strBuyCountLimit := strBuyCount + "," + strBuyLimit

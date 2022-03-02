@@ -42,6 +42,7 @@ func (ci *CollectionIndexer) StartWorker() {
 	resultNotAvailableCount := 0
 	var colsToCheck []dtos.CollectionToCheck
 	for {
+	deployLoop:
 		var foundDeployedContracts uint64 = 0
 		logErr.Println("collection indexer loop")
 		time.Sleep(time.Second * ci.Delay)
@@ -77,13 +78,15 @@ func (ci *CollectionIndexer) StartWorker() {
 			goto colLoop
 		}
 		foundDeployedContracts += uint64(len(ColResults))
-
 		for _, colR := range ColResults {
 			if _, ok := colR["action"]; !ok {
 				continue
 			}
 			name := (colR["action"].(map[string]interface{}))["name"].(string)
 			if name == "deployNFTTemplateContract" && colR["status"] != "fail" {
+				if _, ok := colR["results"]; !ok {
+					goto deployLoop
+				}
 				mainDataStr := colR["data"].(string)
 				mainData64Str, _ := base64.StdEncoding.DecodeString(mainDataStr)
 				mainDatas := strings.Split(string(mainData64Str), "@")
@@ -151,7 +154,7 @@ func (ci *CollectionIndexer) StartWorker() {
 			}
 		}
 		for _, colObj := range colsToCheck {
-			var foundMintedTokens uint64 = 0
+			var foundedTxsCount uint64 = 0
 
 			col, err := storage.GetCollectionByTokenId(colObj.TokenID)
 			if err != nil {
@@ -194,7 +197,7 @@ func (ci *CollectionIndexer) StartWorker() {
 			if len(ColResults) == 0 {
 				continue
 			}
-			foundMintedTokens += uint64(len(ColResults))
+			foundedTxsCount += uint64(len(ColResults))
 
 			for _, colR := range ColResults {
 				name := (colR["action"].(map[string]interface{}))["name"].(string)
@@ -304,6 +307,28 @@ func (ci *CollectionIndexer) StartWorker() {
 									url := fmt.Sprintf("%s/%s.json", metaURI, nonceStr)
 									attrbs, err := services.GetResponse(url)
 									if err != nil {
+										if strings.Contains(err.Error(), "429") || strings.Contains(err.Error(), "EOF") || strings.Contains(err.Error(), "deadline") {
+											err = storage.AddToken(&entities.Token{
+												TokenID:      string(tokenIdByte),
+												MintTxHash:   colR["txHash"].(string),
+												CollectionID: col.ID,
+												Nonce:        nonce,
+												NonceStr:     nonceResArr[2],
+												MetadataLink: string(metaURI) + "/" + nonceStr + ".json",
+												ImageLink:    string(imageURI) + "/" + nonceStr + ".png",
+												TokenName:    col.Name,
+												Attributes:   []byte{},
+												OwnerId:      acc.ID,
+												OnSale:       false,
+												PriceString:  price,
+												PriceNominal: priceFloat,
+											})
+											if err != nil {
+												logErr.Println(err.Error())
+												continue
+											}
+											continue
+										}
 										logErr.Println(err.Error(), url, col.MetaDataBaseURI, col.TokenBaseURI, col.ID)
 										continue
 									}
@@ -350,15 +375,10 @@ func (ci *CollectionIndexer) StartWorker() {
 							}
 						}
 					}
-
-					err = collstats.RemoveCollectionToCheck(colObj)
-					if err != nil {
-						logErr.Println(err.Error())
-						continue
-					}
 				}
 			}
-			collectionIndexer.LastIndex += foundMintedTokens
+			collstats.RemoveCollectionToCheck(colsToCheck[0])
+			collectionIndexer.LastIndex += foundedTxsCount
 			_, err = storage.UpdateCollectionIndexer(collectionIndexer.LastIndex, collectionIndexer.CollectionAddr)
 			if err != nil {
 				_, err := storage.UpdateCollectionIndexer(collectionIndexer.LastIndex, collectionIndexer.CollectionAddr)

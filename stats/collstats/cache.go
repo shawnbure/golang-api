@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -20,26 +21,29 @@ import (
 var (
 	redisCollectionStatsKeyFormat = "CollStats:%s"
 	redisSetNXCollectionKeyFormat = "SetNxColl:%s"
-	redisCollectionChange         = "CollChangeQueue"
+	redisCollectionChange         = "coll_change_queue"
+	redisProccesingCollection     = "coll_change_queue-processing"
 	redisSetNXCollectionExpire    = 1 * time.Second
 	tokenIdToCollectionCacheInfo  = []byte("tokenToColl")
 
-	log = logger.GetOrCreate("stats")
+	log     = logger.GetOrCreate("stats")
+	counter = 0
 )
 
 func AddCollectionToCheck(col dtos.CollectionToCheck) error {
 	redis := cache.GetRedis()
 	redisCtx := cache.GetContext()
-	cmd := redis.SAdd(redisCtx, redisCollectionChange, fmt.Sprintf("%s,%s", col.CollectionAddr, col.TokenID))
+	cmd := redis.SAdd(redisCtx, redisCollectionChange, fmt.Sprintf("%s,%s,%d", col.CollectionAddr, col.TokenID, counter))
 	if cmd.Err() != nil {
 		return cmd.Err()
 	}
+	counter++
 	return nil
 }
 func RemoveCollectionToCheck(col dtos.CollectionToCheck) error {
 	redis := cache.GetRedis()
 	redisCtx := cache.GetContext()
-	cmd := redis.SRem(redisCtx, redisCollectionChange, fmt.Sprintf("%s,%s", col.CollectionAddr, col.TokenID))
+	cmd := redis.SRem(redisCtx, redisCollectionChange, fmt.Sprintf("%s,%s,%d", col.CollectionAddr, col.TokenID, col.Counter))
 	if cmd.Err() != nil {
 		return cmd.Err()
 	}
@@ -48,15 +52,21 @@ func RemoveCollectionToCheck(col dtos.CollectionToCheck) error {
 func GetCollectionToCheck() ([]dtos.CollectionToCheck, error) {
 	redis := cache.GetRedis()
 	redisCtx := cache.GetContext()
+	var colToCheck []dtos.CollectionToCheck
 	cmd := redis.SMembers(redisCtx, redisCollectionChange)
 	cols, err := cmd.Result()
 	if err != nil {
 		return nil, err
 	}
-	var colToCheck []dtos.CollectionToCheck
+	// colData := strings.Split(cols, ",")
+	// col = dtos.CollectionToCheck{CollectionAddr: colData[0], TokenID: colData[1]}
 	for _, col := range cols {
 		colData := strings.Split(col, ",")
-		colToCheck = append(colToCheck, dtos.CollectionToCheck{CollectionAddr: colData[0], TokenID: colData[1]})
+		ci, err := strconv.Atoi(colData[2])
+		if err != nil {
+			return nil, err
+		}
+		colToCheck = append(colToCheck, dtos.CollectionToCheck{CollectionAddr: colData[0], TokenID: colData[1], Counter: ci})
 	}
 	return colToCheck, nil
 }
