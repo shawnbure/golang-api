@@ -82,7 +82,8 @@ type AuthConfig struct {
 }
 
 type CacheConfig struct {
-	Url string
+	ReadUrl  string
+	WriteUrl string
 }
 
 type SwaggerConfig struct {

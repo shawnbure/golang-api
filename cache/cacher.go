@@ -22,7 +22,7 @@ type Cacher struct {
 	cache *cache.Cache
 	stats Stats
 	ctx   context.Context
-	redis *redis.Client
+	redis *redis.ClusterClient
 	bolt  *bolt.DB
 }
 
@@ -38,14 +38,53 @@ var (
 
 func InitCacher(cfg config.CacheConfig) {
 	initOnce.Do(func() {
-		opt, err := redis.ParseURL(cfg.Url)
-		if err != nil {
-			panic(err)
-		}
 
-		redisClient := redis.NewClient(opt)
+		clusterSlots := func(ctx context.Context) ([]redis.ClusterSlot, error) {
+			slots := []redis.ClusterSlot{
+				// First node with 1 master and 1 slave.
+				{
+					Start: 0,
+					End:   8191,
+					Nodes: []redis.ClusterNode{{
+						Addr: cfg.WriteUrl, // master
+					}, {
+						Addr: cfg.ReadUrl, // 1st slave
+					}},
+				},
+				// Second node with 1 master and 1 slave.
+				{
+					Start: 8192,
+					End:   16383,
+					Nodes: []redis.ClusterNode{{
+						Addr: cfg.WriteUrl, // master
+					}, {
+						Addr: cfg.ReadUrl, // 1st slave
+					}},
+				},
+			}
+			return slots, nil
+		}
+		redisdb := redis.NewClusterClient(&redis.ClusterOptions{
+			ClusterSlots:  clusterSlots,
+			RouteRandomly: true,
+		})
+
+		// ReloadState reloads cluster state. It calls ClusterSlots func
+		// to get cluster slots information.
+		// ctx := context.Background()
+		// err := redisdb.ReloadState(ctx)
+		// if err != nil {
+		// 	panic(err)
+		// }
+
+		// opt, err := redis.ParseURL(cfg.WriteUrl)
+		// if err != nil {
+		// 	panic(err)
+		// }
+
+		// redisClient := redis.NewClient(opt)
 		newCache := cache.New(&cache.Options{
-			Redis:      redisClient,
+			Redis:      redisdb,
 			LocalCache: cache.NewTinyLFU(1000, time.Second),
 		})
 
@@ -63,7 +102,7 @@ func InitCacher(cfg config.CacheConfig) {
 			cache: newCache,
 			stats: Stats{},
 			ctx:   context.Background(),
-			redis: redisClient,
+			redis: redisdb,
 			bolt:  boltDb,
 		}
 	})
@@ -107,7 +146,7 @@ func GetCacher() *Cacher {
 	return cacher
 }
 
-func GetRedis() *redis.Client {
+func GetRedis() *redis.ClusterClient {
 	return cacher.redis
 }
 
