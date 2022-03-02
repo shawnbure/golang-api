@@ -303,6 +303,11 @@ func (ci *CollectionIndexer) StartWorker() {
 										b, _ := hex.DecodeString(imageURI)
 										imageURI = string(b)
 									}
+									if strings.Contains(ci.ElrondAPI,"devnet"){
+										strings.Replace(imageURI,"https://gateway.pinata.cloud/ipfs/","https://devnet-media.elrond.com/nfts/asset/",1)
+									}else{
+										strings.Replace(imageURI,"https://gateway.pinata.cloud/ipfs/","https://media.elrond.com/nfts/asset/",1)
+									}
 
 									url := fmt.Sprintf("%s/%s.json", metaURI, nonceStr)
 									attrbs, err := services.GetResponse(url)
