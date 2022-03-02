@@ -310,6 +310,7 @@ func (ci *CollectionIndexer) StartWorker() {
 									}
 
 									url := fmt.Sprintf("%s/%s.json", metaURI, nonceStr)
+									tokenName := fmt.Sprintf("%s #%d",col.Name,int64(nonce))
 									attrbs, err := services.GetResponse(url)
 									if err != nil {
 										if strings.Contains(err.Error(), "429") || strings.Contains(err.Error(), "EOF") || strings.Contains(err.Error(), "deadline") {
@@ -321,7 +322,7 @@ func (ci *CollectionIndexer) StartWorker() {
 												NonceStr:     nonceResArr[2],
 												MetadataLink: string(metaURI) + "/" + nonceStr + ".json",
 												ImageLink:    string(imageURI) + "/" + nonceStr + ".png",
-												TokenName:    col.Name,
+												TokenName:    tokenName,
 												Attributes:   []byte{},
 												OwnerId:      acc.ID,
 												OnSale:       false,
