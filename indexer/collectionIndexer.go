@@ -185,7 +185,10 @@ func (ci *CollectionIndexer) StartWorker() {
 			if err != nil {
 				logErr.Println(err.Error())
 				logErr.Println("error creating request for get nfts deployer")
-				continue
+				if strings.Contains(err.Error(), "429") {
+					time.Sleep(time.Second * 10)
+					goto singleColLoop
+				}
 			}
 
 			var ColResults []map[string]interface{}
@@ -198,6 +201,7 @@ func (ci *CollectionIndexer) StartWorker() {
 			if len(ColResults) == 0 {
 				continue
 			}
+
 			foundedTxsCount += uint64(len(ColResults))
 
 			for _, colR := range ColResults {
@@ -215,6 +219,10 @@ func (ci *CollectionIndexer) StartWorker() {
 								continue
 							}
 						}
+					}
+					if colR["status"] == "pending" {
+						time.Sleep(time.Second * 2)
+						goto colLoop
 					}
 					results := (colR["results"].([]interface{}))
 					if len(results) < 2 {
@@ -321,7 +329,7 @@ func (ci *CollectionIndexer) StartWorker() {
 												CollectionID: col.ID,
 												Nonce:        nonce,
 												NonceStr:     nonceResArr[2],
-												MetadataLink: string(metaURI) + "/" + nonceStr + ".json",
+												MetadataLink: string(youbeiMeta) + "/" + nonceStr + ".json",
 												ImageLink:    string(imageURI) + "/" + nonceStr + ".png",
 												TokenName:    tokenName,
 												Attributes:   []byte{},
@@ -362,7 +370,7 @@ func (ci *CollectionIndexer) StartWorker() {
 										CollectionID: col.ID,
 										Nonce:        nonce,
 										NonceStr:     nonceResArr[2],
-										MetadataLink: string(metaURI) + "/" + nonceStr + ".json",
+										MetadataLink: string(youbeiMeta) + "/" + nonceStr + ".json",
 										ImageLink:    string(imageURI) + "/" + nonceStr + ".png",
 										TokenName:    tokenName,
 										Attributes:   attributes,
