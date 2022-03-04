@@ -322,6 +322,7 @@ func (ci *CollectionIndexer) StartWorker() {
 									tokenName := fmt.Sprintf("%s #%d", col.Name, int64(nonce))
 									attrbs, err := services.GetResponse(url)
 									if err != nil {
+										logErr.Println(err.Error())
 										if strings.Contains(err.Error(), "429") || strings.Contains(err.Error(), "EOF") || strings.Contains(err.Error(), "deadline") {
 											err = storage.AddToken(&entities.Token{
 												TokenID:      string(tokenIdByte),
@@ -350,7 +351,7 @@ func (ci *CollectionIndexer) StartWorker() {
 									metadataJSON := make(map[string]interface{})
 									err = json.Unmarshal(attrbs, &metadataJSON)
 									if err != nil {
-										logErr.Println(err.Error())
+										logErr.Println(err.Error(), string(attrbs))
 										continue
 									}
 									var attributes datatypes.JSON
