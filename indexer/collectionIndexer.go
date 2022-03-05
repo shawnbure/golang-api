@@ -148,6 +148,7 @@ func (ci *CollectionIndexer) StartWorker() {
 	colLoop:
 		if len(colsToCheck) == 0 { // TODO remove
 			colsToCheck, err = collstats.GetCollectionToCheck()
+			fmt.Println("collection to check from cache ", len(colsToCheck))
 			if err != nil {
 				logErr.Println(err.Error())
 				continue
