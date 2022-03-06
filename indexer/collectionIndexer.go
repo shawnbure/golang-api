@@ -116,6 +116,10 @@ func (ci *CollectionIndexer) StartWorker() {
 				}
 				colsToCheck = append(colsToCheck, dtos.CollectionToCheck{CollectionAddr: bech32Addr, TokenID: string(tokenIdStr)})
 				tokenId, err := hex.DecodeString(tokenIdHex)
+				if err != nil {
+					logErr.Println(err.Error())
+					continue
+				}
 				dbCol, err := storage.GetCollectionByTokenId(string(tokenId))
 				if err != nil {
 					logErr.Println(err.Error())
@@ -123,6 +127,18 @@ func (ci *CollectionIndexer) StartWorker() {
 				}
 				dbCol.MetaDataBaseURI = string(metaLink)
 				dbCol.TokenBaseURI = string(imageLink)
+				metaInfoByte, err := services.GetResponse(dbCol.MetaDataBaseURI + "/1.json")
+				if err != nil {
+					logErr.Println(err.Error())
+					continue
+				}
+				metaInfo := map[string]interface{}{}
+				err = json.Unmarshal(metaInfoByte, &metaInfo)
+				if err != nil {
+					logErr.Println(err.Error())
+					continue
+				}
+				dbCol.Description = metaInfo["description"].(string)
 				err = storage.UpdateCollection(dbCol)
 				if err != nil {
 					logErr.Println(err.Error())
