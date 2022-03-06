@@ -62,7 +62,6 @@ func ComputeCollectionMetadata(collectionId uint64) (*CollectionMetadata, error)
 		for _, token := range tokens {
 			tokenAttrs := []map[string]interface{}{}
 			ownersIDs[token.OwnerId] = true
-			token.Attributes.String()
 			innerErr = json.Unmarshal(token.Attributes, &tokenAttrs)
 			if innerErr != nil {
 				continue
