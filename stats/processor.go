@@ -60,18 +60,20 @@ func ComputeCollectionMetadata(collectionId uint64) (*CollectionMetadata, error)
 
 		numItems = numItems + len(tokens)
 		for _, token := range tokens {
-			tokenAttrs := make(map[string]interface{})
+			tokenAttrs := []map[string]interface{}{}
 			ownersIDs[token.OwnerId] = true
-
+			token.Attributes.String()
 			innerErr = json.Unmarshal(token.Attributes, &tokenAttrs)
 			if innerErr != nil {
 				continue
 			}
-
-			for k, v := range tokenAttrs {
+			if len(tokenAttrs) == 0 {
+				continue
+			}
+			for _, obj := range tokenAttrs {
 				attributeFound := false
 				for index, globalAttr := range globalAttrs {
-					if globalAttr.TraitType == k && globalAttr.Value == v {
+					if globalAttr.TraitType == obj["trait_type"] && globalAttr.Value == obj["value"] {
 						attributeFound = true
 						globalAttrs[index].Total++
 					}
@@ -79,8 +81,8 @@ func ComputeCollectionMetadata(collectionId uint64) (*CollectionMetadata, error)
 
 				if !attributeFound {
 					globalAttrs = append(globalAttrs, dtos.AttributeStat{
-						TraitType: k,
-						Value:     v,
+						TraitType: obj["trait_type"].(string),
+						Value:     obj["value"],
 						Total:     1,
 					})
 				}
