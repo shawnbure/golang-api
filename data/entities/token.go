@@ -24,6 +24,7 @@ type Token struct {
 	OnSale              bool           `json:"onSale"`
 	OwnerId             uint64         `json:"ownerId"`
 	CollectionID        uint64         `json:"collectionId"`
+	Owner               Account        `json:"owner"`
 }
 
 type TokenStatus string

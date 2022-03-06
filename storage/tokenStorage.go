@@ -232,7 +232,9 @@ func GetTokensByCollectionIdWithOffsetLimit(
 		txRead.Order(query)
 	}
 
-	txRead.Find(&tokens, "collection_id = ?", collectionId)
+	txRead.
+		Preload("Owner").
+		Find(&tokens, "collection_id = ?", collectionId)
 	if txRead.Error != nil {
 		return nil, txRead.Error
 	}
