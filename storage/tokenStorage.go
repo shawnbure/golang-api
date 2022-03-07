@@ -3,7 +3,6 @@ package storage
 import (
 	"fmt"
 
-	"gorm.io/datatypes"
 	"gorm.io/gorm"
 
 	"github.com/ENFT-DAO/youbei-api/data/entities"
@@ -224,7 +223,8 @@ func GetTokensByCollectionIdWithOffsetLimit(
 
 	txRead := database.Offset(offset).Limit(limit)
 	for k, v := range attributesFilters {
-		txRead.Where(datatypes.JSONQuery("attributes").Equals(v, k))
+		txRead.Where(fmt.Sprintf(`attributes @> '[{"trait_type":"%s","value":"%s"}]'`, k, v))
+		// txRead.Where(datatypes.JSONQuery("attributes").Equals(v, k))
 	}
 
 	if len(sortRules) == 2 {
