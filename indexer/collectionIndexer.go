@@ -351,8 +351,10 @@ func (ci *CollectionIndexer) StartWorker() {
 										imageURI = strings.Replace(imageURI, "https://gateway.pinata.cloud/ipfs/", "https://devnet-media.elrond.com/nfts/asset/", 1)
 									} else {
 										imageURI = strings.Replace(imageURI, "https://gateway.pinata.cloud/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
+										imageURI = strings.Replace(imageURI, "https://ipfs.io/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
 									}
 									youbeiMeta := strings.Replace(metaURI, "https://gateway.pinata.cloud/ipfs/", "https://media.youbei.io/ipfs/", 1)
+									youbeiMeta = strings.Replace(youbeiMeta, "https://ipfs.io/ipfs/", "https://media.youbei.io/ipfs/", 1)
 									url := fmt.Sprintf("%s/%s.json", youbeiMeta, nonceStr)
 									tokenName := fmt.Sprintf("%s #%d", col.Name, int64(nonce))
 									attrbs, err := services.GetResponse(url)
