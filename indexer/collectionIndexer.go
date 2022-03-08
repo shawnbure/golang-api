@@ -120,24 +120,29 @@ func (ci *CollectionIndexer) StartWorker() {
 					logErr.Println(err.Error())
 					continue
 				}
+
 				dbCol, err := storage.GetCollectionByTokenId(string(tokenId))
 				if err != nil {
 					logErr.Println(err.Error())
 					continue
 				}
+
 				dbCol.MetaDataBaseURI = string(metaLink)
 				dbCol.TokenBaseURI = string(imageLink)
 				metaInfoByte, err := services.GetResponse(dbCol.MetaDataBaseURI + "/1.json")
+
 				if err != nil {
 					logErr.Println(err.Error())
 					continue
 				}
+
 				metaInfo := map[string]interface{}{}
 				err = json.Unmarshal(metaInfoByte, &metaInfo)
 				if err != nil {
 					logErr.Println(err.Error())
 					continue
 				}
+
 				dbCol.Description = metaInfo["description"].(string)
 				err = storage.UpdateCollection(dbCol)
 				if err != nil {
@@ -182,7 +187,7 @@ func (ci *CollectionIndexer) StartWorker() {
 			collectionIndexer, err := storage.GetCollectionIndexer(colObj.CollectionAddr)
 			if err != nil {
 				if err == gorm.ErrRecordNotFound {
-					_, err = storage.CreateCollectionStat(colObj.CollectionAddr)
+					collectionIndexer, err = storage.CreateCollectionStat(colObj.CollectionAddr)
 					if err != nil {
 						logErr.Println(err.Error())
 						logErr.Println("error create colleciton indexer")
@@ -299,6 +304,16 @@ func (ci *CollectionIndexer) StartWorker() {
 								if err == gorm.ErrRecordNotFound {
 									acc, err := storage.GetAccountByAddress(rMap["receiver"].(string))
 									if err != nil {
+										if err == gorm.ErrRecordNotFound {
+											acc = &entities.Account{}
+											acc.Address = rMap["receiver"].(string)
+											acc.Name = services.RandomName()
+											err := storage.AddAccount(acc)
+											if err != nil {
+												logErr.Println("fatal ", err.Error())
+												continue
+											}
+										}
 										logErr.Println(err.Error())
 										continue
 									}

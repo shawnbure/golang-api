@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/rs/xid"
 )
 
 // ConvertFilterToQuery converts a querystring conversion filter to a sql where clause
@@ -113,4 +115,9 @@ func TurnIntoBigIntNDec(num int64, decimal int64) *big.Int {
 	bigNum := big.NewInt(num)
 	bigNum = bigNum.Mul(big.NewInt(10).Exp(big.NewInt(10), big.NewInt(decimal), nil), bigNum)
 	return bigNum
+}
+
+func RandomName() string {
+	guid := xid.New()
+	return guid.String()
 }
