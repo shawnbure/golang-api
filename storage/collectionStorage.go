@@ -72,7 +72,28 @@ func UpdateCollectionCoverWhereId(collectionId uint64, link string) error {
 	}
 	return nil
 }
+func GetCollectionByAddr(addr string) (*entities.Collection, error) {
+	var collection entities.Collection
 
+	if len(addr) < 10 {
+		return &collection, nil
+	}
+
+	database, err := GetDBOrError()
+	if err != nil {
+		return nil, err
+	}
+	collection.ContractAddress = addr
+	txRead := database.Where(collection).Find(&collection)
+	if txRead.Error != nil {
+		return nil, txRead.Error
+	}
+	if txRead.RowsAffected == 0 {
+		return nil, gorm.ErrRecordNotFound
+	}
+
+	return &collection, nil
+}
 func GetCollectionById(id uint64) (*entities.Collection, error) {
 	var collection entities.Collection
 

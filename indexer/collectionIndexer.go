@@ -221,10 +221,13 @@ func (ci *CollectionIndexer) StartWorker() {
 				continue
 			}
 			if len(ColResults) == 0 {
+				logErr.Println("ColResults no collection related tx found")
+				collstats.RemoveCollectionToCheck(colObj)
 				continue
 			}
 
 			foundedTxsCount += uint64(len(ColResults))
+			fmt.Println("entering colResults loop")
 
 			for _, colR := range ColResults {
 				name := (colR["action"].(map[string]interface{}))["name"].(string)
@@ -425,7 +428,7 @@ func (ci *CollectionIndexer) StartWorker() {
 					}
 				}
 			}
-			collstats.RemoveCollectionToCheck(colObj)
+			// collstats.RemoveCollectionToCheck(colObj) TODO
 			collectionIndexer.LastIndex += foundedTxsCount
 			_, err = storage.UpdateCollectionIndexer(collectionIndexer.LastIndex, collectionIndexer.CollectionAddr)
 			if err != nil {

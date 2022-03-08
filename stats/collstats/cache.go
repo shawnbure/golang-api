@@ -26,18 +26,16 @@ var (
 	redisSetNXCollectionExpire    = 1 * time.Second
 	tokenIdToCollectionCacheInfo  = []byte("tokenToColl")
 
-	log     = logger.GetOrCreate("stats")
-	counter = 0
+	log = logger.GetOrCreate("stats")
 )
 
 func AddCollectionToCheck(col dtos.CollectionToCheck) error {
 	redis := cache.GetRedis()
 	redisCtx := cache.GetContext()
-	cmd := redis.SAdd(redisCtx, redisCollectionChange, fmt.Sprintf("%s,%s,%d", col.CollectionAddr, col.TokenID, counter))
+	cmd := redis.SAdd(redisCtx, redisCollectionChange, fmt.Sprintf("%s,%s,%d", col.CollectionAddr, col.TokenID, col.Counter))
 	if cmd.Err() != nil {
 		return cmd.Err()
 	}
-	counter++
 	return nil
 }
 func RemoveCollectionToCheck(col dtos.CollectionToCheck) error {

@@ -9,6 +9,7 @@ import (
 	"github.com/ENFT-DAO/youbei-api/data/dtos"
 	"github.com/ENFT-DAO/youbei-api/services"
 	"github.com/ENFT-DAO/youbei-api/stats/collstats"
+	"github.com/ENFT-DAO/youbei-api/storage"
 	"github.com/ElrondNetwork/elrond-sdk-erdgo/data"
 )
 
@@ -357,7 +358,15 @@ func (f *TxFormatter) NewMintNftsTxTemplate(
 	txData := endpointName +
 		"@" + hex.EncodeToString(big.NewInt(int64(numberOfTokens)).Bytes()) /*+
 	"@" + hex.EncodeToString(signedMessage)*/
-	err := collstats.AddCollectionToCheck(dtos.CollectionToCheck{CollectionAddr: contractAddress, TokenID: tokenID})
+	col, err := storage.GetCollectionByAddr(contractAddress)
+	if err != nil {
+		return Transaction{}, err
+	}
+	tt, err := storage.GetLastNonceTokenByCollectionId(col.ID)
+	if err != nil {
+		return Transaction{}, err
+	}
+	err = collstats.AddCollectionToCheck(dtos.CollectionToCheck{CollectionAddr: contractAddress, TokenID: tokenID, Counter: int(tt.Nonce)})
 	if err != nil {
 		return Transaction{}, err
 	}
