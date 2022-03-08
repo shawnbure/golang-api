@@ -228,7 +228,7 @@ func (ci *CollectionIndexer) StartWorker() {
 						logErr.Println("results not available!")
 						if colR["status"] == "pending" {
 							time.Sleep(time.Second * 2)
-							goto singleColLoop
+							goto colLoop
 						} else {
 							resultNotAvailableCount++
 							if resultNotAvailableCount > 3 {
@@ -239,7 +239,7 @@ func (ci *CollectionIndexer) StartWorker() {
 					}
 					if colR["status"] == "pending" {
 						time.Sleep(time.Second * 2)
-						goto singleColLoop
+						goto colLoop
 					}
 					results := (colR["results"].([]interface{}))
 					if len(results) < 2 {
@@ -365,7 +365,6 @@ func (ci *CollectionIndexer) StartWorker() {
 										logErr.Println(err.Error(), url, col.MetaDataBaseURI, col.TokenBaseURI, col.ID)
 										continue
 									}
-
 									metadataJSON := make(map[string]interface{})
 									err = json.Unmarshal(attrbs, &metadataJSON)
 									if err != nil {
@@ -411,7 +410,8 @@ func (ci *CollectionIndexer) StartWorker() {
 					}
 				}
 			}
-			collectionIndexer.LastIndex += foundedTxsCount - 1
+			collstats.RemoveCollectionToCheck(colsToCheck[0])
+			collectionIndexer.LastIndex += foundedTxsCount
 			_, err = storage.UpdateCollectionIndexer(collectionIndexer.LastIndex, collectionIndexer.CollectionAddr)
 			if err != nil {
 				_, err := storage.UpdateCollectionIndexer(collectionIndexer.LastIndex, collectionIndexer.CollectionAddr)
