@@ -233,7 +233,7 @@ func (ci *CollectionIndexer) StartWorker() {
 						logErr.Println("results not available!")
 						if colR["status"] == "pending" {
 							time.Sleep(time.Second * 2)
-							goto colLoop
+							goto singleColLoop
 						} else {
 							resultNotAvailableCount++
 							if resultNotAvailableCount > 3 {
@@ -244,7 +244,7 @@ func (ci *CollectionIndexer) StartWorker() {
 					}
 					if colR["status"] == "pending" {
 						time.Sleep(time.Second * 2)
-						goto colLoop
+						goto singleColLoop
 					}
 					results := (colR["results"].([]interface{}))
 					if len(results) < 2 {
