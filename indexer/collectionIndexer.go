@@ -410,7 +410,7 @@ func (ci *CollectionIndexer) StartWorker() {
 					}
 				}
 			}
-			collstats.RemoveCollectionToCheck(colsToCheck[0])
+			collstats.ClearCollectionToCheck()
 			collectionIndexer.LastIndex += foundedTxsCount
 			_, err = storage.UpdateCollectionIndexer(collectionIndexer.LastIndex, collectionIndexer.CollectionAddr)
 			if err != nil {
