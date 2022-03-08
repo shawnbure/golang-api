@@ -230,6 +230,10 @@ func (ci *CollectionIndexer) StartWorker() {
 			fmt.Println("entering colResults loop")
 
 			for _, colR := range ColResults {
+				if _, ok := colR["action"]; !ok {
+					time.Sleep(time.Second * 1)
+					goto singleColLoop
+				}
 				name := (colR["action"].(map[string]interface{}))["name"].(string)
 				if name == "mintTokensThroughMarketplace" && colR["status"] != "fail" {
 					if _, ok := colR["results"]; !ok {
