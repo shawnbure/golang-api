@@ -44,7 +44,6 @@ func (ci *CollectionIndexer) StartWorker() {
 	for {
 	deployLoop:
 		var foundDeployedContracts uint64 = 0
-		logErr.Println("collection indexer loop")
 		time.Sleep(time.Second * ci.Delay)
 		deployerStat, err := storage.GetDeployerStat(ci.DeployerAddr)
 		if err != nil {
@@ -169,7 +168,9 @@ func (ci *CollectionIndexer) StartWorker() {
 	colLoop:
 		if len(colsToCheck) == 0 { // TODO remove
 			colsToCheck, err = collstats.GetCollectionToCheck()
-			fmt.Println("collection to check from cache ", len(colsToCheck))
+			if len(colsToCheck) > 0 {
+				fmt.Println("collection to check from cache ", len(colsToCheck))
+			}
 			if err != nil {
 				logErr.Println(err.Error())
 				continue
@@ -207,7 +208,7 @@ func (ci *CollectionIndexer) StartWorker() {
 			if err != nil {
 				logErr.Println(err.Error())
 				logErr.Println("error creating request for get nfts deployer")
-				if strings.Contains(err.Error(), "429") {
+				if strings.Contains(err.Error(), "429") || strings.Contains(err.Error(), "deadline") {
 					time.Sleep(time.Second * 10)
 					goto singleColLoop
 				}
@@ -236,6 +237,7 @@ func (ci *CollectionIndexer) StartWorker() {
 				}
 				name := (colR["action"].(map[string]interface{}))["name"].(string)
 				if name == "mintTokensThroughMarketplace" && colR["status"] != "fail" {
+					fmt.Println("mint found")
 					if _, ok := colR["results"]; !ok {
 						logErr.Println("results not available!")
 						if colR["status"] == "pending" {
@@ -277,7 +279,7 @@ func (ci *CollectionIndexer) StartWorker() {
 							continue
 						}
 						nonceResArr := strings.Split(string(nonceResBytes), "@")
-						nonceResString, err := hex.DecodeString(nonceResArr[2])
+						nonce, err := strconv.ParseInt(nonceResArr[2], 16, 64)
 						if err != nil {
 							logErr.Println(err.Error())
 							continue
@@ -288,7 +290,7 @@ func (ci *CollectionIndexer) StartWorker() {
 							continue
 						}
 						// nonce, err := strconv.ParseUint(string(nonceResString[0]), 10, 64)
-						nonce := uint64(nonceResString[0])
+						// nonceResString := strconv.FormatInt(nonce, 10)
 						count := int(countRes[0])
 
 						resultMap := result.(map[string]interface{})
@@ -304,7 +306,7 @@ func (ci *CollectionIndexer) StartWorker() {
 							continue
 						}
 						for i := 0; i < count; i++ {
-							nonceStr := strconv.FormatInt(int64(nonce), 10)
+							nonceStr := nonceResArr[2] //strconv.FormatInt(int64(nonce), 10)
 							tokenId := string(tokenIdByte) + "-" + nonceStr
 							_, err := storage.GetTokenByTokenIdAndNonceStr(tokenId, nonceStr)
 							if err != nil {
@@ -320,9 +322,10 @@ func (ci *CollectionIndexer) StartWorker() {
 												logErr.Println("fatal ", err.Error())
 												continue
 											}
+										} else {
+											logErr.Println(err.Error())
+											continue
 										}
-										logErr.Println(err.Error())
-										continue
 									}
 									price := colR["value"].(string)
 									bigPrice, ok := big.NewInt(0).SetString(price, 10)
@@ -359,6 +362,8 @@ func (ci *CollectionIndexer) StartWorker() {
 									}
 									youbeiMeta := strings.Replace(metaURI, "https://gateway.pinata.cloud/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
 									youbeiMeta = strings.Replace(youbeiMeta, "https://ipfs.io/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
+									nonceStr = strconv.FormatInt(int64(nonce), 10)
+
 									url := fmt.Sprintf("%s/%s.json", youbeiMeta, nonceStr)
 									tokenName := fmt.Sprintf("%s #%d", col.Name, int64(nonce))
 									attrbs, err := services.GetResponse(url)
@@ -369,7 +374,7 @@ func (ci *CollectionIndexer) StartWorker() {
 												TokenID:      string(tokenIdByte),
 												MintTxHash:   colR["txHash"].(string),
 												CollectionID: col.ID,
-												Nonce:        nonce,
+												Nonce:        uint64(nonce),
 												NonceStr:     nonceResArr[2],
 												MetadataLink: string(youbeiMeta) + "/" + nonceStr + ".json",
 												ImageLink:    string(imageURI) + "/" + nonceStr + ".png",
@@ -410,7 +415,7 @@ func (ci *CollectionIndexer) StartWorker() {
 										TokenID:      string(tokenIdByte),
 										MintTxHash:   colR["txHash"].(string),
 										CollectionID: col.ID,
-										Nonce:        nonce,
+										Nonce:        uint64(nonce),
 										NonceStr:     nonceResArr[2],
 										MetadataLink: string(youbeiMeta) + "/" + nonceStr + ".json",
 										ImageLink:    string(imageURI) + "/" + nonceStr + ".png",
