@@ -264,7 +264,6 @@ func (handler *collectionsHandler) set(c *gin.Context) {
 // @Router /collections/create [post]
 func (handler *collectionsHandler) create(c *gin.Context) {
 	var request services.CreateCollectionRequest
-
 	err := c.BindJSON(&request)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
