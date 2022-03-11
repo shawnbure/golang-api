@@ -726,20 +726,20 @@ func GetTokenCacheInfo(tokenId string, nonce uint64) (*TokenCacheInfo, error) {
 }
 
 func GetOrAddTokenCacheInfo(tokenId string, nonce uint64) (*TokenCacheInfo, error) {
-	cacheInfo, err := GetTokenCacheInfo(tokenId, nonce)
-	if err != nil {
-		token, innerErr := storage.GetTokenByTokenIdAndNonce(tokenId, nonce)
-		if innerErr != nil {
-			return nil, innerErr
-		}
-
-		cacheInfo, innerErr = AddTokenToCache(tokenId, nonce, token.TokenName, token.ID)
-		if innerErr != nil {
-			return nil, innerErr
-		}
+	// cacheInfo, err := GetTokenCacheInfo(tokenId, nonce)
+	// if err != nil {
+	token, innerErr := storage.GetTokenByTokenIdAndNonce(tokenId, nonce)
+	if innerErr != nil {
+		return nil, innerErr
 	}
 
-	return cacheInfo, nil
+	// 	cacheInfo, innerErr = AddTokenToCache(tokenId, nonce, token.TokenName, token.ID)
+	// 	if innerErr != nil {
+	// 		return nil, innerErr
+	// 	}
+	// }
+
+	return &TokenCacheInfo{TokenDbId: token.ID, TokenName: token.TokenName}, nil
 }
 
 func GetAvailableTokens(args AvailableTokensRequest) (AvailableTokensResponse, error) {
