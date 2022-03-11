@@ -19,12 +19,12 @@ import (
 )
 
 var (
-	redisCollectionStatsKeyFormat = "CollStats:%s"
-	redisSetNXCollectionKeyFormat = "SetNxColl:%s"
-	redisCollectionChange         = "coll_change_queue"
-	redisProccesingCollection     = "coll_change_queue-processing"
-	redisSetNXCollectionExpire    = 1 * time.Second
-	tokenIdToCollectionCacheInfo  = []byte("tokenToColl")
+	redisCollectionStatsKeyFormat        = "CollStats:%s"
+	redisSetNXCollectionKeyFormat        = "SetNxColl:%s"
+	redisCollectionChange                = "coll_change_queue"
+	redisCollectionChangeRemoveCandidate = "coll_change_queue-rem-candidate"
+	redisSetNXCollectionExpire           = 1 * time.Second
+	tokenIdToCollectionCacheInfo         = []byte("tokenToColl")
 
 	log = logger.GetOrCreate("stats")
 )
@@ -87,6 +87,16 @@ func ClearCollectionToCheck() ([]dtos.CollectionToCheck, error) {
 		colToCheck = append(colToCheck, dtos.CollectionToCheck{CollectionAddr: colData[0], TokenID: colData[1]})
 	}
 	return colToCheck, nil
+}
+
+func AddColToRemoveCandidate(col dtos.CollectionToCheck) error {
+	redis := cache.GetRedis()
+	redisCtx := cache.GetContext()
+	cmd := redis.SAdd(redisCtx, redisCollectionChangeRemoveCandidate, fmt.Sprintf("%s,%s,%d", col.CollectionAddr, col.TokenID, col.Counter))
+	if cmd.Err() != nil {
+		return cmd.Err()
+	}
+	return nil
 }
 func GetStatisticsForTokenId(tokenId string) (*dtos.CollectionStatistics, error) {
 	redis := cache.GetRedis()

@@ -15,7 +15,6 @@ import (
 	"github.com/ENFT-DAO/youbei-api/data/dtos"
 	"github.com/ENFT-DAO/youbei-api/data/entities"
 	"github.com/ENFT-DAO/youbei-api/services"
-	"github.com/ENFT-DAO/youbei-api/stats/collstats"
 	"github.com/ENFT-DAO/youbei-api/storage"
 	"github.com/btcsuite/btcutil/bech32"
 	"github.com/emurmotol/ethconv"
@@ -166,17 +165,22 @@ func (ci *CollectionIndexer) StartWorker() {
 
 		}
 	colLoop:
-		if len(colsToCheck) == 0 { // TODO remove
-			colsToCheck, err = collstats.GetCollectionToCheck()
-			if len(colsToCheck) > 0 {
-				fmt.Println("collection to check from cache ", len(colsToCheck))
-			}
-			if err != nil {
-				logErr.Println(err.Error())
-				continue
-			}
+		// if len(colsToCheck) == 0 { // TODO remove
+		// 	colsToCheck, err = collstats.GetCollectionToCheck()
+		// 	if len(colsToCheck) > 0 {
+		// 		fmt.Println("collection to check from cache ", len(colsToCheck))
+		// 	}
+		// 	if err != nil {
+		// 		logErr.Println(err.Error())
+		// 		continue
+		// 	}
+		// }
+		cols, err := storage.GetAllCollections()
+		if err != nil {
+			logErr.Println(err.Error())
+			continue
 		}
-		for _, colObj := range colsToCheck {
+		for _, colObj := range cols {
 		singleColLoop:
 			var foundedTxsCount uint64 = 0
 
@@ -185,10 +189,10 @@ func (ci *CollectionIndexer) StartWorker() {
 				logErr.Println("GetCollectionByTokenId", err.Error(), colObj.TokenID)
 				continue
 			}
-			collectionIndexer, err := storage.GetCollectionIndexer(colObj.CollectionAddr)
+			collectionIndexer, err := storage.GetCollectionIndexer(colObj.ContractAddress)
 			if err != nil {
 				if err == gorm.ErrRecordNotFound {
-					collectionIndexer, err = storage.CreateCollectionStat(colObj.CollectionAddr)
+					collectionIndexer, err = storage.CreateCollectionStat(colObj.ContractAddress)
 					if err != nil {
 						logErr.Println(err.Error())
 						logErr.Println("error create colleciton indexer")
@@ -223,7 +227,6 @@ func (ci *CollectionIndexer) StartWorker() {
 			}
 			if len(ColResults) == 0 {
 				logErr.Println("ColResults no collection related tx found")
-				collstats.RemoveCollectionToCheck(colObj)
 				continue
 			}
 
