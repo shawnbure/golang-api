@@ -4,9 +4,9 @@ import "gorm.io/datatypes"
 
 type Token struct {
 	ID                  uint64         `gorm:"primaryKey" json:"id"`
-	TokenID             string         `json:"tokenId" gorm:"unique"`
+	TokenID             string         `json:"tokenId" gorm:"index:token_nonce,unique"`
 	Nonce               uint64         `json:"nonce"`
-	NonceStr            string         `json:"nonceStr"`
+	NonceStr            string         `json:"nonceStr" gorm:"index:token_nonce,unique"`
 	PriceString         string         `json:"priceString"`
 	PriceNominal        float64        `json:"priceNominal"`
 	RoyaltiesPercent    float64        `json:"royaltiesPercent"`

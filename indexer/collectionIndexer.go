@@ -373,7 +373,7 @@ func (ci *CollectionIndexer) StartWorker() {
 										logErr.Println(err.Error())
 										if strings.Contains(err.Error(), "429") || strings.Contains(err.Error(), "EOF") || strings.Contains(err.Error(), "deadline") {
 											err = storage.AddToken(&entities.Token{
-												TokenID:      string(tokenIdByte) + "-" + nonceResArr[2],
+												TokenID:      string(tokenIdByte),
 												MintTxHash:   colR["txHash"].(string),
 												CollectionID: col.ID,
 												Nonce:        uint64(nonce),
@@ -414,7 +414,7 @@ func (ci *CollectionIndexer) StartWorker() {
 										continue
 									}
 									err = storage.AddToken(&entities.Token{
-										TokenID:      string(tokenIdByte) + "-" + nonceResArr[2],
+										TokenID:      string(tokenIdByte),
 										MintTxHash:   colR["txHash"].(string),
 										CollectionID: col.ID,
 										Nonce:        uint64(nonce),
