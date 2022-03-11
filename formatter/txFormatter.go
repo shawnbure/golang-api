@@ -11,6 +11,7 @@ import (
 	"github.com/ENFT-DAO/youbei-api/stats/collstats"
 	"github.com/ENFT-DAO/youbei-api/storage"
 	"github.com/ElrondNetwork/elrond-sdk-erdgo/data"
+	"gorm.io/gorm"
 )
 
 var (
@@ -364,7 +365,11 @@ func (f *TxFormatter) NewMintNftsTxTemplate(
 	}
 	tt, err := storage.GetLastNonceTokenByCollectionId(col.ID)
 	if err != nil {
-		return Transaction{}, err
+		if err == gorm.ErrRecordNotFound {
+			tt.Nonce = 0
+		} else {
+			return Transaction{}, err
+		}
 	}
 	err = collstats.AddCollectionToCheck(dtos.CollectionToCheck{CollectionAddr: contractAddress, TokenID: tokenID, Counter: int(tt.Nonce)})
 	if err != nil {
