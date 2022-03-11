@@ -88,7 +88,7 @@ func ComputeCollectionMetadata(collectionId uint64) (*CollectionMetadata, error)
 			}
 		}
 
-		offset = limit
+		offset += limit
 	}
 
 	result := CollectionMetadata{
