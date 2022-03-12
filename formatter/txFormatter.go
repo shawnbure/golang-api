@@ -357,7 +357,7 @@ func (f *TxFormatter) NewMintNftsTxTemplate(
 	// if numberOfTokens < factor {
 	// 	factor = numberOfTokens
 	// }
-	gasLimit := 600000000 //f.config.MintTokenGasLimit * (numberOfTokens/factor + 1)
+	gasLimit := uint64(600000000) //f.config.MintTokenGasLimit * (numberOfTokens/factor + 1)
 	totalPrice := fmt.Sprintf("%f", mintPricePerToken*float64(numberOfTokens))
 	txData := endpointName +
 		"@" + hex.EncodeToString(big.NewInt(int64(numberOfTokens)).Bytes()) /*+
