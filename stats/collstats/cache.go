@@ -23,7 +23,7 @@ var (
 	redisSetNXCollectionKeyFormat        = "SetNxColl:%s"
 	redisCollectionChange                = "coll_change_queue"
 	redisCollectionChangeRemoveCandidate = "coll_change_queue-rem-candidate"
-	redisSetNXCollectionExpire           = 1 * time.Second
+	redisSetNXCollectionExpire           = 1 * time.Minute
 	tokenIdToCollectionCacheInfo         = []byte("tokenToColl")
 
 	log = logger.GetOrCreate("stats")
