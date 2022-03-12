@@ -259,6 +259,10 @@ func (ci *CollectionIndexer) StartWorker() {
 						time.Sleep(time.Second * 2)
 						goto singleColLoop
 					}
+					if colR["results"] == nil {
+						time.Sleep(time.Second * 2)
+						goto singleColLoop
+					}
 					results := (colR["results"].([]interface{}))
 					if len(results) < 2 {
 						logErr.Println("this tx wasn't good!", colR["originalTxHash"])
