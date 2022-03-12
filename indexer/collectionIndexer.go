@@ -249,19 +249,20 @@ func (ci *CollectionIndexer) StartWorker() {
 							resultNotAvailableCount++
 							if resultNotAvailableCount > 3 {
 								resultNotAvailableCount = 0
-								continue
 							}
 						}
-						time.Sleep(time.Second * 2)
-						goto singleColLoop
+						// goto singleColLoop
+						continue
 					}
 					if colR["status"] == "pending" {
 						time.Sleep(time.Second * 2)
-						goto singleColLoop
+						continue
+						// goto singleColLoop
 					}
 					if colR["results"] == nil {
+						logErr.Println("result was nil")
 						time.Sleep(time.Second * 2)
-						goto singleColLoop
+						continue
 					}
 					results := (colR["results"].([]interface{}))
 					if len(results) < 2 {
