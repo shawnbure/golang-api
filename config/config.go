@@ -40,6 +40,7 @@ type BlockchainConfig struct {
 	BuyNftGasLimit                       uint64
 	WithdrawNftGasLimit                  uint64
 	MintTokenGasLimit                    uint64
+	MintGasPrice                         uint64
 	MakeOfferGasLimit                    uint64
 	AcceptOfferGasLimit                  uint64
 	CancelOfferGasLimit                  uint64

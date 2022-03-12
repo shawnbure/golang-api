@@ -608,7 +608,10 @@ func (handler *txTemplateHandler) getMintNftTxTemplate(c *gin.Context) {
 	// msg := []byte(message)
 
 	// signedMessage := ed25519.Sign(edPkey, msg)
-
+	if numberOfTokens > 10 {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, "you can't mint more than 10 per batch")
+		return
+	}
 	template, err := handler.txFormatter.NewMintNftsTxTemplate(
 		userAddress,
 		collection.ContractAddress,

@@ -353,8 +353,11 @@ func (f *TxFormatter) NewMintNftsTxTemplate(
 	if f.noFeeOnMintContracts[contractAddress] {
 		endpointName = mintTokensEndpointName
 	}
-
-	gasLimit := f.config.MintTokenGasLimit * (numberOfTokens/4 + 1)
+	var factor uint64 = 6
+	if numberOfTokens < factor {
+		factor = numberOfTokens
+	}
+	gasLimit := f.config.MintTokenGasLimit * (numberOfTokens/factor + 1)
 	totalPrice := fmt.Sprintf("%f", mintPricePerToken*float64(numberOfTokens))
 	txData := endpointName +
 		"@" + hex.EncodeToString(big.NewInt(int64(numberOfTokens)).Bytes()) /*+
@@ -380,7 +383,7 @@ func (f *TxFormatter) NewMintNftsTxTemplate(
 		Value:     totalPrice,
 		RcvAddr:   contractAddress,
 		SndAddr:   walletAddress,
-		GasPrice:  f.config.GasPrice,
+		GasPrice:  f.config.MintGasPrice,
 		GasLimit:  gasLimit,
 		Data:      txData,
 		Signature: "",
