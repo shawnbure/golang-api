@@ -33,6 +33,7 @@ func NewMarketPlaceIndexer(marketPlaceAddr string, elrondAPI string, delay uint6
 func (mpi *MarketPlaceIndexer) StartWorker() {
 	lerr := mpi.Logger
 	for {
+		var foundResults uint64 = 0
 		time.Sleep(time.Second * mpi.Delay)
 		marketStat, err := storage.GetMarketPlaceIndexer()
 		if err != nil {
@@ -65,14 +66,16 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 		if len(txResult) == 0 {
 			continue
 		}
+		foundResults += uint64(len(txResult))
 		for _, tx := range txResult {
+		txloop:
 			orgtxByte, err := services.GetResponse(fmt.Sprintf("%s/transactions/%s", mpi.ElrondAPI, tx.OriginalTxHash))
 			if err != nil {
 				lerr.Println(err.Error())
 				continue
 			}
 			var orgTx entities.TransactionBC
-			err = json.Unmarshal(orgtxByte, orgTx)
+			err = json.Unmarshal(orgtxByte, &orgTx)
 			if err != nil {
 				lerr.Println(err.Error())
 				continue
@@ -80,14 +83,24 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			if orgTx.Status == "fail" {
 				continue
 			}
-
+			if orgTx.Status == "pending" {
+				goto txloop
+			}
 			var token entities.Token
 			data, err := base64.StdEncoding.DecodeString(tx.Data)
 			if err != nil {
 				lerr.Println(err.Error())
 				continue
 			}
-			if !strings.Contains(string(data), "putNftForSale") {
+			orgData, err := base64.StdEncoding.DecodeString(orgTx.Data)
+			if err != nil {
+				lerr.Println(err.Error())
+				continue
+			}
+			isWithdrawn := strings.Contains(string(orgData), "withdrawNft")
+			isOnSale := strings.Contains(string(data), "putNftForSale")
+			isBuyNft := strings.Contains(string(orgData), "buyNft")
+			if !isOnSale && !isBuyNft && !isWithdrawn {
 				continue
 			}
 			body, err := services.GetResponse(fmt.Sprintf("%s/transactions?hashes=%s&order=asc", mpi.ElrondAPI, tx.OriginalTxHash))
@@ -110,6 +123,10 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			mainDataParts := strings.Split(string(mainTxData), "@")
 			hexTokenId := mainDataParts[1]
 			tokenId, err := hex.DecodeString(hexTokenId)
+			if err != nil {
+				lerr.Println(err.Error())
+				continue
+			}
 			hexNonce := mainDataParts[2]
 			// nonce, err := hex.DecodeString(hexNonce)
 			data, err = base64.StdEncoding.DecodeString(tx.Data)
@@ -125,9 +142,22 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				continue
 			}
 			fprice, err := ethconv.FromWei(price, ethconv.Ether)
+			if err != nil {
+				lerr.Println(err.Error())
+				continue
+			}
 			token.PriceString = fprice.String()
 			token.PriceNominal, _ = fprice.Float64()
-			token.OnSale = true
+			if isOnSale {
+				token.OnSale = true
+				token.Status = "List"
+			} else if isWithdrawn {
+				token.OnSale = false
+				token.Status = "Withdrawn"
+			} else if isBuyNft {
+				token.OnSale = false
+				token.Status = "Bought"
+			}
 			err = storage.UpdateTokenWhere(&token, "token_id=? AND nonce_str=?", tokenId, hexNonce)
 			if err != nil {
 				if err == gorm.ErrRecordNotFound {
@@ -203,7 +233,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				continue
 			}
 		}
-		newStat, err := storage.UpdateMarketPlaceIndexer(marketStat.LastIndex + 1)
+		newStat, err := storage.UpdateMarketPlaceIndexer(marketStat.LastIndex + foundResults)
 		if err != nil {
 			lerr.Println(err.Error())
 			lerr.Println("error update marketplace index nfts ")

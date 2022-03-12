@@ -17,8 +17,8 @@ import (
 const (
 	baseAccountsEndpoint        = "/accounts"
 	accountByIdEndpoint         = "/:walletAddress"
-	accountTokensEndpoint       = "/:walletAddress/tokens/:offset/:limit"
-	accountTokensOnSaleEndpoint = "/:walletAddress/tokens/onsale/:offset/:limit"
+	accountTokensEndpoint       = "/:walletAddress/tokens"
+	accountTokensOnSaleEndpoint = "/:walletAddress/tokens/onsale"
 	accountCollectionsEndpoint  = "/:walletAddress/collections/:offset/:limit"
 	accountProfileEndpoint      = "/:walletAddress/profile"
 	accountCoverEndpoint        = "/:walletAddress/cover"

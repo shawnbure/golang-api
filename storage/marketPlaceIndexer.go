@@ -46,7 +46,7 @@ func UpdateMarketPlaceIndexer(lastIndex uint64) (entities.MarketPlaceStat, error
 	if err != nil {
 		return stat, err
 	}
-	stat.LastIndex = stat.LastIndex + 1
+	stat.LastIndex = lastIndex
 	err = database.Updates(stat).Where("id=?", stat.ID).Error
 	if err != nil {
 		return stat, err

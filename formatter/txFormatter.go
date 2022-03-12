@@ -353,10 +353,10 @@ func (f *TxFormatter) NewMintNftsTxTemplate(
 	if f.noFeeOnMintContracts[contractAddress] {
 		endpointName = mintTokensEndpointName
 	}
-	var factor uint64 = 6
-	if numberOfTokens < factor {
-		factor = numberOfTokens
-	}
+	var factor uint64 = 4
+	// if numberOfTokens < factor {
+	// 	factor = numberOfTokens
+	// }
 	gasLimit := f.config.MintTokenGasLimit * (numberOfTokens/factor + 1)
 	totalPrice := fmt.Sprintf("%f", mintPricePerToken*float64(numberOfTokens))
 	txData := endpointName +

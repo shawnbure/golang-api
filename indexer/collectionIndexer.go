@@ -252,6 +252,8 @@ func (ci *CollectionIndexer) StartWorker() {
 								continue
 							}
 						}
+						time.Sleep(time.Second * 2)
+						goto singleColLoop
 					}
 					if colR["status"] == "pending" {
 						time.Sleep(time.Second * 2)
