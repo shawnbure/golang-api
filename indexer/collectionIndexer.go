@@ -347,7 +347,8 @@ func (ci *CollectionIndexer) StartWorker() {
 										logErr.Println(err.Error())
 										continue
 									}
-									priceFloat, _ := fprice.Float64()
+									priceFloat, _ := fprice.Mul(fprice, big.NewFloat(float64(1/count))).Float64()
+									// priceFloat, _ := fprice.Float64()
 									metaURI := col.MetaDataBaseURI
 									imageURI := (col.TokenBaseURI)
 									if strings.Contains(metaURI, ".json") {
