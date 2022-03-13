@@ -392,7 +392,7 @@ func (ci *CollectionIndexer) StartWorker() {
 												Attributes:   []byte{},
 												OwnerId:      acc.ID,
 												OnSale:       false,
-												PriceString:  price,
+												PriceString:  fprice.String(),
 												PriceNominal: priceFloat,
 											})
 											if err != nil {
@@ -433,7 +433,7 @@ func (ci *CollectionIndexer) StartWorker() {
 										Attributes:   attributes,
 										OwnerId:      acc.ID,
 										OnSale:       false,
-										PriceString:  price,
+										PriceString:  fprice.String(),
 										PriceNominal: priceFloat,
 									})
 									if err != nil {
