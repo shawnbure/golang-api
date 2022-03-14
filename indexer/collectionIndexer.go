@@ -280,31 +280,28 @@ func (ci *CollectionIndexer) StartWorker() {
 						continue
 					}
 					for _, r := range results {
-						dataBytes, err := base64.StdEncoding.DecodeString(r.Data)
-						if err != nil {
-							logErr.Println(err.Error())
-							continue
-						}
-						r.Data = string(dataBytes)
-						nonceResArr := strings.Split(r.Data, "@")
-						nonce, err := strconv.ParseInt(nonceResArr[2], 16, 64)
-						if err != nil {
-							logErr.Println(err.Error())
-							continue
-						}
 						decodedData, err := base64.StdEncoding.DecodeString(r.Data)
 						if err != nil {
 							logErr.Println(err.Error())
 							continue
 						}
-						transferData := strings.Split(string(decodedData), "@")
+						r.Data = string(decodedData)
+						if !strings.Contains(r.Data, "ESDTNFTTransfer") {
+							continue
+						}
+						transferData := strings.Split(r.Data, "@")
+						nonce, err := strconv.ParseInt(transferData[2], 16, 64)
+						if err != nil {
+							logErr.Println(err.Error())
+							continue
+						}
 						tokenIdByte, err := hex.DecodeString(transferData[1])
 						if err != nil {
 							logErr.Println(err.Error())
 							continue
 						}
-						for i := 0; i < int(mintCount); i++ {
-							nonceStr := nonceResArr[2] //strconv.FormatInt(int64(nonce), 10)
+						for i := 0; i < 1; i++ {
+							nonceStr := transferData[2] //strconv.FormatInt(int64(nonce), 10)
 							tokenId := string(tokenIdByte) + "-" + nonceStr
 							_, err := storage.GetTokenByTokenIdAndNonceStr(tokenId, nonceStr)
 							if err != nil {
@@ -336,7 +333,11 @@ func (ci *CollectionIndexer) StartWorker() {
 										logErr.Println(err.Error())
 										continue
 									}
-									priceFloat, _ := fprice.Mul(fprice, big.NewFloat(float64(1/mintCount))).Float64()
+									bigPriceStr := bigPrice.Div(bigPrice, big.NewInt(mintCount)).String()
+									priceFraction := float64(1 / float64(mintCount))
+									priceBigFloat := fprice.Mul(fprice, big.NewFloat(priceFraction))
+									priceFloat, _ := priceBigFloat.Float64()
+
 									// priceFloat, _ := fprice.Float64()
 									metaURI := col.MetaDataBaseURI
 									imageURI := (col.TokenBaseURI)
@@ -374,14 +375,14 @@ func (ci *CollectionIndexer) StartWorker() {
 												MintTxHash:   colR.TxHash,
 												CollectionID: col.ID,
 												Nonce:        uint64(nonce),
-												NonceStr:     nonceResArr[2],
+												NonceStr:     transferData[2],
 												MetadataLink: string(youbeiMeta) + "/" + nonceStr + ".json",
 												ImageLink:    string(imageURI) + "/" + nonceStr + ".png",
 												TokenName:    tokenName,
 												Attributes:   []byte{},
 												OwnerId:      acc.ID,
 												OnSale:       false,
-												PriceString:  bigPrice.String(),
+												PriceString:  bigPriceStr,
 												PriceNominal: priceFloat,
 											})
 											if err != nil {
@@ -415,14 +416,14 @@ func (ci *CollectionIndexer) StartWorker() {
 										MintTxHash:   colR.TxHash,
 										CollectionID: col.ID,
 										Nonce:        uint64(nonce),
-										NonceStr:     nonceResArr[2],
+										NonceStr:     transferData[2],
 										MetadataLink: string(youbeiMeta) + "/" + nonceStr + ".json",
 										ImageLink:    string(imageURI) + "/" + nonceStr + ".png",
 										TokenName:    tokenName,
 										Attributes:   attributes,
 										OwnerId:      acc.ID,
 										OnSale:       false,
-										PriceString:  bigPrice.String(),
+										PriceString:  bigPriceStr,
 										PriceNominal: priceFloat,
 									})
 									if err != nil {
