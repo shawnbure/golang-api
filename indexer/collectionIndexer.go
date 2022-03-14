@@ -65,36 +65,36 @@ func (ci *CollectionIndexer) StartWorker() {
 			logErr.Println(url)
 			continue
 		}
-		var ColResults []map[string]interface{}
-		err = json.Unmarshal(res, &ColResults)
+		var deployerTxs []entities.TransactionBC
+		err = json.Unmarshal(res, &deployerTxs)
 		if err != nil {
 			logErr.Println(err.Error())
 			logErr.Println("error unmarshal nfts deployer")
 			continue
 		}
-		if len(ColResults) == 0 {
+		if len(deployerTxs) == 0 {
 			goto colLoop
 		}
-		foundDeployedContracts += uint64(len(ColResults))
-		for _, colR := range ColResults {
-			if _, ok := colR["action"]; !ok {
+		foundDeployedContracts += uint64(len(deployerTxs))
+		for _, colR := range deployerTxs {
+			if colR.Action.Name == "" {
 				continue
 			}
-			name := (colR["action"].(map[string]interface{}))["name"].(string)
-			if name == "deployNFTTemplateContract" && colR["status"] != "fail" {
-				if _, ok := colR["results"]; !ok {
+			name := colR.Action.Name
+			if name == "deployNFTTemplateContract" && colR.Status != "fail" {
+				if len(colR.Results) == 0 {
 					goto deployLoop
 				}
-				mainDataStr := colR["data"].(string)
+				mainDataStr := colR.Data
 				mainData64Str, _ := base64.StdEncoding.DecodeString(mainDataStr)
 				mainDatas := strings.Split(string(mainData64Str), "@")
 				tokenIdHex := mainDatas[1]
 				tokenIdStr, _ := hex.DecodeString(mainDatas[1])
 				imageLink, _ := hex.DecodeString(mainDatas[4])
 				metaLink, _ := hex.DecodeString(mainDatas[9])
-				results := (colR["results"].([]interface{}))
+				results := colR.Results
 				result := results[0]
-				data := result.(map[string]interface{})["data"].(string)
+				data := result.Data
 				decodedData64, _ := base64.StdEncoding.DecodeString(data)
 				decodedData := strings.Split(string(decodedData64), "@")
 				hexByte, err := hex.DecodeString(decodedData[2])
@@ -218,31 +218,35 @@ func (ci *CollectionIndexer) StartWorker() {
 				}
 			}
 
-			var ColResults []map[string]interface{}
-			err = json.Unmarshal(res, &ColResults)
+			var collectionTxs []entities.TransactionBC
+			err = json.Unmarshal(res, &collectionTxs)
 			if err != nil {
 				logErr.Println(err.Error())
 				logErr.Println("error unmarshal nfts deployer")
 				continue
 			}
-			if len(ColResults) == 0 {
+			if len(collectionTxs) == 0 {
 				logErr.Println("ColResults no collection related tx found")
 				continue
 			}
 
-			foundedTxsCount += uint64(len(ColResults))
+			foundedTxsCount += uint64(len(collectionTxs))
 			fmt.Println("entering colResults loop")
 
-			for _, colR := range ColResults {
-				if _, ok := colR["action"]; !ok {
+			for _, colR := range collectionTxs {
+
+				dataString := colR.Data
+				dataByte, err := base64.StdEncoding.DecodeString(dataString)
+				if err != nil {
+					logErr.Println(err.Error())
 					continue
 				}
-				name := (colR["action"].(map[string]interface{}))["name"].(string)
-				if name == "mintTokensThroughMarketplace" && colR["status"] != "fail" {
+				dataStr := string(dataByte)
+				if strings.Contains(dataStr, "mintTokensThroughMarketplace") && colR.Status != "fail" {
 					fmt.Println("mint found")
-					if _, ok := colR["results"]; !ok {
+					if len(colR.Results) == 0 {
 						logErr.Println("results not available!")
-						if colR["status"] == "pending" {
+						if colR.Status == "pending" {
 							time.Sleep(time.Second * 2)
 							goto singleColLoop
 						} else {
@@ -254,56 +258,41 @@ func (ci *CollectionIndexer) StartWorker() {
 						// goto singleColLoop
 						continue
 					}
-					if colR["status"] == "pending" {
+					if colR.Status == "pending" {
 						time.Sleep(time.Second * 2)
 						continue
 						// goto singleColLoop
 					}
-					if colR["results"] == nil {
+					if colR.Results == nil {
 						logErr.Println("result was nil")
 						time.Sleep(time.Second * 2)
 						continue
 					}
-					results := (colR["results"].([]interface{}))
+					results := colR.Results
 					if len(results) < 2 {
-						logErr.Println("this tx wasn't good!", colR["originalTxHash"])
+						logErr.Println("this tx wasn't good!", colR.TxHash)
+						continue
+					}
+					dataParts := strings.Split(dataStr, "@")
+					mintCount, err := strconv.ParseInt(dataParts[1], 16, 64)
+					if err != nil {
+						logErr.Println("mint count conversion failed")
 						continue
 					}
 					for _, r := range results {
-						rMap := r.(map[string]interface{})
-						rMapData, err := base64.StdEncoding.DecodeString(rMap["data"].(string))
+						dataBytes, err := base64.StdEncoding.DecodeString(r.Data)
 						if err != nil {
 							logErr.Println(err.Error())
 							continue
 						}
-						if !strings.Contains(string(rMapData), "ESDTNFTTransfer") {
-							continue
-						}
-						result := r
-						nonceRes := result.(map[string]interface{})["data"]
-						fmt.Println(nonceRes)
-						nonceResBytes, err := base64.StdEncoding.DecodeString(nonceRes.(string))
-						if err != nil {
-							logErr.Println(err.Error())
-							continue
-						}
-						nonceResArr := strings.Split(string(nonceResBytes), "@")
+						r.Data = string(dataBytes)
+						nonceResArr := strings.Split(r.Data, "@")
 						nonce, err := strconv.ParseInt(nonceResArr[2], 16, 64)
 						if err != nil {
 							logErr.Println(err.Error())
 							continue
 						}
-						countRes, err := hex.DecodeString(nonceResArr[3])
-						if err != nil {
-							logErr.Println(err.Error())
-							continue
-						}
-						// nonce, err := strconv.ParseUint(string(nonceResString[0]), 10, 64)
-						// nonceResString := strconv.FormatInt(nonce, 10)
-						count := int(countRes[0])
-
-						resultMap := result.(map[string]interface{})
-						decodedData, err := base64.StdEncoding.DecodeString(resultMap["data"].(string))
+						decodedData, err := base64.StdEncoding.DecodeString(r.Data)
 						if err != nil {
 							logErr.Println(err.Error())
 							continue
@@ -314,17 +303,17 @@ func (ci *CollectionIndexer) StartWorker() {
 							logErr.Println(err.Error())
 							continue
 						}
-						for i := 0; i < count; i++ {
+						for i := 0; i < int(mintCount); i++ {
 							nonceStr := nonceResArr[2] //strconv.FormatInt(int64(nonce), 10)
 							tokenId := string(tokenIdByte) + "-" + nonceStr
 							_, err := storage.GetTokenByTokenIdAndNonceStr(tokenId, nonceStr)
 							if err != nil {
 								if err == gorm.ErrRecordNotFound {
-									acc, err := storage.GetAccountByAddress(rMap["receiver"].(string))
+									acc, err := storage.GetAccountByAddress(r.Receiver)
 									if err != nil {
 										if err == gorm.ErrRecordNotFound {
 											acc = &entities.Account{}
-											acc.Address = rMap["receiver"].(string)
+											acc.Address = r.Receiver
 											acc.Name = services.RandomName()
 											err := storage.AddAccount(acc)
 											if err != nil {
@@ -336,7 +325,7 @@ func (ci *CollectionIndexer) StartWorker() {
 											continue
 										}
 									}
-									price := colR["value"].(string)
+									price := colR.Value
 									bigPrice, ok := big.NewInt(0).SetString(price, 10)
 									if !ok {
 										logErr.Println("conversion to bigInt failed for price")
@@ -347,7 +336,7 @@ func (ci *CollectionIndexer) StartWorker() {
 										logErr.Println(err.Error())
 										continue
 									}
-									priceFloat, _ := fprice.Mul(fprice, big.NewFloat(float64(1/count))).Float64()
+									priceFloat, _ := fprice.Mul(fprice, big.NewFloat(float64(1/mintCount))).Float64()
 									// priceFloat, _ := fprice.Float64()
 									metaURI := col.MetaDataBaseURI
 									imageURI := (col.TokenBaseURI)
@@ -382,7 +371,7 @@ func (ci *CollectionIndexer) StartWorker() {
 										if strings.Contains(err.Error(), "429") || strings.Contains(err.Error(), "EOF") || strings.Contains(err.Error(), "deadline") {
 											err = storage.AddToken(&entities.Token{
 												TokenID:      string(tokenIdByte),
-												MintTxHash:   colR["txHash"].(string),
+												MintTxHash:   colR.TxHash,
 												CollectionID: col.ID,
 												Nonce:        uint64(nonce),
 												NonceStr:     nonceResArr[2],
@@ -392,7 +381,7 @@ func (ci *CollectionIndexer) StartWorker() {
 												Attributes:   []byte{},
 												OwnerId:      acc.ID,
 												OnSale:       false,
-												PriceString:  fprice.String(),
+												PriceString:  bigPrice.String(),
 												PriceNominal: priceFloat,
 											})
 											if err != nil {
@@ -423,7 +412,7 @@ func (ci *CollectionIndexer) StartWorker() {
 									}
 									err = storage.AddToken(&entities.Token{
 										TokenID:      string(tokenIdByte),
-										MintTxHash:   colR["txHash"].(string),
+										MintTxHash:   colR.TxHash,
 										CollectionID: col.ID,
 										Nonce:        uint64(nonce),
 										NonceStr:     nonceResArr[2],
@@ -433,7 +422,7 @@ func (ci *CollectionIndexer) StartWorker() {
 										Attributes:   attributes,
 										OwnerId:      acc.ID,
 										OnSale:       false,
-										PriceString:  fprice.String(),
+										PriceString:  bigPrice.String(),
 										PriceNominal: priceFloat,
 									})
 									if err != nil {

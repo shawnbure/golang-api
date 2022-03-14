@@ -48,18 +48,14 @@ type TransactionBC struct {
 	Sender    string `json:"sender"`
 	Receiver  string `json:"receiver"`
 	Data      string `json:"data"`
-	Status    string `json:"status`
+	Status    string `json:"status"`
+	Value     string `json:"value"`
 	Timestamp uint64 `json:"timestamp"`
 	Action    struct {
 		Category string `json:"category"`
 		Name     string `json:"name"`
 	} `json:"action"`
-	Results []struct {
-		Hash      string `json:"hash"`
-		Timestamp uint64 `json:"timestamp"`
-		Nonce     uint64 `json:"nonce"`
-		Data      string `json:"data"`
-	}
+	Results []SCResult
 }
 
 type SCResult struct {
