@@ -164,10 +164,29 @@ func CreateToken(request *CreateTokenRequest, blockchainApi string) (*entities.T
 
 	imageURI := []byte{}
 	metadataURI := []byte{}
+	stringImageURI := ""
+	stringMetadataURI := ""
 
 	if len(tokenData.Uris) > 0 {
+
 		imageURI, err = base64.StdEncoding.DecodeString(tokenData.Uris[0])
+		if err != nil {
+			fmt.Printf("%v\n", err)
+			return nil, err
+		}
+
+		stringImageURI = string(imageURI)
+
 		metadataURI, err = base64.StdEncoding.DecodeString(tokenData.Uris[1])
+		if err != nil {
+			fmt.Printf("%v\n", err)
+			return nil, err
+		}
+		//if there is no .json extension add it
+		if strings.Contains(string(metadataURI), ".json") {
+
+			stringMetadataURI = string(metadataURI) + ".json"
+		}
 	}
 
 	//fmt.Printf("%v\n", token)
@@ -182,8 +201,8 @@ func CreateToken(request *CreateTokenRequest, blockchainApi string) (*entities.T
 		CollectionID:     collection.ID,
 		TokenID:          tokenData.Collection,
 		RoyaltiesPercent: tokenData.Royalties,
-		ImageLink:        string(imageURI),
-		MetadataLink:     string(metadataURI),
+		ImageLink:        stringImageURI,
+		MetadataLink:     stringMetadataURI,
 		CreatedAt:        uint64(time.Now().Unix()),
 		Attributes:       datatypes.JSON(tokenData.Metadata),
 		TokenName:        tokenData.Name,
