@@ -177,6 +177,7 @@ func CreateToken(request *CreateTokenRequest, blockchainApi string) (*entities.T
 
 	token := &entities.Token{
 		Nonce:            tokenData.Nonce,
+		NonceStr:         fmt.Sprintf("%02d", tokenData.Nonce),
 		OwnerId:          collection.CreatorID,
 		CollectionID:     collection.ID,
 		TokenID:          tokenData.Collection,
