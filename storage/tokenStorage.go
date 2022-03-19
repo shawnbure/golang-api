@@ -66,11 +66,11 @@ func UpdateToken(token *entities.Token) error {
 	return nil
 }
 func UpdateTokenWhere(token *entities.Token, where string, args ...interface{}) error {
+
 	database, err := GetDBOrError()
 	if err != nil {
 		return err
 	}
-
 	txCreate := database.Where(where, args...).Updates(&token)
 	if txCreate.Error != nil {
 		return txCreate.Error

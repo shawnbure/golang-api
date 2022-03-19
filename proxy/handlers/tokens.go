@@ -78,7 +78,7 @@ func NewTokensHandler(groupHandler *groupHandler, authCfg config.AuthConfig, cfg
 // @Tags token
 // @Accept json
 // @Produce json
-// @Param createTokenRequest body services.CreateTokenRequest true "token info"
+// @Param createTokenRequest body services.CreateOrUpdateToken true "token info"
 // @Success 200 {object} entities.Collection
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 401 {object} dtos.ApiResponse
@@ -102,7 +102,7 @@ func (handler *tokensHandler) create(c *gin.Context) {
 		return
 	}
 
-	token, err := services.CreateToken(&request, handler.blockchainConfig.ApiUrl)
+	token, err := services.CreateOrUpdateToken(&request, handler.blockchainConfig.ApiUrl)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return

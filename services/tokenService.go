@@ -147,7 +147,7 @@ var (
 	tooManyTokensError = errors.New("too many tokens")
 )
 
-func CreateToken(request *CreateTokenRequest, blockchainApi string) (*entities.Token, error) {
+func CreateOrUpdateToken(request *CreateTokenRequest, blockchainApi string) (*entities.Token, error) {
 
 	//get collection_id, contract address and owner_id (account_id)
 	collection, err := storage.GetCollectionByTokenId(request.TokenID)
@@ -163,9 +163,8 @@ func CreateToken(request *CreateTokenRequest, blockchainApi string) (*entities.T
 	}
 
 	imageURI := []byte{}
-	metadataURI := []byte{}
-	stringImageURI := ""
-	stringMetadataURI := ""
+	metaDataURI := []byte{}
+	stringMetaData := ""
 
 	if len(tokenData.Uris) > 0 {
 
@@ -175,24 +174,23 @@ func CreateToken(request *CreateTokenRequest, blockchainApi string) (*entities.T
 			return nil, err
 		}
 
-		stringImageURI = string(imageURI)
-
-		metadataURI, err = base64.StdEncoding.DecodeString(tokenData.Uris[1])
+		metaDataURI, err = base64.StdEncoding.DecodeString(tokenData.Uris[1])
 		if err != nil {
 			fmt.Printf("%v\n", err)
 			return nil, err
 		}
-		//if there is no .json extension add it
-		if strings.Contains(string(metadataURI), ".json") {
 
-			stringMetadataURI = string(metadataURI) + ".json"
+		stringMetaData, err = HttpGetRaw(string(metaDataURI))
+		if err != nil {
+			return nil, err
 		}
-	}
 
-	//fmt.Printf("%v\n", token)
-	//fmt.Print("Status: " + token.Status)
-	//fmt.Print("PS: " + token.PriceString)
-	//fmt.Print("PN: " + String(token.PriceNominal))
+		//if there is no json file set empty
+		if strings.Contains(stringMetaData, "no link named") {
+			stringMetaData = `[{}]`
+		}
+
+	}
 
 	token := &entities.Token{
 		Nonce:            tokenData.Nonce,
@@ -201,10 +199,10 @@ func CreateToken(request *CreateTokenRequest, blockchainApi string) (*entities.T
 		CollectionID:     collection.ID,
 		TokenID:          tokenData.Collection,
 		RoyaltiesPercent: tokenData.Royalties,
-		ImageLink:        stringImageURI,
-		MetadataLink:     stringMetadataURI,
+		ImageLink:        string(imageURI),
+		MetadataLink:     string(metaDataURI),
 		CreatedAt:        uint64(time.Now().Unix()),
-		Attributes:       datatypes.JSON(tokenData.Metadata),
+		Attributes:       datatypes.JSON(stringMetaData),
 		TokenName:        tokenData.Name,
 		Hash:             tokenData.Hash,
 		OnSale:           true,
@@ -215,9 +213,27 @@ func CreateToken(request *CreateTokenRequest, blockchainApi string) (*entities.T
 		AuctionDeadline:  request.SaleEndDate,
 	}
 
-	err = storage.AddToken(token)
-	if err != nil {
-		return nil, err
+	//err = storage.AddToken(token)
+	//if err != nil {
+	//	return nil, err
+	//}
+
+	var innerErr error
+
+	innerErr = storage.AddToken(token)
+	if innerErr == nil {
+		_, cacheErr := AddTokenToCache(token.TokenID, token.Nonce, token.TokenName, token.ID)
+		if cacheErr != nil {
+			log.Error("could not add token to cache")
+		}
+	} else {
+		//innerErr = storage.UpdateToken(token)
+		innerErr = storage.UpdateTokenWhere(token, "token_id=? and nonce=?", token.TokenID, token.Nonce)
+	}
+
+	if innerErr != nil {
+		log.Debug("could not create or update token", "err", innerErr)
+		return nil, innerErr
 	}
 
 	return token, nil
@@ -237,8 +253,6 @@ func getTokenByNonce(tokenName string, tokenNonce string, blockchainApi string) 
 	}
 
 	url := fmt.Sprintf(GetNFTBaseFormat, blockchainApi, tokenName, hexNonce)
-
-	//fmt.Print(url)
 
 	//err := HttpGet(url, &resp)
 	response, err := HttpGetRaw(url)
@@ -262,6 +276,7 @@ func getTokenByNonce(tokenName string, tokenNonce string, blockchainApi string) 
 }
 
 func ListToken(args ListTokenArgs, blockchainProxy string, marketplaceAddress string) {
+
 	priceNominal, err := GetPriceNominal(args.Price)
 	if err != nil {
 		log.Debug("could not parse price", "err", err)
@@ -305,6 +320,7 @@ func ListToken(args ListTokenArgs, blockchainProxy string, marketplaceAddress st
 	}
 
 	token.Status = entities.List
+	token.OnSale = true
 	token.PriceString = args.Price
 	token.PriceNominal = priceNominal
 	token.OwnerId = ownerAccount.ID
@@ -369,8 +385,9 @@ func BuyToken(args BuyTokenArgs) {
 
 	// Owner ID was to be reset since the token will no longer be on the marketplace.
 	// Could have been kept like this, but bugs may appear when querying.
-	token.OwnerId = 0
+	token.OwnerId = ownerAccount.ID
 	token.Status = entities.None
+	token.OnSale = false
 	token.LastBuyPriceNominal = priceNominal
 	err = storage.UpdateToken(token)
 	if err != nil {
@@ -416,10 +433,9 @@ func WithdrawToken(args WithdrawTokenArgs) {
 		return
 	}
 
-	// This was to be reset since the token will no longer be on the marketplace.
-	// Could have been kept like this, but bugs may appear when trying when querying.
-	token.OwnerId = 0
+	//token.OwnerId = ownerAccount.ID
 	token.Status = entities.None
+	token.OnSale = false
 	err = storage.UpdateToken(token)
 	if err != nil {
 		log.Debug("could not update token", "err", err)
@@ -503,6 +519,7 @@ func StartAuction(args StartAuctionArgs, blockchainProxy string, marketplaceAddr
 	}
 
 	token.Status = entities.Auction
+	token.OnSale = true
 	token.PriceString = args.MinBid
 	token.PriceNominal = amountNominal
 	token.OwnerId = accountID
@@ -565,6 +582,7 @@ func EndAuction(args EndAuctionArgs) {
 	sellerId := token.OwnerId
 	token.OwnerId = 0
 	token.Status = entities.None
+	token.OnSale = false
 	token.LastBuyPriceNominal = amountNominal
 	err = storage.UpdateToken(token)
 	if err != nil {
