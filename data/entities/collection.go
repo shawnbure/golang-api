@@ -38,6 +38,7 @@ type Collection struct {
 const (
 	Collection_type_none        = 0
 	Collection_type_whitelisted = 1
+	Collection_type_noteworthy  = 2
 )
 
 type DeployerStat struct {

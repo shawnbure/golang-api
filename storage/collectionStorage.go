@@ -277,3 +277,52 @@ func GetCollectionsByCreatorIdWithOffsetLimit(creatorId uint64, offset int, limi
 
 	return collections, nil
 }
+
+func GetCollectionsVerified(limit int) ([]entities.Collection, error) {
+	var collections []entities.Collection
+
+	database, err := GetDBOrError()
+	if err != nil {
+		return nil, err
+	}
+
+	txRead := database.Limit(limit).Find(&collections, "is_verified = true").Order("priority desc")
+	if txRead.Error != nil {
+		return nil, txRead.Error
+	}
+
+	return collections, nil
+}
+
+func GetCollectionsNoteworthy(limit int) ([]entities.Collection, error) {
+	var collections []entities.Collection
+
+	database, err := GetDBOrError()
+	if err != nil {
+		return nil, err
+	}
+
+	txRead := database.Limit(limit).Find(&collections, "type = 2").Order("priority desc")
+	if txRead.Error != nil {
+		return nil, txRead.Error
+	}
+
+	return collections, nil
+}
+
+func GetCollectionsTrending(limit int) ([]entities.Collection, error) {
+	var collections []entities.Collection
+
+	database, err := GetDBOrError()
+	if err != nil {
+		return nil, err
+	}
+
+	//temp placeholder
+	txRead := database.Limit(limit).Find(&collections).Order("created_at desc")
+	if txRead.Error != nil {
+		return nil, txRead.Error
+	}
+
+	return collections, nil
+}
