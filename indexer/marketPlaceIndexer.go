@@ -8,6 +8,7 @@ import (
 	"log"
 	"math/big"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -69,6 +70,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			continue
 		}
 		foundResults += uint64(len(txResult))
+
 		for _, tx := range txResult {
 		txloop:
 			orgtxByte, err := services.GetResponse(fmt.Sprintf("%s/transactions/%s", mpi.ElrondAPI, tx.OriginalTxHash))
@@ -107,8 +109,9 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			}
 			isWithdrawn := strings.Contains(string(orgData), "withdrawNft")
 			isOnSale := strings.Contains(string(data), "putNftForSale")
+			isOnAuction := strings.Contains(string(data), "startAuction")
 			isBuyNft := strings.Contains(string(orgData), "buyNft")
-			if !isOnSale && !isBuyNft && !isWithdrawn {
+			if !isOnSale && !isOnAuction && !isBuyNft && !isWithdrawn {
 				continue
 			}
 			body, err := services.GetResponse(fmt.Sprintf("%s/transactions?hashes=%s&order=asc", mpi.ElrondAPI, tx.OriginalTxHash))
@@ -143,6 +146,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				continue
 			}
 			dataStr := string(data)
+
 			dataParts := strings.Split(dataStr, "@")
 			price, ok := big.NewInt(0).SetString(dataParts[1], 16)
 			if !ok {
@@ -163,12 +167,36 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					continue
 				}
 			}
+
 			if token.LastMarketTimestamp < txTimestamp {
 				if isOnSale {
 					token.OnSale = true
 					token.Status = "List"
 					token.PriceString = fprice.String()
 					token.PriceNominal, _ = fprice.Float64()
+				} else if isOnAuction {
+
+					lastBuyPriceNominal, err := strconv.ParseFloat(dataParts[1], 64)
+					if err == nil {
+						fmt.Printf("%d of type %T", lastBuyPriceNominal, lastBuyPriceNominal)
+					}
+
+					auctionDeadline, err := strconv.ParseUint(dataParts[2], 10, 64)
+					if err == nil {
+						fmt.Printf("%d of type %T", auctionDeadline, auctionDeadline)
+					}
+
+					auctionStartTime, err := strconv.ParseUint(dataParts[3], 10, 64)
+					if err == nil {
+						fmt.Printf("%d of type %T", auctionStartTime, auctionStartTime)
+					}
+
+					token.OnSale = true
+					token.Status = "Auction"
+					token.LastBuyPriceNominal = lastBuyPriceNominal
+					token.AuctionDeadline = auctionDeadline
+					token.AuctionStartTime = auctionStartTime
+
 				} else if isWithdrawn {
 					token.OnSale = false
 					token.Status = "Withdrawn"
@@ -194,6 +222,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				}
 			}
 		}
+
 		// marketStat, err = storage.UpdateMarketPlaceIndexer(marketStat.LastIndex + foundResults)
 		// if err != nil {
 		// 	lerr.Println(err.Error())
