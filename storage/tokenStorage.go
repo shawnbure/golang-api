@@ -65,13 +65,13 @@ func UpdateToken(token *entities.Token) error {
 
 	return nil
 }
-func UpdateTokenWhere(token *entities.Token, where string, args ...interface{}) error {
+func UpdateTokenWhere(token *entities.Token, toUpdate map[string]interface{}, where string, args ...interface{}) error {
 	database, err := GetDBOrError()
 	if err != nil {
 		return err
 	}
 
-	txCreate := database.Where(where, args...).Updates(&token)
+	txCreate := database.Model(token).Where(where, args...).Updates(toUpdate)
 	if txCreate.Error != nil {
 		return txCreate.Error
 	}
