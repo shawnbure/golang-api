@@ -161,6 +161,8 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				if err != gorm.ErrRecordNotFound {
 					lerr.Println(err.Error())
 					continue
+				} else {
+					goto txloop
 				}
 			}
 			if token.LastMarketTimestamp < txTimestamp {
