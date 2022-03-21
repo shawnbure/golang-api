@@ -95,7 +95,6 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			if orgTx.Status == "pending" {
 				goto txloop
 			}
-			token := &entities.Token{}
 			data, err := base64.StdEncoding.DecodeString(tx.Data)
 			if err != nil {
 				lerr.Println(err.Error())
@@ -157,12 +156,13 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			}
 
 			txTimestamp := orgTx.Timestamp
-			token, err = storage.GetTokenByTokenIdAndNonceStr(string(tokenId), hexNonce)
+			token, err := storage.GetTokenByTokenIdAndNonceStr(string(tokenId), hexNonce)
 			if err != nil {
 				if err != gorm.ErrRecordNotFound {
 					lerr.Println(err.Error())
 					continue
 				} else {
+					lerr.Println("no token found", string(tokenId), hexNonce)
 					goto txloop
 				}
 			}
@@ -211,22 +211,12 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				}
 			}
 		}
-		// marketStat, err = storage.UpdateMarketPlaceIndexer(marketStat.LastIndex + foundResults)
-		// if err != nil {
-		// 	lerr.Println(err.Error())
-		// 	lerr.Println("error update marketplace index nfts ")
-		// 	continue
-		// }
 		marketStat, err = storage.UpdateMarketPlaceHash(marketStat.LastHash)
 		if err != nil {
 			lerr.Println(err.Error())
 			lerr.Println("error update marketplace index nfts ")
 			continue
 		}
-		// if newStat.LastIndex <= marketStat.LastIndex {
-		// 	lerr.Println("error something went wrong updating last index of marketplace  ")
-		// 	continue
-		// }
 		if !lastHashMet {
 			lastIndex += 100
 		}
