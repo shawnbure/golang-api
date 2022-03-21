@@ -35,6 +35,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 	lastHashMet := false
 	lastIndex := 0
 	for {
+	mainLoop:
 		var foundResults uint64 = 0
 		time.Sleep(time.Second * mpi.Delay)
 		marketStat, err := storage.GetMarketPlaceIndexer()
@@ -177,6 +178,18 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				} else if isBuyNft {
 					token.OnSale = false
 					token.Status = "Bought"
+					buyerAddres := orgTx.Sender
+					buyer, err := storage.GetAccountByAddress(buyerAddres)
+					if err != nil {
+						if err == gorm.ErrNotImplemented {
+							buyer.Name = services.RandomName()
+							err := storage.AddAccount(buyer)
+							if err != nil {
+								lerr.Println("couldn't add user", err.Error())
+								goto mainLoop
+							}
+						}
+					}
 				}
 				token.LastMarketTimestamp = txTimestamp
 				err = storage.UpdateTokenWhere(token, map[string]interface{}{
