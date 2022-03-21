@@ -190,6 +190,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 							}
 						}
 					}
+					token.OwnerId = buyer.ID
 				}
 				token.LastMarketTimestamp = txTimestamp
 				err = storage.UpdateTokenWhere(token, map[string]interface{}{
@@ -198,6 +199,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					"PriceString":         token.PriceString,
 					"PriceNominal":        token.PriceNominal,
 					"LastMarketTimestamp": txTimestamp,
+					"OwnerId":             token.OwnerId,
 				}, "token_id=? AND nonce_str=?", tokenId, hexNonce)
 				if err != nil {
 					if err == gorm.ErrRecordNotFound {
