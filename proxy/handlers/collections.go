@@ -19,16 +19,19 @@ import (
 type RankingEntry = collstats.LeaderboardEntry
 
 const (
-	baseCollectionsEndpoint    = "/collections"
-	collectionByNameEndpoint   = "/:collectionId"
-	collectionListEndpoint     = "/list/:offset/:limit"
-	collectionCreateEndpoint   = "/create"
-	collectionTokensEndpoint   = "/:collectionId/tokens/:offset/:limit"
-	collectionProfileEndpoint  = "/:collectionId/profile"
-	collectionCoverEndpoint    = "/:collectionId/cover"
-	collectionMintInfoEndpoint = "/:collectionId/mintInfo"
-	collectionRankingEndpoint  = "/rankings/:offset/:limit"
-	collectionAllEndpoint      = "/all"
+	baseCollectionsEndpoint      = "/collections"
+	collectionByNameEndpoint     = "/:collectionId"
+	collectionListEndpoint       = "/list/:offset/:limit"
+	collectionCreateEndpoint     = "/create"
+	collectionTokensEndpoint     = "/:collectionId/tokens/:offset/:limit"
+	collectionProfileEndpoint    = "/:collectionId/profile"
+	collectionCoverEndpoint      = "/:collectionId/cover"
+	collectionMintInfoEndpoint   = "/:collectionId/mintInfo"
+	collectionRankingEndpoint    = "/rankings/:offset/:limit"
+	collectionAllEndpoint        = "/all"
+	collectionVerifiedEndpoint   = "/verified/:limit"
+	collectionNoteworthyEndpoint = "/noteworthy/:limit"
+	collectionTrendingEndpoint   = "/trending/:limit"
 )
 
 type CollectionTokensQueryBody struct {
@@ -71,6 +74,9 @@ func NewCollectionsHandler(groupHandler *groupHandler, authCfg config.AuthConfig
 		{Method: http.MethodGet, Path: collectionMintInfoEndpoint, HandlerFunc: handler.getMintInfo},
 		{Method: http.MethodPost, Path: collectionRankingEndpoint, HandlerFunc: handler.getCollectionRankings},
 		{Method: http.MethodPost, Path: collectionAllEndpoint, HandlerFunc: handler.getAll},
+		{Method: http.MethodGet, Path: collectionVerifiedEndpoint, HandlerFunc: handler.getCollectionVerified},
+		{Method: http.MethodGet, Path: collectionNoteworthyEndpoint, HandlerFunc: handler.getCollectionNoteworthy},
+		{Method: http.MethodGet, Path: collectionTrendingEndpoint, HandlerFunc: handler.getCollectionTrending},
 	}
 	publicEndpointGroupHandler := EndpointGroupHandler{
 		Root:             baseCollectionsEndpoint,
@@ -140,6 +146,61 @@ func (handler *collectionsHandler) getList(c *gin.Context) {
 func (handler *collectionsHandler) getAll(c *gin.Context) {
 
 	collections, err := services.GetAllCollections()
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	dtos.JsonResponse(c, http.StatusOK, collections, "")
+}
+
+func (handler *collectionsHandler) getCollectionVerified(c *gin.Context) {
+
+	limitStr := c.Param("limit")
+
+	limit, err := strconv.ParseUint(limitStr, 10, 0)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	collections, err := services.GetCollectionsVerified(int(limit))
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	dtos.JsonResponse(c, http.StatusOK, collections, "")
+}
+
+func (handler *collectionsHandler) getCollectionNoteworthy(c *gin.Context) {
+
+	limitStr := c.Param("limit")
+	limit, err := strconv.ParseUint(limitStr, 10, 0)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	collections, err := services.GetCollectionsNoteworthy(int(limit))
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	dtos.JsonResponse(c, http.StatusOK, collections, "")
+}
+
+func (handler *collectionsHandler) getCollectionTrending(c *gin.Context) {
+
+	limitStr := c.Param("limit")
+	limit, err := strconv.ParseUint(limitStr, 10, 0)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	collections, err := services.GetCollectionsTrending(int(limit))
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return

@@ -36,6 +36,15 @@ const (
 	MintInfoSetNxKeyFormat         = "MintInfoNX:%s"
 	MintInfoSetNxExpirePeriod      = 6 * time.Second
 	MintInfoBucketName             = "MintInfo"
+
+	CollectionVerifiedCacheKeyFormat = "CollectionVerifiedCacheKey"
+	CollectionVerifiedExpirePeriod   = 5 * time.Minute
+
+	CollectionNoteworthyCacheKeyFormat = "CollectionNoteworthyCacheKey"
+	CollectionNoteworthyExpirePeriod   = 5 * time.Minute
+
+	CollectionTrendingCacheKeyFormat = "CollectionTrendingCacheKey"
+	CollectionTrendingExpirePeriod   = 5 * time.Minute
 )
 
 type MintInfo struct {
@@ -245,6 +254,87 @@ func GetCollectionsWithNameAlike(name string, limit int) ([]entities.Collection,
 	byteArray, err = json.Marshal(collectionArray)
 	if err == nil {
 		err = cache.GetCacher().Set(cacheKey, byteArray, CollectionSearchExpirePeriod)
+		if err != nil {
+			log.Debug("could not set cache", "err", err)
+		}
+	}
+
+	return collectionArray, nil
+}
+
+func GetCollectionsVerified(limit int) ([]entities.Collection, error) {
+	var byteArray []byte
+	var collectionArray []entities.Collection
+
+	cacheKey := CollectionVerifiedCacheKeyFormat
+	err := cache.GetCacher().Get(cacheKey, &byteArray)
+	if err == nil {
+		err = json.Unmarshal(byteArray, &collectionArray)
+		return collectionArray, err
+	}
+
+	collectionArray, err = storage.GetCollectionsVerified(limit)
+	if err != nil {
+		return nil, err
+	}
+
+	byteArray, err = json.Marshal(collectionArray)
+	if err == nil {
+		err = cache.GetCacher().Set(cacheKey, byteArray, CollectionVerifiedExpirePeriod)
+		if err != nil {
+			log.Debug("could not set cache", "err", err)
+		}
+	}
+
+	return collectionArray, nil
+}
+
+func GetCollectionsNoteworthy(limit int) ([]entities.Collection, error) {
+	var byteArray []byte
+	var collectionArray []entities.Collection
+
+	cacheKey := CollectionNoteworthyCacheKeyFormat
+	err := cache.GetCacher().Get(cacheKey, &byteArray)
+	if err == nil {
+		err = json.Unmarshal(byteArray, &collectionArray)
+		return collectionArray, err
+	}
+
+	collectionArray, err = storage.GetCollectionsNoteworthy(limit)
+	if err != nil {
+		return nil, err
+	}
+
+	byteArray, err = json.Marshal(collectionArray)
+	if err == nil {
+		err = cache.GetCacher().Set(cacheKey, byteArray, CollectionNoteworthyExpirePeriod)
+		if err != nil {
+			log.Debug("could not set cache", "err", err)
+		}
+	}
+
+	return collectionArray, nil
+}
+
+func GetCollectionsTrending(limit int) ([]entities.Collection, error) {
+	var byteArray []byte
+	var collectionArray []entities.Collection
+
+	cacheKey := CollectionTrendingCacheKeyFormat
+	err := cache.GetCacher().Get(cacheKey, &byteArray)
+	if err == nil {
+		err = json.Unmarshal(byteArray, &collectionArray)
+		return collectionArray, err
+	}
+
+	collectionArray, err = storage.GetCollectionsTrending(limit)
+	if err != nil {
+		return nil, err
+	}
+
+	byteArray, err = json.Marshal(collectionArray)
+	if err == nil {
+		err = cache.GetCacher().Set(cacheKey, byteArray, CollectionTrendingExpirePeriod)
 		if err != nil {
 			log.Debug("could not set cache", "err", err)
 		}
