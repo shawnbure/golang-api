@@ -3,7 +3,6 @@ package handlers
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -200,8 +199,6 @@ func (handler *collectionsHandler) getCollectionTrending(c *gin.Context) {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
-
-	fmt.Println("getCollectionTrending Limit")
 
 	collections, err := services.GetCollectionsTrending(int(limit))
 	if err != nil {
