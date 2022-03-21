@@ -16,6 +16,7 @@ import (
 	"github.com/ENFT-DAO/youbei-api/services"
 	"github.com/ENFT-DAO/youbei-api/storage"
 	"github.com/emurmotol/ethconv"
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
@@ -34,6 +35,7 @@ func NewMarketPlaceIndexer(marketPlaceAddr string, elrondAPI string, delay uint6
 func (mpi *MarketPlaceIndexer) StartWorker() {
 	lerr := mpi.Logger
 	lastHashMet := false
+	lastHash := ""
 	lastIndex := 0
 	for {
 	mainLoop:
@@ -68,6 +70,13 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			continue
 		}
 		if len(txResult) == 0 {
+			marketStat.LastHash = lastHash
+			marketStat, err = storage.UpdateMarketPlaceHash(lastHash)
+			if err != nil {
+				lerr.Println(err.Error())
+				lerr.Println("error update marketplace index nfts ")
+				continue
+			}
 			continue
 		}
 		foundResults += uint64(len(txResult))
@@ -88,8 +97,9 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			if orgTx.TxHash == marketStat.LastHash {
 				lastHashMet = true
 				lastIndex = 0
+				break
 			} else {
-				marketStat.LastHash = orgTx.TxHash
+				lastHash = orgTx.TxHash
 			}
 			if orgTx.Status == "fail" {
 				continue
@@ -148,16 +158,6 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			dataStr := string(data)
 
 			dataParts := strings.Split(dataStr, "@")
-			price, ok := big.NewInt(0).SetString(dataParts[1], 16)
-			if !ok {
-				lerr.Println("can not convert price", price, dataParts[1])
-				continue
-			}
-			fprice, err := ethconv.FromWei(price, ethconv.Ether)
-			if err != nil {
-				lerr.Println(err.Error())
-				continue
-			}
 
 			txTimestamp := orgTx.Timestamp
 			token, err := storage.GetTokenByTokenIdAndNonceStr(string(tokenId), hexNonce)
@@ -167,115 +167,206 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					continue
 				} else {
 					lerr.Println("no token found", string(tokenId), hexNonce)
+					tokenDetail, err := services.GetResponse(fmt.Sprintf(`%s/nfts/%s`, mpi.ElrondAPI, string(tokenId)+"-"+hexNonce))
+					if err != nil {
+						lerr.Println(err.Error())
+						continue
+					}
+					var tokenDetailObj entities.TokenBC
+					err = json.Unmarshal(tokenDetail, &tokenDetailObj)
+					if err != nil {
+						lerr.Println(err.Error())
+						continue
+					}
+					col, err := storage.GetCollectionByTokenId(tokenDetailObj.Collection)
+					if err != nil {
+						if err == gorm.ErrRecordNotFound {
+							lerr.Println("collection not found for this token!!", tokenDetailObj.Collection)
+							continue
+						}
+					}
+					idParts := strings.Split(tokenDetailObj.Identifier, "-")
+					nonceStr := idParts[len(idParts)-1]
+					imageURIByte, err := base64.StdEncoding.DecodeString(tokenDetailObj.URIs[0])
+					if err != nil {
+						lerr.Println("error decoding uris", err.Error())
+						continue
+					}
+					imageURI := string(imageURIByte)
+					metadataURIByte, err := base64.StdEncoding.DecodeString(tokenDetailObj.URIs[1])
+					if err != nil {
+						lerr.Println("error decoding uris", err.Error())
+						continue
+					}
+					metadataLink := string(metadataURIByte)
+					attrbs, err := services.GetResponse(metadataLink)
+					metadataJSON := make(map[string]interface{})
+					err = json.Unmarshal(attrbs, &metadataJSON)
+					if err != nil {
+						lerr.Println(err.Error(), string(metadataLink))
+						continue
+					}
+					var attributes datatypes.JSON
+					attributesBytes, err := json.Marshal(metadataJSON["attributes"])
+					if err != nil {
+						lerr.Println(err.Error())
+						continue
+					}
+					err = json.Unmarshal(attributesBytes, &attributes)
+					if err != nil {
+						lerr.Println(err.Error())
+						continue
+					}
+					err = storage.AddToken(&entities.Token{
+						TokenID:      tokenDetailObj.Collection,
+						MintTxHash:   "",
+						CollectionID: col.ID,
+						Nonce:        tokenDetailObj.Nonce,
+						NonceStr:     nonceStr,
+						MetadataLink: metadataLink,
+						ImageLink:    imageURI,
+						TokenName:    tokenDetailObj.Name,
+						Attributes:   attributes,
+						OnSale:       false,
+					})
+					if err != nil {
+						lerr.Println(err.Error())
+						continue
+					}
 					continue
 				}
 			}
 
-			if token.LastMarketTimestamp < txTimestamp {
+			price := orgTx.Value
+			bigPrice, ok := big.NewInt(0).SetString(price, 10)
+			if !ok {
+				lerr.Println("conversion to bigInt failed for price")
+				continue
+			}
+			fprice, err := ethconv.FromWei(bigPrice, ethconv.Ether)
+			if err != nil {
+				lerr.Println(err.Error())
+				continue
+			}
 
-				senderAdress := orgTx.Sender
-				sender, err := storage.GetAccountByAddress(senderAdress)
+			senderAdress := orgTx.Sender
+			sender, err := storage.GetAccountByAddress(senderAdress)
+			if err != nil {
+				if err == gorm.ErrNotImplemented {
+					sender.Name = services.RandomName()
+					err := storage.AddAccount(sender)
+					if err != nil {
+						lerr.Println("couldn't add user", err.Error())
+						goto mainLoop
+					}
+				}
+			}
+			token.OwnerId = sender.ID
+			if isOnSale {
+				price, ok := big.NewInt(0).SetString(dataParts[1], 16)
+				if !ok {
+					lerr.Println("can not convert price", price, dataParts[1])
+					continue
+				}
+				fprice, err := ethconv.FromWei(price, ethconv.Ether)
 				if err != nil {
-					if err == gorm.ErrNotImplemented {
-						sender.Name = services.RandomName()
-						err := storage.AddAccount(sender)
-						if err != nil {
-							lerr.Println("couldn't add user", err.Error())
-							goto mainLoop
-						}
-					}
+					lerr.Println(err.Error())
+					continue
 				}
 
-				if isOnSale {
-					token.OnSale = true
-					token.Status = "List"
-					token.PriceString = fprice.String()
-					token.PriceNominal, _ = fprice.Float64()
-
-					err = storage.AddTransaction(&entities.Transaction{
-						PriceNominal: token.PriceNominal,
-						Type:         entities.ListToken,
-						Timestamp:    orgTx.Timestamp,
-						SellerID:     sender.ID,
-						TokenID:      token.ID,
-						CollectionID: token.CollectionID,
-						Hash:         orgTx.TxHash,
-					})
-					if err != nil {
-						lerr.Println(err.Error())
-					}
-
-				} else if isOnAuction {
-					lastBuyPriceNominal, err := strconv.ParseFloat(dataParts[1], 64)
-					if err == nil {
-						fmt.Printf("%f of type %T", lastBuyPriceNominal, lastBuyPriceNominal)
-					}
-
-					auctionDeadline, err := strconv.ParseUint(dataParts[2], 10, 64)
-					if err == nil {
-						fmt.Printf("%d of type %T", auctionDeadline, auctionDeadline)
-					}
-
-					auctionStartTime, err := strconv.ParseUint(dataParts[3], 10, 64)
-					if err == nil {
-						fmt.Printf("%d of type %T", auctionStartTime, auctionStartTime)
-					}
-
-					token.OnSale = true
-					token.Status = "Auction"
-					token.LastBuyPriceNominal = lastBuyPriceNominal
-					token.AuctionDeadline = auctionDeadline
-					token.AuctionStartTime = auctionStartTime
-					err = storage.AddTransaction(&entities.Transaction{
-						PriceNominal: lastBuyPriceNominal,
-						Type:         entities.AuctionToken,
-						Timestamp:    orgTx.Timestamp,
-						SellerID:     sender.ID,
-						TokenID:      token.ID,
-						CollectionID: token.CollectionID,
-						Hash:         orgTx.TxHash,
-					})
-					if err != nil {
-						lerr.Println(err.Error())
-					}
-
-				} else if isWithdrawn {
-					token.OnSale = false
-					token.Status = "Withdrawn"
-					err = storage.AddTransaction(&entities.Transaction{
-						PriceNominal: token.LastBuyPriceNominal,
-						Type:         entities.WithdrawToken,
-						Timestamp:    orgTx.Timestamp,
-						SellerID:     sender.ID,
-						TokenID:      token.ID,
-						CollectionID: token.CollectionID,
-						Hash:         orgTx.TxHash,
-					})
-					if err != nil {
-						lerr.Println(err.Error())
-					}
-				} else if isBuyNft {
-					token.OnSale = false
-					token.Status = "Bought"
-					token.OwnerId = sender.ID
-					lastBuyPriceNominal, err := strconv.ParseFloat(dataParts[1], 64)
-					if err == nil {
-						fmt.Printf("%f of type %T", lastBuyPriceNominal, lastBuyPriceNominal)
-					}
-					token.LastBuyPriceNominal = lastBuyPriceNominal
-					err = storage.AddTransaction(&entities.Transaction{
-						PriceNominal: token.LastBuyPriceNominal,
-						Type:         entities.BuyToken,
-						Timestamp:    orgTx.Timestamp,
-						SellerID:     sender.ID,
-						TokenID:      token.ID,
-						CollectionID: token.CollectionID,
-						Hash:         orgTx.TxHash,
-					})
-					if err != nil {
-						lerr.Println(err.Error())
-					}
+				token.OnSale = true
+				token.Status = "List"
+				token.LastBuyPriceNominal, _ = fprice.Float64()
+				err = storage.AddTransaction(&entities.Transaction{
+					PriceNominal: token.PriceNominal,
+					Type:         entities.ListToken,
+					Timestamp:    orgTx.Timestamp,
+					SellerID:     sender.ID,
+					TokenID:      token.ID,
+					CollectionID: token.CollectionID,
+					Hash:         orgTx.TxHash,
+				})
+				if err != nil {
+					lerr.Println(err.Error())
 				}
+
+			} else if isOnAuction {
+				hexMinBid := dataParts[1]
+				minBid, _ := big.NewInt(0).SetString(hexMinBid, 16)
+				minBidfloat, err := ethconv.FromWei(minBid, ethconv.Ether)
+				lastBuyPriceNominal, _ := minBidfloat.Float64()
+				if err == nil {
+					fmt.Printf("%f of type %T", lastBuyPriceNominal, lastBuyPriceNominal)
+				}
+
+				auctionDeadline, err := strconv.ParseUint(dataParts[2], 16, 64)
+				if err == nil {
+					fmt.Printf("%d of type %T", auctionDeadline, auctionDeadline)
+				}
+
+				auctionStartTime, err := strconv.ParseUint(dataParts[3], 16, 64)
+				if err == nil {
+					fmt.Printf("%d of type %T", auctionStartTime, auctionStartTime)
+				}
+
+				token.OnSale = true
+				token.Status = "Auction"
+				token.LastBuyPriceNominal = lastBuyPriceNominal
+				token.AuctionDeadline = auctionDeadline
+				token.AuctionStartTime = auctionStartTime
+				err = storage.AddTransaction(&entities.Transaction{
+					PriceNominal: lastBuyPriceNominal,
+					Type:         entities.AuctionToken,
+					Timestamp:    orgTx.Timestamp,
+					SellerID:     sender.ID,
+					TokenID:      token.ID,
+					CollectionID: token.CollectionID,
+					Hash:         orgTx.TxHash,
+				})
+				if err != nil {
+					lerr.Println(err.Error())
+				}
+
+			} else if isWithdrawn {
+				token.OnSale = false
+				token.Status = "Withdrawn"
+				err = storage.AddTransaction(&entities.Transaction{
+					PriceNominal: token.PriceNominal,
+					Type:         entities.WithdrawToken,
+					Timestamp:    orgTx.Timestamp,
+					SellerID:     sender.ID,
+					TokenID:      token.ID,
+					CollectionID: token.CollectionID,
+					Hash:         orgTx.TxHash,
+				})
+				if err != nil {
+					lerr.Println(err.Error())
+				}
+			} else if isBuyNft {
+				token.OnSale = false
+				token.Status = "Bought"
+				token.OwnerId = sender.ID
+				lastBuyPriceNominal, err := strconv.ParseFloat(dataParts[1], 64)
+				if err == nil {
+					fmt.Printf("%f of type %T", lastBuyPriceNominal, lastBuyPriceNominal)
+				}
+				token.LastBuyPriceNominal, _ = fprice.Float64()
+				token.PriceString = price
+				token.PriceNominal, _ = fprice.Float64()
+				err = storage.AddTransaction(&entities.Transaction{
+					PriceNominal: token.PriceNominal,
+					Type:         entities.BuyToken,
+					Timestamp:    orgTx.Timestamp,
+					SellerID:     sender.ID,
+					TokenID:      token.ID,
+					CollectionID: token.CollectionID,
+					Hash:         orgTx.TxHash,
+				})
+				if err != nil {
+					lerr.Println(err.Error())
+				}
+			}
+			if token.LastMarketTimestamp < txTimestamp {
 				token.LastMarketTimestamp = txTimestamp
 				err = storage.UpdateTokenWhere(token, map[string]interface{}{
 					"OnSale":              token.OnSale,
@@ -284,6 +375,8 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					"PriceNominal":        token.PriceNominal,
 					"LastMarketTimestamp": txTimestamp,
 					"OwnerId":             token.OwnerId,
+					"AuctionDeadline":     token.AuctionDeadline,
+					"AuctionStartTime":    token.AuctionStartTime,
 				}, "token_id=? AND nonce_str=?", tokenId, hexNonce)
 				if err != nil {
 					if err == gorm.ErrRecordNotFound {
@@ -295,14 +388,15 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				}
 			}
 		}
-		marketStat, err = storage.UpdateMarketPlaceHash(marketStat.LastHash)
-		if err != nil {
-			lerr.Println(err.Error())
-			lerr.Println("error update marketplace index nfts ")
-			continue
-		}
 		if !lastHashMet {
-			lastIndex += 100
+			lastIndex += len(txResult)
+		} else {
+			marketStat, err = storage.UpdateMarketPlaceHash(lastHash)
+			if err != nil {
+				lerr.Println(err.Error())
+				lerr.Println("error update marketplace index nfts ")
+				continue
+			}
 		}
 	}
 }
