@@ -163,7 +163,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					continue
 				} else {
 					lerr.Println("no token found", string(tokenId), hexNonce)
-					goto txloop
+					continue
 				}
 			}
 			if token.LastMarketTimestamp < txTimestamp {
