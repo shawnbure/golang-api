@@ -16,7 +16,7 @@ const (
 	accountsSearchEndpoint    = "/accounts/:accountName"
 	tokensSearchEndpoint      = "/tokens/:tokenId"
 
-	SearchCategoryLimit = 5
+	SearchCategoryLimit = 10 //5
 )
 
 type GeneralSearchResponse struct {
