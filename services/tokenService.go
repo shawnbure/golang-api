@@ -228,7 +228,7 @@ func CreateOrUpdateToken(request *CreateTokenRequest, blockchainApi string) (*en
 		}
 	} else {
 		//innerErr = storage.UpdateToken(token)
-		innerErr = storage.UpdateTokenWhere(token, "token_id=? and nonce=?", token.TokenID, token.Nonce)
+		innerErr = storage.UpdateToken(token)
 	}
 
 	if innerErr != nil {
