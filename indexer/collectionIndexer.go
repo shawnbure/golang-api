@@ -165,16 +165,6 @@ func (ci *CollectionIndexer) StartWorker() {
 
 		}
 	colLoop:
-		// if len(colsToCheck) == 0 { // TODO remove
-		// 	colsToCheck, err = collstats.GetCollectionToCheck()
-		// 	if len(colsToCheck) > 0 {
-		// 		fmt.Println("collection to check from cache ", len(colsToCheck))
-		// 	}
-		// 	if err != nil {
-		// 		logErr.Println(err.Error())
-		// 		continue
-		// 	}
-		// }
 		cols, err := storage.GetAllCollections()
 		if err != nil {
 			logErr.Println(err.Error())
@@ -365,7 +355,17 @@ func (ci *CollectionIndexer) StartWorker() {
 									nonceStr = strconv.FormatInt(int64(nonce), 10)
 
 									url := fmt.Sprintf("%s/%s.json", youbeiMeta, nonceStr)
-									tokenName := fmt.Sprintf("%s #%d", col.Name, int64(nonce))
+									tokenDetail, err := services.GetResponse(fmt.Sprintf(`%s/nfts/%s`, ci.ElrondAPI, tokenId))
+									if err != nil {
+										logErr.Println(err.Error())
+										continue
+									}
+									var tokenDetailObj entities.TokenBC
+									err = json.Unmarshal(tokenDetail, &tokenDetailObj)
+									if err != nil {
+										logErr.Println(err.Error())
+										continue
+									}
 									attrbs, err := services.GetResponse(url)
 									if err != nil {
 										logErr.Println(err.Error())
@@ -378,7 +378,7 @@ func (ci *CollectionIndexer) StartWorker() {
 												NonceStr:     transferData[2],
 												MetadataLink: string(youbeiMeta) + "/" + nonceStr + ".json",
 												ImageLink:    string(imageURI) + "/" + nonceStr + ".png",
-												TokenName:    tokenName,
+												TokenName:    tokenDetailObj.Name,
 												Attributes:   []byte{},
 												OwnerId:      acc.ID,
 												OnSale:       false,
@@ -419,7 +419,7 @@ func (ci *CollectionIndexer) StartWorker() {
 										NonceStr:     transferData[2],
 										MetadataLink: string(youbeiMeta) + "/" + nonceStr + ".json",
 										ImageLink:    string(imageURI) + "/" + nonceStr + ".png",
-										TokenName:    tokenName,
+										TokenName:    tokenDetailObj.Name,
 										Attributes:   attributes,
 										OwnerId:      acc.ID,
 										OnSale:       false,

@@ -28,6 +28,44 @@ type Token struct {
 	Owner               Account        `json:"owner"`
 }
 
+type TokenBC struct {
+	Identifier           string      `json:"identifier"`
+	Collection           string      `json:"collection"`
+	Timestamp            uint64      `json:"timestamp"`
+	Attributes           string      `json:"attributes"`
+	Nonce                uint64      `json:"nonce"`
+	Type                 string      `json:"type"`
+	Name                 string      `json:"name"`
+	Creator              string      `json:"creator"`
+	Royalties            interface{} `json:"royalties"`
+	URIs                 []string    `json:"uris"`
+	URL                  string      `json:"url"`
+	Media                interface{} `json:"media"`
+	IsWhitelistedStorage bool        `json:"isWhitelistedStorage"`
+	/*
+		  "thumbnailUrl": "string",
+		  "tags": [
+		    "string"
+		  ],
+		  "metadata": {},
+		  "owner": {},
+		  "balance": {},
+		  "supply": {},
+		  "decimals": {},
+		  "assets": {
+		    "website": "string",
+		    "description": "string",
+		    "status": "string",
+		    "pngUrl": "string",
+		    "svgUrl": "string",
+		    "lockedAccounts": {}
+		  },
+		  "ticker": "string",
+		  "scamInfo": {}
+		}
+	*/
+}
+
 type TokenStatus string
 
 const (

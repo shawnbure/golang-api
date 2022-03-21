@@ -172,16 +172,43 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			}
 
 			if token.LastMarketTimestamp < txTimestamp {
+
+				senderAdress := orgTx.Sender
+				sender, err := storage.GetAccountByAddress(senderAdress)
+				if err != nil {
+					if err == gorm.ErrNotImplemented {
+						sender.Name = services.RandomName()
+						err := storage.AddAccount(sender)
+						if err != nil {
+							lerr.Println("couldn't add user", err.Error())
+							goto mainLoop
+						}
+					}
+				}
+
 				if isOnSale {
 					token.OnSale = true
 					token.Status = "List"
 					token.PriceString = fprice.String()
 					token.PriceNominal, _ = fprice.Float64()
-				} else if isOnAuction {
 
+					err = storage.AddTransaction(&entities.Transaction{
+						PriceNominal: token.PriceNominal,
+						Type:         entities.ListToken,
+						Timestamp:    orgTx.Timestamp,
+						SellerID:     sender.ID,
+						TokenID:      token.ID,
+						CollectionID: token.CollectionID,
+						Hash:         orgTx.TxHash,
+					})
+					if err != nil {
+						lerr.Println(err.Error())
+					}
+
+				} else if isOnAuction {
 					lastBuyPriceNominal, err := strconv.ParseFloat(dataParts[1], 64)
 					if err == nil {
-						fmt.Printf("%d of type %T", lastBuyPriceNominal, lastBuyPriceNominal)
+						fmt.Printf("%f of type %T", lastBuyPriceNominal, lastBuyPriceNominal)
 					}
 
 					auctionDeadline, err := strconv.ParseUint(dataParts[2], 10, 64)
@@ -199,26 +226,55 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					token.LastBuyPriceNominal = lastBuyPriceNominal
 					token.AuctionDeadline = auctionDeadline
 					token.AuctionStartTime = auctionStartTime
+					err = storage.AddTransaction(&entities.Transaction{
+						PriceNominal: lastBuyPriceNominal,
+						Type:         entities.AuctionToken,
+						Timestamp:    orgTx.Timestamp,
+						SellerID:     sender.ID,
+						TokenID:      token.ID,
+						CollectionID: token.CollectionID,
+						Hash:         orgTx.TxHash,
+					})
+					if err != nil {
+						lerr.Println(err.Error())
+					}
 
 				} else if isWithdrawn {
 					token.OnSale = false
 					token.Status = "Withdrawn"
+					err = storage.AddTransaction(&entities.Transaction{
+						PriceNominal: token.LastBuyPriceNominal,
+						Type:         entities.WithdrawToken,
+						Timestamp:    orgTx.Timestamp,
+						SellerID:     sender.ID,
+						TokenID:      token.ID,
+						CollectionID: token.CollectionID,
+						Hash:         orgTx.TxHash,
+					})
+					if err != nil {
+						lerr.Println(err.Error())
+					}
 				} else if isBuyNft {
 					token.OnSale = false
 					token.Status = "Bought"
-					buyerAddres := orgTx.Sender
-					buyer, err := storage.GetAccountByAddress(buyerAddres)
-					if err != nil {
-						if err == gorm.ErrNotImplemented {
-							buyer.Name = services.RandomName()
-							err := storage.AddAccount(buyer)
-							if err != nil {
-								lerr.Println("couldn't add user", err.Error())
-								goto mainLoop
-							}
-						}
+					token.OwnerId = sender.ID
+					lastBuyPriceNominal, err := strconv.ParseFloat(dataParts[1], 64)
+					if err == nil {
+						fmt.Printf("%f of type %T", lastBuyPriceNominal, lastBuyPriceNominal)
 					}
-					token.OwnerId = buyer.ID
+					token.LastBuyPriceNominal = lastBuyPriceNominal
+					err = storage.AddTransaction(&entities.Transaction{
+						PriceNominal: token.LastBuyPriceNominal,
+						Type:         entities.BuyToken,
+						Timestamp:    orgTx.Timestamp,
+						SellerID:     sender.ID,
+						TokenID:      token.ID,
+						CollectionID: token.CollectionID,
+						Hash:         orgTx.TxHash,
+					})
+					if err != nil {
+						lerr.Println(err.Error())
+					}
 				}
 				token.LastMarketTimestamp = txTimestamp
 				err = storage.UpdateTokenWhere(token, map[string]interface{}{
