@@ -36,6 +36,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 	lastHashMet := false
 	lastIndex := 0
 	for {
+	mainLoop:
 		var foundResults uint64 = 0
 		time.Sleep(time.Second * mpi.Delay)
 		marketStat, err := storage.GetMarketPlaceIndexer()
@@ -96,7 +97,6 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			if orgTx.Status == "pending" {
 				goto txloop
 			}
-			token := &entities.Token{}
 			data, err := base64.StdEncoding.DecodeString(tx.Data)
 			if err != nil {
 				lerr.Println(err.Error())
@@ -160,10 +160,13 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			}
 
 			txTimestamp := orgTx.Timestamp
-			token, err = storage.GetTokenByTokenIdAndNonceStr(string(tokenId), hexNonce)
+			token, err := storage.GetTokenByTokenIdAndNonceStr(string(tokenId), hexNonce)
 			if err != nil {
 				if err != gorm.ErrRecordNotFound {
 					lerr.Println(err.Error())
+					continue
+				} else {
+					lerr.Println("no token found", string(tokenId), hexNonce)
 					continue
 				}
 			}
@@ -203,6 +206,19 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				} else if isBuyNft {
 					token.OnSale = false
 					token.Status = "Bought"
+					buyerAddres := orgTx.Sender
+					buyer, err := storage.GetAccountByAddress(buyerAddres)
+					if err != nil {
+						if err == gorm.ErrNotImplemented {
+							buyer.Name = services.RandomName()
+							err := storage.AddAccount(buyer)
+							if err != nil {
+								lerr.Println("couldn't add user", err.Error())
+								goto mainLoop
+							}
+						}
+					}
+					token.OwnerId = buyer.ID
 				}
 				token.LastMarketTimestamp = txTimestamp
 				err = storage.UpdateTokenWhere(token, map[string]interface{}{
@@ -211,6 +227,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					"PriceString":         token.PriceString,
 					"PriceNominal":        token.PriceNominal,
 					"LastMarketTimestamp": txTimestamp,
+					"OwnerId":             token.OwnerId,
 				}, "token_id=? AND nonce_str=?", tokenId, hexNonce)
 				if err != nil {
 					if err == gorm.ErrRecordNotFound {
@@ -222,23 +239,12 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				}
 			}
 		}
-
-		// marketStat, err = storage.UpdateMarketPlaceIndexer(marketStat.LastIndex + foundResults)
-		// if err != nil {
-		// 	lerr.Println(err.Error())
-		// 	lerr.Println("error update marketplace index nfts ")
-		// 	continue
-		// }
 		marketStat, err = storage.UpdateMarketPlaceHash(marketStat.LastHash)
 		if err != nil {
 			lerr.Println(err.Error())
 			lerr.Println("error update marketplace index nfts ")
 			continue
 		}
-		// if newStat.LastIndex <= marketStat.LastIndex {
-		// 	lerr.Println("error something went wrong updating last index of marketplace  ")
-		// 	continue
-		// }
 		if !lastHashMet {
 			lastIndex += 100
 		}
