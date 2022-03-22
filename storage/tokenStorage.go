@@ -334,3 +334,35 @@ func GetTokensWithTokenIdAlikeWithLimit(tokenId string, limit int) ([]entities.T
 
 	return tokens, nil
 }
+
+func GetTokensListedWithTokenIdAlikeWithLimit(tokenId string, limit int) ([]entities.Token, error) {
+	var tokens []entities.Token
+
+	database, err := GetDBOrError()
+	if err != nil {
+		return nil, err
+	}
+
+	txRead := database.Limit(limit).Where("token_id ILIKE ?", tokenId).Where("status is not NULL and status != '' and status != 'None'").Find(&tokens)
+	if txRead.Error != nil {
+		return nil, txRead.Error
+	}
+
+	return tokens, nil
+}
+
+func GetTokensUnlistedWithTokenIdAlikeWithLimit(tokenId string, limit int) ([]entities.Token, error) {
+	var tokens []entities.Token
+
+	database, err := GetDBOrError()
+	if err != nil {
+		return nil, err
+	}
+
+	txRead := database.Limit(limit).Where("token_id ILIKE ?", tokenId).Where("status is NULL or status = '' or status = 'None'").Find(&tokens)
+	if txRead.Error != nil {
+		return nil, txRead.Error
+	}
+
+	return tokens, nil
+}
