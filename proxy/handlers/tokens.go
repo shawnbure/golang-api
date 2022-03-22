@@ -21,8 +21,9 @@ import (
 const (
 	baseTokensEndpoint               = "/tokens"
 	tokenByTokenIdAndNonceEndpoint   = "/:tokenId/:nonce"
+	tokenWithdrawEndpoint            = "/withdraw/:tokenId/:nonce"
 	availableTokensEndpoint          = "/available"
-	tokenCreateEndpoint              = "/create/:walletAddress/:tokenName/:tokenNonce"
+	tokenListEndpoint                = "/list-fc/:walletAddress/:tokenName/:tokenNonce"
 	offersForTokenIdAndNonceEndpoint = "/:tokenId/:nonce/offers/:offset/:limit"
 	bidsForTokenIdAndNonceEndpoint   = "/:tokenId/:nonce/bids/:offset/:limit"
 	refreshTokenMetadataEndpoint     = "/:tokenId/:nonce/refresh"
@@ -43,7 +44,8 @@ func NewTokensHandler(groupHandler *groupHandler, authCfg config.AuthConfig, cfg
 	handler := &tokensHandler{blockchainConfig: cfg}
 
 	endpoints := []EndpointHandler{
-		{Method: http.MethodPost, Path: tokenCreateEndpoint, HandlerFunc: handler.create},
+		{Method: http.MethodPost, Path: tokenListEndpoint, HandlerFunc: handler.list},
+		{Method: http.MethodPost, Path: tokenWithdrawEndpoint, HandlerFunc: handler.withdraw},
 	}
 
 	endpointGroupHandler := EndpointGroupHandler{
@@ -78,16 +80,16 @@ func NewTokensHandler(groupHandler *groupHandler, authCfg config.AuthConfig, cfg
 // @Tags token
 // @Accept json
 // @Produce json
-// @Param createTokenRequest body services.CreateOrUpdateToken true "token info"
+// @Param listTokenRequest body services.ListToken true "token info"
 // @Success 200 {object} entities.Collection
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 401 {object} dtos.ApiResponse
 // @Failure 500 {object} dtos.ApiResponse
 // @Router /tokens/create [post]
 
-func (handler *tokensHandler) create(c *gin.Context) {
+func (handler *tokensHandler) list(c *gin.Context) {
 
-	var request services.CreateTokenRequest
+	var request services.ListTokenRequest
 
 	err := c.BindJSON(&request)
 	if err != nil {
@@ -102,13 +104,41 @@ func (handler *tokensHandler) create(c *gin.Context) {
 		return
 	}
 
-	token, err := services.CreateOrUpdateToken(&request, handler.blockchainConfig.ApiUrl)
+	token, err := services.ListTokenFromClient(&request, handler.blockchainConfig.ApiUrl)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
 	}
 
 	dtos.JsonResponse(c, http.StatusOK, token, "")
+}
+
+func (handler *tokensHandler) withdraw(c *gin.Context) {
+
+	nonceString := c.Params.ByName("nonce")
+
+	nonce, err := strconv.ParseUint(nonceString, 10, 64)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	args := services.WithdrawTokenArgs{
+		OwnerAddress: c.Keys["address"].(string),
+		TokenId:      c.Params.ByName("tokenId"),
+		Nonce:        nonce,
+		Price:        "0",
+	}
+
+	jwtAddress := c.GetString(middleware.AddressKey)
+	if jwtAddress != args.OwnerAddress {
+		dtos.JsonResponse(c, http.StatusUnauthorized, nil, "jwt and request addresses differ")
+		return
+	}
+
+	services.WithdrawToken(args)
+
+	dtos.JsonResponse(c, http.StatusOK, nil, "")
 }
 
 // @Summary Get token by id and nonce
@@ -454,9 +484,6 @@ func (handler *tokensHandler) getWhitelistBuyCountLimit(c *gin.Context) {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
 	}
-
-	fmt.Println("@@@@@@ queries.ContractAddress: " + queries.ContractAddress)
-	fmt.Println("@@@@@@ queries.UserAddress: " + queries.UserAddress)
 
 	strBuyCountLimit, err := services.GetWhitelistBuyCountLimit(queries.ContractAddress, queries.UserAddress)
 	if err != nil {

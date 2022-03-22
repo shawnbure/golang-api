@@ -9,6 +9,7 @@ import (
 )
 
 func AddToken(token *entities.Token) error {
+
 	database, err := GetDBOrError()
 	if err != nil {
 		return err
@@ -40,7 +41,7 @@ func AddToken(token *entities.Token) error {
 				return gorm.ErrRecordNotFound
 			}
 		} else {
-			return err
+			return gorm.ErrRegistered
 		}
 	} else {
 		return err
