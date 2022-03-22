@@ -132,7 +132,7 @@ func GetTransactionsByTokenIdWithOffsetLimit(id uint64, offset int, limit int) (
 		return nil, err
 	}
 
-	txRead := database.Offset(offset).Limit(limit).Order("id desc").Find(&transactions, "token_id = ?", id)
+	txRead := database.Offset(offset).Limit(limit).Order("timestamp desc").Find(&transactions, "token_id = ?", id)
 	if txRead.Error != nil {
 		return nil, txRead.Error
 	}
@@ -191,6 +191,21 @@ func GetTransactionsWithOffsetLimit(offset int, limit int) ([]entities.Transacti
 	return transactions, nil
 }
 
+func DeleteTransaction(id uint64) error {
+	var transaction entities.Transaction
+	database, err := GetDBOrError()
+	if err != nil {
+		return err
+	}
+	txRead := database.Find(&transaction, "id = ?", id)
+	if txRead.Error != nil {
+		return txRead.Error
+	}
+	if txRead.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
+}
 func GetMinBuyPriceForTransactionsWithCollectionId(collectionId uint64) (float64, error) {
 	var price float64
 

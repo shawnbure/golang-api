@@ -36,6 +36,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 	lerr := mpi.Logger
 	lastHashMet := false
 	lastHash := ""
+	lastHashTimestamp := uint64(0)
 	lastIndex := 0
 	for {
 	mainLoop:
@@ -70,6 +71,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			continue
 		}
 		if len(txResult) == 0 {
+			lastIndex = 0
 			marketStat.LastHash = lastHash
 			marketStat, err = storage.UpdateMarketPlaceHash(lastHash)
 			if err != nil {
@@ -77,6 +79,12 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				lerr.Println("error update marketplace index nfts ")
 				continue
 			}
+			continue
+		}
+		if txResult[0].OriginalTxHash == marketStat.LastHash {
+			lastHashMet = true
+			lastIndex = 0
+			time.Sleep(time.Second * mpi.Delay)
 			continue
 		}
 		foundResults += uint64(len(txResult))
@@ -99,9 +107,19 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				lastIndex = 0
 				break
 			} else {
-				lastHash = txResult[0].OriginalTxHash
+				if lastHashTimestamp < orgTx.Timestamp {
+					lastHashTimestamp = orgTx.Timestamp
+					lastHash = orgTx.TxHash
+				}
 			}
 			if orgTx.Status == "fail" || orgTx.Status == "invalid" {
+				tx, err := storage.GetTransactionByHash(orgTx.TxHash)
+				if err != nil {
+					if err == gorm.ErrRecordNotFound {
+						continue
+					}
+				}
+				storage.DeleteTransaction(tx.ID)
 				continue
 			}
 			if orgTx.Status == "pending" {
