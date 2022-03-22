@@ -32,7 +32,10 @@ func NewMarketPlaceIndexer(marketPlaceAddr string, elrondAPI string, delay uint6
 
 func (mpi *MarketPlaceIndexer) StartWorker() {
 	lerr := mpi.Logger
+	lastHashMet := false
+	lastIndex := 0
 	for {
+	mainLoop:
 		var foundResults uint64 = 0
 		time.Sleep(time.Second * mpi.Delay)
 		marketStat, err := storage.GetMarketPlaceIndexer()
@@ -46,10 +49,10 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				}
 			}
 		}
-		body, err := services.GetResponse(fmt.Sprintf("%s/accounts/%s/sc-results?from=%d&order=asc",
+		body, err := services.GetResponse(fmt.Sprintf("%s/accounts/%s/sc-results?from=%d&size=100", // sc-result endpoint doesn't have order!
 			mpi.ElrondAPI,
 			mpi.MarketPlaceAddr,
-			marketStat.LastIndex,
+			lastIndex,
 		))
 		if err != nil {
 			lerr.Println(err.Error())
@@ -80,13 +83,18 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				lerr.Println(err.Error())
 				continue
 			}
+			if orgTx.TxHash == marketStat.LastHash {
+				lastHashMet = true
+				lastIndex = 0
+			} else {
+				marketStat.LastHash = orgTx.TxHash
+			}
 			if orgTx.Status == "fail" {
 				continue
 			}
 			if orgTx.Status == "pending" {
 				goto txloop
 			}
-			var token entities.Token
 			data, err := base64.StdEncoding.DecodeString(tx.Data)
 			if err != nil {
 				lerr.Println(err.Error())
@@ -146,102 +154,71 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				lerr.Println(err.Error())
 				continue
 			}
-			token.PriceString = fprice.String()
-			token.PriceNominal, _ = fprice.Float64()
-			if isOnSale {
-				token.OnSale = true
-				token.Status = "List"
-			} else if isWithdrawn {
-				token.OnSale = false
-				token.Status = "Withdrawn"
-			} else if isBuyNft {
-				token.OnSale = false
-				token.Status = "Bought"
-			}
-			err = storage.UpdateTokenWhere(&token, "token_id=? AND nonce_str=?", tokenId, hexNonce)
-			if err != nil {
-				if err == gorm.ErrRecordNotFound {
-					// col, err := storage.GetCollectionByTokenId(nft.Collection)
-					// if err != nil {
-					// 	fmt.Println(err.Error())
-					// 	fmt.Println("error get collection by tokenid", fmt.Sprintf("tokenID %d", token.ID))
-					// 	continue
-					// }
-					// token.PriceNominal = col.MintPricePerTokenNominal
-					// token.PriceString = col.MintPricePerTokenString
-					// token.RoyaltiesPercent = float64(nft.Royalties)
-					// twoParts := strings.Split(nft.URL, "/")
-					// metadataLink, err := hex.DecodeString(twoParts[0])
-					// if err != nil {
-					// 	fmt.Println(err.Error())
-					// 	continue
-					// }
-					// token.ImageLink = fmt.Sprintf(string(metadataLink)+"/%d.%s", nft.Nonce, "png")     // TODO image type should come from collection probably
-					// token.MetadataLink = fmt.Sprintf(string(metadataLink)+"/%d.%s", nft.Nonce, "json") // TODO image type should come from collection probably
-					// token.TokenName = nft.Collection
-					// token.CollectionID = col.ID
-					// // get owner
-					// req, err := http.
-					// 	NewRequest("GET",
-					// 		fmt.Sprintf("https://devnet-api.elrond.com/accounts/%s",
-					// 			nft.Creator,
-					// 		),
-					// 		nil)
-					// if err != nil {
-					// 	fmt.Println(err.Error())
-					// 	fmt.Println("error creating request for get nfts marketplace")
-					// 	continue
-					// }
-					// resp, err := client.Do(req)
-					// if err != nil {
-					// 	fmt.Println(err.Error())
-					// 	fmt.Println("error running request get nfts marketplace")
-					// 	continue
-					// }
 
-					// body, err := ioutil.ReadAll(resp.Body)
-					// if err != nil {
-					// 	fmt.Println(err.Error())
-					// 	resp.Body.Close()
-					// 	fmt.Println("error readall response get nfts marketplace")
-					// 	continue
-					// }
-					// resp.Body.Close()
-					// if resp.Status != "200 OK" {
-					// 	fmt.Println("response not successful  get nfts marketplace")
-					// 	continue
-					// }
-					// var accountObj map[string]interface{}
-					// err = json.Unmarshal(body, &accountObj)
-					// if err != nil {
-					// 	fmt.Println(err.Error())
-					// 	continue
-					// }
-					// ownerAddr := accountObj["ownerAddress"].(string)
-					// acc, err := storage.GetAccountByAddress(ownerAddr)
-					// if err != nil {
-					// 	fmt.Println(err.Error())
-					// 	fmt.Println("error get account by address", fmt.Sprintf("nft create %s", nft.Creator))
-					// 	continue
-					// }
-					// token.OwnerId = acc.ID
-					// fmt.Println("token not added to db ", token.TokenID, fmt.Sprintf("nonce %d", token.Nonce))
+			txTimestamp := orgTx.Timestamp
+			token, err := storage.GetTokenByTokenIdAndNonceStr(string(tokenId), hexNonce)
+			if err != nil {
+				if err != gorm.ErrRecordNotFound {
+					lerr.Println(err.Error())
+					continue
+				} else {
+					lerr.Println("no token found", string(tokenId), hexNonce)
 					continue
 				}
-				lerr.Println(err.Error())
-				lerr.Println("error updating token ", fmt.Sprintf("tokenID %d", token.ID))
-				continue
+			}
+			if token.LastMarketTimestamp < txTimestamp {
+				if isOnSale {
+					token.OnSale = true
+					token.Status = "List"
+					token.PriceString = fprice.String()
+					token.PriceNominal, _ = fprice.Float64()
+				} else if isWithdrawn {
+					token.OnSale = false
+					token.Status = "Withdrawn"
+				} else if isBuyNft {
+					token.OnSale = false
+					token.Status = "Bought"
+					buyerAddres := orgTx.Sender
+					buyer, err := storage.GetAccountByAddress(buyerAddres)
+					if err != nil {
+						if err == gorm.ErrNotImplemented {
+							buyer.Name = services.RandomName()
+							err := storage.AddAccount(buyer)
+							if err != nil {
+								lerr.Println("couldn't add user", err.Error())
+								goto mainLoop
+							}
+						}
+					}
+					token.OwnerId = buyer.ID
+				}
+				token.LastMarketTimestamp = txTimestamp
+				err = storage.UpdateTokenWhere(token, map[string]interface{}{
+					"OnSale":              token.OnSale,
+					"Status":              token.Status,
+					"PriceString":         token.PriceString,
+					"PriceNominal":        token.PriceNominal,
+					"LastMarketTimestamp": txTimestamp,
+					"OwnerId":             token.OwnerId,
+				}, "token_id=? AND nonce_str=?", tokenId, hexNonce)
+				if err != nil {
+					if err == gorm.ErrRecordNotFound {
+						continue
+					}
+					lerr.Println(err.Error())
+					lerr.Println("error updating token ", fmt.Sprintf("tokenID %d", token.ID))
+					continue
+				}
 			}
 		}
-		newStat, err := storage.UpdateMarketPlaceIndexer(marketStat.LastIndex + foundResults)
+		marketStat, err = storage.UpdateMarketPlaceHash(marketStat.LastHash)
 		if err != nil {
 			lerr.Println(err.Error())
 			lerr.Println("error update marketplace index nfts ")
 			continue
 		}
-		if newStat.LastIndex <= marketStat.LastIndex {
-			lerr.Println("error something went wrong updating last index of marketplace  ")
-			continue
+		if !lastHashMet {
+			lastIndex += 100
 		}
 	}
 }

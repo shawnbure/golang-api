@@ -226,7 +226,11 @@ func ListTokenFromClient(request *ListTokenRequest, blockchainApi string) (*enti
 			log.Error("could not add token to cache")
 		}
 	} else {
-		innerErr = storage.UpdateTokenWhere(token, "token_id=? AND nonce_str=?", token.TokenID, token.NonceStr)
+		innerErr = storage.UpdateTokenWhere(token, map[string]interface{}{
+			"OnSale": token.OnSale,
+			"Status": token.Status,
+		}, "token_id=? AND nonce_str=?", token.TokenID, token.NonceStr)
+
 	}
 
 	if innerErr != nil {
