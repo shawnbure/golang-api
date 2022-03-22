@@ -29,11 +29,13 @@ var (
 	TokenSearchExpirePeriod   = 5 * time.Minute
 )
 
-type CreateTokenRequest struct {
+type ListTokenRequest struct {
+	TxHash        string  `json:"txHash"`
 	UserAddress   string  `json:"walletAddress"`
 	TokenID       string  `json:"tokenName"`
 	Nonce         string  `json:"tokenNonce"`
 	Status        string  `json:"saleStatus"`
+	OnSale        bool    `json:"saleOnSale"`
 	StringPrice   string  `json:"saleStringPrice"`
 	NominalPrice  float64 `json:"saleNominalPrice"`
 	SaleStartDate uint64  `json:"saleStartDate"`
@@ -147,7 +149,7 @@ var (
 	tooManyTokensError = errors.New("too many tokens")
 )
 
-func CreateOrUpdateToken(request *CreateTokenRequest, blockchainApi string) (*entities.Token, error) {
+func ListTokenFromClient(request *ListTokenRequest, blockchainApi string) (*entities.Token, error) {
 
 	//get collection_id, contract address and owner_id (account_id)
 	collection, err := storage.GetCollectionByTokenId(request.TokenID)
@@ -193,6 +195,7 @@ func CreateOrUpdateToken(request *CreateTokenRequest, blockchainApi string) (*en
 	}
 
 	token := &entities.Token{
+		MintTxHash:       request.TxHash,
 		Nonce:            tokenData.Nonce,
 		NonceStr:         fmt.Sprintf("%02d", tokenData.Nonce),
 		OwnerId:          collection.CreatorID,
@@ -205,7 +208,7 @@ func CreateOrUpdateToken(request *CreateTokenRequest, blockchainApi string) (*en
 		Attributes:       datatypes.JSON(stringMetaData),
 		TokenName:        tokenData.Name,
 		Hash:             tokenData.Hash,
-		OnSale:           true,
+		OnSale:           request.OnSale,
 		Status:           entities.TokenStatus(request.Status),
 		PriceString:      request.StringPrice,
 		PriceNominal:     request.NominalPrice,
@@ -213,22 +216,17 @@ func CreateOrUpdateToken(request *CreateTokenRequest, blockchainApi string) (*en
 		AuctionDeadline:  request.SaleEndDate,
 	}
 
-	//err = storage.AddToken(token)
-	//if err != nil {
-	//	return nil, err
-	//}
-
 	var innerErr error
 
 	innerErr = storage.AddToken(token)
+
 	if innerErr == nil {
 		_, cacheErr := AddTokenToCache(token.TokenID, token.Nonce, token.TokenName, token.ID)
 		if cacheErr != nil {
 			log.Error("could not add token to cache")
 		}
 	} else {
-		//innerErr = storage.UpdateToken(token)
-		innerErr = storage.UpdateTokenWhere(token, "token_id=? and nonce=?", token.TokenID, token.Nonce)
+		innerErr = storage.UpdateTokenWhere(token, "token_id=? AND nonce_str=?", token.TokenID, token.NonceStr)
 	}
 
 	if innerErr != nil {
@@ -240,39 +238,57 @@ func CreateOrUpdateToken(request *CreateTokenRequest, blockchainApi string) (*en
 
 }
 
-func getTokenByNonce(tokenName string, tokenNonce string, blockchainApi string) (NonFungibleToken, error) {
-	//var resp ProxyTokenResponse
-	var token NonFungibleToken
+func WithdrawToken(args WithdrawTokenArgs) {
 
-	intNonce, err := strconv.ParseUint(tokenNonce, 10, 64)
-	hexNonce := fmt.Sprintf("%X", intNonce)
-
-	//Couldn't sort out padding and this quick check will work
-	if len(hexNonce) == 1 {
-		hexNonce = "0" + hexNonce
-	}
-
-	url := fmt.Sprintf(GetNFTBaseFormat, blockchainApi, tokenName, hexNonce)
-
-	//err := HttpGet(url, &resp)
-	response, err := HttpGetRaw(url)
+	priceNominal, err := GetPriceNominal(args.Price)
 	if err != nil {
-		return token, err
+		log.Debug("could not parse price", "err", err)
+		return
 	}
 
-	err = json.Unmarshal([]byte(response), &token)
+	ownerAccount, err := storage.GetAccountByAddress(args.OwnerAddress)
 	if err != nil {
-		return token, err
+		log.Debug("could not get owner account", err)
+		return
 	}
 
-	return token, nil
+	token, err := storage.GetTokenByTokenIdAndNonce(args.TokenId, args.Nonce)
+	if err != nil {
+		log.Debug("could not get token", "err", err)
+		return
+	}
 
-	//err = cache.GetCacher().Set(url, resp, HttpResponseExpirePeriod)
-	//if err != nil {
-	//	log.Debug("could not cache response", "err", err)
-	//}
+	token.Status = entities.None
+	token.OnSale = false
 
-	//return response.Data.Token, nil
+	err = storage.UpdateToken(token)
+	if err != nil {
+		log.Debug("could not update token", "err", err)
+		return
+	}
+
+	err = storage.DeleteOffersForTokenId(token.ID)
+	if err != nil {
+		log.Debug("could not delete offers for token", "err", err)
+	}
+
+	err = storage.DeleteBidsForTokenId(token.ID)
+	if err != nil {
+		log.Debug("could not delete bids for token", "err", err)
+	}
+
+	transaction := entities.Transaction{
+		Hash:         args.TxHash,
+		Type:         entities.WithdrawToken,
+		PriceNominal: priceNominal,
+		Timestamp:    args.Timestamp,
+		SellerID:     0,
+		BuyerID:      ownerAccount.ID,
+		TokenID:      token.ID,
+		CollectionID: token.CollectionID,
+	}
+
+	AddTransaction(&transaction)
 }
 
 func ListToken(args ListTokenArgs, blockchainProxy string, marketplaceAddress string) {
@@ -358,6 +374,41 @@ func ListToken(args ListTokenArgs, blockchainProxy string, marketplaceAddress st
 	AddTransaction(&transaction)
 }
 
+func getTokenByNonce(tokenName string, tokenNonce string, blockchainApi string) (NonFungibleToken, error) {
+	//var resp ProxyTokenResponse
+	var token NonFungibleToken
+
+	intNonce, err := strconv.ParseUint(tokenNonce, 10, 64)
+	hexNonce := fmt.Sprintf("%X", intNonce)
+
+	//Couldn't sort out padding and this quick check will work
+	if len(hexNonce) == 1 {
+		hexNonce = "0" + hexNonce
+	}
+
+	url := fmt.Sprintf(GetNFTBaseFormat, blockchainApi, tokenName, hexNonce)
+
+	//err := HttpGet(url, &resp)
+	response, err := HttpGetRaw(url)
+	if err != nil {
+		return token, err
+	}
+
+	err = json.Unmarshal([]byte(response), &token)
+	if err != nil {
+		return token, err
+	}
+
+	return token, nil
+
+	//err = cache.GetCacher().Set(url, resp, HttpResponseExpirePeriod)
+	//if err != nil {
+	//	log.Debug("could not cache response", "err", err)
+	//}
+
+	//return response.Data.Token, nil
+}
+
 func BuyToken(args BuyTokenArgs) {
 	priceNominal, err := GetPriceNominal(args.Price)
 	if err != nil {
@@ -407,58 +458,6 @@ func BuyToken(args BuyTokenArgs) {
 		Timestamp:    args.Timestamp,
 		SellerID:     ownerAccount.ID,
 		BuyerID:      buyerAccount.ID,
-		TokenID:      token.ID,
-		CollectionID: token.CollectionID,
-	}
-
-	AddTransaction(&transaction)
-}
-
-func WithdrawToken(args WithdrawTokenArgs) {
-	priceNominal, err := GetPriceNominal(args.Price)
-	if err != nil {
-		log.Debug("could not parse price", "err", err)
-		return
-	}
-
-	ownerAccount, err := storage.GetAccountByAddress(args.OwnerAddress)
-	if err != nil {
-		log.Debug("could not get owner account", err)
-		return
-	}
-
-	token, err := storage.GetTokenByTokenIdAndNonce(args.TokenId, args.Nonce)
-	if err != nil {
-		log.Debug("could not get token", "err", err)
-		return
-	}
-
-	//token.OwnerId = ownerAccount.ID
-	token.Status = entities.None
-	token.OnSale = false
-	err = storage.UpdateToken(token)
-	if err != nil {
-		log.Debug("could not update token", "err", err)
-		return
-	}
-
-	err = storage.DeleteOffersForTokenId(token.ID)
-	if err != nil {
-		log.Debug("could not delete offers for token", "err", err)
-	}
-
-	err = storage.DeleteBidsForTokenId(token.ID)
-	if err != nil {
-		log.Debug("could not delete bids for token", "err", err)
-	}
-
-	transaction := entities.Transaction{
-		Hash:         args.TxHash,
-		Type:         entities.WithdrawToken,
-		PriceNominal: priceNominal,
-		Timestamp:    args.Timestamp,
-		SellerID:     0,
-		BuyerID:      ownerAccount.ID,
 		TokenID:      token.ID,
 		CollectionID: token.CollectionID,
 	}
