@@ -10,11 +10,13 @@ import (
 )
 
 const (
-	baseSearchEndpoint        = "/search"
-	generalSearchEndpoint     = "/:searchString"
-	collectionsSearchEndpoint = "/collections/:collectionName"
-	accountsSearchEndpoint    = "/accounts/:accountName"
-	tokensSearchEndpoint      = "/tokens/:tokenId"
+	baseSearchEndpoint                 = "/search"
+	generalSearchEndpoint              = "/:searchString"
+	collectionsSearchEndpoint          = "/collections/:collectionName"
+	accountsSearchEndpoint             = "/accounts/:accountName"
+	tokensSearchEndpoint               = "/tokens/:tokenId"
+	tokensListedStatusSearchEndpoint   = "/tokens/listed/status/:tokenId"
+	tokensUnlistedStatusSearchEndpoint = "/tokens/unlisted/status/:tokenId"
 
 	SearchCategoryLimit = 10 //5
 )
@@ -36,6 +38,8 @@ func NewSearchHandler(groupHandler *groupHandler) {
 		{Method: http.MethodGet, Path: collectionsSearchEndpoint, HandlerFunc: handler.collectionSearch},
 		{Method: http.MethodGet, Path: accountsSearchEndpoint, HandlerFunc: handler.accountSearch},
 		{Method: http.MethodGet, Path: tokensSearchEndpoint, HandlerFunc: handler.tokenSearch},
+		{Method: http.MethodGet, Path: tokensListedStatusSearchEndpoint, HandlerFunc: handler.tokensListedStatusSearch},
+		{Method: http.MethodGet, Path: tokensUnlistedStatusSearchEndpoint, HandlerFunc: handler.tokensUnlistedStatusSearch},
 	}
 
 	endpointGroupHandler := EndpointGroupHandler{
@@ -140,6 +144,30 @@ func (handler *searchHandler) tokenSearch(c *gin.Context) {
 	tokenId := c.Param("tokenId")
 
 	tokens, err := services.GetTokensWithTokenIdAlike(tokenId, SearchCategoryLimit)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		return
+	}
+
+	dtos.JsonResponse(c, http.StatusOK, tokens, "")
+}
+
+func (handler *searchHandler) tokensListedStatusSearch(c *gin.Context) {
+	tokenId := c.Param("tokenId")
+
+	tokens, err := services.GetTokensListedWithTokenIdAlikeWithStatus(tokenId, SearchCategoryLimit)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		return
+	}
+
+	dtos.JsonResponse(c, http.StatusOK, tokens, "")
+}
+
+func (handler *searchHandler) tokensUnlistedStatusSearch(c *gin.Context) {
+	tokenId := c.Param("tokenId")
+
+	tokens, err := services.GetTokensUnlistedWithTokenIdAlikeWithStatus(tokenId, SearchCategoryLimit)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
