@@ -99,9 +99,9 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				lastIndex = 0
 				break
 			} else {
-				lastHash = orgTx.TxHash
+				lastHash = txResult[0].OriginalTxHash
 			}
-			if orgTx.Status == "fail" {
+			if orgTx.Status == "fail" || orgTx.Status == "invalid" {
 				continue
 			}
 			if orgTx.Status == "pending" {
@@ -124,18 +124,8 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			if !isOnSale && !isOnAuction && !isBuyNft && !isWithdrawn {
 				continue
 			}
-			body, err := services.GetResponse(fmt.Sprintf("%s/transactions?hashes=%s&order=asc", mpi.ElrondAPI, tx.OriginalTxHash))
-			if err != nil {
-				lerr.Println(err.Error())
-				continue
-			}
-			var txBody []entities.TransactionBC
-			err = json.Unmarshal(body, &txBody)
-			if err != nil {
-				lerr.Println(err.Error())
-				continue
-			}
-			mainTxDataStr := txBody[0].Data
+
+			mainTxDataStr := orgTx.Data
 			mainTxData, err := base64.StdEncoding.DecodeString(mainTxDataStr)
 			if err != nil {
 				lerr.Println(err.Error())
@@ -277,6 +267,8 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				token.OnSale = true
 				token.Status = "List"
 				token.LastBuyPriceNominal, _ = fprice.Float64()
+				token.PriceNominal, _ = fprice.Float64()
+				token.PriceString = price.String()
 				err = storage.AddTransaction(&entities.Transaction{
 					PriceNominal: token.PriceNominal,
 					Type:         entities.ListToken,
