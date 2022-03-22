@@ -65,6 +65,7 @@ func NewWebServer(cfg *config.GeneralConfig) (*webServer, error) {
 	}
 	go collectionIndexer.StartWorker()
 	go marketPlaceIndexer.StartWorker()
+
 	observerMonitor := process.NewObserverMonitor(
 		bot,
 		ctx,
