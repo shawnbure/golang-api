@@ -1,6 +1,7 @@
 package services
 
 import (
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -9,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/btcsuite/btcutil/bech32"
 	"github.com/rs/xid"
 )
 
@@ -120,4 +122,19 @@ func TurnIntoBigIntNDec(num int64, decimal int64) *big.Int {
 func RandomName() string {
 	guid := xid.New()
 	return guid.String()
+}
+func ConvertHexToBehc32(addrHex string) (string, error) {
+	hexByte, err := hex.DecodeString(addrHex)
+	if err != nil {
+		return "", err
+	}
+	byte32, err := bech32.ConvertBits(hexByte, 8, 5, true)
+	if err != nil {
+		return "", err
+	}
+	bech32Addr, err := bech32.Encode("erd", byte32)
+	if err != nil {
+		return "", err
+	}
+	return bech32Addr, nil
 }

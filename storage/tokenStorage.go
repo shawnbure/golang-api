@@ -366,3 +366,20 @@ func GetTokensUnlistedWithTokenIdAlikeWithLimit(tokenId string, limit int) ([]en
 
 	return tokens, nil
 }
+
+func GetEndAuctionTokens() ([]entities.Token, error) {
+	var tokens []entities.Token
+
+	database, err := GetDBOrError()
+	if err != nil {
+		return nil, err
+	}
+
+	txRead := database.Where("auction_deadline <= extract(epoch from now()) ").Where("Status = ?", "Auction").Find(&tokens)
+	if txRead.Error != nil {
+		return nil, txRead.Error
+	}
+
+	return tokens, nil
+
+}

@@ -81,7 +81,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			}
 			continue
 		}
-		if txResult[0].OriginalTxHash == marketStat.LastHash {
+		if txResult[0].Hash == marketStat.LastHash {
 			lastHashMet = true
 			lastIndex = 0
 			time.Sleep(time.Second * mpi.Delay)
@@ -102,14 +102,14 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				lerr.Println(err.Error())
 				continue
 			}
-			if orgTx.TxHash == marketStat.LastHash {
+			if tx.Hash == marketStat.LastHash {
 				lastHashMet = true
 				lastIndex = 0
 				break
 			} else {
-				if lastHashTimestamp < orgTx.Timestamp {
-					lastHashTimestamp = orgTx.Timestamp
-					lastHash = orgTx.TxHash
+				if lastHashTimestamp < tx.Timestamp {
+					lastHashTimestamp = tx.Timestamp
+					lastHash = tx.Hash
 				}
 			}
 			if orgTx.Status == "fail" || orgTx.Status == "invalid" {
@@ -139,7 +139,21 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			isOnSale := strings.Contains(string(data), "putNftForSale")
 			isOnAuction := strings.Contains(string(data), "startAuction")
 			isBuyNft := strings.Contains(string(orgData), "buyNft")
-			if !isOnSale && !isOnAuction && !isBuyNft && !isWithdrawn {
+			isOffer := strings.Contains(string(orgData), "makeOffer")
+			isCancelOffer := strings.Contains(string(orgData), "cancelOffer")
+			isAcceptOffer := strings.Contains(string(orgData), "acceptOffer")
+			isBid := strings.Contains(string(orgData), "placeBid")
+			isEndAuction := strings.Contains(string(orgData), "endAuction") && strings.Contains(string(data), "ESDTNFTTransfer")
+
+			if !isOnSale &&
+				!isOnAuction &&
+				!isBuyNft &&
+				!isWithdrawn &&
+				!isOffer &&
+				!isCancelOffer &&
+				!isAcceptOffer &&
+				!isBid &&
+				!isEndAuction {
 				continue
 			}
 
@@ -269,7 +283,6 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					}
 				}
 			}
-			token.OwnerId = sender.ID
 			if isOnSale {
 				price, ok := big.NewInt(0).SetString(dataParts[1], 16)
 				if !ok {
@@ -299,7 +312,88 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				if err != nil {
 					lerr.Println(err.Error())
 				}
+			} else if isOffer {
 
+				offerStr := mainDataParts[3]
+				offer, _ := big.NewInt(0).SetString(offerStr, 16)
+				offerFloat, err := ethconv.FromWei(offer, ethconv.Ether)
+				offerNominal, _ := offerFloat.Float64()
+				if err == nil {
+					fmt.Printf("%f of type %T", offerNominal, offerNominal)
+				}
+
+				offerDeadline, err := strconv.ParseUint(mainDataParts[4], 16, 64)
+				if err == nil {
+					fmt.Printf("%d of type %T", offerDeadline, offerDeadline)
+				}
+				err = storage.DeleteOfferByOfferorForTokenId(senderAdress, token.ID)
+				if err != nil {
+					if err != gorm.ErrRecordNotFound {
+						lerr.Println(err.Error())
+						continue
+					}
+				}
+				err = storage.AddOffer(&entities.Offer{
+					AmountNominal:  offerNominal,
+					AmountString:   offer.String(),
+					Expire:         offerDeadline,
+					OfferorAddress: senderAdress,
+					Timestamp:      tx.Timestamp,
+					TxHash:         orgTx.TxHash,
+					TokenID:        token.ID,
+				})
+				if err != nil {
+					lerr.Println(err.Error())
+					continue
+				}
+			} else if isAcceptOffer {
+				offerorAddrHex := mainDataParts[3]
+				token.OnSale = false
+				token.Status = "Bought"
+				offerorAddrStr, err := services.ConvertHexToBehc32(offerorAddrHex)
+				if err != nil {
+					lerr.Println(err.Error())
+					goto mainLoop
+				}
+				user, err := storage.GetAccountByAddress(offerorAddrStr)
+				if err != nil {
+					lerr.Println(err.Error())
+					goto mainLoop
+				}
+				token.OwnerId = user.ID
+
+				offerStr := mainDataParts[4]
+				offer, _ := big.NewInt(0).SetString(offerStr, 16)
+				offerFloat, err := ethconv.FromWei(offer, ethconv.Ether)
+				if err != nil {
+					lerr.Println(err.Error())
+					goto mainLoop
+				}
+				offerNominal, _ := offerFloat.Float64()
+				lastBuyPriceNominal := offerNominal
+				token.LastBuyPriceNominal = lastBuyPriceNominal
+				token.PriceString = offer.String()
+				token.PriceNominal = lastBuyPriceNominal
+				err = storage.AddTransaction(&entities.Transaction{
+					PriceNominal: token.PriceNominal,
+					Type:         entities.BuyToken,
+					Timestamp:    orgTx.Timestamp,
+					SellerID:     sender.ID,
+					TokenID:      token.ID,
+					CollectionID: token.CollectionID,
+					Hash:         orgTx.TxHash,
+				})
+				if err != nil {
+					lerr.Println(err.Error())
+				}
+
+			} else if isCancelOffer {
+
+				err := storage.DeleteOfferByOfferorForTokenId(senderAdress, token.ID)
+				if err != nil {
+					lerr.Println(err.Error())
+					continue
+				}
 			} else if isOnAuction {
 				hexMinBid := dataParts[1]
 				minBid, _ := big.NewInt(0).SetString(hexMinBid, 16)
@@ -335,8 +429,8 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				})
 				if err != nil {
 					lerr.Println(err.Error())
+					continue
 				}
-
 			} else if isWithdrawn {
 				token.OnSale = false
 				token.Status = "Withdrawn"
@@ -363,6 +457,54 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				token.LastBuyPriceNominal, _ = fprice.Float64()
 				token.PriceString = price
 				token.PriceNominal, _ = fprice.Float64()
+				err = storage.AddTransaction(&entities.Transaction{
+					PriceNominal: token.PriceNominal,
+					Type:         entities.BuyToken,
+					Timestamp:    orgTx.Timestamp,
+					SellerID:     sender.ID,
+					TokenID:      token.ID,
+					CollectionID: token.CollectionID,
+					Hash:         orgTx.TxHash,
+				})
+				if err != nil {
+					lerr.Println(err.Error())
+				}
+			} else if isBid {
+				bidStr := mainDataParts[3]
+				bid, _ := big.NewInt(0).SetString(bidStr, 16)
+				bidFloat, err := ethconv.FromWei(bid, ethconv.Ether)
+				bidNominal, _ := bidFloat.Float64()
+				if err == nil {
+					fmt.Printf("%f of type %T", bidNominal, bidNominal)
+				}
+				err = storage.AddBid(&entities.Bid{
+					BidAmountNominal: bidNominal,
+					BidAmountString:  bid.String(),
+					BidderAddress:    senderAdress,
+					Timestamp:        tx.Timestamp,
+					TxHash:           orgTx.TxHash,
+					TokenID:          token.ID,
+				})
+				if err != nil {
+					lerr.Println(err.Error())
+					continue
+				}
+			} else if isEndAuction {
+				token.OnSale = false
+				token.Status = "Bought"
+				// ownerHex := dataParts[4]
+
+				// ownerAddrStr, err := services.ConvertHexToBehc32(ownerHex)
+				// if err != nil {
+				// 	lerr.Println("CRITICAL", err.Error())
+				// 	goto mainLoop
+				// }
+				user, err := storage.GetAccountByAddress(string(tx.Receiver))
+				if err != nil {
+					lerr.Println("CRITICAL", err.Error())
+					goto mainLoop
+				}
+				token.OwnerId = user.ID
 				err = storage.AddTransaction(&entities.Transaction{
 					PriceNominal: token.PriceNominal,
 					Type:         entities.BuyToken,

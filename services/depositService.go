@@ -56,10 +56,10 @@ func GetDeposit(marketplaceAddress string, address string) (float64, error) {
 	localCacher := cache.GetLocalCacher()
 	key := fmt.Sprintf(DepositLocalCacheKeyFormat, address)
 
-	priceVal, errRead := localCacher.Get(key)
-	if errRead == nil {
-		return priceVal.(float64), nil
-	}
+	// priceVal, errRead := localCacher.Get(key) TODO
+	// if errRead == nil {
+	// 	return priceVal.(float64), nil
+	// }
 
 	depositMaybeEmpty, err := DoGetDepositVmQuery(marketplaceAddress, address)
 	if err != nil {
