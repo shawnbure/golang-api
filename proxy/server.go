@@ -63,13 +63,8 @@ func NewWebServer(cfg *config.GeneralConfig) (*webServer, error) {
 	if err != nil {
 		return nil, err
 	}
-	// endAuctionProcess, err := process.NewEndAuctionChecker(cfg.Blockchain.MarketplaceAddress, cfg.Blockchain.ApiUrl, cfg.Blockchain.CollectionAPIDelay)
-	// if err != nil {
-	// 	return nil, err
-	// }
 	go collectionIndexer.StartWorker()
 	go marketPlaceIndexer.StartWorker()
-	// go endAuctionProcess.StartWorker()
 	observerMonitor := process.NewObserverMonitor(
 		bot,
 		ctx,
