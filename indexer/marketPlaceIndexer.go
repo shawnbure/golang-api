@@ -344,7 +344,6 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				})
 				if err != nil {
 					lerr.Println(err.Error())
-					continue
 				}
 			} else if isAcceptOffer {
 				offerorAddrHex := mainDataParts[3]
@@ -395,6 +394,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					continue
 				}
 			} else if isOnAuction {
+				fmt.Println("is_on_auction", dataParts)
 				hexMinBid := dataParts[1]
 				minBid, _ := big.NewInt(0).SetString(hexMinBid, 16)
 				minBidfloat, err := ethconv.FromWei(minBid, ethconv.Ether)
@@ -429,7 +429,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				})
 				if err != nil {
 					lerr.Println(err.Error())
-					continue
+
 				}
 			} else if isWithdrawn {
 				token.OnSale = false
