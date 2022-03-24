@@ -56,6 +56,7 @@ type PlaceBidArgs struct {
 }
 
 type EndAuctionArgs struct {
+	Caller    string
 	TokenId   string
 	Nonce     uint64
 	Winner    string

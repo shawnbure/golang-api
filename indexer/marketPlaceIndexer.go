@@ -305,7 +305,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				}
 
 				token.OnSale = true
-				token.Status = "List"
+				token.Status = entities.List
 				token.LastBuyPriceNominal, _ = fprice.Float64()
 				token.PriceNominal, _ = fprice.Float64()
 				token.PriceString = price.String()
@@ -357,7 +357,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			} else if isAcceptOffer {
 				offerorAddrHex := mainDataParts[3]
 				token.OnSale = false
-				token.Status = "Bought"
+				token.Status = entities.BuyToken
 				offerorAddrStr, err := services.ConvertHexToBehc32(offerorAddrHex)
 				if err != nil {
 					lerr.Println(err.Error())
@@ -423,8 +423,10 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				}
 
 				token.OnSale = true
-				token.Status = "Auction"
+				token.Status = entities.AuctionToken
 				token.LastBuyPriceNominal = lastBuyPriceNominal
+				token.PriceString = minBid.String()
+				token.PriceNominal, _ = minBidfloat.Float64()
 				token.AuctionDeadline = auctionDeadline
 				token.AuctionStartTime = auctionStartTime
 				err = storage.AddTransaction(&entities.Transaction{
@@ -442,7 +444,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				}
 			} else if isWithdrawn {
 				token.OnSale = false
-				token.Status = "Withdrawn"
+				token.Status = entities.WithdrawToken
 				err = storage.AddTransaction(&entities.Transaction{
 					PriceNominal: token.PriceNominal,
 					Type:         entities.WithdrawToken,
@@ -457,7 +459,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				}
 			} else if isBuyNft {
 				token.OnSale = false
-				token.Status = "Bought"
+				token.Status = entities.BuyToken
 				token.OwnerId = sender.ID
 				lastBuyPriceNominal, err := strconv.ParseFloat(dataParts[1], 64)
 				if err == nil {
@@ -500,23 +502,23 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				}
 			} else if isEndAuction {
 				token.OnSale = false
-				token.Status = "Bought"
-				// ownerHex := dataParts[4]
+				token.Status = entities.BuyToken
 
-				// ownerAddrStr, err := services.ConvertHexToBehc32(ownerHex)
-				// if err != nil {
-				// 	lerr.Println("CRITICAL", err.Error())
-				// 	goto mainLoop
-				// }
 				user, err := storage.GetAccountByAddress(string(tx.Receiver))
 				if err != nil {
 					lerr.Println("CRITICAL", err.Error())
 					goto mainLoop
 				}
+				var typeOfTx entities.TxType = entities.BuyToken
+				if token.OwnerId == sender.ID {
+					// auction had no winner
+					typeOfTx = entities.WithdrawToken
+					token.Status = entities.WithdrawToken
+				}
 				token.OwnerId = user.ID
 				err = storage.AddTransaction(&entities.Transaction{
 					PriceNominal: token.PriceNominal,
-					Type:         entities.BuyToken,
+					Type:         typeOfTx,
 					Timestamp:    orgTx.Timestamp,
 					SellerID:     sender.ID,
 					TokenID:      token.ID,

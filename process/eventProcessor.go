@@ -377,6 +377,7 @@ func (e *EventProcessor) onEventEndAuction(event entities.Event) {
 	}
 
 	args := services.EndAuctionArgs{
+		Caller:    decodeStringFromTopic(event.Topics[1]),
 		TokenId:   decodeStringFromTopic(event.Topics[2]),
 		Nonce:     decodeU64FromTopic(event.Topics[3]),
 		Winner:    decodeAddressFromTopic(event.Topics[4]),

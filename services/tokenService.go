@@ -262,7 +262,7 @@ func WithdrawToken(args WithdrawTokenArgs) {
 		return
 	}
 
-	token.Status = entities.None
+	token.Status = entities.WithdrawToken
 	token.OnSale = false
 
 	err = storage.UpdateToken(token)
@@ -271,15 +271,15 @@ func WithdrawToken(args WithdrawTokenArgs) {
 		return
 	}
 
-	err = storage.DeleteOffersForTokenId(token.ID)
-	if err != nil {
-		log.Debug("could not delete offers for token", "err", err)
-	}
+	// err = storage.DeleteOffersForTokenId(token.ID)
+	// if err != nil {
+	// 	log.Debug("could not delete offers for token", "err", err)
+	// }
 
-	err = storage.DeleteBidsForTokenId(token.ID)
-	if err != nil {
-		log.Debug("could not delete bids for token", "err", err)
-	}
+	// err = storage.DeleteBidsForTokenId(token.ID)
+	// if err != nil {
+	// 	log.Debug("could not delete bids for token", "err", err)
+	// }
 
 	transaction := entities.Transaction{
 		Hash:         args.TxHash,
@@ -441,18 +441,15 @@ func BuyToken(args BuyTokenArgs) {
 	// Owner ID was to be reset since the token will no longer be on the marketplace.
 	// Could have been kept like this, but bugs may appear when querying.
 	token.OwnerId = ownerAccount.ID
-	token.Status = entities.None
+	token.Status = entities.BuyToken
 	token.OnSale = false
 	token.LastBuyPriceNominal = priceNominal
+	dec18Float := TurnIntoBigFloat18Dec((priceNominal))
+	token.PriceString = dec18Float.String()
 	err = storage.UpdateToken(token)
 	if err != nil {
 		log.Debug("could not update token", "err", err)
 		return
-	}
-
-	err = storage.DeleteOffersForTokenId(token.ID)
-	if err != nil {
-		log.Debug("could not delete proffers for token", "err", err)
 	}
 
 	transaction := entities.Transaction{
@@ -581,27 +578,38 @@ func EndAuction(args EndAuctionArgs) {
 		log.Debug("could not get token", "err", err)
 		return
 	}
-
+	var txType entities.TokenStatus = entities.BuyToken
+	var winner bool = true
+	if token.Owner.Address == args.Caller {
+		//had no winner
+		txType = entities.WithdrawToken
+		winner = false
+	}
 	sellerId := token.OwnerId
-	token.OwnerId = 0
-	token.Status = entities.None
+	token.OwnerId = buyer.AccountId
+	token.Status = txType
 	token.OnSale = false
-	token.LastBuyPriceNominal = amountNominal
+	if winner {
+		token.LastBuyPriceNominal = amountNominal
+	} else {
+		token.LastBuyPriceNominal = token.PriceNominal
+
+	}
 	err = storage.UpdateToken(token)
 	if err != nil {
 		log.Debug("could not update token", "err", err)
 		return
 	}
 
-	err = storage.DeleteOffersForTokenId(token.ID)
-	if err != nil {
-		log.Debug("could not delete offers for token", "err", err)
-	}
+	// err = storage.DeleteOffersForTokenId(token.ID)
+	// if err != nil {
+	// 	log.Debug("could not delete offers for token", "err", err)
+	// }
 
-	err = storage.DeleteBidsForTokenId(token.ID)
-	if err != nil {
-		log.Debug("could not delete bids for token", "err", err)
-	}
+	// err = storage.DeleteBidsForTokenId(token.ID)
+	// if err != nil {
+	// 	log.Debug("could not delete bids for token", "err", err)
+	// }
 
 	transaction := entities.Transaction{
 		Hash:         args.TxHash,

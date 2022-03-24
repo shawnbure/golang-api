@@ -128,7 +128,7 @@ func GetTokenByTokenIdAndNonce(tokenId string, nonce uint64) (*entities.Token, e
 		return nil, err
 	}
 
-	txRead := database.Find(&token, "token_id = ? AND nonce = ?", tokenId, nonce)
+	txRead := database.Preload("Owner").Find(&token, "token_id = ? AND nonce = ?", tokenId, nonce)
 	if txRead.Error != nil {
 		return nil, txRead.Error
 	}

@@ -55,7 +55,7 @@ func AcceptOffer(args AcceptOfferArgs) {
 
 	sellerId := token.OwnerId
 	token.OwnerId = 0
-	token.Status = entities.None
+	token.Status = entities.BuyToken
 	token.LastBuyPriceNominal = amountNominal
 	err = storage.UpdateToken(token)
 	if err != nil {
@@ -63,15 +63,15 @@ func AcceptOffer(args AcceptOfferArgs) {
 		return
 	}
 
-	err = storage.DeleteOffersForTokenId(token.ID)
-	if err != nil {
-		log.Debug("could not delete proffers for token", "err", err)
-	}
+	// err = storage.DeleteOffersForTokenId(token.ID)
+	// if err != nil {
+	// 	log.Debug("could not delete proffers for token", "err", err)
+	// }
 
-	err = storage.DeleteBidsForTokenId(token.ID)
-	if err != nil {
-		log.Debug("could not delete proffers for token", "err", err)
-	}
+	// err = storage.DeleteBidsForTokenId(token.ID)
+	// if err != nil {
+	// 	log.Debug("could not delete proffers for token", "err", err)
+	// }
 
 	transaction := entities.Transaction{
 		Hash:         args.TxHash,
