@@ -63,15 +63,15 @@ func AcceptOffer(args AcceptOfferArgs) {
 		return
 	}
 
-	// err = storage.DeleteOffersForTokenId(token.ID)
-	// if err != nil {
-	// 	log.Debug("could not delete proffers for token", "err", err)
-	// }
+	err = storage.DeleteOffersForTokenId(token.ID)
+	if err != nil {
+		log.Debug("could not delete proffers for token", "err", err)
+	}
 
-	// err = storage.DeleteBidsForTokenId(token.ID)
-	// if err != nil {
-	// 	log.Debug("could not delete proffers for token", "err", err)
-	// }
+	err = storage.DeleteBidsForTokenId(token.ID)
+	if err != nil {
+		log.Debug("could not delete proffers for token", "err", err)
+	}
 
 	transaction := entities.Transaction{
 		Hash:         args.TxHash,

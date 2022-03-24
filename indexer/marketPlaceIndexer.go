@@ -377,6 +377,18 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					lerr.Println(err.Error())
 					goto mainLoop
 				}
+
+				err = storage.DeleteOffersForTokenId(token.ID)
+				if err != nil {
+					lerr.Println(err.Error())
+					continue
+				}
+				err = storage.DeleteBidsForTokenId(token.ID)
+				if err != nil {
+					lerr.Println(err.Error())
+					continue
+				}
+
 				offerNominal, _ := offerFloat.Float64()
 				lastBuyPriceNominal := offerNominal
 				token.LastBuyPriceNominal = lastBuyPriceNominal
@@ -465,6 +477,18 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				if err == nil {
 					fmt.Printf("%f of type %T", lastBuyPriceNominal, lastBuyPriceNominal)
 				}
+
+				err = storage.DeleteOffersForTokenId(token.ID)
+				if err != nil {
+					lerr.Println(err.Error())
+					continue
+				}
+				err = storage.DeleteBidsForTokenId(token.ID)
+				if err != nil {
+					lerr.Println(err.Error())
+					continue
+				}
+
 				token.LastBuyPriceNominal, _ = fprice.Float64()
 				token.PriceString = price
 				token.PriceNominal, _ = fprice.Float64()
@@ -480,6 +504,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				if err != nil {
 					lerr.Println(err.Error())
 				}
+
 			} else if isBid {
 				bidStr := mainDataParts[3]
 				bid, _ := big.NewInt(0).SetString(bidStr, 16)
@@ -515,6 +540,13 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					typeOfTx = entities.WithdrawToken
 					token.Status = entities.WithdrawToken
 				}
+
+				err = storage.DeleteBidsForTokenId(token.ID)
+				if err != nil {
+					lerr.Println(err.Error())
+					continue
+				}
+
 				token.OwnerId = user.ID
 				err = storage.AddTransaction(&entities.Transaction{
 					PriceNominal: token.PriceNominal,

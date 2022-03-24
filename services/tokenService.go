@@ -271,15 +271,15 @@ func WithdrawToken(args WithdrawTokenArgs) {
 		return
 	}
 
-	// err = storage.DeleteOffersForTokenId(token.ID)
-	// if err != nil {
-	// 	log.Debug("could not delete offers for token", "err", err)
-	// }
+	err = storage.DeleteOffersForTokenId(token.ID)
+	if err != nil {
+		log.Debug("could not delete offers for token", "err", err)
+	}
 
-	// err = storage.DeleteBidsForTokenId(token.ID)
-	// if err != nil {
-	// 	log.Debug("could not delete bids for token", "err", err)
-	// }
+	err = storage.DeleteBidsForTokenId(token.ID)
+	if err != nil {
+		log.Debug("could not delete bids for token", "err", err)
+	}
 
 	transaction := entities.Transaction{
 		Hash:         args.TxHash,
@@ -601,15 +601,15 @@ func EndAuction(args EndAuctionArgs) {
 		return
 	}
 
-	// err = storage.DeleteOffersForTokenId(token.ID)
-	// if err != nil {
-	// 	log.Debug("could not delete offers for token", "err", err)
-	// }
+	err = storage.DeleteOffersForTokenId(token.ID)
+	if err != nil {
+		log.Debug("could not delete offers for token", "err", err)
+	}
 
-	// err = storage.DeleteBidsForTokenId(token.ID)
-	// if err != nil {
-	// 	log.Debug("could not delete bids for token", "err", err)
-	// }
+	err = storage.DeleteBidsForTokenId(token.ID)
+	if err != nil {
+		log.Debug("could not delete bids for token", "err", err)
+	}
 
 	transaction := entities.Transaction{
 		Hash:         args.TxHash,
