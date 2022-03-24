@@ -151,17 +151,34 @@ var (
 
 func ListTokenFromClient(request *ListTokenRequest, blockchainApi string) error {
 
-	//get collection_id, contract address and owner_id (account_id)
-
-	//TODO SEE IF ALL THE DRAMA BELOW CAN BE IMPROVED WITH COLLECTION DATA
-
-	collection, err := storage.GetCollectionByTokenId(request.TokenID)
+	//get token data from blockchain
+	tokenData, err := getTokenByNonce(request.TokenID, request.Nonce, blockchainApi)
 	if err != nil {
-		return errors.New("no collection found")
+		fmt.Printf("%v\n", err)
+		return err
 	}
 
-	//get token data
-	tokenData, err := getTokenByNonce(request.TokenID, request.Nonce, blockchainApi)
+	//auto create collection
+	collection, err := storage.GetCollectionByTokenId(request.TokenID)
+	if err != nil {
+
+		//if no collection auto create it
+		var autoCreateCollectionRequest AutoCreateCollectionRequest
+		autoCreateCollectionRequest.Name = request.TokenID
+		autoCreateCollectionRequest.TokenId = request.TokenID
+		autoCreateCollectionRequest.Nonce = request.Nonce
+		autoCreateCollectionRequest.UserAddress = request.UserAddress
+		autoCreateCollectionRequest.CreatorAddress = tokenData.Creator
+
+		collection, err = AutoCreateCollection(&autoCreateCollectionRequest)
+
+		if err != nil {
+			return errors.New("no collection found after autocreation")
+		}
+	}
+
+	//the account was created if it did not exists in the previous step, otherwise get it
+	account, err := storage.GetAccountByAddress(request.UserAddress)
 	if err != nil {
 		fmt.Printf("%v\n", err)
 		return err
@@ -206,7 +223,7 @@ func ListTokenFromClient(request *ListTokenRequest, blockchainApi string) error 
 		MintTxHash:       request.TxHash,
 		Nonce:            tokenData.Nonce,
 		NonceStr:         stringNonce,
-		OwnerId:          collection.CreatorID,
+		OwnerId:          account.ID,
 		CollectionID:     collection.ID,
 		TokenID:          tokenData.Collection,
 		RoyaltiesPercent: tokenData.Royalties,

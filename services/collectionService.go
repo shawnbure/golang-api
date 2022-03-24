@@ -72,10 +72,11 @@ type CreateCollectionRequest struct {
 }
 
 type AutoCreateCollectionRequest struct {
-	UserAddress string `json:"userAddress"`
-	TokenId     string `json:"tokenId"`
-	Nonce       string `json:"nonce"`
-	Name        string `json:"collectionName"`
+	UserAddress    string `json:"userAddress"`
+	TokenId        string `json:"tokenId"`
+	Nonce          string `json:"nonce"`
+	Name           string `json:"collectionName"`
+	CreatorAddress string `json:"creatorAddress"`
 }
 
 type UpdateCollectionRequest struct {
@@ -198,7 +199,7 @@ func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) 
 	return collection, nil
 }
 
-func AutoCreateCollection(request *AutoCreateCollectionRequest, blockchainApi string) (*entities.Collection, error) {
+func AutoCreateCollection(request *AutoCreateCollectionRequest) (*entities.Collection, error) {
 
 	// ========== STEP: CHECK TO SEE IF COLLECTION EXIST ==========
 	collection, errGetCollection := storage.GetCollectionByTokenId(request.TokenId)
@@ -216,18 +217,9 @@ func AutoCreateCollection(request *AutoCreateCollectionRequest, blockchainApi st
 		return collection, nil
 	}
 
-	// ========== STEP: GET BLOCKCHAIN CREATOR ADDRESS ==========
-	//Go get the "CREATOR" Address from Blockchain - Check the wallet address to see if the user is the owner token
-	tokenData, err := getTokenByNonce(request.TokenId, request.Nonce, blockchainApi)
-	if err != nil {
-		fmt.Printf("%v\n", err)
-		return nil, err
-	}
-
 	//set the token creator adress
-	tokenCreatorAddress := tokenData.Creator
+	tokenCreatorAddress := request.CreatorAddress
 
-	//
 	// ========== STEP: CHECK IF USER IS THE CREATOR OF TOKEN  ==========
 	// if user wallet not the creator of token, then check if the original
 	// creator is register - if not register, then auto register
@@ -240,6 +232,7 @@ func AutoCreateCollection(request *AutoCreateCollectionRequest, blockchainApi st
 		if err != nil && err == gorm.ErrRecordNotFound {
 			//account doesn't exist, so auto register
 			accountTokenCreator := &entities.Account{
+				Name:      request.TokenId + " Creator",
 				Address:   tokenCreatorAddress,
 				CreatedAt: uint64(time.Now().Unix()),
 			}
@@ -275,7 +268,13 @@ func AutoCreateCollection(request *AutoCreateCollectionRequest, blockchainApi st
 
 	errCollection := storage.AddCollection(collection)
 	if errCollection != nil {
+		fmt.Printf("%n", errCollection)
 		return nil, errCollection
+	}
+
+	_, err = collstats.AddCollectionToCache(collection.ID, collection.Name, nil, collection.TokenID)
+	if err != nil {
+		log.Debug("could not add to coll stats")
 	}
 
 	return collection, nil
