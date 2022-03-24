@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"gorm.io/datatypes"
+	"gorm.io/gorm"
 
 	"github.com/ENFT-DAO/youbei-api/cache"
 	"github.com/ENFT-DAO/youbei-api/data/entities"
@@ -199,6 +200,22 @@ func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) 
 
 func AutoCreateCollection(request *AutoCreateCollectionRequest, blockchainApi string) (*entities.Collection, error) {
 
+	// ========== STEP: CHECK TO SEE IF COLLECTION EXIST ==========
+	collection, errGetCollection := storage.GetCollectionByTokenId(request.TokenId)
+
+	if errGetCollection != nil {
+
+		if errGetCollection == gorm.ErrRecordNotFound {
+			//no collection found so don't exit out of the process and
+			//auto create collection
+		} else {
+			return nil, errGetCollection
+		}
+	} else {
+		//collection Found - so no need to auto create
+		return collection, nil
+	}
+
 	// ========== STEP: GET BLOCKCHAIN CREATOR ADDRESS ==========
 	//Go get the "CREATOR" Address from Blockchain - Check the wallet address to see if the user is the owner token
 	tokenData, err := getTokenByNonce(request.TokenId, request.Nonce, blockchainApi)
@@ -220,7 +237,7 @@ func AutoCreateCollection(request *AutoCreateCollectionRequest, blockchainApi st
 		//Check if address is not already in account
 		//(for cases userWallet in account but haven't register account)
 		_, err := storage.GetAccountByAddress(tokenCreatorAddress)
-		if err != nil {
+		if err != nil && err == gorm.ErrRecordNotFound {
 			//account doesn't exist, so auto register
 			accountTokenCreator := &entities.Account{
 				Address:   tokenCreatorAddress,
@@ -231,6 +248,8 @@ func AutoCreateCollection(request *AutoCreateCollectionRequest, blockchainApi st
 			if errAddAccount != nil {
 				return nil, err
 			}
+		} else {
+			return nil, err
 		}
 	}
 
@@ -247,7 +266,7 @@ func AutoCreateCollection(request *AutoCreateCollectionRequest, blockchainApi st
 
 	//
 	// ========== STEP: AUTO CREATE COLLECTION ==========
-	collection := &entities.Collection{
+	collection = &entities.Collection{
 		Name:      request.Name,
 		TokenID:   request.TokenId,
 		CreatorID: uint64(creatorID), //set the creator id
