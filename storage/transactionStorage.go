@@ -175,23 +175,23 @@ func GetTransactionByHash(hash string) (*entities.Transaction, error) {
 	return &transaction, nil
 }
 
-func GetTransactionWhere(where map[string]interface{}) (*entities.Transaction, error) {
+func GetTransactionWhere(where map[string]interface{}) (entities.Transaction, error) {
 	var transaction entities.Transaction
 
 	database, err := GetDBOrError()
 	if err != nil {
-		return nil, err
+		return transaction, err
 	}
 
 	txRead := database.Where(where).Find(&transaction)
 	if txRead.Error != nil {
-		return nil, txRead.Error
+		return transaction, txRead.Error
 	}
 	if txRead.RowsAffected == 0 {
-		return nil, gorm.ErrRecordNotFound
+		return transaction, gorm.ErrRecordNotFound
 	}
 
-	return &transaction, nil
+	return transaction, nil
 }
 
 func GetTransactionsWithOffsetLimit(offset int, limit int) ([]entities.Transaction, error) {
