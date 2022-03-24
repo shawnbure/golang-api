@@ -70,6 +70,13 @@ type CreateCollectionRequest struct {
 	MetaDataBaseURI         string   `json:"metaDataBaseURI"`
 }
 
+type AutoCreateCollectionRequest struct {
+	UserAddress string `json:"userAddress"`
+	TokenId     string `json:"tokenId"`
+	Nonce       string `json:"nonce"`
+	Name        string `json:"collectionName"`
+}
+
 type UpdateCollectionRequest struct {
 	Description   string   `json:"description"`
 	Website       string   `json:"website"`
@@ -89,22 +96,16 @@ type ProxyRegisteredNFTsResponse struct {
 }
 
 func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) (*entities.Collection, error) {
-	//return nil, errors.New("before Validation")
+
 	err := checkValidInputOnCreate(request)
 	if err != nil {
 		return nil, err
 	}
 
-	//return nil, errors.New("After Validation")
-
 	bytes, err := json.Marshal(request.Flags)
 	if err != nil {
 		return nil, err
 	}
-
-	//return nil, errors.New("After jsonMarshal")
-
-	//uncommment
 
 	tokensRegisteredByUser, err := getTokensRegisteredByUser(request.UserAddress, blockchainProxy)
 	if err != nil {
@@ -164,14 +165,14 @@ func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) 
 
 	collection := &entities.Collection{
 		ID:                       0,
-		Name:                     standardizedName,
+		Name:                     request.Name,
 		TokenID:                  request.TokenId,
-		Description:              request.Description,
-		Website:                  request.Website,
-		DiscordLink:              request.DiscordLink,
-		TwitterLink:              request.TwitterLink,
-		InstagramLink:            request.InstagramLink,
-		TelegramLink:             request.TelegramLink,
+		Description:              "",
+		Website:                  "",
+		DiscordLink:              "",
+		TwitterLink:              "",
+		InstagramLink:            "",
+		TelegramLink:             "",
 		Flags:                    datatypes.JSON(bytes),
 		ContractAddress:          request.ContractAddress,
 		MintPricePerTokenString:  priceBig.String(),
@@ -191,6 +192,71 @@ func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) 
 	_, err = collstats.AddCollectionToCache(collection.ID, collection.Name, collection.Flags, collection.TokenID)
 	if err != nil {
 		log.Debug("could not add to coll stats")
+	}
+
+	return collection, nil
+}
+
+func AutoCreateCollection(request *AutoCreateCollectionRequest, blockchainApi string) (*entities.Collection, error) {
+
+	// ========== STEP: GET BLOCKCHAIN CREATOR ADDRESS ==========
+	//Go get the "CREATOR" Address from Blockchain - Check the wallet address to see if the user is the owner token
+	tokenData, err := getTokenByNonce(request.TokenId, request.Nonce, blockchainApi)
+	if err != nil {
+		fmt.Printf("%v\n", err)
+		return nil, err
+	}
+
+	//set the token creator adress
+	tokenCreatorAddress := tokenData.Creator
+
+	//
+	// ========== STEP: CHECK IF USER IS THE CREATOR OF TOKEN  ==========
+	// if user wallet not the creator of token, then check if the original
+	// creator is register - if not register, then auto register
+	if request.UserAddress != tokenCreatorAddress {
+		//user is NOT the creator of the token, so auto creator the creator account
+
+		//Check if address is not already in account
+		//(for cases userWallet in account but haven't register account)
+		_, err := storage.GetAccountByAddress(tokenCreatorAddress)
+		if err != nil {
+			//account doesn't exist, so auto register
+			accountTokenCreator := &entities.Account{
+				Address:   tokenCreatorAddress,
+				CreatedAt: uint64(time.Now().Unix()),
+			}
+
+			errAddAccount := storage.AddAccount(accountTokenCreator)
+			if errAddAccount != nil {
+				return nil, err
+			}
+		}
+	}
+
+	//
+	// ========== STEP: GET CREATOR ID FROM ACCOUNT BY ADDRESS   ==========
+	//get account to get the "creator id"
+	account, err := storage.GetAccountByAddress(tokenCreatorAddress)
+
+	if err != nil {
+		return nil, err
+	}
+
+	creatorID := account.ID
+
+	//
+	// ========== STEP: AUTO CREATE COLLECTION ==========
+	collection := &entities.Collection{
+		Name:      request.Name,
+		TokenID:   request.TokenId,
+		CreatorID: uint64(creatorID), //set the creator id
+		CreatedAt: uint64(time.Now().Unix()),
+	}
+
+	errCollection := storage.AddCollection(collection)
+	if errCollection != nil {
+		return nil, errCollection
 	}
 
 	return collection, nil
