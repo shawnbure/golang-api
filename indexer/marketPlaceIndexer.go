@@ -118,7 +118,6 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			if strings.EqualFold(orgTx.Status, "fail") || strings.EqualFold(orgTx.Status, "invalid") {
 				tx, err := storage.GetTransactionWhere(map[string]interface{}{
 					"TxHash":    orgTx.TxHash,
-					"Status":    orgTx.Status,
 					"Timestamp": orgTx.Timestamp,
 				})
 				if err != nil {
