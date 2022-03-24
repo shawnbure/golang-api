@@ -112,14 +112,21 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					lastHash = tx.Hash
 				}
 			}
-			if orgTx.Status == "fail" || orgTx.Status == "invalid" {
-				tx, err := storage.GetTransactionByHash(orgTx.TxHash)
+			if strings.EqualFold(orgTx.Status, "fail") || strings.EqualFold(orgTx.Status, "invalid") {
+				tx, err := storage.GetTransactionWhere(map[string]interface{}{
+					"TxHash":    orgTx.TxHash,
+					"Status":    orgTx.Status,
+					"Timestamp": orgTx.Timestamp,
+				})
 				if err != nil {
 					if err == gorm.ErrRecordNotFound {
 						continue
 					}
 				}
 				storage.DeleteTransaction(tx.ID)
+				continue
+			}
+			if orgTx.TxHash == "" {
 				continue
 			}
 			if orgTx.Status == "pending" {
