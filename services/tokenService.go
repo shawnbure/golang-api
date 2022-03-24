@@ -149,63 +149,71 @@ var (
 	tooManyTokensError = errors.New("too many tokens")
 )
 
-func ListTokenFromClient(request *ListTokenRequest, blockchainApi string) (*entities.Token, error) {
+func ListTokenFromClient(request *ListTokenRequest, blockchainApi string) error {
 
 	//get collection_id, contract address and owner_id (account_id)
+
+	//TODO SEE IF ALL THE DRAMA BELOW CAN BE IMPROVED WITH COLLECTION DATA
+
 	collection, err := storage.GetCollectionByTokenId(request.TokenID)
 	if err != nil {
-		return nil, errors.New("no collection found")
+		return errors.New("no collection found")
 	}
 
 	//get token data
 	tokenData, err := getTokenByNonce(request.TokenID, request.Nonce, blockchainApi)
 	if err != nil {
 		fmt.Printf("%v\n", err)
-		return nil, err
+		return err
 	}
 
-	imageURI := []byte{}
-	metaDataURI := []byte{}
-	stringMetaData := ""
+	stringNonce := fmt.Sprintf("%02d", tokenData.Nonce)
+
+	imageURI := ""
+	metaDataURI := ""
 
 	if len(tokenData.Uris) > 0 {
 
-		imageURI, err = base64.StdEncoding.DecodeString(tokenData.Uris[0])
+		byteImageURI := []byte{}
+		byteMetaDataURI := []byte{}
+
+		byteImageURI, err = base64.StdEncoding.DecodeString(tokenData.Uris[0])
 		if err != nil {
 			fmt.Printf("%v\n", err)
-			return nil, err
+			return err
 		}
 
-		metaDataURI, err = base64.StdEncoding.DecodeString(tokenData.Uris[1])
+		if strings.Contains(blockchainApi, "devnet") {
+			imageURI = strings.Replace(string(byteImageURI), "https://gateway.pinata.cloud/ipfs/", "https://devnet-media.elrond.com/nfts/asset/", 1)
+			imageURI = strings.Replace(imageURI, "https://ipfs.io/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
+		} else {
+			imageURI = strings.Replace(string(byteImageURI), "https://gateway.pinata.cloud/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
+			imageURI = strings.Replace(imageURI, "https://ipfs.io/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
+		}
+
+		byteMetaDataURI, err = base64.StdEncoding.DecodeString(tokenData.Uris[1])
 		if err != nil {
 			fmt.Printf("%v\n", err)
-			return nil, err
+			return err
 		}
 
-		stringMetaData, err = HttpGetRaw(string(metaDataURI))
-		if err != nil {
-			return nil, err
-		}
-
-		//if there is no json file set empty
-		if strings.Contains(stringMetaData, "no link named") {
-			stringMetaData = `[{}]`
-		}
+		metaDataURI = strings.Replace(string(byteMetaDataURI), "https://gateway.pinata.cloud/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
+		metaDataURI = strings.Replace(metaDataURI, "https://ipfs.io/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
 
 	}
 
 	token := &entities.Token{
 		MintTxHash:       request.TxHash,
 		Nonce:            tokenData.Nonce,
-		NonceStr:         fmt.Sprintf("%02d", tokenData.Nonce),
+		NonceStr:         stringNonce,
 		OwnerId:          collection.CreatorID,
 		CollectionID:     collection.ID,
 		TokenID:          tokenData.Collection,
 		RoyaltiesPercent: tokenData.Royalties,
-		ImageLink:        string(imageURI),
-		MetadataLink:     string(metaDataURI),
+		ImageLink:        imageURI,
+		MetadataLink:     metaDataURI,
 		CreatedAt:        uint64(time.Now().Unix()),
-		Attributes:       datatypes.JSON(stringMetaData),
+		Attributes:       GetAttributesFromMetadata(string(metaDataURI)),
 		TokenName:        tokenData.Name,
 		Hash:             tokenData.Hash,
 		OnSale:           request.OnSale,
@@ -235,10 +243,10 @@ func ListTokenFromClient(request *ListTokenRequest, blockchainApi string) (*enti
 
 	if innerErr != nil {
 		log.Debug("could not create or update token", "err", innerErr)
-		return nil, innerErr
+		return innerErr
 	}
 
-	return token, nil
+	return nil
 
 }
 

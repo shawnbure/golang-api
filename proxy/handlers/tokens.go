@@ -91,10 +91,10 @@ func (handler *tokensHandler) list(c *gin.Context) {
 
 	var request services.ListTokenRequest
 
-	err := c.BindJSON(&request)
-	if err != nil {
-		fmt.Printf("%+v\n", err)
-		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+	errBindJSON := c.BindJSON(&request)
+	if errBindJSON != nil {
+		fmt.Printf("%+v\n", errBindJSON)
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, errBindJSON.Error())
 		return
 	}
 
@@ -104,13 +104,13 @@ func (handler *tokensHandler) list(c *gin.Context) {
 		return
 	}
 
-	token, err := services.ListTokenFromClient(&request, handler.blockchainConfig.ApiUrl)
-	if err != nil {
-		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+	errListToken := services.ListTokenFromClient(&request, handler.blockchainConfig.ApiUrl)
+	if errListToken != nil {
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, errListToken.Error())
 		return
 	}
 
-	dtos.JsonResponse(c, http.StatusOK, token, "")
+	dtos.JsonResponse(c, http.StatusOK, nil, "")
 }
 
 func (handler *tokensHandler) withdraw(c *gin.Context) {
