@@ -175,7 +175,7 @@ func GetTransactionByHash(hash string) (*entities.Transaction, error) {
 	return &transaction, nil
 }
 
-func GetTransactionWhere(where map[string]interface{}) (entities.Transaction, error) {
+func GetTransactionWhere(where string, args ...interface{}) (entities.Transaction, error) {
 	var transaction entities.Transaction
 
 	database, err := GetDBOrError()
@@ -183,7 +183,7 @@ func GetTransactionWhere(where map[string]interface{}) (entities.Transaction, er
 		return transaction, err
 	}
 
-	txRead := database.Where(where).Find(&transaction)
+	txRead := database.Where(where, args...).Find(&transaction)
 	if txRead.Error != nil {
 		return transaction, txRead.Error
 	}

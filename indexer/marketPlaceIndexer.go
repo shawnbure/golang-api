@@ -116,10 +116,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				continue
 			}
 			if strings.EqualFold(orgTx.Status, "fail") || strings.EqualFold(orgTx.Status, "invalid") {
-				tx, err := storage.GetTransactionWhere(map[string]interface{}{
-					"TxHash":    orgTx.TxHash,
-					"Timestamp": orgTx.Timestamp,
-				})
+				tx, err := storage.GetTransactionWhere("tx_hash=? AND timestamp=?", orgTx.TxHash, orgTx.Timestamp)
 				if err != nil {
 					if err == gorm.ErrRecordNotFound {
 						continue
