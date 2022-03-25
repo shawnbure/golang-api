@@ -29,6 +29,7 @@ const (
 	MaxLinkLen                     = 100
 	MaxDescLen                     = 1000
 	RegisteredNFTsBaseFormat       = "%s/address/%s/registered-nfts"
+	GetCollectionBaseFormat        = "%s/collections/%s"
 	GetNFTBaseFormat               = "%s/nfts/%s-%s" //example https://devnet-api.elrond.com/nfts/AMIR-55a2ea-01
 	HttpResponseExpirePeriod       = 10 * time.Minute
 	CollectionSearchCacheKeyFormat = "CollectionSearch:%s"
@@ -72,11 +73,13 @@ type CreateCollectionRequest struct {
 }
 
 type AutoCreateCollectionRequest struct {
-	UserAddress    string `json:"userAddress"`
-	TokenId        string `json:"tokenId"`
-	Nonce          string `json:"nonce"`
-	Name           string `json:"collectionName"`
-	CreatorAddress string `json:"creatorAddress"`
+	UserAddress     string `json:"userAddress"`
+	TokenId         string `json:"tokenId"`
+	Nonce           string `json:"nonce"`
+	Name            string `json:"collectionName"`
+	CreatorAddress  string `json:"creatorAddress"`
+	TokenBaseURI    string `json:"tokenBaseURI"`
+	MetadataBaseURI string `json:"metadataBaseURI"`
 }
 
 type UpdateCollectionRequest struct {
@@ -89,12 +92,30 @@ type UpdateCollectionRequest struct {
 	Flags         []string `json:"flags"`
 }
 
+type UpdateCollectionObj struct {
+	UpdateCollectionRequest
+	Address string `json:"string"`
+}
+
 type ProxyRegisteredNFTsResponse struct {
 	Data struct {
 		Tokens []string `json:"tokens"`
 	} `json:"data"`
 	Error string `json:"error"`
 	Code  string `json:"code"`
+}
+
+type CollectionDetailBCResponse struct {
+	Collection      string                   `json:"collection"`
+	Type            string                   `json:"type"`
+	Name            string                   `json:"name"`
+	Ticker          string                   `json:"ticker"`
+	Owner           string                   `json:"owner"`
+	Timestamp       uint64                   `json:"timestamp"`
+	CanFreeze       bool                     `json:"canFreeze"`
+	CanWipe         bool                     `json:"canWipe"`
+	CanTransferRole bool                     `json:"canTransferRole"`
+	Roles           []map[string]interface{} `json:"roles"`
 }
 
 func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) (*entities.Collection, error) {
@@ -199,7 +220,7 @@ func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) 
 	return collection, nil
 }
 
-func AutoCreateCollection(request *AutoCreateCollectionRequest) (*entities.Collection, error) {
+func AutoCreateCollection(request *AutoCreateCollectionRequest, blockchainApi string) (*entities.Collection, error) {
 
 	// ========== STEP: CHECK TO SEE IF COLLECTION EXIST ==========
 	collection, errGetCollection := storage.GetCollectionByTokenId(request.TokenId)
@@ -236,13 +257,19 @@ func AutoCreateCollection(request *AutoCreateCollectionRequest) (*entities.Colle
 				Address:   tokenCreatorAddress,
 				CreatedAt: uint64(time.Now().Unix()),
 			}
-
 			errAddAccount := storage.AddAccount(accountTokenCreator)
 			if errAddAccount != nil {
-				return nil, err
+				if !strings.Contains(errAddAccount.Error(), "duplicate") {
+					return nil, err
+				} else {
+					err = storage.UpdateAccountProfileWhereName(accountTokenCreator.Name, *accountTokenCreator)
+					if err != nil {
+						if err != gorm.ErrRecordNotFound {
+							return nil, err
+						}
+					}
+				}
 			}
-		} else {
-			return nil, err
 		}
 	}
 
@@ -257,7 +284,6 @@ func AutoCreateCollection(request *AutoCreateCollectionRequest) (*entities.Colle
 
 	creatorID := account.ID
 
-	//
 	// ========== STEP: AUTO CREATE COLLECTION ==========
 	collection = &entities.Collection{
 		Name:      request.Name,
@@ -266,6 +292,27 @@ func AutoCreateCollection(request *AutoCreateCollectionRequest) (*entities.Colle
 		CreatedAt: uint64(time.Now().Unix()),
 	}
 
+	// ========== GET COLLECTION DETAIL FROM BC ========
+	colDetail, err := GetCollectionDetailBC(request.TokenId, blockchainApi)
+	if err != nil {
+		fmt.Println(err.Error())
+	} else {
+		collection.Name = colDetail.Name
+		var address string
+		for _, role := range colDetail.Roles {
+			rolesStr, ok := role["roles"].([]string)
+			if ok {
+				for _, roleStr := range rolesStr {
+					if strings.EqualFold(roleStr, "ESDTRoleNFTCreate") {
+						address = role["address"].(string)
+					}
+				}
+			}
+		}
+		collection.ContractAddress = address
+		// collection.ContractAddress = colDetail.Roles[]
+	}
+	//
 	errCollection := storage.AddCollection(collection)
 	if errCollection != nil {
 		fmt.Printf("%n", errCollection)
@@ -300,6 +347,19 @@ func UpdateCollection(collection *entities.Collection, request *UpdateCollection
 	collection.Flags = bytes
 
 	err = storage.UpdateCollection(collection)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func UpdateCollectionWithAddress(collection *entities.Collection, request map[string]interface{}) error {
+
+	collection.ContractAddress = request["ContractAddress"].(string)
+	collection.Name = request["Name"].(string)
+
+	err := storage.UpdateCollection(collection)
 	if err != nil {
 		return err
 	}
@@ -563,6 +623,28 @@ func getTokensRegisteredByUser(userAddress string, blockchainProxy string) ([]st
 	}
 
 	return resp.Data.Tokens, nil
+}
+
+func GetCollectionDetailBC(collectionName string, blockchainApi string) (CollectionDetailBCResponse, error) {
+	var resp CollectionDetailBCResponse
+
+	url := fmt.Sprintf(GetCollectionBaseFormat, blockchainApi, collectionName)
+	// err := cache.GetCacher().Get(url, &resp)
+	// if err == nil {
+	// 	return resp.Data.Tokens, nil
+	// }
+
+	err := HttpGet(url, &resp)
+	if err != nil {
+		return resp, err
+	}
+
+	err = cache.GetCacher().Set(url, resp, HttpResponseExpirePeriod)
+	if err != nil {
+		log.Debug("could not cache response", "err", err)
+	}
+
+	return resp, nil
 }
 
 func checkValidInputOnCreate(request *CreateCollectionRequest) error {

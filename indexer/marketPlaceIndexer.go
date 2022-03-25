@@ -116,7 +116,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				continue
 			}
 			if strings.EqualFold(orgTx.Status, "fail") || strings.EqualFold(orgTx.Status, "invalid") {
-				tx, err := storage.GetTransactionWhere("tx_hash=? AND timestamp=?", orgTx.TxHash, orgTx.Timestamp)
+				tx, err := storage.GetTransactionWhere("hash=? AND timestamp=?", orgTx.TxHash, orgTx.Timestamp)
 				if err != nil {
 					if err == gorm.ErrRecordNotFound {
 						continue
@@ -188,6 +188,20 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			dataParts := strings.Split(dataStr, "@")
 
 			txTimestamp := orgTx.Timestamp
+
+			senderAdress := orgTx.Sender
+			sender, err := storage.GetAccountByAddress(senderAdress)
+			if err != nil {
+				if err == gorm.ErrNotImplemented {
+					sender.Name = services.RandomName()
+					err := storage.AddAccount(sender)
+					if err != nil {
+						lerr.Println("couldn't add user", err.Error())
+						goto mainLoop
+					}
+				}
+			}
+
 			token, err := storage.GetTokenByTokenIdAndNonceStr(string(tokenId), hexNonce)
 			if err != nil {
 				if err != gorm.ErrRecordNotFound {
@@ -215,39 +229,40 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					}
 					idParts := strings.Split(tokenDetailObj.Identifier, "-")
 					nonceStr := idParts[len(idParts)-1]
-					imageURIByte, err := base64.StdEncoding.DecodeString(tokenDetailObj.URIs[0])
-					if err != nil {
-						lerr.Println("error decoding uris", err.Error())
-						continue
-					}
-					imageURI := string(imageURIByte)
-					metadataURIByte, err := base64.StdEncoding.DecodeString(tokenDetailObj.URIs[1])
-					if err != nil {
-						lerr.Println("error decoding uris", err.Error())
-						continue
-					}
-					metadataLink := string(metadataURIByte)
+					imageURI, metadataLink := services.GetTokenUris(tokenDetailObj)
 					attrbs, err := services.GetResponse(metadataLink)
 					metadataJSON := make(map[string]interface{})
 					err = json.Unmarshal(attrbs, &metadataJSON)
+					var attributes datatypes.JSON
 					if err != nil {
 						lerr.Println(err.Error(), string(metadataLink))
-						continue
+					} else {
+						attributesBytes, err := json.Marshal(metadataJSON["attributes"])
+						if err != nil {
+							lerr.Println(err.Error())
+						}
+						err = json.Unmarshal(attributesBytes, &attributes)
+						if err != nil {
+							lerr.Println(err.Error())
+							continue
+						}
 					}
-					var attributes datatypes.JSON
-					attributesBytes, err := json.Marshal(metadataJSON["attributes"])
-					if err != nil {
-						lerr.Println(err.Error())
-						continue
-					}
-					err = json.Unmarshal(attributesBytes, &attributes)
-					if err != nil {
-						lerr.Println(err.Error())
-						continue
-					}
-					err = storage.AddToken(&entities.Token{
+					// owner, err := storage.GetAccountByAddress(senderAdress)
+					// if err != nil {
+					// 	if err == gorm.ErrRecordNotFound {
+					// 		err := storage.AddAccount(&entities.Account{
+					// 			Name:    tokenDetailObj.Identifier + "-Owner",
+					// 			Address: tokenDetailObj.Owner,
+					// 		})
+					// 		if err != nil {
+					// 			goto txloop
+					// 		}
+					// 	}
+					// }
+					token = &entities.Token{
 						TokenID:      tokenDetailObj.Collection,
 						MintTxHash:   "",
+						OwnerId:      sender.ID,
 						CollectionID: col.ID,
 						Nonce:        tokenDetailObj.Nonce,
 						NonceStr:     nonceStr,
@@ -256,12 +271,12 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 						TokenName:    tokenDetailObj.Name,
 						Attributes:   attributes,
 						OnSale:       false,
-					})
+					}
+					err = storage.AddToken(token)
 					if err != nil {
 						lerr.Println(err.Error())
 						continue
 					}
-					continue
 				}
 			}
 
@@ -277,18 +292,6 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				continue
 			}
 
-			senderAdress := orgTx.Sender
-			sender, err := storage.GetAccountByAddress(senderAdress)
-			if err != nil {
-				if err == gorm.ErrNotImplemented {
-					sender.Name = services.RandomName()
-					err := storage.AddAccount(sender)
-					if err != nil {
-						lerr.Println("couldn't add user", err.Error())
-						goto mainLoop
-					}
-				}
-			}
 			if isOnSale {
 				price, ok := big.NewInt(0).SetString(dataParts[1], 16)
 				if !ok {

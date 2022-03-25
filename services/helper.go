@@ -71,7 +71,7 @@ func ConvertFilterToQuery(tableName string, filter string) (string, []interface{
 
 func GetResponse(url string) ([]byte, error) {
 	var client http.Client
-	client.Timeout = time.Second * 5
+	client.Timeout = time.Second * 10
 	req, err := http.
 		NewRequest("GET", url,
 			nil)

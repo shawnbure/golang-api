@@ -17,7 +17,7 @@ type Collection struct {
 	TelegramLink             string         `json:"telegramLink"`
 	CreatedAt                uint64         `json:"createdAt"`
 	Priority                 uint64         `json:"priority"`
-	ContractAddress          string         `json:"contractAddress"`
+	ContractAddress          string         `json:"contractAddress"` // could be contract address of creator role
 	MintPricePerTokenString  string         `json:"mintPricePerTokenString"`
 	MintPricePerTokenNominal float64        `json:"mintPricePerTokenNominal"`
 	Flags                    datatypes.JSON `json:"flags"`

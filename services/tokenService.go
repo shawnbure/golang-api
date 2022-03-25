@@ -46,6 +46,7 @@ type NonFungibleToken struct {
 	Identifier string         `json:"identifier"`
 	Collection string         `json:"collection"`
 	Name       string         `json:"name"`
+	Attributes string         `json:"attributes"`
 	Nonce      uint64         `json:"nonce"`
 	Creator    string         `json:"creator"`
 	Owner      string         `json:"owner"`
@@ -149,6 +150,79 @@ var (
 	tooManyTokensError = errors.New("too many tokens")
 )
 
+func GetTokenBaseURIs(tokenData entities.TokenBC) (string, string) {
+	var attributeUrl string
+	for _, uri := range tokenData.URIs {
+		attributeUrlByte, err := base64.StdEncoding.DecodeString(uri)
+		if !strings.Contains(string(attributeUrlByte), ".json") {
+			if tokenData.Attributes != "" {
+				attributeUrlByte, err = base64.StdEncoding.DecodeString(tokenData.Attributes)
+				if err != nil {
+					continue
+				}
+			}
+		}
+		if err != nil {
+			attributeUrl = ""
+		} else {
+			attributeUrl = string(attributeUrlByte)
+
+			urlParts := strings.Split(attributeUrl, "/")
+			lastPart := urlParts[len(urlParts)-1]
+			attributeUrl = strings.Replace(attributeUrl, lastPart, "", 1)
+			if strings.Contains(attributeUrl, "metadata:") {
+				attributeUrl = strings.ReplaceAll(attributeUrl, "metadata:", "")
+				attributeUrl = fmt.Sprintf(ipfsDefaultGatewayURL, attributeUrl)
+			}
+
+		}
+	}
+
+	urlParts := strings.Split(tokenData.URL, "/")
+	lastPart := urlParts[len(urlParts)-1]
+	url := strings.Replace(tokenData.URL, lastPart, "", 1)
+	return url, attributeUrl
+}
+func GetTokenUris(tokenData entities.TokenBC) (string, string) {
+	var attributeUrl string
+	for _, uri := range tokenData.URIs {
+		attributeUrlByte, err := base64.StdEncoding.DecodeString(uri)
+		if err != nil {
+			continue
+		}
+		if strings.Contains(string(attributeUrlByte), ".json") {
+			attributeUrl = string(attributeUrlByte)
+			urlParts := strings.Split(attributeUrl, "/")
+			lastPart := urlParts[len(urlParts)-1]
+			attributeUrl = strings.Replace(attributeUrl, lastPart, "", 1)
+			stringNonce := fmt.Sprintf("%02d", tokenData.Nonce)
+			attributeUrl = attributeUrl + stringNonce + ".json"
+			break
+		}
+	}
+	if attributeUrl == "" {
+		if tokenData.Attributes != "" {
+			attributeUrlByte, err := base64.StdEncoding.DecodeString(tokenData.Attributes)
+			if err != nil {
+
+			} else {
+				attributeUrl = string(attributeUrlByte)
+				urlParts := strings.Split(attributeUrl, "/")
+				lastPart := urlParts[len(urlParts)-1]
+				attributeUrl = strings.Replace(attributeUrl, lastPart, "", 1)
+				if strings.Contains(attributeUrl, "metadata:") {
+					attributeUrl = strings.ReplaceAll(attributeUrl, "metadata:", "")
+					attributeUrl = fmt.Sprintf(ipfsDefaultGatewayURL, attributeUrl)
+					stringNonce := fmt.Sprintf("%02d", tokenData.Nonce)
+
+					attributeUrl = attributeUrl + stringNonce + ".json"
+				}
+			}
+		}
+	}
+
+	return tokenData.URL, attributeUrl
+}
 func ListTokenFromClient(request *ListTokenRequest, blockchainApi string) error {
 
 	//get token data from blockchain
@@ -161,6 +235,36 @@ func ListTokenFromClient(request *ListTokenRequest, blockchainApi string) error 
 	//auto create collection
 	collection, err := storage.GetCollectionByTokenId(request.TokenID)
 	if err != nil {
+		var attributeUrl string
+		for _, uri := range tokenData.Uris {
+			attributeUrlByte, err := base64.StdEncoding.DecodeString(uri)
+			if !strings.Contains(string(attributeUrlByte), ".json") {
+				if tokenData.Attributes != "" {
+					attributeUrlByte, err = base64.StdEncoding.DecodeString(tokenData.Attributes)
+					if err != nil {
+						continue
+					}
+				}
+			}
+			if err != nil {
+				attributeUrl = ""
+			} else {
+				attributeUrl = string(attributeUrlByte)
+
+				urlParts := strings.Split(attributeUrl, "/")
+				lastPart := urlParts[len(urlParts)-1]
+				attributeUrl = strings.Replace(attributeUrl, lastPart, "", 1)
+				if strings.Contains(attributeUrl, "metadata:") {
+					attributeUrl = strings.ReplaceAll(attributeUrl, "metadata:", "")
+					attributeUrl = fmt.Sprintf(ipfsDefaultGatewayURL, attributeUrl)
+				}
+
+			}
+		}
+
+		urlParts := strings.Split(tokenData.Url, "/")
+		lastPart := urlParts[len(urlParts)-1]
+		url := strings.Replace(tokenData.Url, lastPart, "", 1)
 
 		//if no collection auto create it
 		var autoCreateCollectionRequest AutoCreateCollectionRequest
@@ -169,8 +273,9 @@ func ListTokenFromClient(request *ListTokenRequest, blockchainApi string) error 
 		autoCreateCollectionRequest.Nonce = request.Nonce
 		autoCreateCollectionRequest.UserAddress = request.UserAddress
 		autoCreateCollectionRequest.CreatorAddress = tokenData.Creator
-
-		collection, err = AutoCreateCollection(&autoCreateCollectionRequest)
+		autoCreateCollectionRequest.TokenBaseURI = url
+		autoCreateCollectionRequest.MetadataBaseURI = attributeUrl
+		collection, err = AutoCreateCollection(&autoCreateCollectionRequest, blockchainApi)
 
 		if err != nil {
 			return errors.New("no collection found after autocreation")
@@ -414,9 +519,9 @@ func getTokenByNonce(tokenName string, tokenNonce string, blockchainApi string) 
 	hexNonce := fmt.Sprintf("%X", intNonce)
 
 	//Couldn't sort out padding and this quick check will work
-	if len(hexNonce) == 1 {
-		hexNonce = "0" + hexNonce
-	}
+	// if len(hexNonce) == 1 {
+	hexNonce = "0" + hexNonce
+	// }
 
 	url := fmt.Sprintf(GetNFTBaseFormat, blockchainApi, tokenName, hexNonce)
 

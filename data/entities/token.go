@@ -37,6 +37,7 @@ type TokenBC struct {
 	Type                 string      `json:"type"`
 	Name                 string      `json:"name"`
 	Creator              string      `json:"creator"`
+	Owner                string      `json:"owner"`
 	Royalties            interface{} `json:"royalties"`
 	URIs                 []string    `json:"uris"`
 	URL                  string      `json:"url"`

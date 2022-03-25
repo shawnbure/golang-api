@@ -179,6 +179,32 @@ func (ci *CollectionIndexer) StartWorker() {
 				logErr.Println("GetCollectionByTokenId", err.Error(), colObj.TokenID)
 				continue
 			}
+			if colObj.ContractAddress == "" {
+				colDetail, err := services.GetCollectionDetailBC(col.TokenID, ci.ElrondAPI)
+				if err != nil {
+					continue
+				}
+				var address string
+				for _, role := range colDetail.Roles {
+					rolesStr, ok := role["roles"].([]interface{})
+					if ok {
+						for _, roleStr := range rolesStr {
+							if strings.EqualFold(roleStr.(string), "ESDTRoleNFTCreate") {
+								address = role["address"].(string)
+							}
+						}
+					}
+				}
+				colObj.ContractAddress = address
+				colObj.Name = colDetail.Name
+				err = services.UpdateCollectionWithAddress(&colObj, map[string]interface{}{
+					"Name":            colObj.Name,
+					"ContractAddress": colObj.ContractAddress,
+				})
+				if err != nil {
+					continue
+				}
+			}
 			collectionIndexer, err := storage.GetCollectionIndexer(colObj.ContractAddress)
 			if err != nil {
 				if err == gorm.ErrRecordNotFound {
