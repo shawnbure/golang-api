@@ -219,7 +219,80 @@ func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) 
 
 	return collection, nil
 }
+func CreateCollectionFromToken(token entities.TokenBC, blockchainApi string) (*entities.Collection, error) {
 
+	// ========== STEP: CHECK TO SEE IF COLLECTION EXIST ==========
+	collection, errGetCollection := storage.GetCollectionByTokenId(token.Collection)
+
+	if errGetCollection != nil {
+
+		if errGetCollection == gorm.ErrRecordNotFound {
+			//no collection found so don't exit out of the process and
+			//auto create collection
+		} else {
+			return nil, errGetCollection
+		}
+	} else {
+		//collection Found - so no need to auto create
+		return collection, nil
+	}
+
+	//set the token creator adress
+	tokenCreatorAddress := token.Owner
+
+	//
+	// ========== STEP: GET CREATOR ID FROM ACCOUNT BY ADDRESS   ==========
+	//get account to get the "creator id"
+	account, err := storage.GetAccountByAddress(tokenCreatorAddress)
+
+	if err != nil {
+		return nil, err
+	}
+
+	creatorID := account.ID
+
+	// ========== STEP: AUTO CREATE COLLECTION ==========
+	collection = &entities.Collection{
+		Name:      token.Collection,
+		TokenID:   token.Identifier,
+		CreatorID: uint64(creatorID), //set the creator id
+		CreatedAt: uint64(time.Now().Unix()),
+	}
+
+	// ========== GET COLLECTION DETAIL FROM BC ========
+	colDetail, err := GetCollectionDetailBC(token.Collection, blockchainApi)
+	if err != nil {
+		fmt.Println(err.Error())
+	} else {
+		collection.Name = colDetail.Name
+		var address string
+		for _, role := range colDetail.Roles {
+			rolesStr, ok := role["roles"].([]string)
+			if ok {
+				for _, roleStr := range rolesStr {
+					if strings.EqualFold(roleStr, "ESDTRoleNFTCreate") {
+						address = role["address"].(string)
+					}
+				}
+			}
+		}
+		collection.ContractAddress = address
+		// collection.ContractAddress = colDetail.Roles[]
+	}
+	//
+	errCollection := storage.AddCollection(collection)
+	if errCollection != nil {
+		fmt.Printf("%n", errCollection)
+		return nil, errCollection
+	}
+
+	_, err = collstats.AddCollectionToCache(collection.ID, collection.Name, nil, collection.TokenID)
+	if err != nil {
+		log.Debug("could not add to coll stats")
+	}
+
+	return collection, nil
+}
 func AutoCreateCollection(request *AutoCreateCollectionRequest, blockchainApi string) (*entities.Collection, error) {
 
 	// ========== STEP: CHECK TO SEE IF COLLECTION EXIST ==========

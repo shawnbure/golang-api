@@ -224,7 +224,11 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					if err != nil {
 						if err == gorm.ErrRecordNotFound {
 							lerr.Println("collection not found for this token!!", tokenDetailObj.Collection)
-							continue
+							col, err = services.CreateCollectionFromToken(tokenDetailObj, mpi.ElrondAPI)
+							if err != nil {
+								lerr.Println("create collection failed on market indexer", tokenDetailObj.Collection)
+								continue
+							}
 						}
 					}
 					idParts := strings.Split(tokenDetailObj.Identifier, "-")
