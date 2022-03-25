@@ -32,6 +32,7 @@ const (
 	collectionVerifiedEndpoint   = "/verified/:limit"
 	collectionNoteworthyEndpoint = "/noteworthy/:limit"
 	collectionTrendingEndpoint   = "/trending/:limit"
+	collectionByTokenIDEndpoint  = "/tokenId/:tokenId"
 )
 
 type CollectionTokensQueryBody struct {
@@ -77,6 +78,7 @@ func NewCollectionsHandler(groupHandler *groupHandler, authCfg config.AuthConfig
 		{Method: http.MethodGet, Path: collectionVerifiedEndpoint, HandlerFunc: handler.getCollectionVerified},
 		{Method: http.MethodGet, Path: collectionNoteworthyEndpoint, HandlerFunc: handler.getCollectionNoteworthy},
 		{Method: http.MethodGet, Path: collectionTrendingEndpoint, HandlerFunc: handler.getCollectionTrending},
+		{Method: http.MethodGet, Path: collectionByTokenIDEndpoint, HandlerFunc: handler.getCollectionByTokenID},
 	}
 	publicEndpointGroupHandler := EndpointGroupHandler{
 		Root:             baseCollectionsEndpoint,
@@ -255,6 +257,18 @@ func (handler *collectionsHandler) get(c *gin.Context) {
 	}
 
 	dtos.JsonResponse(c, http.StatusOK, extendedDto, "")
+}
+
+func (handler *collectionsHandler) getCollectionByTokenID(c *gin.Context) {
+	tokenId := c.Param("tokenID")
+
+	collection, err := storage.GetCollectionByTokenId(tokenId)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	dtos.JsonResponse(c, http.StatusOK, collection, "")
 }
 
 // @Summary Set collection info.
