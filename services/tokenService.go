@@ -519,9 +519,9 @@ func getTokenByNonce(tokenName string, tokenNonce string, blockchainApi string) 
 	hexNonce := fmt.Sprintf("%X", intNonce)
 
 	//Couldn't sort out padding and this quick check will work
-	// if len(hexNonce) == 1 {
-	hexNonce = "0" + hexNonce
-	// }
+	if len(hexNonce)%2 != 0 {
+		hexNonce = "0" + hexNonce
+	}
 
 	url := fmt.Sprintf(GetNFTBaseFormat, blockchainApi, tokenName, hexNonce)
 
