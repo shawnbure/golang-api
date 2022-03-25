@@ -208,15 +208,18 @@ func ListTokenFromClient(request *ListTokenRequest, blockchainApi string) error 
 			imageURI = strings.Replace(imageURI, "https://ipfs.io/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
 		}
 
-		byteMetaDataURI, err = base64.StdEncoding.DecodeString(tokenData.Uris[1])
-		if err != nil {
-			fmt.Printf("%v\n", err)
-			return err
+		if len(tokenData.Uris) > 1 {
+
+			byteMetaDataURI, err = base64.StdEncoding.DecodeString(tokenData.Uris[1])
+			if err != nil {
+				fmt.Printf("%v\n", err)
+				return err
+			}
+
+			metaDataURI = strings.Replace(string(byteMetaDataURI), "https://gateway.pinata.cloud/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
+			metaDataURI = strings.Replace(metaDataURI, "https://ipfs.io/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
+
 		}
-
-		metaDataURI = strings.Replace(string(byteMetaDataURI), "https://gateway.pinata.cloud/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
-		metaDataURI = strings.Replace(metaDataURI, "https://ipfs.io/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
-
 	}
 
 	token := &entities.Token{
