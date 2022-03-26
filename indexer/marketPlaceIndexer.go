@@ -203,7 +203,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			}
 
 			token, err := storage.GetTokenByTokenIdAndNonceStr(string(tokenId), hexNonce)
-
+			fmt.Println(tokenId, hexNonce)
 			if err != nil {
 				if err != gorm.ErrRecordNotFound {
 					lerr.Println(err.Error())
@@ -306,12 +306,6 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 						}
 					}
 				}
-				// err = storage.UpdateTokenWhere(token, map[string]interface{}{
-				// 	"LastMarketTimestamp": 0,
-				// }, "token_id=? AND nonce_str=?", tokenId, hexNonce)
-				// if err != nil {
-				// 	lerr.Println("failed to update token when tx failed")
-				// }
 				continue
 			}
 
