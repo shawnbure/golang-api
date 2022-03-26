@@ -16,6 +16,7 @@ ADD . /app
 ## directory
 WORKDIR /app
 
+RUN go mod download 
 RUN go mod vendor
 
 RUN export CGO_CPPFLAGS="-I /usr/local/include"
