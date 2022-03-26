@@ -8,7 +8,7 @@ import (
 type Collection struct {
 	ID                       uint64         `gorm:"primaryKey" json:"id"`
 	Name                     string         `json:"name"`
-	TokenID                  string         `json:"tokenId"`
+	TokenID                  string         `json:"tokenId" gorm:"unique"`
 	Description              string         `json:"description"`
 	Website                  string         `json:"website"`
 	DiscordLink              string         `json:"discordLink"`
@@ -49,7 +49,7 @@ type DeployerStat struct {
 	CreatedAt    int64  `json:"created_at" gorm:"autoCreateTime:milli"` // Use unix seconds as creating time
 }
 type CollectionBC struct {
-	Identifier           string         `json:"identifier"`
+	Identifier           string         `json:"identifier" `
 	Collection           string         `json:"collection"`
 	Nonce                uint64         `json:"nonce"`
 	NFTType              string         `json:"type"`
@@ -65,7 +65,7 @@ type CollectionBC struct {
 type CollectionAccount struct {
 	ID                       uint64         `gorm:"primaryKey" json:"id"`
 	Name                     string         `json:"name"`
-	TokenID                  string         `json:"tokenId"`
+	TokenID                  string         `json:"tokenId" `
 	Description              string         `json:"description"`
 	Website                  string         `json:"website"`
 	DiscordLink              string         `json:"discordLink"`

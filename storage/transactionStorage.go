@@ -174,7 +174,24 @@ func GetTransactionByHash(hash string) (*entities.Transaction, error) {
 
 	return &transaction, nil
 }
+func GetLastTokenTransaction(tokenId uint64) (entities.Transaction, error) {
+	var transaction entities.Transaction
 
+	database, err := GetDBOrError()
+	if err != nil {
+		return transaction, err
+	}
+
+	txRead := database.Where("token_id=?", tokenId).Order("timestamp desc").Find(&transaction)
+	if txRead.Error != nil {
+		return transaction, txRead.Error
+	}
+	if txRead.RowsAffected == 0 {
+		return transaction, gorm.ErrRecordNotFound
+	}
+
+	return transaction, nil
+}
 func GetTransactionWhere(where string, args ...interface{}) (entities.Transaction, error) {
 	var transaction entities.Transaction
 

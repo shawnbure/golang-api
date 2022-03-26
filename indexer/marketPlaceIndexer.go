@@ -115,16 +115,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			if orgTx.Timestamp == 0 {
 				continue
 			}
-			if strings.EqualFold(orgTx.Status, "fail") || strings.EqualFold(orgTx.Status, "invalid") {
-				tx, err := storage.GetTransactionWhere("hash=? AND timestamp=?", orgTx.TxHash, orgTx.Timestamp)
-				if err != nil {
-					if err == gorm.ErrRecordNotFound {
-						continue
-					}
-				}
-				storage.DeleteTransaction(tx.ID)
-				continue
-			}
+
 			if orgTx.TxHash == "" {
 				continue
 			}
@@ -136,30 +127,38 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				lerr.Println(err.Error())
 				continue
 			}
-			orgData, err := base64.StdEncoding.DecodeString(orgTx.Data)
+			orgDataHex, err := base64.StdEncoding.DecodeString(orgTx.Data)
 			if err != nil {
 				lerr.Println(err.Error())
 				continue
 			}
-			isWithdrawn := strings.Contains(string(orgData), "withdrawNft")
-			isOnSale := strings.Contains(string(data), "putNftForSale")
-			isOnAuction := strings.Contains(string(data), "startAuction")
-			isBuyNft := strings.Contains(string(orgData), "buyNft")
-			isOffer := strings.Contains(string(orgData), "makeOffer")
-			isCancelOffer := strings.Contains(string(orgData), "cancelOffer")
-			isAcceptOffer := strings.Contains(string(orgData), "acceptOffer")
-			isBid := strings.Contains(string(orgData), "placeBid")
-			isEndAuction := strings.Contains(string(orgData), "endAuction") && strings.Contains(string(data), "ESDTNFTTransfer")
+			orgDataHexParts := strings.Split(string(orgDataHex), "@")
+			orgDataHexStr := strings.Join(orgDataHexParts[1:], "")
+			orgData, err := hex.DecodeString(orgDataHexStr)
+			if err != nil {
+				lerr.Println(err.Error())
+				continue
+			}
+			orgData = []byte(orgDataHexParts[0] + string(orgData))
+			var actions map[string]bool = make(map[string]bool)
 
-			if !isOnSale &&
-				!isOnAuction &&
-				!isBuyNft &&
-				!isWithdrawn &&
-				!isOffer &&
-				!isCancelOffer &&
-				!isAcceptOffer &&
-				!isBid &&
-				!isEndAuction {
+			actions["isWithdrawn"] = strings.Contains(string(orgData), "withdrawNft")
+			actions["isOnSale"] = strings.Contains(string(orgData), "putNftForSale")
+			actions["isOnAuction"] = strings.Contains(string(orgData), "startAuction")
+			actions["isBuyNft"] = strings.Contains(string(orgData), "buyNft")
+			actions["isOffer"] = strings.Contains(string(orgData), "makeOffer")
+			actions["isCancelOffer"] = strings.Contains(string(orgData), "cancelOffer")
+			actions["isAcceptOffer"] = strings.Contains(string(orgData), "acceptOffer")
+			actions["isBid"] = strings.Contains(string(orgData), "placeBid")
+			actions["isEndAuction"] = strings.Contains(string(orgData), "endAuction")
+
+			next := false
+			for _, v := range actions {
+				if v {
+					next = true
+				}
+			}
+			if !next {
 				continue
 			}
 
@@ -192,7 +191,8 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			senderAdress := orgTx.Sender
 			sender, err := storage.GetAccountByAddress(senderAdress)
 			if err != nil {
-				if err == gorm.ErrNotImplemented {
+				if err == gorm.ErrRecordNotFound {
+					sender = &entities.Account{}
 					sender.Name = services.RandomName()
 					err := storage.AddAccount(sender)
 					if err != nil {
@@ -203,6 +203,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			}
 
 			token, err := storage.GetTokenByTokenIdAndNonceStr(string(tokenId), hexNonce)
+
 			if err != nil {
 				if err != gorm.ErrRecordNotFound {
 					lerr.Println(err.Error())
@@ -263,6 +264,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					// 		}
 					// 	}
 					// }
+
 					token = &entities.Token{
 						TokenID:      tokenDetailObj.Collection,
 						MintTxHash:   "",
@@ -284,6 +286,35 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				}
 			}
 
+			if strings.EqualFold(orgTx.Status, "fail") || strings.EqualFold(orgTx.Status, "invalid") {
+				tx, err := storage.GetTransactionWhere("hash=? AND timestamp=?", orgTx.TxHash, orgTx.Timestamp)
+				if err != nil {
+					if err == gorm.ErrRecordNotFound {
+
+					} else {
+						storage.DeleteTransaction(tx.ID)
+					}
+				}
+				tx, err = storage.GetLastTokenTransaction(token.ID)
+				if err != nil {
+					if err == gorm.ErrRecordNotFound {
+						err = storage.UpdateTokenWhere(token, map[string]interface{}{
+							"isOnSale": false, // TODO we can't be sure if tx is messed up
+						}, "token_id=? AND nonce_str=?", tokenId, hexNonce)
+						if err != nil {
+							lerr.Println("failed to update token when tx failed")
+						}
+					}
+				}
+				// err = storage.UpdateTokenWhere(token, map[string]interface{}{
+				// 	"LastMarketTimestamp": 0,
+				// }, "token_id=? AND nonce_str=?", tokenId, hexNonce)
+				// if err != nil {
+				// 	lerr.Println("failed to update token when tx failed")
+				// }
+				continue
+			}
+
 			price := orgTx.Value
 			bigPrice, ok := big.NewInt(0).SetString(price, 10)
 			if !ok {
@@ -296,7 +327,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				continue
 			}
 
-			if isOnSale {
+			if actions["isOnSale"] {
 				price, ok := big.NewInt(0).SetString(dataParts[1], 16)
 				if !ok {
 					lerr.Println("can not convert price", price, dataParts[1])
@@ -325,7 +356,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				if err != nil {
 					lerr.Println(err.Error())
 				}
-			} else if isOffer {
+			} else if actions["isOffer"] {
 
 				offerStr := mainDataParts[3]
 				offer, _ := big.NewInt(0).SetString(offerStr, 16)
@@ -358,7 +389,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				if err != nil {
 					lerr.Println(err.Error())
 				}
-			} else if isAcceptOffer {
+			} else if actions["isAcceptOffer"] {
 				offerorAddrHex := mainDataParts[3]
 				token.OnSale = false
 				token.Status = entities.BuyToken
@@ -411,14 +442,14 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					lerr.Println(err.Error())
 				}
 
-			} else if isCancelOffer {
+			} else if actions["isCancelOffer"] {
 
 				err := storage.DeleteOfferByOfferorForTokenId(senderAdress, token.ID)
 				if err != nil {
 					lerr.Println(err.Error())
 					continue
 				}
-			} else if isOnAuction {
+			} else if actions["isOnAuction"] && strings.Contains(string(data), "startAuction") {
 				fmt.Println("is_on_auction", dataParts)
 				hexMinBid := dataParts[1]
 				minBid, _ := big.NewInt(0).SetString(hexMinBid, 16)
@@ -458,7 +489,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					lerr.Println(err.Error())
 
 				}
-			} else if isWithdrawn {
+			} else if actions["isWithdrawn"] {
 				token.OnSale = false
 				token.Status = entities.WithdrawToken
 				err = storage.AddTransaction(&entities.Transaction{
@@ -473,7 +504,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				if err != nil {
 					lerr.Println(err.Error())
 				}
-			} else if isBuyNft {
+			} else if actions["isBuyNft"] {
 				token.OnSale = false
 				token.Status = entities.BuyToken
 				token.OwnerId = sender.ID
@@ -509,7 +540,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					lerr.Println(err.Error())
 				}
 
-			} else if isBid {
+			} else if actions["isBid"] {
 				bidStr := mainDataParts[3]
 				bid, _ := big.NewInt(0).SetString(bidStr, 16)
 				bidFloat, err := ethconv.FromWei(bid, ethconv.Ether)
@@ -529,7 +560,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					lerr.Println(err.Error())
 					continue
 				}
-			} else if isEndAuction {
+			} else if actions["isEndAuction"] {
 				token.OnSale = false
 				token.Status = entities.BuyToken
 

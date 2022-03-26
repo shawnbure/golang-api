@@ -22,11 +22,12 @@ func (j *JSONB) Scan(value interface{}) error {
 }
 
 type MarketPlaceStat struct {
-	LastIndex uint64 `json:"lastIndex"`
-	ID        uint64 `json:"id" gorm:"primaryKey"`
-	LastHash  string `json:"lastHash"`
-	UpdatedAt int64  `json:"updatedAt" gorm:"autoUpdateTime:milli"`  // Set to current unix seconds on updaing or if it is zero on creating
-	CreatedAt int64  `json:"created_at" gorm:"autoCreateTime:milli"` // Use unix seconds as creating time
+	LastIndex     uint64 `json:"lastIndex"`
+	ID            uint64 `json:"id" gorm:"primaryKey"`
+	LastHash      string `json:"lastHash"`
+	LastTimestamp uint64 `json:"lastTimestamp"`
+	UpdatedAt     int64  `json:"updatedAt" gorm:"autoUpdateTime:milli"`  // Set to current unix seconds on updaing or if it is zero on creating
+	CreatedAt     int64  `json:"created_at" gorm:"autoCreateTime:milli"` // Use unix seconds as creating time
 }
 
 type MarketPlaceNFT struct {
@@ -44,15 +45,16 @@ type MarketPlaceNFT struct {
 }
 
 type TransactionBC struct {
-	TxHash    string `json:"txHash"`
-	Nonce     uint64 `json:"none"`
-	Sender    string `json:"sender"`
-	Receiver  string `json:"receiver"`
-	Data      string `json:"data"`
-	Status    string `json:"status"`
-	Value     string `json:"value"`
-	Timestamp uint64 `json:"timestamp"`
-	Action    struct {
+	TxHash         string `json:"txHash"`
+	Nonce          uint64 `json:"nonce"`
+	Sender         string `json:"sender"`
+	Receiver       string `json:"receiver"`
+	Data           string `json:"data"`
+	Status         string `json:"status"`
+	PendingResults bool   `json:"pendingResults"`
+	Value          string `json:"value"`
+	Timestamp      uint64 `json:"timestamp"`
+	Action         struct {
 		Category string `json:"category"`
 		Name     string `json:"name"`
 	} `json:"action"`

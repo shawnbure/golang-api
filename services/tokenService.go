@@ -224,7 +224,23 @@ func GetTokenUris(tokenData entities.TokenBC) (string, string) {
 	return tokenData.URL, attributeUrl
 }
 func ListTokenFromClient(request *ListTokenRequest, blockchainApi string) error {
-
+	tx := &entities.TransactionBC{PendingResults: true}
+	for tx.PendingResults { // TODO
+		txByte, err := GetResponse(fmt.Sprintf("%s/transactions/%s", blockchainApi, request.TxHash))
+		if err != nil {
+			fmt.Printf("%v\n", err)
+			return err
+		}
+		err = json.Unmarshal(txByte, tx)
+		if err != nil {
+			fmt.Printf("%v\n", err)
+			return err
+		}
+		if !strings.EqualFold(tx.Status, "success") {
+			return fmt.Errorf("tx not successfull")
+		}
+		time.Sleep(time.Millisecond * 500)
+	}
 	//get token data from blockchain
 	tokenData, err := getTokenByNonce(request.TokenID, request.Nonce, blockchainApi)
 	if err != nil {
