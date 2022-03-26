@@ -1,4 +1,4 @@
-FROM golang:latest
+FROM golang:1.17
 
 
 LABEL Project="youbei-api"
