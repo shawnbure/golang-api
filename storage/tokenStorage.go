@@ -28,7 +28,7 @@ func AddToken(token *entities.Token) error {
 		//if the token does not exixts in the db create it return error
 		tokenCount := int64(0)
 		err = db.Model(token).
-			Where("token_id = ? AND nonce = ?", token.TokenID, token.Nonce).
+			Where("token_id = ? AND nonce_str = ?", token.TokenID, token.NonceStr).
 			Count(&tokenCount).
 			Error
 

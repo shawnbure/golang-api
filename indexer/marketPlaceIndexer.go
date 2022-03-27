@@ -91,6 +91,9 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 
 		for _, tx := range txResult {
 		txloop:
+			if tx.OriginalTxHash == "1389342b57f71e323824e6624fda04ee47bc38c649de0a824a725441eb3aca7c" {
+				fmt.Println("THIS")
+			}
 			orgtxByte, err := services.GetResponse(fmt.Sprintf("%s/transactions/%s", mpi.ElrondAPI, tx.OriginalTxHash))
 			if err != nil {
 				lerr.Println(err.Error())
@@ -152,6 +155,9 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			actions["isBid"] = strings.Contains(string(orgData), "placeBid")
 			actions["isEndAuction"] = strings.Contains(string(orgData), "endAuction")
 
+			if mpi.DeleteFailedTX(orgTx) {
+			}
+
 			next := false
 			for _, v := range actions {
 				if v {
@@ -203,7 +209,6 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			}
 
 			token, err := storage.GetTokenByTokenIdAndNonceStr(string(tokenId), hexNonce)
-			fmt.Println(tokenId, hexNonce)
 			if err != nil {
 				if err != gorm.ErrRecordNotFound {
 					lerr.Println(err.Error())
@@ -286,16 +291,8 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				}
 			}
 
-			if strings.EqualFold(orgTx.Status, "fail") || strings.EqualFold(orgTx.Status, "invalid") {
-				tx, err := storage.GetTransactionWhere("hash=? AND timestamp=?", orgTx.TxHash, orgTx.Timestamp)
-				if err != nil {
-					if err == gorm.ErrRecordNotFound {
-
-					} else {
-						storage.DeleteTransaction(tx.ID)
-					}
-				}
-				tx, err = storage.GetLastTokenTransaction(token.ID)
+			if mpi.DeleteFailedTX(orgTx) {
+				_, err := storage.GetLastTokenTransaction(token.ID)
 				if err != nil {
 					if err == gorm.ErrRecordNotFound {
 						err = storage.UpdateTokenWhere(token, map[string]interface{}{
@@ -304,6 +301,8 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 						if err != nil {
 							lerr.Println("failed to update token when tx failed")
 						}
+					} else {
+
 					}
 				}
 				continue
@@ -320,7 +319,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				lerr.Println(err.Error())
 				continue
 			}
-
+			toUpdate := true // we need to update token afterward
 			if actions["isOnSale"] {
 				price, ok := big.NewInt(0).SetString(dataParts[1], 16)
 				if !ok {
@@ -335,6 +334,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 
 				token.OnSale = true
 				token.Status = entities.List
+				token.OwnerId = sender.ID
 				token.LastBuyPriceNominal, _ = fprice.Float64()
 				token.PriceNominal, _ = fprice.Float64()
 				token.PriceString = price.String()
@@ -351,7 +351,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					lerr.Println(err.Error())
 				}
 			} else if actions["isOffer"] {
-
+				toUpdate = false
 				offerStr := mainDataParts[3]
 				offer, _ := big.NewInt(0).SetString(offerStr, 16)
 				offerFloat, err := ethconv.FromWei(offer, ethconv.Ether)
@@ -410,12 +410,16 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				err = storage.DeleteOffersForTokenId(token.ID)
 				if err != nil {
 					lerr.Println(err.Error())
-					continue
+					if err != gorm.ErrRecordNotFound {
+						continue
+					}
 				}
 				err = storage.DeleteBidsForTokenId(token.ID)
 				if err != nil {
 					lerr.Println(err.Error())
-					continue
+					if err != gorm.ErrRecordNotFound {
+						continue
+					}
 				}
 
 				offerNominal, _ := offerFloat.Float64()
@@ -437,6 +441,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				}
 
 			} else if actions["isCancelOffer"] {
+				toUpdate = false
 
 				err := storage.DeleteOfferByOfferorForTokenId(senderAdress, token.ID)
 				if err != nil {
@@ -465,6 +470,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 
 				token.OnSale = true
 				token.Status = entities.AuctionToken
+				token.OwnerId = sender.ID
 				token.LastBuyPriceNominal = lastBuyPriceNominal
 				token.PriceString = minBid.String()
 				token.PriceNominal, _ = minBidfloat.Float64()
@@ -485,6 +491,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				}
 			} else if actions["isWithdrawn"] {
 				token.OnSale = false
+				token.OwnerId = sender.ID
 				token.Status = entities.WithdrawToken
 				err = storage.AddTransaction(&entities.Transaction{
 					PriceNominal: token.PriceNominal,
@@ -502,20 +509,19 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				token.OnSale = false
 				token.Status = entities.BuyToken
 				token.OwnerId = sender.ID
-				lastBuyPriceNominal, err := strconv.ParseFloat(dataParts[1], 64)
-				if err == nil {
-					fmt.Printf("%f of type %T", lastBuyPriceNominal, lastBuyPriceNominal)
-				}
-
 				err = storage.DeleteOffersForTokenId(token.ID)
 				if err != nil {
 					lerr.Println(err.Error())
-					continue
+					if err != gorm.ErrRecordNotFound {
+						continue
+					}
 				}
 				err = storage.DeleteBidsForTokenId(token.ID)
 				if err != nil {
 					lerr.Println(err.Error())
-					continue
+					if err != gorm.ErrRecordNotFound {
+						continue
+					}
 				}
 
 				token.LastBuyPriceNominal, _ = fprice.Float64()
@@ -554,7 +560,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					lerr.Println(err.Error())
 					continue
 				}
-			} else if actions["isEndAuction"] {
+			} else if actions["isEndAuction"] && strings.Contains(string(data), "ESDTNFTTransfer") {
 				token.OnSale = false
 				token.Status = entities.BuyToken
 
@@ -573,7 +579,9 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				err = storage.DeleteBidsForTokenId(token.ID)
 				if err != nil {
 					lerr.Println(err.Error())
-					continue
+					if err != gorm.ErrRecordNotFound {
+						continue
+					}
 				}
 
 				token.OwnerId = user.ID
@@ -590,14 +598,14 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					lerr.Println(err.Error())
 				}
 			}
-			if token.LastMarketTimestamp < txTimestamp {
+			if token.LastMarketTimestamp < txTimestamp && toUpdate {
 				token.LastMarketTimestamp = txTimestamp
 				err = storage.UpdateTokenWhere(token, map[string]interface{}{
 					"OnSale":              token.OnSale,
 					"Status":              token.Status,
 					"PriceString":         token.PriceString,
 					"PriceNominal":        token.PriceNominal,
-					"LastMarketTimestamp": txTimestamp,
+					"LastMarketTimestamp": token.LastMarketTimestamp,
 					"OwnerId":             token.OwnerId,
 					"AuctionDeadline":     token.AuctionDeadline,
 					"AuctionStartTime":    token.AuctionStartTime,
@@ -623,4 +631,19 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			}
 		}
 	}
+}
+func (mpi *MarketPlaceIndexer) DeleteFailedTX(orgTx entities.TransactionBC) bool {
+
+	if strings.EqualFold(orgTx.Status, "fail") || strings.EqualFold(orgTx.Status, "invalid") {
+		tx, err := storage.GetTransactionWhere("hash=? AND timestamp=?", orgTx.TxHash, orgTx.Timestamp)
+		if err != nil {
+			if err == gorm.ErrRecordNotFound {
+
+			} else {
+				storage.DeleteTransaction(tx.ID)
+			}
+		}
+		return true
+	}
+	return false
 }

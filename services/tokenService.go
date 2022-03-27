@@ -225,7 +225,7 @@ func GetTokenUris(tokenData entities.TokenBC) (string, string) {
 }
 func ListTokenFromClient(request *ListTokenRequest, blockchainApi string) error {
 	tx := &entities.TransactionBC{PendingResults: false}
-
+	start := time.Now()
 	for !tx.PendingResults { // TODO
 		txByte, err := GetResponse(fmt.Sprintf("%s/transactions/%s", blockchainApi, request.TxHash))
 		if err != nil {
@@ -238,6 +238,9 @@ func ListTokenFromClient(request *ListTokenRequest, blockchainApi string) error 
 			return err
 		}
 		time.Sleep(time.Millisecond * 500)
+		if time.Since(start) > time.Second*30 {
+			return fmt.Errorf("tx not successfull")
+		}
 	}
 	if !strings.EqualFold(tx.Status, "success") {
 		return fmt.Errorf("tx not successfull")
