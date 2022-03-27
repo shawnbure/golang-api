@@ -91,9 +91,6 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 
 		for _, tx := range txResult {
 		txloop:
-			if tx.OriginalTxHash == "1389342b57f71e323824e6624fda04ee47bc38c649de0a824a725441eb3aca7c" {
-				fmt.Println("THIS")
-			}
 			orgtxByte, err := services.GetResponse(fmt.Sprintf("%s/transactions/%s", mpi.ElrondAPI, tx.OriginalTxHash))
 			if err != nil {
 				lerr.Println(err.Error())

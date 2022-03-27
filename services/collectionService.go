@@ -244,9 +244,27 @@ func CreateCollectionFromToken(token entities.TokenBC, blockchainApi string) (*e
 	// ========== STEP: GET CREATOR ID FROM ACCOUNT BY ADDRESS   ==========
 	//get account to get the "creator id"
 	account, err := storage.GetAccountByAddress(tokenCreatorAddress)
-
-	if err != nil {
-		return nil, err
+	if err != nil && err == gorm.ErrRecordNotFound {
+		//account doesn't exist, so auto register
+		name := RandomName()
+		accountTokenCreator := &entities.Account{
+			Name:      token.Identifier + name,
+			Address:   tokenCreatorAddress,
+			CreatedAt: uint64(time.Now().Unix()),
+		}
+		errAddAccount := storage.AddAccount(accountTokenCreator)
+		if errAddAccount != nil {
+			if !strings.Contains(errAddAccount.Error(), "duplicate") {
+				return nil, err
+			} else {
+				err = storage.UpdateAccountProfileWhereName(accountTokenCreator.Name, *accountTokenCreator)
+				if err != nil {
+					if err != gorm.ErrRecordNotFound {
+						return nil, err
+					}
+				}
+			}
+		}
 	}
 
 	creatorID := account.ID
