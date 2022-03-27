@@ -319,8 +319,9 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				lerr.Println(err.Error())
 				continue
 			}
-			toUpdate := true // we need to update token afterward
-			if actions["isOnSale"] {
+			toUpdate := false // we need to update token afterward
+			if actions["isOnSale"] && strings.Contains(string(data), "putNftForSale") {
+				toUpdate = true
 				price, ok := big.NewInt(0).SetString(dataParts[1], 16)
 				if !ok {
 					lerr.Println("can not convert price", price, dataParts[1])
@@ -384,6 +385,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					lerr.Println(err.Error())
 				}
 			} else if actions["isAcceptOffer"] {
+				toUpdate = true
 				offerorAddrHex := mainDataParts[3]
 				token.OnSale = false
 				token.Status = entities.BuyToken
@@ -442,13 +444,13 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 
 			} else if actions["isCancelOffer"] {
 				toUpdate = false
-
 				err := storage.DeleteOfferByOfferorForTokenId(senderAdress, token.ID)
 				if err != nil {
 					lerr.Println(err.Error())
 					continue
 				}
 			} else if actions["isOnAuction"] && strings.Contains(string(data), "startAuction") {
+				toUpdate = true
 				fmt.Println("is_on_auction", dataParts)
 				hexMinBid := dataParts[1]
 				minBid, _ := big.NewInt(0).SetString(hexMinBid, 16)
@@ -490,6 +492,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 
 				}
 			} else if actions["isWithdrawn"] {
+				toUpdate = true
 				token.OnSale = false
 				token.OwnerId = sender.ID
 				token.Status = entities.WithdrawToken
@@ -506,6 +509,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					lerr.Println(err.Error())
 				}
 			} else if actions["isBuyNft"] {
+				toUpdate = true
 				token.OnSale = false
 				token.Status = entities.BuyToken
 				token.OwnerId = sender.ID
@@ -541,6 +545,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				}
 
 			} else if actions["isBid"] {
+				toUpdate = true
 				bidStr := mainDataParts[3]
 				bid, _ := big.NewInt(0).SetString(bidStr, 16)
 				bidFloat, err := ethconv.FromWei(bid, ethconv.Ether)
@@ -561,6 +566,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					continue
 				}
 			} else if actions["isEndAuction"] && strings.Contains(string(data), "ESDTNFTTransfer") {
+				toUpdate = true
 				token.OnSale = false
 				token.Status = entities.BuyToken
 
