@@ -34,11 +34,12 @@ var (
 func GetOrCreateAccount(address string) (*entities.Account, error) {
 	account, err := storage.GetAccountByAddress(address)
 	if err != nil {
+		name := RandomName()
 		account = &entities.Account{
+			Name:      name,
 			Address:   address,
 			CreatedAt: uint64(time.Now().Unix()),
 		}
-
 		err = storage.AddAccount(account)
 		if err != nil {
 			return nil, err
