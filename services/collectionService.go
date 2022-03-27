@@ -272,7 +272,7 @@ func CreateCollectionFromToken(token entities.TokenBC, blockchainApi string) (*e
 	// ========== STEP: AUTO CREATE COLLECTION ==========
 	collection = &entities.Collection{
 		Name:      token.Collection,
-		TokenID:   token.Identifier,
+		TokenID:   token.Collection,
 		CreatorID: uint64(creatorID), //set the creator id
 		CreatedAt: uint64(time.Now().Unix()),
 	}
