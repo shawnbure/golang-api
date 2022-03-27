@@ -319,7 +319,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				lerr.Println(err.Error())
 				continue
 			}
-			toUpdate := false // we need to update token afterward
+			toUpdate := false // we need to update token afterward  this to detect if we are on right result inside tx NEEDS REFACTOR to better detect the case
 			if actions["isOnSale"] && strings.Contains(string(data), "putNftForSale") {
 				toUpdate = true
 				price, ok := big.NewInt(0).SetString(dataParts[1], 16)
