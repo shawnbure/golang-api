@@ -224,9 +224,9 @@ func GetTokenUris(tokenData entities.TokenBC) (string, string) {
 	return tokenData.URL, attributeUrl
 }
 func ListTokenFromClient(request *ListTokenRequest, blockchainApi string) error {
-	tx := &entities.TransactionBC{PendingResults: false}
+	tx := &entities.TransactionBC{PendingResults: true}
 	start := time.Now()
-	for !tx.PendingResults { // TODO
+	for !(len(tx.Results) > 0) { // TODO
 		txByte, err := GetResponse(fmt.Sprintf("%s/transactions/%s", blockchainApi, request.TxHash))
 		if err != nil {
 			fmt.Printf("%v\n", err)

@@ -265,6 +265,7 @@ func CreateCollectionFromToken(token entities.TokenBC, blockchainApi string) (*e
 				}
 			}
 		}
+		account = accountTokenCreator
 	}
 
 	creatorID := account.ID

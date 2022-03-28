@@ -197,6 +197,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				if err == gorm.ErrRecordNotFound {
 					sender = &entities.Account{}
 					sender.Name = services.RandomName()
+					sender.Address = senderAdress
 					err := storage.AddAccount(sender)
 					if err != nil {
 						lerr.Println("couldn't add user", err.Error())
@@ -566,8 +567,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				toUpdate = true
 				token.OnSale = false
 				token.Status = entities.BuyToken
-
-				user, err := storage.GetAccountByAddress(string(tx.Receiver))
+				user, err := services.GetOrCreateAccount(string(tx.Receiver))
 				if err != nil {
 					lerr.Println("CRITICAL", err.Error())
 					goto mainLoop
