@@ -238,8 +238,8 @@ func ListTokenFromClient(request *ListTokenRequest, blockchainApi string) error 
 			return err
 		}
 		time.Sleep(time.Millisecond * 500)
-		if time.Since(start) > time.Second*30 {
-			return fmt.Errorf("tx not successfull")
+		if time.Since(start) > time.Second*40 {
+			return fmt.Errorf("Timed out , please check your wallet or onList tab inside your profile page ")
 		}
 	}
 	if !strings.EqualFold(tx.Status, "success") {
