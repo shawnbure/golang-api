@@ -65,6 +65,7 @@ func (ci *CollectionIndexer) StartWorker() {
 			logErr.Println(url)
 			continue
 		}
+
 		var deployerTxs []entities.TransactionBC
 		err = json.Unmarshal(res, &deployerTxs)
 		if err != nil {
