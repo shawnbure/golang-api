@@ -246,9 +246,9 @@ func CreateCollectionFromToken(token entities.TokenBC, blockchainApi string) (*e
 	account, err := storage.GetAccountByAddress(tokenCreatorAddress)
 	if err != nil && err == gorm.ErrRecordNotFound {
 		//account doesn't exist, so auto register
-		name := RandomName()
+
 		accountTokenCreator := &entities.Account{
-			Name:      token.Identifier + name,
+			Name:      tokenCreatorAddress, //default name to address (due to uniqueness requirement) - user can mod in profile page //OLD: token.Identifier + name,
 			Address:   tokenCreatorAddress,
 			CreatedAt: uint64(time.Now().Unix()),
 		}
@@ -345,9 +345,8 @@ func AutoCreateCollection(request *AutoCreateCollectionRequest, blockchainApi st
 		if err != nil && err == gorm.ErrRecordNotFound {
 			//account doesn't exist, so auto register
 
-			name := RandomName()
 			accountTokenCreator := &entities.Account{
-				Name:      request.TokenId + name,
+				Name:      tokenCreatorAddress, //default name to address (due to uniqueness requirement) - user can mod in profile page //OLD: token.Identifier + name,
 				Address:   tokenCreatorAddress,
 				CreatedAt: uint64(time.Now().Unix()),
 			}

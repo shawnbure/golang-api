@@ -62,7 +62,6 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			lerr.Println(err.Error())
 			continue
 		}
-
 		var txResult []entities.SCResult
 		err = json.Unmarshal(body, &txResult)
 		if err != nil {
@@ -84,7 +83,6 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 		if txResult[0].Hash == marketStat.LastHash {
 			lastHashMet = true
 			lastIndex = 0
-			time.Sleep(time.Second * mpi.Delay)
 			continue
 		}
 		foundResults += uint64(len(txResult))
@@ -94,7 +92,10 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			orgtxByte, err := services.GetResponse(fmt.Sprintf("%s/transactions/%s", mpi.ElrondAPI, tx.OriginalTxHash))
 			if err != nil {
 				lerr.Println(err.Error())
-				continue
+				if strings.Contains(err.Error(), "404") {
+					continue
+				}
+				goto txloop
 			}
 			var orgTx entities.TransactionBC
 			err = json.Unmarshal(orgtxByte, &orgTx)
@@ -121,11 +122,6 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			}
 			if orgTx.Status == "pending" {
 				goto txloop
-			}
-			data, err := base64.StdEncoding.DecodeString(tx.Data)
-			if err != nil {
-				lerr.Println(err.Error())
-				continue
 			}
 			orgDataHex, err := base64.StdEncoding.DecodeString(orgTx.Data)
 			if err != nil {
@@ -179,8 +175,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				continue
 			}
 			hexNonce := mainDataParts[2]
-			// nonce, err := hex.DecodeString(hexNonce)
-			data, err = base64.StdEncoding.DecodeString(tx.Data)
+			data, err := base64.StdEncoding.DecodeString(tx.Data)
 			if err != nil {
 				lerr.Println(err.Error())
 				continue

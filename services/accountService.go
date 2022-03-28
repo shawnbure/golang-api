@@ -34,9 +34,8 @@ var (
 func GetOrCreateAccount(address string) (*entities.Account, error) {
 	account, err := storage.GetAccountByAddress(address)
 	if err != nil {
-		name := RandomName()
 		account = &entities.Account{
-			Name:      name,
+			Name:      address, //default name to address (due to uniqueness requirement) - user can mod in profile page
 			Address:   address,
 			CreatedAt: uint64(time.Now().Unix()),
 		}
