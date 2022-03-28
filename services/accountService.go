@@ -89,6 +89,14 @@ func UpdateAccount(account *entities.Account, request *SetAccountRequest) error 
 		return err
 	}
 
+	standardizedName := standardizeName(request.Name)
+
+	accountUnique, _ := storage.GetAccountsExcludingAccountIDWithNameAlike(account.ID, standardizedName)
+
+	if accountUnique != nil {
+		return errors.New("account name already taken")
+	}
+
 	account.Name = request.Name
 	account.Description = request.Description
 	account.InstagramLink = request.InstagramLink
