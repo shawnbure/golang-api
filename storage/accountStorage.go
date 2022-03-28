@@ -145,3 +145,23 @@ func GetAccountsWithNameAlikeWithLimit(name string, limit int) ([]entities.Accou
 
 	return accounts, nil
 }
+
+func GetAccountsExcludingAccountIDWithNameAlike(accountId uint64, name string) (*entities.Account, error) {
+	var account entities.Account
+
+	database, err := GetDBOrError()
+	if err != nil {
+		return nil, err
+	}
+
+	txRead := database.Find(&account, "id <> ? AND name ILIKE ?", accountId, name)
+	if txRead.Error != nil {
+		return nil, txRead.Error
+	}
+
+	if txRead.RowsAffected == 0 {
+		return nil, gorm.ErrRecordNotFound
+	}
+
+	return &account, nil
+}
