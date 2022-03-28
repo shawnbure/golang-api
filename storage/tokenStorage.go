@@ -233,10 +233,11 @@ func GetTokensByCollectionIdWithOffsetLimit(
 		query := fmt.Sprintf("%s %s", sortRules["criteria"], sortRules["mode"])
 		txRead.Order(query)
 	}
-
+	if sqlFilter.Query != "" {
+		txRead.Where(sqlFilter.Query, sqlFilter.Values...)
+	}
 	txRead.
 		Preload("Owner").
-		Where(sqlFilter.Query, sqlFilter.Values...).
 		Find(&tokens, "collection_id = ?", collectionId)
 
 	if txRead.Error != nil {
