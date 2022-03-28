@@ -210,6 +210,7 @@ func GetLastNonceTokenByCollectionId(collectionId uint64) (entities.Token, error
 }
 func GetTokensByCollectionIdWithOffsetLimit(
 	collectionId uint64,
+	sqlFilter entities.QueryFilter,
 	offset int,
 	limit int,
 	attributesFilters map[string]string,
@@ -235,7 +236,9 @@ func GetTokensByCollectionIdWithOffsetLimit(
 
 	txRead.
 		Preload("Owner").
+		Where(sqlFilter.Query, sqlFilter.Values...).
 		Find(&tokens, "collection_id = ?", collectionId)
+
 	if txRead.Error != nil {
 		return nil, txRead.Error
 	}

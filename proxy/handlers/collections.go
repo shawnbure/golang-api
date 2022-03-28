@@ -9,6 +9,7 @@ import (
 
 	"github.com/ENFT-DAO/youbei-api/config"
 	"github.com/ENFT-DAO/youbei-api/data/dtos"
+	"github.com/ENFT-DAO/youbei-api/data/entities"
 	"github.com/ENFT-DAO/youbei-api/proxy/middleware"
 	"github.com/ENFT-DAO/youbei-api/services"
 	"github.com/ENFT-DAO/youbei-api/stats/collstats"
@@ -377,9 +378,17 @@ func (handler *collectionsHandler) getTokens(c *gin.Context) {
 	offsetStr := c.Param("offset")
 	limitStr := c.Param("limit")
 	tokenId := c.Param("collectionId")
+	filter := c.Query("filter")
+	// convert filter query string into query sql clauses
+	querySQL, queryValues, err := services.ConvertFilterToQuery("tokens", filter)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+	sqlFilter := entities.QueryFilter{Query: querySQL, Values: queryValues}
 
 	var queries CollectionTokensQueryBody
-	err := c.BindJSON(&queries)
+	err = c.BindJSON(&queries)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return
@@ -418,7 +427,7 @@ func (handler *collectionsHandler) getTokens(c *gin.Context) {
 		return
 	}
 
-	tokens, err := storage.GetTokensByCollectionIdWithOffsetLimit(cacheInfo.CollectionId, int(offset), int(limit), filters, sortRules)
+	tokens, err := storage.GetTokensByCollectionIdWithOffsetLimit(cacheInfo.CollectionId, sqlFilter, int(offset), int(limit), filters, sortRules)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
