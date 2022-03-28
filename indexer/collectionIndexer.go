@@ -174,6 +174,7 @@ func (ci *CollectionIndexer) StartWorker() {
 		for _, colObj := range cols {
 		singleColLoop:
 			var foundedTxsCount uint64 = 0
+			var minted uint64 = 0
 
 			col, err := storage.GetCollectionByTokenId(colObj.TokenID)
 			if err != nil {
@@ -264,7 +265,6 @@ func (ci *CollectionIndexer) StartWorker() {
 					if len(colR.Results) == 0 {
 						logErr.Println("results not available!")
 						if colR.Status == "pending" {
-							time.Sleep(time.Second * 2)
 							goto singleColLoop
 						} else {
 							resultNotAvailableCount++
@@ -276,30 +276,30 @@ func (ci *CollectionIndexer) StartWorker() {
 						continue
 					}
 					if colR.Status == "pending" {
-						time.Sleep(time.Second * 2)
-						continue
-						// goto singleColLoop
+						if colR.Timestamp-uint64(time.Now().UTC().Unix()) < 10*60 { // i've seen stuff on devnet pending for hours
+							goto singleColLoop
+						}
 					}
 					if colR.Results == nil {
-						logErr.Println("result was nil")
+						logErr.Println("CRITICAL  result was nil")
 						time.Sleep(time.Second * 2)
 						continue
 					}
 					results := colR.Results
 					if len(results) < 2 {
-						logErr.Println("this tx wasn't good!", colR.TxHash)
+						logErr.Println("CRITICAL this tx wasn't good!", colR.TxHash)
 						continue
 					}
 					dataParts := strings.Split(dataStr, "@")
 					mintCount, err := strconv.ParseInt(dataParts[1], 16, 64)
 					if err != nil {
-						logErr.Println("mint count conversion failed")
+						logErr.Println("CRITICAL  mint count conversion failed")
 						continue
 					}
 					for _, r := range results {
 						decodedData, err := base64.StdEncoding.DecodeString(r.Data)
 						if err != nil {
-							logErr.Println(err.Error())
+							logErr.Println("CRITICAL ", err.Error())
 							continue
 						}
 						r.Data = string(decodedData)
@@ -331,7 +331,7 @@ func (ci *CollectionIndexer) StartWorker() {
 											acc.Name = services.RandomName()
 											err := storage.AddAccount(acc)
 											if err != nil {
-												logErr.Println("fatal ", err.Error())
+												logErr.Println("CRITICAL ", "fatal ", err.Error())
 												continue
 											}
 										} else {
@@ -416,6 +416,7 @@ func (ci *CollectionIndexer) StartWorker() {
 												logErr.Println(err.Error())
 												continue
 											}
+											minted++
 											continue
 										}
 										logErr.Println(err.Error(), url, col.MetaDataBaseURI, col.TokenBaseURI, col.ID)
@@ -457,6 +458,7 @@ func (ci *CollectionIndexer) StartWorker() {
 										logErr.Println(err.Error())
 										continue
 									}
+									minted++
 								} else {
 									logErr.Println(err.Error())
 									continue
@@ -467,6 +469,9 @@ func (ci *CollectionIndexer) StartWorker() {
 				}
 			}
 			// collstats.RemoveCollectionToCheck(colObj) TODO
+			if foundedTxsCount != minted {
+				fmt.Println("CRITICAL", "mint!=founded", collectionIndexer.CollectionAddr, collectionIndexer.ID)
+			}
 			collectionIndexer.LastIndex += foundedTxsCount
 			_, err = storage.UpdateCollectionIndexer(collectionIndexer.LastIndex, collectionIndexer.CollectionAddr)
 			if err != nil {
