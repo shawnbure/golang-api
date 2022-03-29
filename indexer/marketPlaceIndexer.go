@@ -107,11 +107,6 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				lastHashMet = true
 				lastIndex = 0
 				break
-			} else {
-				if lastHashTimestamp < tx.Timestamp {
-					lastHashTimestamp = tx.Timestamp
-					lastHash = tx.Hash
-				}
 			}
 			if orgTx.Timestamp == 0 {
 				continue
@@ -200,7 +195,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					}
 				}
 			}
-
+			err = nil
 			token, err := storage.GetTokenByTokenIdAndNonceStr(string(tokenId), hexNonce)
 			if err != nil {
 				if err != gorm.ErrRecordNotFound {
@@ -434,7 +429,6 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				if err != nil {
 					lerr.Println(err.Error())
 				}
-
 			} else if actions["isCancelOffer"] {
 				toUpdate = false
 				err := storage.DeleteOfferByOfferorForTokenId(senderAdress, token.ID)
@@ -536,7 +530,6 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				if err != nil {
 					lerr.Println(err.Error())
 				}
-
 			} else if actions["isBid"] {
 				toUpdate = true
 				bidStr := mainDataParts[3]
@@ -616,6 +609,10 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					lerr.Println("error updating token ", fmt.Sprintf("tokenID %d", token.ID))
 					continue
 				}
+			}
+			if lastHashTimestamp < tx.Timestamp {
+				lastHashTimestamp = tx.Timestamp
+				lastHash = tx.Hash
 			}
 		}
 		if !lastHashMet {
