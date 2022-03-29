@@ -43,6 +43,7 @@ type TokenBC struct {
 	URL                  string      `json:"url"`
 	Media                interface{} `json:"media"`
 	IsWhitelistedStorage bool        `json:"isWhitelistedStorage"`
+	Metadata             interface{} `json:"metadata"`
 	/*
 		  "thumbnailUrl": "string",
 		  "tags": [

@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"math/big"
 	"os"
 	"strconv"
 	"strings"
@@ -17,7 +16,6 @@ import (
 	"github.com/ENFT-DAO/youbei-api/services"
 	"github.com/ENFT-DAO/youbei-api/storage"
 	"github.com/btcsuite/btcutil/bech32"
-	"github.com/emurmotol/ethconv"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
@@ -38,7 +36,6 @@ func NewCollectionIndexer(deployerAddr string, elrondAPI string, delay uint64) (
 
 func (ci *CollectionIndexer) StartWorker() {
 	logErr := ci.Logger
-	resultNotAvailableCount := 0
 	var colsToCheck []dtos.CollectionToCheck
 	for {
 	deployLoop:
@@ -73,9 +70,7 @@ func (ci *CollectionIndexer) StartWorker() {
 			logErr.Println("error unmarshal nfts deployer")
 			continue
 		}
-		if len(deployerTxs) == 0 {
-			goto colLoop
-		}
+
 		foundDeployedContracts += uint64(len(deployerTxs))
 		for _, colR := range deployerTxs {
 			if colR.Action.Name == "" {
@@ -152,7 +147,7 @@ func (ci *CollectionIndexer) StartWorker() {
 				_, err = storage.GetCollectionIndexer(bech32Addr)
 				if err != nil {
 					if err == gorm.ErrRecordNotFound {
-						_, err = storage.CreateCollectionStat(bech32Addr)
+						_, err = storage.CreateCollectionStat(entities.CollectionIndexer{CollectionName: string(tokenIdStr), CollectionAddr: bech32Addr})
 						if err != nil {
 							logErr.Println(err.Error())
 							continue
@@ -165,7 +160,16 @@ func (ci *CollectionIndexer) StartWorker() {
 			}
 
 		}
-	colLoop:
+		newStat, err := storage.UpdateDeployerIndexer(deployerStat.LastIndex+foundDeployedContracts, ci.DeployerAddr)
+		if err != nil {
+			logErr.Println(err.Error())
+			logErr.Println("error update deployer index nfts ")
+			continue
+		}
+		if newStat.LastIndex < deployerStat.LastIndex {
+			logErr.Println("error something went wrong updating last index of deployer  ")
+			continue
+		}
 		cols, err := storage.GetAllCollections()
 		if err != nil {
 			logErr.Println(err.Error())
@@ -173,9 +177,6 @@ func (ci *CollectionIndexer) StartWorker() {
 		}
 		for _, colObj := range cols {
 		singleColLoop:
-			var foundedTxsCount uint64 = 0
-			var minted uint64 = 0
-
 			col, err := storage.GetCollectionByTokenId(colObj.TokenID)
 			if err != nil {
 				logErr.Println("GetCollectionByTokenId", err.Error(), colObj.TokenID)
@@ -210,7 +211,10 @@ func (ci *CollectionIndexer) StartWorker() {
 			collectionIndexer, err := storage.GetCollectionIndexer(colObj.ContractAddress)
 			if err != nil {
 				if err == gorm.ErrRecordNotFound {
-					collectionIndexer, err = storage.CreateCollectionStat(colObj.ContractAddress)
+					collectionIndexer, err = storage.CreateCollectionStat(entities.CollectionIndexer{
+						CollectionAddr: colObj.ContractAddress,
+						CollectionName: colObj.TokenID,
+					})
 					if err != nil {
 						logErr.Println(err.Error())
 						logErr.Println("error create colleciton indexer")
@@ -222,257 +226,121 @@ func (ci *CollectionIndexer) StartWorker() {
 					continue
 				}
 			}
+
 			res, err := services.GetResponse(
-				fmt.Sprintf("%s/accounts/%s/transactions?from=%d&withScResults=true&withLogs=false&order=asc",
+				fmt.Sprintf("%s/collections/%s/nfts?from=%d",
 					ci.ElrondAPI,
-					collectionIndexer.CollectionAddr,
+					collectionIndexer.CollectionName,
 					collectionIndexer.LastIndex))
 			if err != nil {
 				logErr.Println(err.Error())
 				logErr.Println("error creating request for get nfts deployer")
+
 				if strings.Contains(err.Error(), "429") || strings.Contains(err.Error(), "deadline") {
 					time.Sleep(time.Second * 10)
 					goto singleColLoop
 				}
+
 			}
 
-			var collectionTxs []entities.TransactionBC
-			err = json.Unmarshal(res, &collectionTxs)
+			var tokens []entities.TokenBC
+			err = json.Unmarshal(res, &tokens)
 			if err != nil {
 				logErr.Println(err.Error())
 				logErr.Println("error unmarshal nfts deployer")
 				continue
 			}
-			if len(collectionTxs) == 0 {
-				logErr.Println("ColResults no collection related tx found")
-				continue
-			}
+			for _, token := range tokens {
+				imageURI, attributeURI := services.GetTokenBaseURIs(token)
+				nonceStr := strconv.FormatUint(token.Nonce, 16)
+				if len(nonceStr)%2 != 0 {
+					nonceStr = "0" + nonceStr
+				}
 
-			foundedTxsCount += uint64(len(collectionTxs))
-			fmt.Println("entering colResults loop")
+				youbeiMeta := strings.Replace(attributeURI, "https://gateway.pinata.cloud/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
+				youbeiMeta = strings.Replace(youbeiMeta, "https://ipfs.io/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
+				youbeiMeta = strings.Replace(youbeiMeta, "https://ipfs.io/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
+				youbeiMeta = strings.Replace(youbeiMeta, "ipfs://", "https://media.elrond.com/nfts/asset/", 1)
+				if youbeiMeta != "" {
+					if string(youbeiMeta[len(youbeiMeta)-1]) == "/" {
+						youbeiMeta = youbeiMeta[:len(youbeiMeta)-1]
+					}
+					if strings.Contains(attributeURI, "ipfs://") {
+						youbeiMeta = strings.Replace(youbeiMeta, "ipfs://", "", 1)
+						youbeiMeta = ""
+					}
+				}
+				url := fmt.Sprintf("%s/%s.json", youbeiMeta, nonceStr)
+				attrbs, err := services.GetResponse(url)
 
-			for _, colR := range collectionTxs {
+				metadataJSON := make(map[string]interface{})
+				err = json.Unmarshal(attrbs, &metadataJSON)
+				if err != nil {
+					logErr.Println(err.Error(), string(url))
+				}
+				var attributes datatypes.JSON
+				attributesBytes, err := json.Marshal(metadataJSON["attributes"])
+				if err != nil {
+					logErr.Println(err.Error())
+					attributesBytes = []byte{}
+				}
+				err = json.Unmarshal(attributesBytes, &attributes)
+				if err != nil {
+					logErr.Println(err.Error())
+				}
 
-				dataString := colR.Data
-				dataByte, err := base64.StdEncoding.DecodeString(dataString)
+				//get owner of token from database TODO
+				acc, err := storage.GetAccountByAddress(token.Owner)
+				if err != nil {
+					if err != gorm.ErrRecordNotFound {
+						goto singleColLoop
+					} else {
+						name := services.RandomName()
+
+						err := storage.AddAccount(&entities.Account{
+							Address: token.Owner,
+							Name:    name,
+						})
+						if err != nil {
+							logErr.Println("CRITICAL can't create user")
+							goto singleColLoop
+						}
+					}
+				}
+				//try get token from database TODO
+				dbToken, err := storage.GetTokenByTokenIdAndNonce(token.Collection, token.Nonce)
+				if err != nil {
+					if err != gorm.ErrRecordNotFound {
+						goto singleColLoop
+					} else {
+
+					}
+				}
+				if dbToken == nil {
+					dbToken = &entities.Token{}
+				}
+				err = storage.AddToken(&entities.Token{
+					TokenID:      token.Collection,
+					MintTxHash:   dbToken.MintTxHash,
+					CollectionID: col.ID,
+					Nonce:        token.Nonce,
+					NonceStr:     nonceStr,
+					MetadataLink: string(youbeiMeta) + "/" + nonceStr + ".json",
+					ImageLink:    string(imageURI) + "/" + nonceStr + ".png",
+					TokenName:    token.Name,
+					Attributes:   attributes,
+					OwnerId:      acc.ID,
+					OnSale:       false,
+					PriceString:  dbToken.PriceString,
+					PriceNominal: dbToken.PriceNominal,
+				})
 				if err != nil {
 					logErr.Println(err.Error())
 					continue
 				}
-				dataStr := string(dataByte)
-				if strings.Contains(dataStr, "mintTokensThroughMarketplace") && colR.Status != "fail" {
-					fmt.Println("mint found")
-					if len(colR.Results) == 0 {
-						logErr.Println("results not available!")
-						if colR.Status == "pending" {
-							goto singleColLoop
-						} else {
-							resultNotAvailableCount++
-							if resultNotAvailableCount > 3 {
-								resultNotAvailableCount = 0
-							}
-						}
-						// goto singleColLoop
-						continue
-					}
-					if colR.Status == "pending" {
-						if colR.Timestamp-uint64(time.Now().UTC().Unix()) < 10*60 { // i've seen stuff on devnet pending for hours
-							goto singleColLoop
-						}
-					}
-					if colR.Results == nil {
-						logErr.Println("CRITICAL  result was nil")
-						time.Sleep(time.Second * 2)
-						continue
-					}
-					results := colR.Results
-					if len(results) < 2 {
-						logErr.Println("CRITICAL this tx wasn't good!", colR.TxHash)
-						continue
-					}
-					dataParts := strings.Split(dataStr, "@")
-					mintCount, err := strconv.ParseInt(dataParts[1], 16, 64)
-					if err != nil {
-						logErr.Println("CRITICAL  mint count conversion failed")
-						continue
-					}
-					for _, r := range results {
-						decodedData, err := base64.StdEncoding.DecodeString(r.Data)
-						if err != nil {
-							logErr.Println("CRITICAL ", err.Error())
-							continue
-						}
-						r.Data = string(decodedData)
-						if !strings.Contains(r.Data, "ESDTNFTTransfer") {
-							continue
-						}
-						transferData := strings.Split(r.Data, "@")
-						nonce, err := strconv.ParseInt(transferData[2], 16, 64)
-						if err != nil {
-							logErr.Println(err.Error())
-							continue
-						}
-						tokenIdByte, err := hex.DecodeString(transferData[1])
-						if err != nil {
-							logErr.Println(err.Error())
-							continue
-						}
-						for i := 0; i < 1; i++ {
-							nonceStr := transferData[2] //strconv.FormatInt(int64(nonce), 10)
-							tokenId := string(tokenIdByte) + "-" + nonceStr
-							_, err := storage.GetTokenByTokenIdAndNonceStr(tokenId, nonceStr)
-							if err != nil {
-								if err == gorm.ErrRecordNotFound {
-									acc, err := storage.GetAccountByAddress(r.Receiver)
-									if err != nil {
-										if err == gorm.ErrRecordNotFound {
-											acc = &entities.Account{}
-											acc.Address = r.Receiver
-											acc.Name = services.RandomName()
-											err := storage.AddAccount(acc)
-											if err != nil {
-												logErr.Println("CRITICAL ", "fatal ", err.Error())
-												continue
-											}
-										} else {
-											logErr.Println(err.Error())
-											continue
-										}
-									}
-									price := colR.Value
-									bigPrice, ok := big.NewInt(0).SetString(price, 10)
-									if !ok {
-										logErr.Println("conversion to bigInt failed for price")
-										continue
-									}
-									fprice, err := ethconv.FromWei(bigPrice, ethconv.Ether)
-									if err != nil {
-										logErr.Println(err.Error())
-										continue
-									}
-									bigPriceStr := bigPrice.Div(bigPrice, big.NewInt(mintCount)).String()
-									priceFraction := float64(1 / float64(mintCount))
-									priceBigFloat := fprice.Mul(fprice, big.NewFloat(priceFraction))
-									priceFloat, _ := priceBigFloat.Float64()
 
-									// priceFloat, _ := fprice.Float64()
-									metaURI := col.MetaDataBaseURI
-									imageURI := (col.TokenBaseURI)
-									if strings.Contains(metaURI, ".json") {
-										metaURI = strings.ReplaceAll(metaURI, ".json", "")
-									}
-									if !strings.Contains(metaURI, "https") {
-										logErr.Println("old link", metaURI)
-										b, _ := hex.DecodeString(metaURI)
-										metaURI = string(b)
-									}
-									if !strings.Contains(imageURI, "https") {
-										logErr.Println("old link", imageURI)
-										b, _ := hex.DecodeString(imageURI)
-										imageURI = string(b)
-									}
-									if strings.Contains(ci.ElrondAPI, "devnet") {
-										imageURI = strings.Replace(imageURI, "https://gateway.pinata.cloud/ipfs/", "https://devnet-media.elrond.com/nfts/asset/", 1)
-									} else {
-										imageURI = strings.Replace(imageURI, "https://gateway.pinata.cloud/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
-										imageURI = strings.Replace(imageURI, "https://ipfs.io/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
-									}
-									youbeiMeta := strings.Replace(metaURI, "https://gateway.pinata.cloud/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
-									youbeiMeta = strings.Replace(youbeiMeta, "https://ipfs.io/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
-									nonceStr = strconv.FormatInt(int64(nonce), 10)
-
-									url := fmt.Sprintf("%s/%s.json", youbeiMeta, nonceStr)
-									tokenDetail, err := services.GetResponse(fmt.Sprintf(`%s/nfts/%s`, ci.ElrondAPI, tokenId))
-									if err != nil {
-										logErr.Println(err.Error())
-										continue
-									}
-									var tokenDetailObj entities.TokenBC
-									err = json.Unmarshal(tokenDetail, &tokenDetailObj)
-									if err != nil {
-										logErr.Println(err.Error())
-										continue
-									}
-									attrbs, err := services.GetResponse(url)
-									if err != nil {
-										logErr.Println(err.Error())
-										if strings.Contains(err.Error(), "429") || strings.Contains(err.Error(), "EOF") || strings.Contains(err.Error(), "deadline") {
-											err = storage.AddToken(&entities.Token{
-												TokenID:      string(tokenIdByte),
-												MintTxHash:   colR.TxHash,
-												CollectionID: col.ID,
-												Nonce:        uint64(nonce),
-												NonceStr:     transferData[2],
-												MetadataLink: string(youbeiMeta) + "/" + nonceStr + ".json",
-												ImageLink:    string(imageURI) + "/" + nonceStr + ".png",
-												TokenName:    tokenDetailObj.Name,
-												Attributes:   []byte{},
-												OwnerId:      acc.ID,
-												OnSale:       false,
-												PriceString:  bigPriceStr,
-												PriceNominal: priceFloat,
-											})
-											if err != nil {
-												logErr.Println(err.Error())
-												continue
-											}
-											minted++
-											continue
-										}
-										logErr.Println(err.Error(), url, col.MetaDataBaseURI, col.TokenBaseURI, col.ID)
-										continue
-									}
-									metadataJSON := make(map[string]interface{})
-									err = json.Unmarshal(attrbs, &metadataJSON)
-									if err != nil {
-										logErr.Println(err.Error(), string(url))
-										continue
-									}
-									var attributes datatypes.JSON
-									attributesBytes, err := json.Marshal(metadataJSON["attributes"])
-									if err != nil {
-										logErr.Println(err.Error())
-										continue
-									}
-									err = json.Unmarshal(attributesBytes, &attributes)
-									if err != nil {
-										logErr.Println(err.Error())
-										continue
-									}
-									err = storage.AddToken(&entities.Token{
-										TokenID:      string(tokenIdByte),
-										MintTxHash:   colR.TxHash,
-										CollectionID: col.ID,
-										Nonce:        uint64(nonce),
-										NonceStr:     transferData[2],
-										MetadataLink: string(youbeiMeta) + "/" + nonceStr + ".json",
-										ImageLink:    string(imageURI) + "/" + nonceStr + ".png",
-										TokenName:    tokenDetailObj.Name,
-										Attributes:   attributes,
-										OwnerId:      acc.ID,
-										OnSale:       false,
-										PriceString:  bigPriceStr,
-										PriceNominal: priceFloat,
-									})
-									if err != nil {
-										logErr.Println(err.Error())
-										continue
-									}
-									minted++
-								} else {
-									logErr.Println(err.Error())
-									continue
-								}
-							}
-						}
-					}
-				}
 			}
-			// collstats.RemoveCollectionToCheck(colObj) TODO
-			if foundedTxsCount != minted {
-				fmt.Println("CRITICAL", "mint!=founded", collectionIndexer.CollectionAddr, collectionIndexer.ID)
-			}
-			collectionIndexer.LastIndex += foundedTxsCount
+			collectionIndexer.LastIndex += uint64(len(tokens))
 			_, err = storage.UpdateCollectionIndexer(collectionIndexer.LastIndex, collectionIndexer.CollectionAddr)
 			if err != nil {
 				_, err := storage.UpdateCollectionIndexer(collectionIndexer.LastIndex, collectionIndexer.CollectionAddr)
@@ -481,18 +349,8 @@ func (ci *CollectionIndexer) StartWorker() {
 					continue
 				}
 			}
-			goto singleColLoop
 		}
-		colsToCheck = []dtos.CollectionToCheck{}
-		newStat, err := storage.UpdateDeployerIndexer(deployerStat.LastIndex+foundDeployedContracts, ci.DeployerAddr)
-		if err != nil {
-			logErr.Println(err.Error())
-			logErr.Println("error update deployer index nfts ")
-			continue
-		}
-		if newStat.LastIndex < deployerStat.LastIndex {
-			logErr.Println("error something went wrong updating last index of deployer  ")
-			continue
-		}
+
 	}
+
 }

@@ -23,16 +23,16 @@ func GetCollectionIndexer(collectionAddr string) (entities.CollectionIndexer, er
 	return stat, nil
 }
 
-func CreateCollectionStat(collectionAddr string) (stat entities.CollectionIndexer, err error) {
+func CreateCollectionStat(col entities.CollectionIndexer) (stat entities.CollectionIndexer, err error) {
 	database, err := GetDBOrError()
 	if err != nil {
 		return stat, err
 	}
-	stat.CollectionAddr = collectionAddr
-	err = database.Create(&stat).Error
+	err = database.Create(&col).Error
 	if err != nil {
 		return stat, err
 	}
+	stat = col
 	return stat, nil
 }
 

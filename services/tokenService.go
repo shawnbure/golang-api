@@ -155,12 +155,7 @@ func GetTokenBaseURIs(tokenData entities.TokenBC) (string, string) {
 	for _, uri := range tokenData.URIs {
 		attributeUrlByte, err := base64.StdEncoding.DecodeString(uri)
 		if !strings.Contains(string(attributeUrlByte), ".json") {
-			if tokenData.Attributes != "" {
-				attributeUrlByte, err = base64.StdEncoding.DecodeString(tokenData.Attributes)
-				if err != nil {
-					continue
-				}
-			}
+			continue
 		}
 		if err != nil {
 			attributeUrl = ""
@@ -180,8 +175,8 @@ func GetTokenBaseURIs(tokenData entities.TokenBC) (string, string) {
 
 	urlParts := strings.Split(tokenData.URL, "/")
 	lastPart := urlParts[len(urlParts)-1]
-	url := strings.Replace(tokenData.URL, lastPart, "", 1)
-	return url, attributeUrl
+	imageURL := strings.Replace(tokenData.URL, lastPart, "", 1)
+	return imageURL, attributeUrl
 }
 func GetTokenUris(tokenData entities.TokenBC) (string, string) {
 	var attributeUrl string
@@ -226,7 +221,7 @@ func GetTokenUris(tokenData entities.TokenBC) (string, string) {
 func ListTokenFromClient(request *ListTokenRequest, blockchainApi string) error {
 	tx := &entities.TransactionBC{PendingResults: true}
 	start := time.Now()
-	for !(len(tx.Results) == 3) { // TODO
+	for len(tx.Results) == 3 { // TODO
 		txByte, err := GetResponse(fmt.Sprintf("%s/transactions/%s", blockchainApi, request.TxHash))
 		if err != nil {
 			fmt.Printf("%v\n", err)
