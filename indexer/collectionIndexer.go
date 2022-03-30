@@ -176,7 +176,6 @@ func (ci *CollectionIndexer) StartWorker() {
 			continue
 		}
 		for _, colObj := range cols {
-		singleColLoop:
 			col, err := storage.GetCollectionByTokenId(colObj.TokenID)
 			if err != nil {
 				logErr.Println("GetCollectionByTokenId", err.Error(), colObj.TokenID)
@@ -226,135 +225,148 @@ func (ci *CollectionIndexer) StartWorker() {
 					continue
 				}
 			}
+			go func() {
+				for {
+					res, err := services.GetResponse(
+						fmt.Sprintf("%s/collections/%s/nfts?from=%d",
+							ci.ElrondAPI,
+							collectionIndexer.CollectionName,
+							collectionIndexer.LastIndex))
+					if err != nil {
+						logErr.Println(err.Error())
+						logErr.Println("error creating request for get nfts deployer")
 
-			res, err := services.GetResponse(
-				fmt.Sprintf("%s/collections/%s/nfts?from=%d",
-					ci.ElrondAPI,
-					collectionIndexer.CollectionName,
-					collectionIndexer.LastIndex))
-			if err != nil {
-				logErr.Println(err.Error())
-				logErr.Println("error creating request for get nfts deployer")
+						if strings.Contains(err.Error(), "429") || strings.Contains(err.Error(), "deadline") {
+							time.Sleep(time.Second * 10)
+							continue
+						}
 
-				if strings.Contains(err.Error(), "429") || strings.Contains(err.Error(), "deadline") {
-					time.Sleep(time.Second * 10)
-					goto singleColLoop
-				}
-
-			}
-
-			var tokens []entities.TokenBC
-			err = json.Unmarshal(res, &tokens)
-			if err != nil {
-				logErr.Println(err.Error())
-				logErr.Println("error unmarshal nfts deployer")
-				continue
-			}
-			for _, token := range tokens {
-				if collectionIndexer.LastNonce == token.Nonce {
-					break
-				}
-				imageURI, attributeURI := services.GetTokenBaseURIs(token)
-				nonceStr := strconv.FormatUint(token.Nonce, 16)
-				if len(nonceStr)%2 != 0 {
-					nonceStr = "0" + nonceStr
-				}
-
-				youbeiMeta := strings.Replace(attributeURI, "https://gateway.pinata.cloud/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
-				youbeiMeta = strings.Replace(youbeiMeta, "https://ipfs.io/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
-				youbeiMeta = strings.Replace(youbeiMeta, "https://ipfs.io/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
-				youbeiMeta = strings.Replace(youbeiMeta, "ipfs://", "https://media.elrond.com/nfts/asset/", 1)
-				if youbeiMeta != "" {
-					if string(youbeiMeta[len(youbeiMeta)-1]) == "/" {
-						youbeiMeta = youbeiMeta[:len(youbeiMeta)-1]
 					}
-					if strings.Contains(attributeURI, "ipfs://") {
-						youbeiMeta = strings.Replace(youbeiMeta, "ipfs://", "", 1)
-						youbeiMeta = ""
+
+					var tokens []entities.TokenBC
+					err = json.Unmarshal(res, &tokens)
+					if err != nil {
+						logErr.Println(err.Error())
+						logErr.Println("error unmarshal nfts deployer")
+						continue
 					}
-				}
-				url := fmt.Sprintf("%s/%s.json", youbeiMeta, nonceStr)
-				attrbs, err := services.GetResponse(url)
+					if len(tokens) == 0 {
+						return
+					}
+					for _, token := range tokens {
+						if collectionIndexer.LastNonce == token.Nonce {
+							break
+						}
+						imageURI, attributeURI := services.GetTokenBaseURIs(token)
+						nonceStr := strconv.FormatUint(token.Nonce, 16)
+						if len(nonceStr)%2 != 0 {
+							nonceStr = "0" + nonceStr
+						}
 
-				metadataJSON := make(map[string]interface{})
-				err = json.Unmarshal(attrbs, &metadataJSON)
-				if err != nil {
-					logErr.Println(err.Error(), string(url))
-				}
-				var attributes datatypes.JSON
-				attributesBytes, err := json.Marshal(metadataJSON["attributes"])
-				if err != nil {
-					logErr.Println(err.Error())
-					attributesBytes = []byte{}
-				}
-				err = json.Unmarshal(attributesBytes, &attributes)
-				if err != nil {
-					logErr.Println(err.Error())
-				}
+						youbeiMeta := strings.Replace(attributeURI, "https://gateway.pinata.cloud/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
+						youbeiMeta = strings.Replace(youbeiMeta, "https://ipfs.io/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
+						youbeiMeta = strings.Replace(youbeiMeta, "https://ipfs.io/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
+						youbeiMeta = strings.Replace(youbeiMeta, "ipfs://", "https://media.elrond.com/nfts/asset/", 1)
+						if youbeiMeta != "" {
+							if string(youbeiMeta[len(youbeiMeta)-1]) == "/" {
+								youbeiMeta = youbeiMeta[:len(youbeiMeta)-1]
+							}
+							if strings.Contains(attributeURI, "ipfs://") {
+								youbeiMeta = strings.Replace(youbeiMeta, "ipfs://", "", 1)
+								youbeiMeta = ""
+							}
+						}
+						url := fmt.Sprintf("%s/%s.json", youbeiMeta, nonceStr)
+						attrbs, err := services.GetResponse(url)
 
-				//get owner of token from database TODO
-				acc, err := storage.GetAccountByAddress(token.Owner)
-				if err != nil {
-					if err != gorm.ErrRecordNotFound {
-						goto singleColLoop
-					} else {
-						name := services.RandomName()
+						metadataJSON := make(map[string]interface{})
+						err = json.Unmarshal(attrbs, &metadataJSON)
+						if err != nil {
+							logErr.Println(err.Error(), string(url))
+						}
+						var attributes datatypes.JSON
+						attributesBytes, err := json.Marshal(metadataJSON["attributes"])
+						if err != nil {
+							logErr.Println(err.Error())
+							attributesBytes = []byte{}
+						}
+						err = json.Unmarshal(attributesBytes, &attributes)
+						if err != nil {
+							logErr.Println(err.Error())
+						}
 
-						err := storage.AddAccount(&entities.Account{
-							Address: token.Owner,
-							Name:    name,
+						//get owner of token from database TODO
+						acc, err := storage.GetAccountByAddress(token.Owner)
+						if err != nil {
+							if err != gorm.ErrRecordNotFound {
+								continue
+							} else {
+								name := services.RandomName()
+								acc = &entities.Account{
+									Address: token.Owner,
+									Name:    name,
+								}
+								err := storage.AddAccount(acc)
+								if err != nil {
+									if !strings.Contains(err.Error(), "duplicate") {
+										logErr.Println("CRITICAL can't create user")
+										continue
+									} else {
+										acc, err = storage.GetAccountByAddress(token.Owner)
+										if err != nil {
+											logErr.Println("CRITICAL can't get user")
+											continue
+										}
+									}
+								}
+							}
+						}
+						//try get token from database TODO
+						dbToken, err := storage.GetTokenByTokenIdAndNonce(token.Collection, token.Nonce)
+						if err != nil {
+							if err != gorm.ErrRecordNotFound {
+								continue
+							} else {
+
+							}
+						}
+						if dbToken == nil {
+							dbToken = &entities.Token{}
+						}
+						err = storage.AddToken(&entities.Token{
+							TokenID:      token.Collection,
+							MintTxHash:   dbToken.MintTxHash,
+							CollectionID: col.ID,
+							Nonce:        token.Nonce,
+							NonceStr:     nonceStr,
+							MetadataLink: string(youbeiMeta) + "/" + nonceStr + ".json",
+							ImageLink:    string(imageURI) + "/" + nonceStr + ".png",
+							TokenName:    token.Name,
+							Attributes:   attributes,
+							OwnerId:      acc.ID,
+							OnSale:       false,
+							PriceString:  dbToken.PriceString,
+							PriceNominal: dbToken.PriceNominal,
 						})
 						if err != nil {
-							logErr.Println("CRITICAL can't create user")
-							goto singleColLoop
+							logErr.Println(err.Error())
+							continue
 						}
+						collectionIndexer.LastNonce = token.Nonce
+					}
+
+					collectionIndexer.LastIndex += uint64(len(tokens))
+					err = storage.UpdateCollectionndexerWhere(&collectionIndexer,
+						map[string]interface{}{
+							"LastNonce": collectionIndexer.LastNonce,
+						},
+						"id=?",
+						collectionIndexer.ID)
+					if err != nil {
+						logErr.Println("CRITICAL", err.Error())
 					}
 				}
-				//try get token from database TODO
-				dbToken, err := storage.GetTokenByTokenIdAndNonce(token.Collection, token.Nonce)
-				if err != nil {
-					if err != gorm.ErrRecordNotFound {
-						goto singleColLoop
-					} else {
-
-					}
-				}
-				if dbToken == nil {
-					dbToken = &entities.Token{}
-				}
-				err = storage.AddToken(&entities.Token{
-					TokenID:      token.Collection,
-					MintTxHash:   dbToken.MintTxHash,
-					CollectionID: col.ID,
-					Nonce:        token.Nonce,
-					NonceStr:     nonceStr,
-					MetadataLink: string(youbeiMeta) + "/" + nonceStr + ".json",
-					ImageLink:    string(imageURI) + "/" + nonceStr + ".png",
-					TokenName:    token.Name,
-					Attributes:   attributes,
-					OwnerId:      acc.ID,
-					OnSale:       false,
-					PriceString:  dbToken.PriceString,
-					PriceNominal: dbToken.PriceNominal,
-				})
-				if err != nil {
-					logErr.Println(err.Error())
-					continue
-				}
-				collectionIndexer.LastNonce = token.Nonce
-			}
-
-			collectionIndexer.LastIndex += uint64(len(tokens))
-			err = storage.UpdateCollectionndexerWhere(&collectionIndexer,
-				map[string]interface{}{
-					"LastNonce": collectionIndexer.LastNonce,
-				},
-				"id=?",
-				collectionIndexer.ID)
-			if err != nil {
-				logErr.Println("CRITICAL", err.Error())
-			}
-
+			}()
 		}
 
 	}
