@@ -251,6 +251,9 @@ func (ci *CollectionIndexer) StartWorker() {
 				continue
 			}
 			for _, token := range tokens {
+				if collectionIndexer.LastNonce == token.Nonce {
+					break
+				}
 				imageURI, attributeURI := services.GetTokenBaseURIs(token)
 				nonceStr := strconv.FormatUint(token.Nonce, 16)
 				if len(nonceStr)%2 != 0 {
@@ -338,17 +341,20 @@ func (ci *CollectionIndexer) StartWorker() {
 					logErr.Println(err.Error())
 					continue
 				}
+				collectionIndexer.LastNonce = token.Nonce
+			}
 
-			}
 			collectionIndexer.LastIndex += uint64(len(tokens))
-			_, err = storage.UpdateCollectionIndexer(collectionIndexer.LastIndex, collectionIndexer.CollectionAddr)
+			err = storage.UpdateCollectionndexerWhere(&collectionIndexer,
+				map[string]interface{}{
+					"LastNonce": collectionIndexer.LastNonce,
+				},
+				"id=?",
+				collectionIndexer.ID)
 			if err != nil {
-				_, err := storage.UpdateCollectionIndexer(collectionIndexer.LastIndex, collectionIndexer.CollectionAddr)
-				if err != nil {
-					logErr.Println(err.Error())
-					continue
-				}
+				logErr.Println("CRITICAL", err.Error())
 			}
+
 		}
 
 	}

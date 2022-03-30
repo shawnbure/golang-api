@@ -23,7 +23,22 @@ func AddCollection(collection *entities.Collection) error {
 
 	return nil
 }
+func UpdateCollectionWhere(collection *entities.Collection, toUpdate map[string]interface{}, where string, args ...interface{}) error {
+	database, err := GetDBOrError()
+	if err != nil {
+		return err
+	}
 
+	txCreate := database.Model(collection).Where(where, args...).Updates(toUpdate)
+	if txCreate.Error != nil {
+		return txCreate.Error
+	}
+	if txCreate.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+
+	return nil
+}
 func UpdateCollection(collection *entities.Collection) error {
 	database, err := GetDBOrError()
 	if err != nil {
