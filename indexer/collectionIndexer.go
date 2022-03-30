@@ -282,6 +282,12 @@ func (ci *CollectionIndexer) StartWorker() {
 							}
 						}
 
+						if strings.Contains(strings.ToLower(imageURI), ".PNG") || strings.Contains(strings.ToLower(imageURI), ".JPG") || strings.Contains(strings.ToLower(imageURI), ".JPEG") {
+
+						} else {
+							imageURI = imageURI + "/" + nonce10Str + ".png"
+						}
+
 						youbeiMeta := strings.Replace(attributeURI, "https://gateway.pinata.cloud/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
 						youbeiMeta = strings.Replace(youbeiMeta, "https://ipfs.io/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
 						youbeiMeta = strings.Replace(youbeiMeta, "https://ipfs.io/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
@@ -359,7 +365,7 @@ func (ci *CollectionIndexer) StartWorker() {
 							Nonce:        token.Nonce,
 							NonceStr:     nonceStr,
 							MetadataLink: string(youbeiMeta) + "/" + nonce10Str + ".json",
-							ImageLink:    string(imageURI) + "/" + nonce10Str + ".png",
+							ImageLink:    string(imageURI),
 							TokenName:    token.Name,
 							Attributes:   attributes,
 							OwnerId:      acc.ID,
