@@ -208,13 +208,14 @@ func GetLastNonceTokenByCollectionId(collectionId uint64) (entities.Token, error
 
 	return token, nil
 }
+
 func GetTokensByCollectionIdWithOffsetLimit(
 	collectionId uint64,
-	sqlFilter entities.QueryFilter,
 	offset int,
 	limit int,
 	attributesFilters map[string]string,
 	sortRules map[string]string,
+	onSaleFlag bool,
 ) ([]entities.Token, error) {
 	var tokens []entities.Token
 
@@ -225,20 +226,20 @@ func GetTokensByCollectionIdWithOffsetLimit(
 
 	txRead := database.Offset(offset).Limit(limit)
 	for k, v := range attributesFilters {
+
 		txRead.Where(fmt.Sprintf(`attributes @> '[{"trait_type":"%s","value":"%s"}]'`, k, v))
 		// txRead.Where(datatypes.JSONQuery("attributes").Equals(v, k))
 	}
 
 	if len(sortRules) == 2 {
+
 		query := fmt.Sprintf("%s %s", sortRules["criteria"], sortRules["mode"])
 		txRead.Order(query)
 	}
-	if sqlFilter.Query != "" {
-		txRead.Where(sqlFilter.Query, sqlFilter.Values...)
-	}
+
 	txRead.
 		Preload("Owner").
-		Find(&tokens, "collection_id = ?", collectionId)
+		Find(&tokens, "collection_id = ? and on_sale = ?", collectionId, onSaleFlag)
 
 	if txRead.Error != nil {
 		return nil, txRead.Error
