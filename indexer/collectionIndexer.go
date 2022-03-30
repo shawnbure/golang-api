@@ -263,6 +263,22 @@ func (ci *CollectionIndexer) StartWorker() {
 							nonceStr = "0" + nonceStr
 						}
 
+						if strings.Contains(ci.ElrondAPI, "devnet") {
+							imageURI = strings.Replace(imageURI, "https://gateway.pinata.cloud/ipfs/", "https://devnet-media.elrond.com/nfts/asset/", 1)
+						} else {
+							imageURI = strings.Replace(imageURI, "https://gateway.pinata.cloud/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
+							imageURI = strings.Replace(imageURI, "https://ipfs.io/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
+						}
+						if imageURI != "" {
+							if string(imageURI[len(imageURI)-1]) == "/" {
+								imageURI = imageURI[:len(imageURI)-1]
+							}
+							if strings.Contains(imageURI, "ipfs://") {
+								imageURI = strings.Replace(imageURI, "ipfs://", "", 1)
+								imageURI = ""
+							}
+						}
+
 						youbeiMeta := strings.Replace(attributeURI, "https://gateway.pinata.cloud/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
 						youbeiMeta = strings.Replace(youbeiMeta, "https://ipfs.io/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
 						youbeiMeta = strings.Replace(youbeiMeta, "https://ipfs.io/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
