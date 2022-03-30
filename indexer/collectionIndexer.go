@@ -258,6 +258,9 @@ func (ci *CollectionIndexer) StartWorker() {
 							break
 						}
 						imageURI, attributeURI := services.GetTokenBaseURIs(token)
+
+						nonce10Str := strconv.FormatUint(token.Nonce, 10)
+
 						nonceStr := strconv.FormatUint(token.Nonce, 16)
 						if len(nonceStr)%2 != 0 {
 							nonceStr = "0" + nonceStr
@@ -355,8 +358,8 @@ func (ci *CollectionIndexer) StartWorker() {
 							CollectionID: col.ID,
 							Nonce:        token.Nonce,
 							NonceStr:     nonceStr,
-							MetadataLink: string(youbeiMeta) + "/" + nonceStr + ".json",
-							ImageLink:    string(imageURI) + "/" + nonceStr + ".png",
+							MetadataLink: string(youbeiMeta) + "/" + nonce10Str + ".json",
+							ImageLink:    string(imageURI) + "/" + nonce10Str + ".png",
 							TokenName:    token.Name,
 							Attributes:   attributes,
 							OwnerId:      acc.ID,
