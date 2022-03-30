@@ -226,21 +226,20 @@ func (ci *CollectionIndexer) StartWorker() {
 				}
 			}
 			go func() {
+				lastIndex := 0
 				for {
 					res, err := services.GetResponse(
 						fmt.Sprintf("%s/collections/%s/nfts?from=%d",
 							ci.ElrondAPI,
 							collectionIndexer.CollectionName,
-							collectionIndexer.LastIndex))
+							lastIndex))
 					if err != nil {
 						logErr.Println(err.Error())
 						logErr.Println("error creating request for get nfts deployer")
-
 						if strings.Contains(err.Error(), "429") || strings.Contains(err.Error(), "deadline") {
 							time.Sleep(time.Second * 10)
 							continue
 						}
-
 					}
 
 					var tokens []entities.TokenBC
@@ -255,7 +254,7 @@ func (ci *CollectionIndexer) StartWorker() {
 					}
 					for _, token := range tokens {
 						if collectionIndexer.LastNonce == token.Nonce {
-							break
+							goto endLoop
 						}
 						imageURI, attributeURI := services.GetTokenBaseURIs(token)
 
@@ -375,12 +374,11 @@ func (ci *CollectionIndexer) StartWorker() {
 						})
 						if err != nil {
 							logErr.Println(err.Error())
-							continue
 						}
 						collectionIndexer.LastNonce = token.Nonce
 					}
-
-					collectionIndexer.LastIndex += uint64(len(tokens))
+				endLoop:
+					lastIndex += len(tokens)
 					err = storage.UpdateCollectionndexerWhere(&collectionIndexer,
 						map[string]interface{}{
 							"LastNonce": collectionIndexer.LastNonce,
