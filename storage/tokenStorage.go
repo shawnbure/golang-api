@@ -216,6 +216,7 @@ func GetTokensByCollectionIdWithOffsetLimit(
 	attributesFilters map[string]string,
 	sortRules map[string]string,
 	onSaleFlag bool,
+	sqlFilter entities.QueryFilter,
 ) ([]entities.Token, error) {
 	var tokens []entities.Token
 
@@ -236,6 +237,19 @@ func GetTokensByCollectionIdWithOffsetLimit(
 		query := fmt.Sprintf("%s %s", sortRules["criteria"], sortRules["mode"])
 		txRead.Order(query)
 	}
+
+	/*
+		fmt.Println("sqlFilter.Query: ")
+		fmt.Println(sqlFilter.Query)
+		fmt.Println(sqlFilter.Values)
+
+		if sqlFilter.Query != "" {
+			txRead.Where(sqlFilter.Query, sqlFilter.Values...)
+			fmt.Printf("txRead.Where: %v\n", txRead.Where.stri)
+		}
+	*/
+
+	//fmt.Println("collection_id = ? and on_sale = ?", collectionId, onSaleFlag)
 
 	txRead.
 		Preload("Owner").

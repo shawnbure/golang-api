@@ -9,6 +9,7 @@ import (
 
 	"github.com/ENFT-DAO/youbei-api/config"
 	"github.com/ENFT-DAO/youbei-api/data/dtos"
+	"github.com/ENFT-DAO/youbei-api/data/entities"
 	"github.com/ENFT-DAO/youbei-api/proxy/middleware"
 	"github.com/ENFT-DAO/youbei-api/services"
 	"github.com/ENFT-DAO/youbei-api/stats/collstats"
@@ -36,9 +37,10 @@ const (
 )
 
 type CollectionTokensQueryBody struct {
-	Filters    map[string]string `json:"filters"`
-	SortRules  map[string]string `json:"sortRules"`
-	OnSaleFlag bool              `json:"onSaleFlag"`
+	Filters      map[string]string `json:"filters"`
+	SortRules    map[string]string `json:"sortRules"`
+	OnSaleFlag   bool              `json:"onSaleFlag"`
+	QueryFilters string            `json:"queryFilters"`
 }
 
 type CollectionRankingQueryBody struct {
@@ -388,6 +390,15 @@ func (handler *collectionsHandler) getTokens(c *gin.Context) {
 	sortRules := queries.SortRules
 	filters := queries.Filters
 	onSaleFlag := queries.OnSaleFlag
+	queryFilters := queries.QueryFilters
+
+	//fmt.Println("queryFilters: ", queryFilters)
+	//fmt.Println("querySQL: ", querySQL)
+	//fmt.Println("queryValues: ", queryValues)
+
+	querySQL, queryValues, _ := services.ConvertFilterToQuery("tokens", queryFilters)
+
+	sqlFilter := entities.QueryFilter{Query: querySQL, Values: queryValues}
 
 	acceptedCriteria := map[string]bool{"price_nominal": true, "created_at": true}
 	err = testInputSortParams(sortRules, acceptedCriteria)
@@ -420,7 +431,7 @@ func (handler *collectionsHandler) getTokens(c *gin.Context) {
 		return
 	}
 
-	tokens, err := storage.GetTokensByCollectionIdWithOffsetLimit(cacheInfo.CollectionId, int(offset), int(limit), filters, sortRules, onSaleFlag)
+	tokens, err := storage.GetTokensByCollectionIdWithOffsetLimit(cacheInfo.CollectionId, int(offset), int(limit), filters, sortRules, onSaleFlag, sqlFilter)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
