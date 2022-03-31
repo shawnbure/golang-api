@@ -301,7 +301,8 @@ func GetCollectionsVerified(limit int) ([]entities.Collection, error) {
 		return nil, err
 	}
 
-	txRead := database.Limit(limit).Find(&collections, "is_verified = true").Order("priority desc")
+	//is_verifed and create_at in desc in order (most recent first)
+	txRead := database.Limit(limit).Find(&collections, "is_verified = true").Order("created_at desc")
 	if txRead.Error != nil {
 		return nil, txRead.Error
 	}
