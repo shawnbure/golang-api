@@ -219,6 +219,7 @@ func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) 
 
 	return collection, nil
 }
+
 func CreateCollectionFromToken(token entities.TokenBC, blockchainApi string) (*entities.Collection, error) {
 
 	// ========== STEP: CHECK TO SEE IF COLLECTION EXIST ==========
@@ -237,8 +238,9 @@ func CreateCollectionFromToken(token entities.TokenBC, blockchainApi string) (*e
 		return collection, nil
 	}
 
+	colDetail, err := GetCollectionDetailBC(token.Collection, blockchainApi)
 	//set the token creator adress
-	tokenCreatorAddress := token.Owner
+	tokenCreatorAddress := colDetail.Owner
 
 	//
 	// ========== STEP: GET CREATOR ID FROM ACCOUNT BY ADDRESS   ==========
@@ -279,7 +281,6 @@ func CreateCollectionFromToken(token entities.TokenBC, blockchainApi string) (*e
 	}
 
 	// ========== GET COLLECTION DETAIL FROM BC ========
-	colDetail, err := GetCollectionDetailBC(token.Collection, blockchainApi)
 	if err != nil {
 		fmt.Println(err.Error())
 	} else {
@@ -312,6 +313,7 @@ func CreateCollectionFromToken(token entities.TokenBC, blockchainApi string) (*e
 
 	return collection, nil
 }
+
 func AutoCreateCollection(request *AutoCreateCollectionRequest, blockchainApi string) (*entities.Collection, error) {
 
 	// ========== STEP: CHECK TO SEE IF COLLECTION EXIST ==========
@@ -330,8 +332,9 @@ func AutoCreateCollection(request *AutoCreateCollectionRequest, blockchainApi st
 		return collection, nil
 	}
 
+	colDetail, err := GetCollectionDetailBC(request.TokenId, blockchainApi)
 	//set the token creator adress
-	tokenCreatorAddress := request.CreatorAddress
+	tokenCreatorAddress := colDetail.Owner
 
 	// ========== STEP: CHECK IF USER IS THE CREATOR OF TOKEN  ==========
 	// if user wallet not the creator of token, then check if the original
@@ -386,7 +389,6 @@ func AutoCreateCollection(request *AutoCreateCollectionRequest, blockchainApi st
 	}
 
 	// ========== GET COLLECTION DETAIL FROM BC ========
-	colDetail, err := GetCollectionDetailBC(request.TokenId, blockchainApi)
 	if err != nil {
 		fmt.Println(err.Error())
 	} else {
