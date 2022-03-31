@@ -333,8 +333,10 @@ func GetCollectionsTrending(limit int) ([]entities.Collection, error) {
 		return nil, err
 	}
 
-	//temp placeholder
-	txRead := database.Limit(limit).Find(&collections).Order("created_at desc")
+	//Do not include in verified and noteworthy accounts
+	//right now, we are just getting the recently added collection
+	//TODO: determine the metrics for
+	txRead := database.Limit(limit).Find(&collections, "is_verified <> true AND type <> 2").Order("priority desc, created_at desc")
 	if txRead.Error != nil {
 		return nil, txRead.Error
 	}
