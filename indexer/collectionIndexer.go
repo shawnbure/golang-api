@@ -300,7 +300,7 @@ func (ci *CollectionIndexer) StartWorker() {
 							youbeiMeta = ""
 						}
 					}
-					url := fmt.Sprintf("%s/%s.json", youbeiMeta, nonceStr)
+					url := fmt.Sprintf("%s/%s.json", youbeiMeta, nonce10Str)
 					attrbs, err := services.GetResponse(url)
 
 					metadataJSON := make(map[string]interface{})
