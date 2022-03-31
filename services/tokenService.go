@@ -1323,13 +1323,13 @@ func GetTokensUnlistedWithTokenIdAlikeWithStatus(tokenId string, limit int) ([]e
 }
 
 func GetWhitelistBuyCountLimit(contractAddress string, userAddress string) (string, error) {
-	//localCacher := cache.GetLocalCacher()
-	//key := fmt.Sprintf(RoyaltiesLocalCacheKeyFormat, address)
+	localCacher := cache.GetLocalCacher()
+	key := fmt.Sprintf(GetBuyerLimitCount, userAddress, contractAddress)
 
-	//priceVal, errRead := localCacher.Get(key)
-	//if errRead == nil {
-	//	return priceVal.(float64), nil
-	//}
+	count, errRead := localCacher.Get(key)
+	if errRead == nil {
+		return strconv.FormatInt(count.(int64), 10), nil
+	}
 
 	strBuyCountLimit, err := DoGetWhitelistBuyCountLimitVmQuery(contractAddress, userAddress)
 	if err != nil {

@@ -245,19 +245,6 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 							continue
 						}
 					}
-					// owner, err := storage.GetAccountByAddress(senderAdress)
-					// if err != nil {
-					// 	if err == gorm.ErrRecordNotFound {
-					// 		err := storage.AddAccount(&entities.Account{
-					// 			Name:    tokenDetailObj.Identifier + "-Owner",
-					// 			Address: tokenDetailObj.Owner,
-					// 		})
-					// 		if err != nil {
-					// 			goto txloop
-					// 		}
-					// 	}
-					// }
-
 					token = &entities.Token{
 						TokenID:      tokenDetailObj.Collection,
 						MintTxHash:   "",
@@ -278,8 +265,8 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					}
 				}
 			}
-
-			if mpi.DeleteFailedTX(orgTx) {
+			failedTx := mpi.DeleteFailedTX(orgTx)
+			if failedTx {
 				_, err := storage.GetLastTokenTransaction(token.ID)
 				if err != nil {
 					if err == gorm.ErrRecordNotFound {
@@ -293,7 +280,6 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 
 					}
 				}
-				continue
 			}
 
 			price := orgTx.Value
@@ -308,7 +294,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				continue
 			}
 			toUpdate := false // we need to update token afterward  this to detect if we are on right result inside tx NEEDS REFACTOR to better detect the case
-			if actions["isOnSale"] && strings.Contains(string(data), "putNftForSale") {
+			if actions["isOnSale"] && strings.Contains(string(data), "putNftForSale") && !failedTx {
 				toUpdate = true
 				price, ok := big.NewInt(0).SetString(dataParts[1], 16)
 				if !ok {
@@ -339,7 +325,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				if err != nil {
 					lerr.Println(err.Error())
 				}
-			} else if actions["isOffer"] {
+			} else if actions["isOffer"] && !failedTx {
 				toUpdate = false
 				offerStr := mainDataParts[3]
 				offer, _ := big.NewInt(0).SetString(offerStr, 16)
@@ -372,7 +358,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				if err != nil {
 					lerr.Println(err.Error())
 				}
-			} else if actions["isAcceptOffer"] {
+			} else if actions["isAcceptOffer"] && !failedTx {
 				toUpdate = true
 				offerorAddrHex := mainDataParts[3]
 				token.OnSale = false
@@ -429,14 +415,14 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				if err != nil {
 					lerr.Println(err.Error())
 				}
-			} else if actions["isCancelOffer"] {
+			} else if actions["isCancelOffer"] && !failedTx {
 				toUpdate = false
 				err := storage.DeleteOfferByOfferorForTokenId(senderAdress, token.ID)
 				if err != nil {
 					lerr.Println(err.Error())
 					continue
 				}
-			} else if actions["isOnAuction"] && strings.Contains(string(data), "startAuction") {
+			} else if actions["isOnAuction"] && strings.Contains(string(data), "startAuction") && !failedTx {
 				toUpdate = true
 				fmt.Println("is_on_auction", dataParts)
 				hexMinBid := dataParts[1]
@@ -478,7 +464,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					lerr.Println(err.Error())
 
 				}
-			} else if actions["isWithdrawn"] {
+			} else if actions["isWithdrawn"] && !failedTx {
 				toUpdate = true
 				token.OnSale = false
 				token.OwnerId = sender.ID
@@ -495,7 +481,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				if err != nil {
 					lerr.Println(err.Error())
 				}
-			} else if actions["isBuyNft"] {
+			} else if actions["isBuyNft"] && !failedTx {
 				toUpdate = true
 				token.OnSale = false
 				token.Status = entities.BuyToken
@@ -530,7 +516,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				if err != nil {
 					lerr.Println(err.Error())
 				}
-			} else if actions["isBid"] {
+			} else if actions["isBid"] && !failedTx {
 				toUpdate = true
 				bidStr := mainDataParts[3]
 				bid, _ := big.NewInt(0).SetString(bidStr, 16)
@@ -551,7 +537,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					lerr.Println(err.Error())
 					continue
 				}
-			} else if actions["isEndAuction"] && strings.Contains(string(data), "ESDTNFTTransfer") {
+			} else if actions["isEndAuction"] && strings.Contains(string(data), "ESDTNFTTransfer") && !failedTx {
 				toUpdate = true
 				token.OnSale = false
 				token.Status = entities.BuyToken
@@ -589,7 +575,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					lerr.Println(err.Error())
 				}
 			}
-			if token.LastMarketTimestamp < txTimestamp && toUpdate {
+			if token.LastMarketTimestamp < txTimestamp && toUpdate && !failedTx {
 				token.LastMarketTimestamp = txTimestamp
 				err = storage.UpdateTokenWhere(token, map[string]interface{}{
 					"OnSale":              token.OnSale,

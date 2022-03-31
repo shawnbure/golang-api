@@ -18,6 +18,7 @@ var (
 	GetCreatorLastWithdrawalEpochView            = "getCreatorLastWithdrawalEpoch"
 	GetRemainingEpochsUntilClaimView             = "getRemainingEpochsUntilClaim"
 	RoyaltiesLocalCacheKeyFormat                 = "Royalties:%s"
+	GetBuyerLimitCount                           = "getBuyerLimitCount:%s,%s"
 	CreatorLastWithdrawalEpochKeyFormat          = "CLWE:%s"
 	CreatorRemainingEpochsUntilWithdrawKeyFormat = "CWRE:%s"
 	RoyaltiesExpirePeriod                        = 15 * time.Minute
