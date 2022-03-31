@@ -80,6 +80,7 @@ type AutoCreateCollectionRequest struct {
 	CreatorAddress  string `json:"creatorAddress"`
 	TokenBaseURI    string `json:"tokenBaseURI"`
 	MetadataBaseURI string `json:"metadataBaseURI"`
+	CreatedAt       uint64 `json:"createdAt"`
 }
 
 type UpdateCollectionRequest struct {
