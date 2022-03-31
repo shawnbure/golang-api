@@ -250,7 +250,7 @@ func (ci *CollectionIndexer) StartWorker() {
 					continue
 				}
 				if len(tokens) == 0 {
-					return
+					continue
 				}
 				for _, token := range tokens {
 					if collectionIndexer.LastNonce == token.Nonce {
