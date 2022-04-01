@@ -55,11 +55,11 @@ func NewWebServer(cfg *config.GeneralConfig) (*webServer, error) {
 		return nil, err
 	}
 
-	marketPlaceIndexer, err := indexer.NewMarketPlaceIndexer(cfg.Blockchain.MarketplaceAddress, cfg.Blockchain.ApiUrl, cfg.Blockchain.CollectionAPIDelay)
+	marketPlaceIndexer, err := indexer.NewMarketPlaceIndexer(cfg.Blockchain.MarketplaceAddress, cfg.Blockchain.ApiUrl, cfg.Blockchain.ApiUrlSec, cfg.Blockchain.CollectionAPIDelay)
 	if err != nil {
 		return nil, err
 	}
-	collectionIndexer, err := indexer.NewCollectionIndexer(cfg.Blockchain.DeployerAddress, cfg.Blockchain.ApiUrl, cfg.Blockchain.CollectionAPIDelay)
+	collectionIndexer, err := indexer.NewCollectionIndexer(cfg.Blockchain.DeployerAddress, cfg.Blockchain.ApiUrl, cfg.Blockchain.ApiUrlSec, cfg.Blockchain.CollectionAPIDelay)
 	if err != nil {
 		return nil, err
 	}

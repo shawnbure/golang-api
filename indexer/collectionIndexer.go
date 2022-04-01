@@ -23,15 +23,19 @@ import (
 type CollectionIndexer struct {
 	DeployerAddr string `json:"deployerAddr"`
 	ElrondAPI    string `json:"elrondApi"`
+	ElrondAPISec string `json:"elrondApiSec"`
 	Logger       *log.Logger
 	Delay        time.Duration // delay per request in second
 }
 
-func NewCollectionIndexer(deployerAddr string, elrondAPI string, delay uint64) (*CollectionIndexer, error) {
+func NewCollectionIndexer(deployerAddr string, elrondAPI string, elrondAPISec string, delay uint64) (*CollectionIndexer, error) {
 	l := log.New(os.Stderr, "", log.LUTC|log.LstdFlags|log.Lshortfile)
-	return &CollectionIndexer{DeployerAddr: deployerAddr, ElrondAPI: elrondAPI,
-		Delay:  time.Duration(delay),
-		Logger: l}, nil
+	return &CollectionIndexer{
+		DeployerAddr: deployerAddr,
+		ElrondAPI:    elrondAPI,
+		ElrondAPISec: elrondAPISec,
+		Delay:        time.Duration(delay),
+		Logger:       l}, nil
 }
 
 func (ci *CollectionIndexer) StartWorker() {
@@ -52,7 +56,7 @@ func (ci *CollectionIndexer) StartWorker() {
 			}
 		}
 		url := fmt.Sprintf("%s/accounts/%s/transactions?from=%d&withScResults=true&withLogs=false&order=asc",
-			ci.ElrondAPI,
+			ci.ElrondAPISec,
 			ci.DeployerAddr,
 			deployerStat.LastIndex)
 		res, err := services.GetResponse(url)
@@ -182,7 +186,7 @@ func (ci *CollectionIndexer) StartWorker() {
 				continue
 			}
 			if colObj.ContractAddress == "" {
-				colDetail, err := services.GetCollectionDetailBC(col.TokenID, ci.ElrondAPI)
+				colDetail, err := services.GetCollectionDetailBC(col.TokenID, ci.ElrondAPISec)
 				if err != nil {
 					continue
 				}
@@ -229,8 +233,8 @@ func (ci *CollectionIndexer) StartWorker() {
 			var lastNonce uint64 = 0
 			for {
 				res, err := services.GetResponse(
-					fmt.Sprintf("%s/collections/%s/nfts?from=%d",
-						ci.ElrondAPI,
+					fmt.Sprintf("%s/nftsFromCollection?collection=%s&from=%d",
+						ci.ElrondAPISec,
 						collectionIndexer.CollectionName,
 						lastIndex))
 				if err != nil {
