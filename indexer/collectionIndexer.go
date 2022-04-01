@@ -232,12 +232,13 @@ func (ci *CollectionIndexer) StartWorker() {
 			lastIndex := 0
 			var lastNonce uint64 = 0
 			for {
-				res, err := services.GetResponse(
-					fmt.Sprintf("%s/nftsFromCollection?collection=%s&from=%d",
-						ci.ElrondAPISec,
-						collectionIndexer.CollectionName,
-						lastIndex))
+				url := fmt.Sprintf("%s/nftsFromCollection?collection=%s&from=%d",
+					ci.ElrondAPISec,
+					collectionIndexer.CollectionName,
+					lastIndex)
+				res, err := services.GetResponse(url)
 				if err != nil {
+					logErr.Println(err.Error())
 					logErr.Println(err.Error())
 					logErr.Println("error creating request for get nfts deployer")
 					if strings.Contains(err.Error(), "429") || strings.Contains(err.Error(), "deadline") {
