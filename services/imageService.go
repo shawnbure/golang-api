@@ -12,8 +12,8 @@ import (
 )
 
 var (
-	maxProfileImageSize = 512 * 1024
-	maxCoverImageSize   = 1400 * 1400
+	maxProfileImageSize = 5242880 //Change to 5MB - 512 * 1024
+	maxCoverImageSize   = 5242880 //Change to 5MB - 1400 * 1400
 	errorImageZeroLen   = errors.New(fmt.Sprintf("image length is 0"))
 	errorProfileTooBig  = errors.New(fmt.Sprintf("profile image exceeded max size of %d", maxProfileImageSize))
 	errorCoverTooBig    = errors.New(fmt.Sprintf("profile image exceeded max size of %d", maxCoverImageSize))
