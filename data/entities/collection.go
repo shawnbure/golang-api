@@ -15,7 +15,7 @@ type Collection struct {
 	TwitterLink              string         `json:"twitterLink"`
 	InstagramLink            string         `json:"instagramLink"`
 	TelegramLink             string         `json:"telegramLink"`
-	CreatedAt                uint64         `json:"createdAt"`
+	CreatedAt                uint64         `json:"createdAt" gorm:"autoCreateTime:milli"`
 	Priority                 uint64         `json:"priority"`
 	ContractAddress          string         `json:"contractAddress"` // could be contract address of creator role
 	MintPricePerTokenString  string         `json:"mintPricePerTokenString"`
