@@ -172,10 +172,19 @@ func GetTokenBaseURIs(tokenData entities.TokenBC) (string, string) {
 
 		}
 	}
-
-	urlParts := strings.Split(tokenData.URL, "/")
-	lastPart := urlParts[len(urlParts)-1]
-	imageURL := strings.Replace(tokenData.URL, lastPart, "", 1)
+	var imageURL string
+	if strings.Contains(tokenData.URL, ".png") ||
+		strings.Contains(tokenData.URL, ".PNG") ||
+		strings.Contains(tokenData.URL, ".JPG") ||
+		strings.Contains(tokenData.URL, ".JPEG") ||
+		strings.Contains(tokenData.URL, ".jpeg") ||
+		strings.Contains(tokenData.URL, ".jpg") {
+		imageURL = tokenData.URL
+	} else {
+		urlParts := strings.Split(tokenData.URL, "/")
+		lastPart := urlParts[len(urlParts)-1]
+		imageURL = strings.Replace(tokenData.URL, lastPart, "", 1)
+	}
 	return imageURL, attributeUrl
 }
 func GetTokenUris(tokenData entities.TokenBC) (string, string) {
