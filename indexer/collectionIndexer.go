@@ -311,7 +311,7 @@ func (ci *CollectionIndexer) StartWorker() {
 					metadataJSON := make(map[string]interface{})
 					err = json.Unmarshal(attrbs, &metadataJSON)
 					if err != nil {
-						logErr.Println(err.Error(), string(url))
+						logErr.Println(err.Error(), string(url), token.Collection, token.Attributes, token.Identifier, token.Media, token.Metadata)
 					}
 					var attributes datatypes.JSON
 					attributesBytes, err := json.Marshal(metadataJSON["attributes"])

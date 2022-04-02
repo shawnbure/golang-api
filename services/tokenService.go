@@ -155,6 +155,7 @@ func GetTokenBaseURIs(tokenData entities.TokenBC) (string, string) {
 	for _, uri := range tokenData.URIs {
 		attributeUrlByte, err := base64.StdEncoding.DecodeString(uri)
 		if !strings.Contains(string(attributeUrlByte), ".json") {
+			res, err := GetResponse(string(attributeUrlByte))
 			continue
 		}
 		if err != nil {
