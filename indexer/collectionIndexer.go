@@ -251,7 +251,7 @@ func (ci *CollectionIndexer) StartWorker() {
 				var tokens []entities.TokenBC
 				err = json.Unmarshal(res, &tokens)
 				if err != nil {
-					logErr.Println(err.Error())
+					logErr.Println(err.Error(), "collection name ", collectionIndexer.CollectionName, "lastIndex", lastIndex)
 					logErr.Println("error unmarshal nfts deployer")
 					continue
 				}
