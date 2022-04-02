@@ -42,6 +42,9 @@ func (ci *CollectionIndexer) StartWorker() {
 	logErr := ci.Logger
 	var colsToCheck []dtos.CollectionToCheck
 	api := ci.ElrondAPI
+	if api == "" {
+		api = ci.ElrondAPISec
+	}
 	for {
 	deployLoop:
 		var foundDeployedContracts uint64 = 0
