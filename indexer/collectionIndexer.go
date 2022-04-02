@@ -41,6 +41,7 @@ func NewCollectionIndexer(deployerAddr string, elrondAPI string, elrondAPISec st
 func (ci *CollectionIndexer) StartWorker() {
 	logErr := ci.Logger
 	var colsToCheck []dtos.CollectionToCheck
+	api := ci.ElrondAPI
 	for {
 	deployLoop:
 		var foundDeployedContracts uint64 = 0
@@ -56,7 +57,7 @@ func (ci *CollectionIndexer) StartWorker() {
 			}
 		}
 		url := fmt.Sprintf("%s/accounts/%s/transactions?from=%d&withScResults=true&withLogs=false&order=asc",
-			ci.ElrondAPISec,
+			api,
 			ci.DeployerAddr,
 			deployerStat.LastIndex)
 		res, err := services.GetResponse(url)
@@ -186,7 +187,7 @@ func (ci *CollectionIndexer) StartWorker() {
 				continue
 			}
 			if colObj.ContractAddress == "" {
-				colDetail, err := services.GetCollectionDetailBC(col.TokenID, ci.ElrondAPISec)
+				colDetail, err := services.GetCollectionDetailBC(col.TokenID, api)
 				if err != nil {
 					continue
 				}
@@ -233,7 +234,7 @@ func (ci *CollectionIndexer) StartWorker() {
 			var lastNonce uint64 = 0
 			for {
 				url := fmt.Sprintf("%s/nftsFromCollection?collection=%s&from=%d",
-					ci.ElrondAPISec,
+					api,
 					collectionIndexer.CollectionName,
 					lastIndex)
 				res, err := services.GetResponse(url)
@@ -270,7 +271,7 @@ func (ci *CollectionIndexer) StartWorker() {
 						nonceStr = "0" + nonceStr
 					}
 
-					if strings.Contains(ci.ElrondAPI, "devnet") {
+					if strings.Contains(api, "devnet") {
 						imageURI = strings.Replace(imageURI, "https://gateway.pinata.cloud/ipfs/", "https://devnet-media.elrond.com/nfts/asset/", 1)
 					} else {
 						imageURI = strings.Replace(imageURI, "https://gateway.pinata.cloud/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
