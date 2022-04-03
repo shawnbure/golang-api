@@ -233,6 +233,14 @@ func (ci *CollectionIndexer) StartWorker() {
 					continue
 				}
 			}
+			if collectionIndexer.CollectionName == "" {
+				err := storage.UpdateCollectionndexerWhere(&collectionIndexer, map[string]interface{}{"collection_name": colObj.TokenID}, "id=?", collectionIndexer.ID)
+				if err != nil {
+					logErr.Println(err.Error())
+					logErr.Println("error UpdateCollectionndexerWhere collection indexer")
+					continue
+				}
+			}
 			lastIndex := 0
 			var lastNonce uint64 = 0
 			done := false
