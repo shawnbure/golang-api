@@ -235,7 +235,8 @@ func (ci *CollectionIndexer) StartWorker() {
 			}
 			lastIndex := 0
 			var lastNonce uint64 = 0
-			for {
+			done := false
+			for !done {
 				url := fmt.Sprintf("%s/nftsFromCollection?collection=%s&from=%d",
 					api,
 					collectionIndexer.CollectionName,
@@ -259,11 +260,11 @@ func (ci *CollectionIndexer) StartWorker() {
 					continue
 				}
 				if len(tokens) == 0 {
-					continue
+					done = true
 				}
 				for _, token := range tokens {
 					if collectionIndexer.LastNonce == token.Nonce {
-						goto endLoop
+						done = true
 					}
 					imageURI, attributeURI := services.GetTokenBaseURIs(token)
 
@@ -358,6 +359,7 @@ func (ci *CollectionIndexer) StartWorker() {
 					dbToken, err := storage.GetTokenByTokenIdAndNonce(token.Collection, token.Nonce)
 					if err != nil {
 						if err != gorm.ErrRecordNotFound {
+							logErr.Println(err.Error(), "getTokenByTokenIdAndNonce_error")
 							continue
 						} else {
 
@@ -386,8 +388,6 @@ func (ci *CollectionIndexer) StartWorker() {
 					}
 				}
 				lastNonce = tokens[0].Nonce
-
-			endLoop:
 				lastIndex += len(tokens)
 				if collectionIndexer.LastNonce < lastNonce {
 					err = storage.UpdateCollectionndexerWhere(&collectionIndexer,
