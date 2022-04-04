@@ -261,11 +261,13 @@ func (ci *CollectionIndexer) StartWorker() {
 				}
 
 				var tokens []entities.TokenBC
+				var raw map[string]interface{} = make(map[string]interface{})
+				err = json.Unmarshal(res, &raw)
 				err = json.Unmarshal(res, &tokens)
 				if err != nil {
 					logErr.Println(err.Error(), "collection name ", collectionIndexer.CollectionName, "lastIndex", lastIndex)
 					logErr.Println("url", url)
-					logErr.Println("res", res)
+					logErr.Println("raw", raw)
 					logErr.Println("error unmarshal nfts deployer")
 					continue
 				}
