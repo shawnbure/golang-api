@@ -295,13 +295,11 @@ func (ci *CollectionIndexer) StartWorker() {
 					} else {
 						imageURI = strings.Replace(imageURI, "https://gateway.pinata.cloud/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
 						imageURI = strings.Replace(imageURI, "https://ipfs.io/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
+						imageURI = strings.Replace(imageURI, "ipfs://", "https://media.elrond.com/nfts/asset/", 1)
 					}
 					if imageURI != "" {
 						if string(imageURI[len(imageURI)-1]) == "/" {
 							imageURI = imageURI[:len(imageURI)-1]
-						}
-						if strings.Contains(imageURI, "ipfs://") {
-							imageURI = strings.Replace(imageURI, "ipfs://", "", 1)
 						}
 					}
 
@@ -318,9 +316,6 @@ func (ci *CollectionIndexer) StartWorker() {
 					if youbeiMeta != "" {
 						if string(youbeiMeta[len(youbeiMeta)-1]) == "/" {
 							youbeiMeta = youbeiMeta[:len(youbeiMeta)-1]
-						}
-						if strings.Contains(attributeURI, "ipfs://") {
-							youbeiMeta = strings.Replace(youbeiMeta, "ipfs://", "", 1)
 						}
 					}
 					url := fmt.Sprintf("%s/%s.json", youbeiMeta, nonce10Str)
