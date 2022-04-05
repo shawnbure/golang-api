@@ -302,7 +302,6 @@ func (ci *CollectionIndexer) StartWorker() {
 						}
 						if strings.Contains(imageURI, "ipfs://") {
 							imageURI = strings.Replace(imageURI, "ipfs://", "", 1)
-							imageURI = ""
 						}
 					}
 
@@ -322,7 +321,6 @@ func (ci *CollectionIndexer) StartWorker() {
 						}
 						if strings.Contains(attributeURI, "ipfs://") {
 							youbeiMeta = strings.Replace(youbeiMeta, "ipfs://", "", 1)
-							youbeiMeta = ""
 						}
 					}
 					url := fmt.Sprintf("%s/%s.json", youbeiMeta, nonce10Str)
