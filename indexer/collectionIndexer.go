@@ -245,6 +245,9 @@ func (ci *CollectionIndexer) StartWorker() {
 			var lastNonce uint64 = 0
 			done := false
 			for !done {
+				if lastIndex > 9999 {
+					done = true
+				}
 				url := fmt.Sprintf("%s/nftsFromCollection?collection=%s&from=%d",
 					api,
 					collectionIndexer.CollectionName,
