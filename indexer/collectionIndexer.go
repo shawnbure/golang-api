@@ -20,6 +20,8 @@ import (
 	"gorm.io/gorm"
 )
 
+var getCollectionNFTSAPI string = "%s/collections/%s/nfts&from=%d"
+
 type CollectionIndexer struct {
 	DeployerAddr string `json:"deployerAddr"`
 	ElrondAPI    string `json:"elrondApi"`
@@ -44,6 +46,7 @@ func (ci *CollectionIndexer) StartWorker() {
 	api := ci.ElrondAPI
 	if api == "" {
 		api = ci.ElrondAPISec
+		getCollectionNFTSAPI = "%s/nftsFromCollection?collection=%s&from=%d"
 	}
 	for {
 	deployLoop:
@@ -248,7 +251,8 @@ func (ci *CollectionIndexer) StartWorker() {
 				if lastIndex > 9999 {
 					done = true
 				}
-				url := fmt.Sprintf("%s/nftsFromCollection?collection=%s&from=%d",
+
+				url := fmt.Sprintf(getCollectionNFTSAPI,
 					api,
 					collectionIndexer.CollectionName,
 					lastIndex)
