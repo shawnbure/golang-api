@@ -229,29 +229,6 @@ func GetTokenUris(tokenData entities.TokenBC) (string, string) {
 }
 func ListTokenFromClient(request *ListTokenRequest, blockchainApi string) error {
 
-	/*
-		tx := &entities.TransactionBC{PendingResults: true}
-		start := time.Now()
-		for len(tx.Results) == 3 { // TODO
-			txByte, err := GetResponse(fmt.Sprintf("%s/transactions/%s", blockchainApi, request.TxHash))
-			if err != nil {
-				fmt.Printf("%v\n", err)
-				return err
-			}
-			err = json.Unmarshal(txByte, tx)
-			if err != nil {
-				fmt.Printf("%v\n", err)
-				return err
-			}
-			time.Sleep(time.Millisecond * 500)
-			if time.Since(start) > time.Second*40 {
-				return fmt.Errorf("Timed out , please check your wallet or onList tab inside your profile page ")
-			}
-		}
-		if !strings.EqualFold(tx.Status, "success") {
-			return fmt.Errorf("tx not successfull")
-		}
-	*/
 	//get token data from blockchain
 	tokenData, err := getTokenByNonce(request.TokenID, request.Nonce, blockchainApi)
 	if err != nil {
@@ -369,13 +346,16 @@ func ListTokenFromClient(request *ListTokenRequest, blockchainApi string) error 
 		Attributes:       GetAttributesFromMetadata(string(metaDataURI)),
 		TokenName:        tokenData.Name,
 		Hash:             tokenData.Hash,
-		OnSale:           request.OnSale,
 		Status:           entities.TokenStatus(request.Status),
 		PriceString:      request.StringPrice,
 		PriceNominal:     request.NominalPrice,
 		AuctionStartTime: request.SaleStartDate,
 		AuctionDeadline:  request.SaleEndDate,
 	}
+
+	//must be false until tx is confirmed
+	token.OnSale = false
+	token.TxConfirmed = false
 
 	var innerErr error
 

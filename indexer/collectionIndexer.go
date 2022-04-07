@@ -259,8 +259,6 @@ func (ci *CollectionIndexer) StartWorker() {
 				res, err := services.GetResponse(url)
 				if err != nil {
 					logErr.Println(err.Error())
-					logErr.Println(err.Error())
-					logErr.Println("error creating request for get nfts deployer")
 					if strings.Contains(err.Error(), "429") || strings.Contains(err.Error(), "deadline") || strings.Contains(err.Error(), "404") {
 						time.Sleep(time.Second * 10)
 						continue
@@ -272,10 +270,11 @@ func (ci *CollectionIndexer) StartWorker() {
 				err = json.Unmarshal(res, &raw)
 				err = json.Unmarshal(res, &tokens)
 				if err != nil {
-					logErr.Println(err.Error(), "collection name ", collectionIndexer.CollectionName, "lastIndex", lastIndex)
-					logErr.Println("url", url)
-					logErr.Println("raw", raw)
-					logErr.Println("error unmarshal nfts deployer")
+					logErr.Println(err.Error(), "collection name ",
+						collectionIndexer.CollectionName,
+						"lastIndex", lastIndex,
+						"url", url,
+						"raw map", raw)
 					continue
 				}
 				if len(tokens) == 0 {
