@@ -15,6 +15,7 @@ import (
 	"github.com/ENFT-DAO/youbei-api/data/entities"
 	"github.com/ENFT-DAO/youbei-api/services"
 	"github.com/ENFT-DAO/youbei-api/storage"
+	"github.com/ElrondNetwork/elrond-go/data/transaction"
 	"github.com/emurmotol/ethconv"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
@@ -126,7 +127,11 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			if orgTx.TxHash == "" {
 				continue
 			}
-			if orgTx.Status == "pending" {
+			if orgTx.Status == string(transaction.TxStatusPending) {
+				goto txloop
+			}
+			if orgTx.Status == string(transaction.TxStatusSuccess) && !orgTx.PendingResults {
+			} else {
 				goto txloop
 			}
 			orgDataHex, err := base64.StdEncoding.DecodeString(orgTx.Data)
