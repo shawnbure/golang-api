@@ -28,8 +28,9 @@ type Collection struct {
 	TokenBaseURI             string         `json:"tokenBaseURI"`
 	MaxSupply                uint64         `json:"maxSupply"`
 	MetaDataBaseURI          string         `json:"metaDataBaseURI"`
-
-	CreatorID uint64 `json:"creatorId"`
+	MintStartDate            uint64         `json:"mintStartDate"`
+	MintEndDate              uint64         `json:"mintEndDate"`
+	CreatorID                uint64         `json:"creatorId"`
 
 	//AccountName              string `json:"accountName"`
 	//AcccountProfileImageLink string `json:"accountProfileImageLink"`

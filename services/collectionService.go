@@ -70,6 +70,7 @@ type CreateCollectionRequest struct {
 	TokenBaseURI            string   `json:"tokenBaseURI"`
 	MaxSupply               uint64   `json:"maxSupply"`
 	MetaDataBaseURI         string   `json:"metaDataBaseURI"`
+	MintStartDate           uint64   `json:"mintStartDate"`
 }
 
 type AutoCreateCollectionRequest struct {
@@ -84,6 +85,7 @@ type AutoCreateCollectionRequest struct {
 }
 
 type UpdateCollectionRequest struct {
+	Name          string   `json:"collectionName"`
 	Description   string   `json:"description"`
 	Website       string   `json:"website"`
 	DiscordLink   string   `json:"discordLink"`
@@ -91,6 +93,7 @@ type UpdateCollectionRequest struct {
 	InstagramLink string   `json:"instagramLink"`
 	TelegramLink  string   `json:"telegramLink"`
 	Flags         []string `json:"flags"`
+	MintStartDate uint64   `json:"mintStartDate"`
 }
 
 type UpdateCollectionObj struct {
@@ -191,12 +194,12 @@ func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) 
 		ID:                       0,
 		Name:                     request.Name,
 		TokenID:                  request.TokenId,
-		Description:              "",
-		Website:                  "",
-		DiscordLink:              "",
-		TwitterLink:              "",
-		InstagramLink:            "",
-		TelegramLink:             "",
+		Description:              request.Description,
+		Website:                  request.Website,
+		DiscordLink:              request.DiscordLink,
+		TwitterLink:              request.TwitterLink,
+		InstagramLink:            request.InstagramLink,
+		TelegramLink:             request.TelegramLink,
 		Flags:                    datatypes.JSON(bytes),
 		ContractAddress:          request.ContractAddress,
 		MintPricePerTokenString:  priceBig.String(),
@@ -204,6 +207,7 @@ func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) 
 		TokenBaseURI:             request.TokenBaseURI,
 		MetaDataBaseURI:          request.MetaDataBaseURI,
 		MaxSupply:                request.MaxSupply,
+		MintStartDate:            request.MintStartDate,
 		CreatorID:                account.ID,
 		CreatedAt:                uint64(time.Now().Unix()),
 	}
@@ -434,6 +438,7 @@ func UpdateCollection(collection *entities.Collection, request *UpdateCollection
 		return err
 	}
 
+	collection.Name = request.Name
 	collection.Description = request.Description
 	collection.Website = request.Website
 	collection.DiscordLink = request.DiscordLink
@@ -441,6 +446,7 @@ func UpdateCollection(collection *entities.Collection, request *UpdateCollection
 	collection.InstagramLink = request.InstagramLink
 	collection.TelegramLink = request.TelegramLink
 	collection.Flags = bytes
+	collection.MintStartDate = request.MintStartDate
 
 	err = storage.UpdateCollection(collection)
 	if err != nil {
