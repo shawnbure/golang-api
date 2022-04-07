@@ -207,6 +207,7 @@ func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) 
 		TokenBaseURI:             request.TokenBaseURI,
 		MetaDataBaseURI:          request.MetaDataBaseURI,
 		MaxSupply:                request.MaxSupply,
+		MintStartDate:            request.MintStartDate,
 		CreatorID:                account.ID,
 		CreatedAt:                uint64(time.Now().Unix()),
 	}
