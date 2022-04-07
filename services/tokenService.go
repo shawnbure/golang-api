@@ -178,6 +178,8 @@ func GetTokenBaseURIs(tokenData entities.TokenBC) (string, string) {
 		strings.Contains(tokenData.URL, ".JPG") ||
 		strings.Contains(tokenData.URL, ".JPEG") ||
 		strings.Contains(tokenData.URL, ".jpeg") ||
+		strings.Contains(tokenData.URL, ".mp4") ||
+		strings.Contains(tokenData.URL, ".MP4") ||
 		strings.Contains(tokenData.URL, ".jpg") {
 		imageURL = tokenData.URL
 	} else {

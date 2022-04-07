@@ -39,7 +39,35 @@ func NewCollectionIndexer(deployerAddr string, elrondAPI string, elrondAPISec st
 		Delay:        time.Duration(delay),
 		Logger:       l}, nil
 }
-
+func (ci *CollectionIndexer) CorrectIfAddressIsEmpty(colObj *entities.Collection, blockchainApi string) error {
+	if colObj.ContractAddress == "" {
+		colDetail, err := services.GetCollectionDetailBC(colObj.TokenID, blockchainApi)
+		if err != nil {
+			return err
+		}
+		var address string
+		for _, role := range colDetail.Roles {
+			rolesStr, ok := role["roles"].([]interface{})
+			if ok {
+				for _, roleStr := range rolesStr {
+					if strings.EqualFold(roleStr.(string), "ESDTRoleNFTCreate") {
+						address = role["address"].(string)
+					}
+				}
+			}
+		}
+		colObj.ContractAddress = address
+		colObj.Name = colDetail.Name
+		err = services.UpdateCollectionWithAddress(colObj, map[string]interface{}{
+			"Name":            colObj.Name,
+			"ContractAddress": colObj.ContractAddress,
+		})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
 func (ci *CollectionIndexer) StartWorker() {
 	logErr := ci.Logger
 	var colsToCheck []dtos.CollectionToCheck
@@ -187,56 +215,31 @@ func (ci *CollectionIndexer) StartWorker() {
 			continue
 		}
 		for _, colObj := range cols {
-			col, err := storage.GetCollectionByTokenId(colObj.TokenID)
-			if err != nil {
-				logErr.Println("GetCollectionByTokenId", err.Error(), colObj.TokenID)
-				continue
-			}
-			if colObj.ContractAddress == "" {
-				colDetail, err := services.GetCollectionDetailBC(col.TokenID, api)
+			if err := ci.CorrectIfAddressIsEmpty(&colObj, api); err != nil {
 				if err != nil {
-					continue
-				}
-				var address string
-				for _, role := range colDetail.Roles {
-					rolesStr, ok := role["roles"].([]interface{})
-					if ok {
-						for _, roleStr := range rolesStr {
-							if strings.EqualFold(roleStr.(string), "ESDTRoleNFTCreate") {
-								address = role["address"].(string)
-							}
-						}
-					}
-				}
-				colObj.ContractAddress = address
-				colObj.Name = colDetail.Name
-				err = services.UpdateCollectionWithAddress(&colObj, map[string]interface{}{
-					"Name":            colObj.Name,
-					"ContractAddress": colObj.ContractAddress,
-				})
-				if err != nil {
+					logErr.Println(err.Error())
 					continue
 				}
 			}
 			collectionIndexer, err := storage.GetCollectionIndexer(colObj.ContractAddress)
 			if err != nil {
-				if err == gorm.ErrRecordNotFound {
+				if err == gorm.ErrRecordNotFound { //indexer not found
 					collectionIndexer, err = storage.CreateCollectionStat(entities.CollectionIndexer{
 						CollectionAddr: colObj.ContractAddress,
 						CollectionName: colObj.TokenID,
 					})
-					if err != nil {
+					if err != nil { // bad error
 						logErr.Println(err.Error())
 						logErr.Println("error create colleciton indexer")
 						continue
 					}
-				} else {
+				} else { // unknown error
 					logErr.Println(err.Error())
 					logErr.Println("error getting collection indexer")
 					continue
 				}
 			}
-			if collectionIndexer.CollectionName == "" {
+			if collectionIndexer.CollectionName == "" { //update collection name inside collection indexer
 				err := storage.UpdateCollectionndexerWhere(&collectionIndexer, map[string]interface{}{"collection_name": colObj.TokenID}, "id=?", collectionIndexer.ID)
 				if err != nil {
 					logErr.Println(err.Error())
@@ -251,31 +254,29 @@ func (ci *CollectionIndexer) StartWorker() {
 				if lastIndex > 9999 {
 					done = true
 				}
-
+				// Get NFTS from collection from lastIndex , index can't be higher than 10k as elastic query by default won't support that and api returns error
 				url := fmt.Sprintf(getCollectionNFTSAPI,
 					api,
 					collectionIndexer.CollectionName,
 					lastIndex)
 				res, err := services.GetResponse(url)
 				if err != nil {
-					logErr.Println(err.Error())
 					if strings.Contains(err.Error(), "429") || strings.Contains(err.Error(), "deadline") || strings.Contains(err.Error(), "404") {
 						time.Sleep(time.Second * 10)
 						continue
 					}
+					logErr.Println("BADERR", err.Error())
 				}
 
 				var tokens []entities.TokenBC
-				var raw map[string]interface{} = make(map[string]interface{})
-				err = json.Unmarshal(res, &raw)
 				err = json.Unmarshal(res, &tokens)
 				if err != nil {
+					logErr.Println("BADERR", err.Error())
 					logErr.Println(err.Error(), "collection name ",
 						collectionIndexer.CollectionName,
 						"lastIndex", lastIndex,
 						"url", url,
-						"raw map", raw)
-					continue
+						"raw data", res)
 				}
 				if len(tokens) == 0 {
 					done = true
@@ -285,14 +286,12 @@ func (ci *CollectionIndexer) StartWorker() {
 						done = true
 					}
 					imageURI, attributeURI := services.GetTokenBaseURIs(token)
-
 					nonce10Str := strconv.FormatUint(token.Nonce, 10)
-
 					nonceStr := strconv.FormatUint(token.Nonce, 16)
 					if len(nonceStr)%2 != 0 {
 						nonceStr = "0" + nonceStr
 					}
-
+					// Convert URI to elrond url for faster retreive
 					if strings.Contains(api, "devnet") {
 						imageURI = strings.Replace(imageURI, "https://gateway.pinata.cloud/ipfs/", "https://devnet-media.elrond.com/nfts/asset/", 1)
 					} else {
@@ -306,12 +305,6 @@ func (ci *CollectionIndexer) StartWorker() {
 						}
 					}
 
-					if strings.Contains(strings.ToLower(imageURI), ".PNG") || strings.Contains(strings.ToLower(imageURI), ".JPG") || strings.Contains(strings.ToLower(imageURI), ".JPEG") {
-
-					} else {
-						imageURI = imageURI + "/" + nonce10Str + ".png"
-					}
-
 					youbeiMeta := strings.Replace(attributeURI, "https://gateway.pinata.cloud/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
 					youbeiMeta = strings.Replace(youbeiMeta, "https://ipfs.io/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
 					youbeiMeta = strings.Replace(youbeiMeta, "https://ipfs.io/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
@@ -321,6 +314,7 @@ func (ci *CollectionIndexer) StartWorker() {
 							youbeiMeta = youbeiMeta[:len(youbeiMeta)-1]
 						}
 					}
+
 					url := fmt.Sprintf("%s/%s.json", youbeiMeta, nonce10Str)
 					attrbs, err := services.GetResponse(url)
 
@@ -382,7 +376,7 @@ func (ci *CollectionIndexer) StartWorker() {
 					err = storage.AddToken(&entities.Token{
 						TokenID:      token.Collection,
 						MintTxHash:   dbToken.MintTxHash,
-						CollectionID: col.ID,
+						CollectionID: colObj.ID,
 						Nonce:        token.Nonce,
 						NonceStr:     nonceStr,
 						MetadataLink: string(youbeiMeta) + "/" + nonce10Str + ".json",
