@@ -284,6 +284,7 @@ func (ci *CollectionIndexer) StartWorker() {
 				for _, token := range tokens {
 					if collectionIndexer.LastNonce == token.Nonce {
 						done = true
+						break
 					}
 					imageURI, attributeURI := services.GetTokenBaseURIs(token)
 					nonce10Str := strconv.FormatUint(token.Nonce, 10)

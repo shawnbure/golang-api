@@ -44,6 +44,11 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 	lastHash := ""
 	lastHashTimestamp := uint64(0)
 	lastIndex := 0
+
+	api := mpi.ElrondAPI
+	if api == "" {
+		api = mpi.ElrondAPISec
+	}
 	for {
 	mainLoop:
 		var foundResults uint64 = 0
@@ -60,7 +65,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			}
 		}
 		body, err := services.GetResponse(fmt.Sprintf("%s/accounts/%s/sc-results?from=%d&size=100", // sc-result endpoint doesn't have order!
-			mpi.ElrondAPISec,
+			api,
 			mpi.MarketPlaceAddr,
 			lastIndex,
 		))
@@ -95,7 +100,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 
 		for _, tx := range txResult {
 		txloop:
-			orgtxByte, err := services.GetResponse(fmt.Sprintf("%s/transactions/%s", mpi.ElrondAPISec, tx.OriginalTxHash))
+			orgtxByte, err := services.GetResponse(fmt.Sprintf("%s/transactions/%s", api, tx.OriginalTxHash))
 			if err != nil {
 				lerr.Println(err.Error())
 				if strings.Contains(err.Error(), "404") {
@@ -209,7 +214,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					continue
 				} else {
 					lerr.Println("no token found", string(tokenId), hexNonce)
-					tokenDetail, err := services.GetResponse(fmt.Sprintf(`%s/nfts/%s`, mpi.ElrondAPISec, string(tokenId)+"-"+hexNonce))
+					tokenDetail, err := services.GetResponse(fmt.Sprintf(`%s/nfts/%s`, api, string(tokenId)+"-"+hexNonce))
 					if err != nil {
 						lerr.Println(err.Error())
 						continue
@@ -224,7 +229,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					if err != nil {
 						if err == gorm.ErrRecordNotFound {
 							lerr.Println("collection not found for this token!!", tokenDetailObj.Collection)
-							col, err = services.CreateCollectionFromToken(tokenDetailObj, mpi.ElrondAPISec)
+							col, err = services.CreateCollectionFromToken(tokenDetailObj, api)
 							if err != nil {
 								lerr.Println("create collection failed on market indexer", tokenDetailObj.Collection)
 								continue
