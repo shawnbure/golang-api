@@ -186,6 +186,10 @@ func GetTokenBaseURIs(tokenData entities.TokenBC) (string, string) {
 		urlParts := strings.Split(tokenData.URL, "/")
 		lastPart := urlParts[len(urlParts)-1]
 		imageURL = strings.Replace(tokenData.URL, lastPart, "", 1)
+
+		nonce10Str := strconv.FormatUint(tokenData.Nonce, 10)
+
+		imageURL = imageURL + nonce10Str
 	}
 	return imageURL, attributeUrl
 }
