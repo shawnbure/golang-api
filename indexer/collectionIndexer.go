@@ -389,7 +389,7 @@ func (ci *CollectionIndexer) StartWorker() {
 						PriceNominal: dbToken.PriceNominal,
 					})
 					if err != nil {
-						logErr.Println(err.Error())
+						logErr.Println("BADERR", err.Error())
 					}
 				}
 				lastNonce = tokens[0].Nonce
