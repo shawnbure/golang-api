@@ -284,7 +284,7 @@ func (ci *CollectionIndexer) StartWorker() {
 				for _, token := range tokens {
 					if collectionIndexer.LastNonce == token.Nonce {
 						done = true
-						break
+						goto endLoop
 					}
 					imageURI, attributeURI := services.GetTokenBaseURIs(token)
 					nonce10Str := strconv.FormatUint(token.Nonce, 10)
@@ -393,7 +393,10 @@ func (ci *CollectionIndexer) StartWorker() {
 						logErr.Println("BADERR", err.Error())
 					}
 				}
-				lastNonce = tokens[0].Nonce
+			endLoop:
+				if len(tokens) > 0 {
+					lastNonce = tokens[0].Nonce
+				}
 				lastIndex += len(tokens)
 				if collectionIndexer.LastNonce < lastNonce {
 					err = storage.UpdateCollectionndexerWhere(&collectionIndexer,
