@@ -26,6 +26,7 @@ type Token struct {
 	CollectionID        uint64         `json:"collectionId"`
 	LastMarketTimestamp uint64         `json:"lastMarketTimestamp"`
 	Owner               Account        `json:"owner"`
+	TxConfirmed         bool           `json:"txConfirmed"`
 }
 
 type TokenBC struct {
