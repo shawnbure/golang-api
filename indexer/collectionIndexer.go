@@ -20,7 +20,7 @@ import (
 	"gorm.io/gorm"
 )
 
-var getCollectionNFTSAPI string = "%s/collections/%s/nfts&from=%d"
+var getCollectionNFTSAPI string = "%s/collections/%s/nfts?from=%d"
 
 type CollectionIndexer struct {
 	DeployerAddr string `json:"deployerAddr"`
