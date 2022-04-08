@@ -402,19 +402,14 @@ func WithdrawToken(args WithdrawTokenArgs) {
 		return
 	}
 
-	if args.NonceStr != "" {
-		intNonce, err := strconv.ParseUint(args.NonceStr, 10, 64)
-		if err != nil {
-			log.Debug("could not convert string nince to biguint nonce", "err", err)
-			return
-		}
-		args.Nonce = intNonce
-	}
-
 	token, err := storage.GetTokenByTokenIdAndNonce(args.TokenId, args.Nonce)
 	if err != nil {
 		log.Debug("could not get token", "err", err)
 		return
+	}
+
+	if args.NonceStr != "" {
+		token.NonceStr = args.NonceStr
 	}
 
 	if args.TxHash != "" {
@@ -531,6 +526,9 @@ func ListToken(args ListTokenArgs, blockchainProxy string, marketplaceAddress st
 	token.OwnerId = ownerAccount.ID
 	token.CollectionID = collectionId
 
+	if args.NonceStr != "" {
+		token.NonceStr = args.NonceStr
+	}
 	if args.TxHash != "" {
 		token.MintTxHash = args.TxHash
 	}
@@ -645,19 +643,14 @@ func BuyToken(args BuyTokenArgs) {
 		return
 	}
 
-	if args.NonceStr != "" {
-		intNonce, err := strconv.ParseUint(args.NonceStr, 10, 64)
-		if err != nil {
-			log.Debug("could not convert string nince to biguint nonce", "err", err)
-			return
-		}
-		args.Nonce = intNonce
-	}
-
 	token, err := storage.GetTokenByTokenIdAndNonce(args.TokenId, args.Nonce)
 	if err != nil {
 		log.Debug("could not get token", "err", err)
 		return
+	}
+
+	if args.NonceStr != "" {
+		token.NonceStr = args.NonceStr
 	}
 
 	if args.TxHash != "" {
