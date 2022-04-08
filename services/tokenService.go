@@ -557,7 +557,6 @@ func ListToken(args ListTokenArgs, blockchainProxy string, marketplaceAddress st
 			}
 			//}
 		} else {
-			fmt.Printf("%+v\n", token)
 			innerErr = storage.UpdateToken(token)
 		}
 	}
