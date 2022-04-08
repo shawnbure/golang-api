@@ -40,6 +40,7 @@ type ListTokenRequest struct {
 	NominalPrice  float64 `json:"saleNominalPrice"`
 	SaleStartDate uint64  `json:"saleStartDate"`
 	SaleEndDate   uint64  `json:"saleEndDate"`
+	TxConfirmed   bool    `json:"txConfirmed"`
 }
 
 type NonFungibleToken struct {
@@ -357,11 +358,9 @@ func ListTokenFromClient(request *ListTokenRequest, blockchainApi string) error 
 		PriceNominal:     request.NominalPrice,
 		AuctionStartTime: request.SaleStartDate,
 		AuctionDeadline:  request.SaleEndDate,
+		OnSale:           request.OnSale,
+		TxConfirmed:      request.TxConfirmed,
 	}
-
-	//must be false until tx is confirmed
-	token.OnSale = false
-	token.TxConfirmed = false
 
 	var innerErr error
 
@@ -411,6 +410,7 @@ func WithdrawToken(args WithdrawTokenArgs) {
 
 	token.Status = entities.WithdrawToken
 	token.OnSale = false
+	token.TxConfirmed = args.TxConfirmed
 
 	err = storage.UpdateToken(token)
 	if err != nil {
@@ -483,11 +483,12 @@ func ListToken(args ListTokenArgs, blockchainProxy string, marketplaceAddress st
 			ImageLink:        args.FirstLink,
 			Hash:             args.Hash,
 			TokenName:        args.TokenName,
+			OnSale:           args.OnSale,
+			TxConfirmed:      args.TxConfirmed,
 		}
 	}
 
 	token.Status = entities.List
-	token.OnSale = true
 	token.PriceString = args.Price
 	token.PriceNominal = priceNominal
 	token.OwnerId = ownerAccount.ID
@@ -561,10 +562,22 @@ func getTokenByNonce(tokenName string, tokenNonce string, blockchainApi string) 
 }
 
 func BuyToken(args BuyTokenArgs) {
-	priceNominal, err := GetPriceNominal(args.Price)
-	if err != nil {
-		log.Debug("could not parse price", "err", err)
-		return
+
+	var priceNominal float64
+	var err error
+
+	if args.NominalPrice != "" {
+		priceNominal, err = strconv.ParseFloat(args.NominalPrice, 64)
+		if err != nil {
+			log.Debug("could not parse nominal", "err", err)
+			return
+		}
+	} else {
+		priceNominal, err = GetPriceNominal(args.Price)
+		if err != nil {
+			log.Debug("could not parse price", "err", err)
+			return
+		}
 	}
 
 	ownerAccount, err := storage.GetAccountByAddress(args.OwnerAddress)
@@ -579,6 +592,15 @@ func BuyToken(args BuyTokenArgs) {
 		return
 	}
 
+	if args.StrNonce == "" {
+		intNonce, err := strconv.ParseUint(args.StrNonce, 10, 64)
+		if err != nil {
+			log.Debug("could not convert string nince to biguint nonce", "err", err)
+			return
+		}
+		args.Nonce = intNonce
+	}
+
 	token, err := storage.GetTokenByTokenIdAndNonce(args.TokenId, args.Nonce)
 	if err != nil {
 		log.Debug("could not get token", "err", err)
@@ -590,6 +612,7 @@ func BuyToken(args BuyTokenArgs) {
 	token.OwnerId = ownerAccount.ID
 	token.Status = entities.BuyToken
 	token.OnSale = false
+	token.TxConfirmed = args.TxConfirmed
 	token.LastBuyPriceNominal = priceNominal
 	dec18Float := TurnIntoBigFloat18Dec((priceNominal))
 	token.PriceString = dec18Float.String()

@@ -2,6 +2,7 @@ package services
 
 type ListTokenArgs struct {
 	OwnerAddress     string
+	BuyerAddress     string
 	TokenId          string
 	Nonce            uint64
 	TokenName        string
@@ -13,6 +14,8 @@ type ListTokenArgs struct {
 	RoyaltiesPercent uint64
 	Timestamp        uint64
 	TxHash           string
+	TxConfirmed      bool
+	OnSale           bool
 }
 
 type BuyTokenArgs struct {
@@ -20,9 +23,13 @@ type BuyTokenArgs struct {
 	BuyerAddress string
 	TokenId      string
 	Nonce        uint64
+	StrNonce     string
 	Price        string
+	NominalPrice string
 	Timestamp    uint64
 	TxHash       string
+	TxConfirmed  bool
+	OnSale       bool
 }
 
 type WithdrawTokenArgs struct {
@@ -32,4 +39,6 @@ type WithdrawTokenArgs struct {
 	Price        string
 	Timestamp    uint64
 	TxHash       string
+	TxConfirmed  bool
+	OnSale       bool
 }
