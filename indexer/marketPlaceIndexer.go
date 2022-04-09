@@ -120,13 +120,6 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				lastIndex = 0
 				break
 			}
-			if orgTx.Timestamp == 0 {
-				continue
-			}
-
-			if orgTx.TxHash == "" {
-				continue
-			}
 			if orgTx.Status == string(transaction.TxStatusPending) {
 				goto txloop
 			}
@@ -136,14 +129,14 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			}
 			orgDataHex, err := base64.StdEncoding.DecodeString(orgTx.Data)
 			if err != nil {
-				lerr.Println(err.Error())
+				lerr.Println("BADERR", err.Error())
 				continue
 			}
 			orgDataHexParts := strings.Split(string(orgDataHex), "@")
 			orgDataHexStr := strings.Join(orgDataHexParts[1:], "")
 			orgData, err := hex.DecodeString(orgDataHexStr)
 			if err != nil {
-				lerr.Println(err.Error())
+				lerr.Println("BADERR", err.Error())
 				continue
 			}
 			orgData = []byte(orgDataHexParts[0] + string(orgData))
@@ -159,8 +152,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			actions["isBid"] = strings.Contains(string(orgData), "placeBid")
 			actions["isEndAuction"] = strings.Contains(string(orgData), "endAuction")
 
-			if mpi.DeleteFailedTX(orgTx) {
-			}
+			mpi.DeleteFailedTX(orgTx)
 
 			next := false
 			for _, v := range actions {
@@ -175,20 +167,20 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			mainTxDataStr := orgTx.Data
 			mainTxData, err := base64.StdEncoding.DecodeString(mainTxDataStr)
 			if err != nil {
-				lerr.Println(err.Error())
+				lerr.Println("BADERR", err.Error())
 				continue
 			}
 			mainDataParts := strings.Split(string(mainTxData), "@")
 			hexTokenId := mainDataParts[1]
 			tokenId, err := hex.DecodeString(hexTokenId)
 			if err != nil {
-				lerr.Println(err.Error())
+				lerr.Println("BADERR", err.Error())
 				continue
 			}
 			hexNonce := mainDataParts[2]
 			data, err := base64.StdEncoding.DecodeString(tx.Data)
 			if err != nil {
-				lerr.Println(err.Error())
+				lerr.Println("BADERR", err.Error())
 				continue
 			}
 			dataStr := string(data)
@@ -215,20 +207,24 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			token, err := storage.GetTokenByTokenIdAndNonceStr(string(tokenId), hexNonce)
 			if err != nil {
 				if err != gorm.ErrRecordNotFound {
-					lerr.Println(err.Error())
-					continue
+					lerr.Println("REPEAT", err.Error())
+					goto txloop
 				} else {
 					lerr.Println("no token found", string(tokenId), hexNonce)
 					tokenDetail, err := services.GetResponse(fmt.Sprintf(`%s/nfts/%s`, api, string(tokenId)+"-"+hexNonce))
 					if err != nil {
-						lerr.Println(err.Error())
-						continue
+						if strings.Contains(err.Error(), "404") {
+							lerr.Println("BADERR", err.Error())
+							continue
+						}
+						lerr.Println("REPEAT", err.Error())
+						goto txloop
 					}
 					var tokenDetailObj entities.TokenBC
 					err = json.Unmarshal(tokenDetail, &tokenDetailObj)
 					if err != nil {
-						lerr.Println(err.Error())
-						continue
+						lerr.Println("REPEAT", err.Error())
+						goto txloop
 					}
 					col, err := storage.GetCollectionByTokenId(tokenDetailObj.Collection)
 					if err != nil {
@@ -236,8 +232,8 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 							lerr.Println("collection not found for this token!!", tokenDetailObj.Collection)
 							col, err = services.CreateCollectionFromToken(tokenDetailObj, api)
 							if err != nil {
-								lerr.Println("create collection failed on market indexer", tokenDetailObj.Collection)
-								continue
+								lerr.Println("REPEAT", err.Error(), "create collection failed on market indexer", tokenDetailObj.Collection)
+								goto txloop
 							}
 						}
 					}
@@ -258,7 +254,6 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 						err = json.Unmarshal(attributesBytes, &attributes)
 						if err != nil {
 							lerr.Println(err.Error())
-							continue
 						}
 					}
 					token = &entities.Token{
@@ -276,8 +271,12 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					}
 					err = storage.AddToken(token)
 					if err != nil {
-						lerr.Println(err.Error())
-						continue
+						if err == gorm.ErrRecordNotFound {
+							storage.UpdateToken(token)
+							continue
+						} else {
+							goto txloop
+						}
 					}
 				}
 			}
@@ -301,26 +300,28 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			price := orgTx.Value
 			bigPrice, ok := big.NewInt(0).SetString(price, 10)
 			if !ok {
-				lerr.Println("conversion to bigInt failed for price")
-				continue
+				lerr.Println("CRITICAL", "conversion to bigInt failed for price")
+				goto txloop
 			}
+
 			fprice, err := ethconv.FromWei(bigPrice, ethconv.Ether)
 			if err != nil {
-				lerr.Println(err.Error())
-				continue
+				lerr.Println("CRITICAL", err.Error())
+				goto txloop
 			}
+
 			toUpdate := false // we need to update token afterward  this to detect if we are on right result inside tx NEEDS REFACTOR to better detect the case
 			if actions["isOnSale"] && strings.Contains(string(data), "putNftForSale") && !failedTx {
 				toUpdate = true
 				price, ok := big.NewInt(0).SetString(dataParts[1], 16)
 				if !ok {
-					lerr.Println("can not convert price", price, dataParts[1])
-					continue
+					lerr.Println("CRITICAL", "can not convert price", price, dataParts[1])
+					goto txloop
 				}
 				fprice, err := ethconv.FromWei(price, ethconv.Ether)
 				if err != nil {
-					lerr.Println(err.Error())
-					continue
+					lerr.Println("CRITICAL", err.Error())
+					goto txloop
 				}
 
 				token.OnSale = true
@@ -358,8 +359,8 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				err = storage.DeleteOfferByOfferorForTokenId(senderAdress, token.ID)
 				if err != nil {
 					if err != gorm.ErrRecordNotFound {
-						lerr.Println(err.Error())
-						continue
+						lerr.Println("REPEAT", err.Error())
+						goto txloop
 					}
 				}
 				err = storage.AddOffer(&entities.Offer{
@@ -403,14 +404,17 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				if err != nil {
 					lerr.Println(err.Error())
 					if err != gorm.ErrRecordNotFound {
-						continue
+						lerr.Println("REPEAT", err.Error())
+						goto txloop
 					}
 				}
+
 				err = storage.DeleteBidsForTokenId(token.ID)
 				if err != nil {
 					lerr.Println(err.Error())
 					if err != gorm.ErrRecordNotFound {
-						continue
+						lerr.Println("REPEAT", err.Error())
+						goto txloop
 					}
 				}
 
@@ -429,14 +433,15 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					Hash:         orgTx.TxHash,
 				})
 				if err != nil {
-					lerr.Println(err.Error())
+					lerr.Println("REPEAT", err.Error())
+					goto txloop
 				}
 			} else if actions["isCancelOffer"] && !failedTx {
 				toUpdate = false
 				err := storage.DeleteOfferByOfferorForTokenId(senderAdress, token.ID)
 				if err != nil {
-					lerr.Println(err.Error())
-					continue
+					lerr.Println("REPEAT", err.Error())
+					goto txloop
 				}
 			} else if actions["isOnAuction"] && strings.Contains(string(data), "startAuction") && !failedTx {
 				toUpdate = true
@@ -506,14 +511,16 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				if err != nil {
 					lerr.Println(err.Error())
 					if err != gorm.ErrRecordNotFound {
-						continue
+						lerr.Println("REPEAT", err.Error())
+						goto txloop
 					}
 				}
 				err = storage.DeleteBidsForTokenId(token.ID)
 				if err != nil {
 					lerr.Println(err.Error())
 					if err != gorm.ErrRecordNotFound {
-						continue
+						lerr.Println("REPEAT", err.Error())
+						goto txloop
 					}
 				}
 
@@ -550,8 +557,8 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					TokenID:          token.ID,
 				})
 				if err != nil {
-					lerr.Println(err.Error())
-					continue
+					lerr.Println("REPEAT", err.Error())
+					goto txloop
 				}
 			} else if actions["isEndAuction"] && strings.Contains(string(data), "ESDTNFTTransfer") && !failedTx {
 				toUpdate = true
@@ -559,7 +566,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				token.Status = entities.BuyToken
 				user, err := services.GetOrCreateAccount(string(tx.Receiver))
 				if err != nil {
-					lerr.Println("CRITICAL", err.Error())
+					lerr.Println("REPEAT", err.Error())
 					goto mainLoop
 				}
 				var typeOfTx entities.TxType = entities.BuyToken
@@ -571,10 +578,11 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 
 				err = storage.DeleteBidsForTokenId(token.ID)
 				if err != nil {
-					lerr.Println(err.Error())
 					if err != gorm.ErrRecordNotFound {
-						continue
+						lerr.Println("REPEAT", err.Error())
+						goto mainLoop
 					}
+					lerr.Println(err.Error())
 				}
 
 				token.OwnerId = user.ID
@@ -605,11 +613,12 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				}, "token_id=? AND nonce_str=?", tokenId, hexNonce)
 				if err != nil {
 					if err == gorm.ErrRecordNotFound {
-						continue
+						lerr.Println("REPEAT", err.Error())
+						goto mainLoop
 					}
 					lerr.Println(err.Error())
-					lerr.Println("error updating token ", fmt.Sprintf("tokenID %d", token.ID))
-					continue
+					lerr.Println("REPEAT", "error updating token ", fmt.Sprintf("tokenID %d", token.ID))
+					goto mainLoop
 				}
 			}
 			if lastHashTimestamp < tx.Timestamp {
@@ -624,7 +633,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			if err != nil {
 				lerr.Println(err.Error())
 				lerr.Println("error update marketplace index nfts ")
-				continue
+				goto mainLoop
 			}
 		}
 	}
