@@ -40,6 +40,7 @@ type ListTokenRequest struct {
 	NominalPrice  float64 `json:"saleNominalPrice"`
 	SaleStartDate uint64  `json:"saleStartDate"`
 	SaleEndDate   uint64  `json:"saleEndDate"`
+	TxConfirmed   bool    `json:"txConfirmed"`
 }
 
 type NonFungibleToken struct {
@@ -357,11 +358,9 @@ func ListTokenFromClient(request *ListTokenRequest, blockchainApi string) error 
 		PriceNominal:     request.NominalPrice,
 		AuctionStartTime: request.SaleStartDate,
 		AuctionDeadline:  request.SaleEndDate,
+		OnSale:           request.OnSale,
+		TxConfirmed:      request.TxConfirmed,
 	}
-
-	//must be false until tx is confirmed
-	token.OnSale = false
-	token.TxConfirmed = false
 
 	var innerErr error
 
@@ -409,6 +408,18 @@ func WithdrawToken(args WithdrawTokenArgs) {
 		return
 	}
 
+	if args.NonceStr != "" {
+		token.NonceStr = args.NonceStr
+	}
+
+	if args.TxHash != "" {
+		token.MintTxHash = args.TxHash
+	}
+
+	if args.TxConfirmed {
+		token.TxConfirmed = args.TxConfirmed
+	}
+
 	token.Status = entities.WithdrawToken
 	token.OnSale = false
 
@@ -444,10 +455,21 @@ func WithdrawToken(args WithdrawTokenArgs) {
 
 func ListToken(args ListTokenArgs, blockchainProxy string, marketplaceAddress string) {
 
-	priceNominal, err := GetPriceNominal(args.Price)
-	if err != nil {
-		log.Debug("could not parse price", "err", err)
-		return
+	var priceNominal float64
+	var err error
+
+	if args.PriceNominal != "" {
+		priceNominal, err = strconv.ParseFloat(args.PriceNominal, 64)
+		if err != nil {
+			log.Debug("could not parse nominal", "err", err)
+			return
+		}
+	} else {
+		priceNominal, err = GetPriceNominal(args.Price)
+		if err != nil {
+			log.Debug("could not parse price", "err", err)
+			return
+		}
 	}
 
 	ownerAccount, err := GetOrCreateAccount(args.OwnerAddress)
@@ -462,9 +484,18 @@ func ListToken(args ListTokenArgs, blockchainProxy string, marketplaceAddress st
 		collectionId = collection.ID
 	}
 
-	token, err := storage.GetTokenByTokenIdAndNonce(args.TokenId, args.Nonce)
-	if err != nil {
-		metadataLink := args.SecondLink
+	if args.NonceStr != "" {
+		intNonce, err := strconv.ParseUint(args.NonceStr, 10, 64)
+		if err != nil {
+			log.Debug("could not convert string nince to biguint nonce", "err", err)
+			return
+		}
+		args.Nonce = intNonce
+	}
+
+	var metadataLink = ""
+	if args.SecondLink != "" {
+		metadataLink = args.SecondLink
 		if len(metadataLink) == 0 {
 			var innerErr error
 			metadataLink, innerErr = TryGetMetadataLink(blockchainProxy, marketplaceAddress, args.TokenId, args.Nonce)
@@ -472,40 +503,61 @@ func ListToken(args ListTokenArgs, blockchainProxy string, marketplaceAddress st
 				log.Debug("could not get metadata link", innerErr)
 			}
 		}
-
-		token = &entities.Token{
-			TokenID:          args.TokenId,
-			Nonce:            args.Nonce,
-			RoyaltiesPercent: GetRoyaltiesPercentNominal(args.RoyaltiesPercent),
-			MetadataLink:     metadataLink,
-			CreatedAt:        args.Timestamp,
-			Attributes:       GetAttributesFromMetadata(metadataLink),
-			ImageLink:        args.FirstLink,
-			Hash:             args.Hash,
-			TokenName:        args.TokenName,
-		}
 	}
 
+	var updateToken = false
+	token, err := storage.GetTokenByTokenIdAndNonce(args.TokenId, args.Nonce)
+	if err != nil {
+		token = &entities.Token{}
+	}
+
+	token.TokenID = args.TokenId
+	token.Nonce = args.Nonce
+	token.RoyaltiesPercent = GetRoyaltiesPercentNominal(args.RoyaltiesPercent)
+	token.MetadataLink = metadataLink
+	token.CreatedAt = args.Timestamp
+	token.Attributes = GetAttributesFromMetadata(metadataLink)
+	token.ImageLink = args.FirstLink
+	token.Hash = args.Hash
+	token.TokenName = args.TokenName
 	token.Status = entities.List
-	token.OnSale = true
 	token.PriceString = args.Price
 	token.PriceNominal = priceNominal
 	token.OwnerId = ownerAccount.ID
 	token.CollectionID = collectionId
 
+	if args.NonceStr != "" {
+		token.NonceStr = args.NonceStr
+	}
+	if args.TxHash != "" {
+		token.MintTxHash = args.TxHash
+	}
+	if args.OnSale {
+		token.OnSale = args.OnSale
+	}
+	if args.TxConfirmed {
+		token.TxConfirmed = args.TxConfirmed
+	}
+	if args.AuctionStartTime > 0 {
+		token.AuctionStartTime = args.AuctionStartTime
+	}
+	if args.AuctionDeadline > 0 {
+		token.AuctionDeadline = args.AuctionDeadline
+	}
+
 	var innerErr error
-	if err != nil {
+	if !updateToken {
 		innerErr = storage.AddToken(token)
 		if innerErr == nil {
 			_, cacheErr := AddTokenToCache(token.TokenID, token.Nonce, token.TokenName, token.ID)
 			if cacheErr != nil {
 				log.Error("could not add token to cache")
 			}
+			//}
+		} else {
+			innerErr = storage.UpdateToken(token)
 		}
-	} else {
-		innerErr = storage.UpdateToken(token)
 	}
-
 	if innerErr != nil {
 		log.Debug("could not create or update token", "err", innerErr)
 		return
@@ -561,10 +613,22 @@ func getTokenByNonce(tokenName string, tokenNonce string, blockchainApi string) 
 }
 
 func BuyToken(args BuyTokenArgs) {
-	priceNominal, err := GetPriceNominal(args.Price)
-	if err != nil {
-		log.Debug("could not parse price", "err", err)
-		return
+
+	var priceNominal float64
+	var err error
+
+	if args.PriceNominal != "" {
+		priceNominal, err = strconv.ParseFloat(args.PriceNominal, 64)
+		if err != nil {
+			log.Debug("could not parse nominal", "err", err)
+			return
+		}
+	} else {
+		priceNominal, err = GetPriceNominal(args.Price)
+		if err != nil {
+			log.Debug("could not parse price", "err", err)
+			return
+		}
 	}
 
 	ownerAccount, err := storage.GetAccountByAddress(args.OwnerAddress)
@@ -585,6 +649,17 @@ func BuyToken(args BuyTokenArgs) {
 		return
 	}
 
+	if args.NonceStr != "" {
+		token.NonceStr = args.NonceStr
+	}
+
+	if args.TxHash != "" {
+		token.MintTxHash = args.TxHash
+	}
+
+	if args.TxConfirmed {
+		token.TxConfirmed = args.TxConfirmed
+	}
 	// Owner ID was to be reset since the token will no longer be on the marketplace.
 	// Could have been kept like this, but bugs may appear when querying.
 	token.OwnerId = ownerAccount.ID
