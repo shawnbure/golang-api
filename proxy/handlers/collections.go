@@ -20,20 +20,21 @@ import (
 type RankingEntry = collstats.LeaderboardEntry
 
 const (
-	baseCollectionsEndpoint      = "/collections"
-	collectionByNameEndpoint     = "/:collectionId"
-	collectionListEndpoint       = "/list/:offset/:limit"
-	collectionCreateEndpoint     = "/create"
-	collectionTokensEndpoint     = "/:collectionId/tokens/:offset/:limit"
-	collectionProfileEndpoint    = "/:collectionId/profile"
-	collectionCoverEndpoint      = "/:collectionId/cover"
-	collectionMintInfoEndpoint   = "/:collectionId/mintInfo"
-	collectionRankingEndpoint    = "/rankings/:offset/:limit"
-	collectionAllEndpoint        = "/all"
-	collectionVerifiedEndpoint   = "/verified/:limit"
-	collectionNoteworthyEndpoint = "/noteworthy/:limit"
-	collectionTrendingEndpoint   = "/trending/:limit"
-	collectionByTokenIDEndpoint  = "/tokenId/:tokenId"
+	baseCollectionsEndpoint               = "/collections"
+	collectionByNameEndpoint              = "/:collectionId"
+	collectionListEndpoint                = "/list/:offset/:limit"
+	collectionCreateEndpoint              = "/create"
+	collectionTokensEndpoint              = "/:collectionId/tokens/:offset/:limit"
+	collectionProfileEndpoint             = "/:collectionId/profile"
+	collectionCoverEndpoint               = "/:collectionId/cover"
+	collectionMintInfoEndpoint            = "/:collectionId/mintInfo"
+	collectionRankingEndpoint             = "/rankings/:offset/:limit"
+	collectionAllEndpoint                 = "/all"
+	collectionVerifiedEndpoint            = "/verified/:limit"
+	collectionNoteworthyEndpoint          = "/noteworthy/:limit"
+	collectionTrendingEndpoint            = "/trending/:limit"
+	collectionByTokenIDEndpoint           = "/tokenId/:tokenId"
+	collectionUpdateMintStartDateEndpoint = "/:collectionId/mintStartDate"
 )
 
 type CollectionTokensQueryBody struct {
@@ -63,6 +64,7 @@ func NewCollectionsHandler(groupHandler *groupHandler, authCfg config.AuthConfig
 		{Method: http.MethodPost, Path: collectionCreateEndpoint, HandlerFunc: handler.create},
 		{Method: http.MethodPost, Path: collectionProfileEndpoint, HandlerFunc: handler.setCollectionProfile},
 		{Method: http.MethodPost, Path: collectionCoverEndpoint, HandlerFunc: handler.setCollectionCover},
+		{Method: http.MethodPost, Path: collectionUpdateMintStartDateEndpoint, HandlerFunc: handler.updateMintStartDate},
 	}
 	endpointGroupHandler := EndpointGroupHandler{
 		Root:             baseCollectionsEndpoint,
@@ -268,6 +270,49 @@ func (handler *collectionsHandler) getCollectionByTokenID(c *gin.Context) {
 	collection, err := storage.GetCollectionByTokenId(tokenId)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	dtos.JsonResponse(c, http.StatusOK, collection, "")
+}
+
+func (handler *collectionsHandler) updateMintStartDate(c *gin.Context) {
+	var request services.UpdateCollectionMintStartDateRequest
+	tokenId := c.Param("collectionId")
+
+	err := c.BindJSON(&request)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	cacheInfo, err := collstats.GetOrAddCollectionCacheInfo(tokenId)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	collection, err := storage.GetCollectionById(cacheInfo.CollectionId)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	creator, err := storage.GetAccountById(collection.CreatorID)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	jwtAddress := c.GetString(middleware.AddressKey)
+	if creator.Address != jwtAddress {
+		dtos.JsonResponse(c, http.StatusUnauthorized, nil, "")
+		return
+	}
+
+	err = services.UpdateCollectionMintStartDate(collection, &request)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
 	}
 

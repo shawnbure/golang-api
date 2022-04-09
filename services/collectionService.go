@@ -93,7 +93,10 @@ type UpdateCollectionRequest struct {
 	InstagramLink string   `json:"instagramLink"`
 	TelegramLink  string   `json:"telegramLink"`
 	Flags         []string `json:"flags"`
-	MintStartDate uint64   `json:"mintStartDate"`
+}
+
+type UpdateCollectionMintStartDateRequest struct {
+	MintStartDate uint64 `json:"mintStartDate"`
 }
 
 type UpdateCollectionObj struct {
@@ -427,6 +430,18 @@ func AutoCreateCollection(request *AutoCreateCollectionRequest, blockchainApi st
 	return collection, nil
 }
 
+func UpdateCollectionMintStartDate(collection *entities.Collection, request *UpdateCollectionMintStartDateRequest) error {
+
+	collection.MintStartDate = request.MintStartDate
+
+	err := storage.UpdateCollection(collection)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func UpdateCollection(collection *entities.Collection, request *UpdateCollectionRequest) error {
 	err := checkValidInputOnUpdate(request)
 	if err != nil {
@@ -446,7 +461,7 @@ func UpdateCollection(collection *entities.Collection, request *UpdateCollection
 	collection.InstagramLink = request.InstagramLink
 	collection.TelegramLink = request.TelegramLink
 	collection.Flags = bytes
-	collection.MintStartDate = request.MintStartDate
+	//collection.MintStartDate = request.MintStartDate
 
 	err = storage.UpdateCollection(collection)
 	if err != nil {
