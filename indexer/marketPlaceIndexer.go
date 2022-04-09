@@ -100,11 +100,17 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 		foundResults += uint64(len(txResult))
 
 		for _, tx := range txResult {
+			txCounter := 0
 		txloop:
 			orgtxByte, err := services.GetResponse(fmt.Sprintf("%s/transactions/%s", api, tx.OriginalTxHash))
 			if err != nil {
 				lerr.Println(err.Error())
 				if strings.Contains(err.Error(), "404") {
+					continue
+				}
+				txCounter++
+				if txCounter > 3 {
+					txCounter = 0
 					continue
 				}
 				goto txloop
@@ -122,10 +128,15 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				break
 			}
 			if orgTx.Status == string(transaction.TxStatusPending) {
+				lerr.Println("REPEAT", "no final state of tx")
 				goto txloop
 			}
-			if orgTx.Status == string(transaction.TxStatusSuccess) && !orgTx.PendingResults {
+			if (orgTx.Status == string(transaction.TxStatusSuccess) ||
+				orgTx.Status == string(transaction.TxStatusFail) ||
+				orgTx.Status == string(transaction.TxStatusInvalid)) &&
+				!orgTx.PendingResults {
 			} else {
+				lerr.Println("REPEAT", "no final state of tx")
 				goto txloop
 			}
 			orgDataHex, err := base64.StdEncoding.DecodeString(orgTx.Data)
@@ -162,6 +173,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				}
 			}
 			if !next {
+				lerr.Println("REPEAT", "no final state of tx")
 				continue
 			}
 
@@ -199,7 +211,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					sender.Address = senderAdress
 					err := storage.AddAccount(sender)
 					if err != nil {
-						lerr.Println("couldn't add user", err.Error())
+						lerr.Println("MAINLOOP", "couldn't add user", err.Error())
 						goto mainLoop
 					}
 				}
@@ -274,8 +286,10 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					if err != nil {
 						if err == gorm.ErrRecordNotFound {
 							storage.UpdateToken(token)
+							lerr.Println("BADERR", err.Error())
 							continue
 						} else {
+							lerr.Println("REPEAT", err.Error())
 							goto txloop
 						}
 					}
@@ -383,12 +397,12 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				token.Status = entities.BuyToken
 				offerorAddrStr, err := services.ConvertHexToBehc32(offerorAddrHex)
 				if err != nil {
-					lerr.Println(err.Error())
+					lerr.Println("MAINLOOP", err.Error())
 					goto mainLoop
 				}
 				user, err := storage.GetAccountByAddress(offerorAddrStr)
 				if err != nil {
-					lerr.Println(err.Error())
+					lerr.Println("MAINLOOP", err.Error())
 					goto mainLoop
 				}
 				token.OwnerId = user.ID
@@ -397,7 +411,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				offer, _ := big.NewInt(0).SetString(offerStr, 16)
 				offerFloat, err := ethconv.FromWei(offer, ethconv.Ether)
 				if err != nil {
-					lerr.Println(err.Error())
+					lerr.Println("MAINLOOP", err.Error())
 					goto mainLoop
 				}
 
@@ -567,7 +581,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				token.Status = entities.BuyToken
 				user, err := services.GetOrCreateAccount(string(tx.Receiver))
 				if err != nil {
-					lerr.Println("REPEAT", err.Error())
+					lerr.Println("MAINLOOP", err.Error())
 					goto mainLoop
 				}
 				var typeOfTx entities.TxType = entities.BuyToken
@@ -580,7 +594,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				err = storage.DeleteBidsForTokenId(token.ID)
 				if err != nil {
 					if err != gorm.ErrRecordNotFound {
-						lerr.Println("REPEAT", err.Error())
+						lerr.Println("MAINLOOP", err.Error())
 						goto mainLoop
 					}
 					lerr.Println(err.Error())
@@ -614,11 +628,11 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				}, "token_id=? AND nonce_str=?", tokenId, hexNonce)
 				if err != nil {
 					if err == gorm.ErrRecordNotFound {
-						lerr.Println("REPEAT", err.Error())
+						lerr.Println("MAINLOOP", err.Error())
 						goto mainLoop
 					}
 					lerr.Println(err.Error())
-					lerr.Println("REPEAT", "error updating token ", fmt.Sprintf("tokenID %d", token.ID))
+					lerr.Println("MAINLOOP", "error updating token ", fmt.Sprintf("tokenID %d", token.ID))
 					goto mainLoop
 				}
 			}
@@ -634,7 +648,6 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			if err != nil {
 				lerr.Println(err.Error())
 				lerr.Println("error update marketplace index nfts ")
-				goto mainLoop
 			}
 		}
 	}
