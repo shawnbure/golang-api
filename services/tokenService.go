@@ -510,7 +510,20 @@ func ListToken(args ListTokenArgs, blockchainProxy string, marketplaceAddress st
 	if err != nil {
 		token = &entities.Token{}
 	}
-
+	priceBigFloat, err := ConvertBigFloatToFloat(args.PriceNominal)
+	if err != nil {
+		log.Debug("could not convert big float string to big float object", "err", err)
+		return
+	}
+	fmt.Println(priceBigFloat.String())
+	priceBigFloat, ok := TurnBigFloatoBigFloatNDec(priceBigFloat, 18)
+	fmt.Println(priceBigFloat.String())
+	if !ok {
+		log.Debug("could not TurnBigFloatoBigFloatNDec priceBigFloat", "err", err)
+		return
+	}
+	finalPriceBigInt := new(big.Int)
+	priceBigFloat.Int(finalPriceBigInt)
 	token.TokenID = args.TokenId
 	token.Nonce = args.Nonce
 	token.RoyaltiesPercent = GetRoyaltiesPercentNominal(args.RoyaltiesPercent)
@@ -521,7 +534,8 @@ func ListToken(args ListTokenArgs, blockchainProxy string, marketplaceAddress st
 	token.Hash = args.Hash
 	token.TokenName = args.TokenName
 	token.Status = entities.List
-	token.PriceString = args.Price
+	// token.PriceString = args.Price
+	token.PriceString = finalPriceBigInt.String()
 	token.PriceNominal = priceNominal
 	token.OwnerId = ownerAccount.ID
 	token.CollectionID = collectionId
@@ -582,7 +596,10 @@ func getTokenByNonce(tokenName string, tokenNonce string, blockchainApi string) 
 	var token NonFungibleToken
 
 	intNonce, err := strconv.ParseUint(tokenNonce, 10, 64)
-	hexNonce := fmt.Sprintf("%X", intNonce)
+	if err != nil {
+		return token, err
+	}
+	hexNonce := strconv.FormatUint(intNonce, 16)
 
 	//Couldn't sort out padding and this quick check will work
 	if len(hexNonce)%2 != 0 {
