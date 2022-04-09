@@ -141,6 +141,28 @@ func TurnIntoBigIntNDec(num int64, decimal int64) *big.Int {
 	return bigNum
 }
 
+func TurnBigIntoBigIntNDec(num *big.Int, decimal int64) *big.Int {
+	num = num.Mul(big.NewInt(10).Exp(big.NewInt(10), big.NewInt(decimal), nil), num)
+	return num
+}
+
+func TurnBigFloatoBigFloatNDec(num *big.Float, decimal int64) (*big.Float, bool) {
+	powerString := big.NewInt(0).Exp(big.NewInt(10), big.NewInt(decimal), nil).String()
+	powerFloat, ok := big.NewFloat(0).SetString(powerString)
+	if !ok {
+		return nil, ok
+	}
+	num = num.Mul(powerFloat, num)
+	return num, true
+}
+
+func ConvertBigFloatToFloat(num string) (*big.Float, error) {
+	bigFloat, ok := big.NewFloat(0).SetString(num)
+	if !ok {
+		return nil, fmt.Errorf("failed to convert big float to float")
+	}
+	return bigFloat, nil
+}
 func RandomName() string {
 	guid := xid.New()
 	return guid.String()

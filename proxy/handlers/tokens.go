@@ -24,6 +24,7 @@ const (
 	tokenWithdrawEndpoint            = "/withdraw/:tokenId/:nonce"
 	availableTokensEndpoint          = "/available"
 	tokenListEndpoint                = "/list-fc/:walletAddress/:tokenName/:tokenNonce"
+	tokenBuyEndpoint                 = "/buy-fc/:walletAddress/:tokenName/:tokenNonce"
 	offersForTokenIdAndNonceEndpoint = "/:tokenId/:nonce/offers/:offset/:limit"
 	bidsForTokenIdAndNonceEndpoint   = "/:tokenId/:nonce/bids/:offset/:limit"
 	refreshTokenMetadataEndpoint     = "/:tokenId/:nonce/refresh"
@@ -45,6 +46,7 @@ func NewTokensHandler(groupHandler *groupHandler, authCfg config.AuthConfig, cfg
 
 	endpoints := []EndpointHandler{
 		{Method: http.MethodPost, Path: tokenListEndpoint, HandlerFunc: handler.list},
+		{Method: http.MethodPost, Path: tokenBuyEndpoint, HandlerFunc: handler.buy},
 		{Method: http.MethodPost, Path: tokenWithdrawEndpoint, HandlerFunc: handler.withdraw},
 	}
 
@@ -89,7 +91,8 @@ func NewTokensHandler(groupHandler *groupHandler, authCfg config.AuthConfig, cfg
 
 func (handler *tokensHandler) list(c *gin.Context) {
 
-	var request services.ListTokenRequest
+	//var request services.ListTokenRequest
+	var request services.ListTokenArgs
 
 	errBindJSON := c.BindJSON(&request)
 	if errBindJSON != nil {
@@ -99,16 +102,40 @@ func (handler *tokensHandler) list(c *gin.Context) {
 	}
 
 	jwtAddress := c.GetString(middleware.AddressKey)
-	if jwtAddress != request.UserAddress {
+	if jwtAddress != request.OwnerAddress {
 		dtos.JsonResponse(c, http.StatusUnauthorized, nil, "jwt and request addresses differ")
 		return
 	}
 
-	errListToken := services.ListTokenFromClient(&request, handler.blockchainConfig.ApiUrl)
-	if errListToken != nil {
-		dtos.JsonResponse(c, http.StatusInternalServerError, nil, errListToken.Error())
+	//errListToken := services.ListTokenFromClient(&request, handler.blockchainConfig.ApiUrl)
+	services.ListToken(request, handler.blockchainConfig.ApiUrl, handler.blockchainConfig.MarketplaceAddress)
+	//if errListToken != nil {
+	//	dtos.JsonResponse(c, http.StatusInternalServerError, nil, errListToken.Error())
+	//	return
+	//}
+
+	dtos.JsonResponse(c, http.StatusOK, nil, "")
+}
+
+func (handler *tokensHandler) buy(c *gin.Context) {
+
+	//var request services.ListTokenRequest
+	var request services.BuyTokenArgs
+
+	errBindJSON := c.BindJSON(&request)
+	if errBindJSON != nil {
+		fmt.Printf("%+v\n", errBindJSON)
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, errBindJSON.Error())
 		return
 	}
+
+	jwtAddress := c.GetString(middleware.AddressKey)
+	if jwtAddress != request.OwnerAddress {
+		dtos.JsonResponse(c, http.StatusUnauthorized, nil, "jwt and request addresses differ")
+		return
+	}
+
+	services.BuyToken(request)
 
 	dtos.JsonResponse(c, http.StatusOK, nil, "")
 }
