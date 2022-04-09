@@ -390,17 +390,17 @@ func ListTokenFromClient(request *ListTokenRequest, blockchainApi string) error 
 
 func WithdrawToken(args WithdrawTokenArgs) {
 
-	priceNominal, err := GetPriceNominal(args.Price)
-	if err != nil {
-		log.Debug("could not parse price", "err", err)
-		return
-	}
+	// priceNominal, err := GetPriceNominal(args.Price)
+	// if err != nil {
+	// 	log.Debug("could not parse price", "err", err)
+	// 	return
+	// }
 
-	ownerAccount, err := storage.GetAccountByAddress(args.OwnerAddress)
-	if err != nil {
-		log.Debug("could not get owner account", err)
-		return
-	}
+	// ownerAccount, err := storage.GetAccountByAddress(args.OwnerAddress)
+	// if err != nil {
+	// 	log.Debug("could not get owner account", err)
+	// 	return
+	// }
 
 	token, err := storage.GetTokenByTokenIdAndNonce(args.TokenId, args.Nonce)
 	if err != nil {
@@ -438,19 +438,20 @@ func WithdrawToken(args WithdrawTokenArgs) {
 	if err != nil {
 		log.Debug("could not delete bids for token", "err", err)
 	}
+	// Indexer is doing it better TODO
 
-	transaction := entities.Transaction{
-		Hash:         args.TxHash,
-		Type:         entities.WithdrawToken,
-		PriceNominal: priceNominal,
-		Timestamp:    args.Timestamp,
-		SellerID:     0,
-		BuyerID:      ownerAccount.ID,
-		TokenID:      token.ID,
-		CollectionID: token.CollectionID,
-	}
+	// transaction := entities.Transaction{
+	// 	Hash:         args.TxHash,
+	// 	Type:         entities.WithdrawToken,
+	// 	PriceNominal: priceNominal,
+	// 	Timestamp:    args.Timestamp,
+	// 	SellerID:     0,
+	// 	BuyerID:      ownerAccount.ID,
+	// 	TokenID:      token.ID,
+	// 	CollectionID: token.CollectionID,
+	// }
 
-	AddTransaction(&transaction)
+	// AddTransaction(&transaction)
 }
 
 func ListToken(args ListTokenArgs, blockchainProxy string, marketplaceAddress string) {
@@ -577,18 +578,19 @@ func ListToken(args ListTokenArgs, blockchainProxy string, marketplaceAddress st
 		return
 	}
 
-	transaction := entities.Transaction{
-		Hash:         args.TxHash,
-		Type:         entities.ListToken,
-		PriceNominal: priceNominal,
-		Timestamp:    args.Timestamp,
-		SellerID:     ownerAccount.ID,
-		BuyerID:      0,
-		TokenID:      token.ID,
-		CollectionID: collectionId,
-	}
+	// Indexer is safer till later review
+	// transaction := entities.Transaction{
+	// 	Hash:         args.TxHash,
+	// 	Type:         entities.ListToken,
+	// 	PriceNominal: priceNominal,
+	// 	Timestamp:    args.Timestamp,
+	// 	SellerID:     ownerAccount.ID,
+	// 	BuyerID:      0,
+	// 	TokenID:      token.ID,
+	// 	CollectionID: collectionId,
+	// }
 
-	AddTransaction(&transaction)
+	// AddTransaction(&transaction)
 }
 
 func getTokenByNonce(tokenName string, tokenNonce string, blockchainApi string) (NonFungibleToken, error) {
@@ -654,11 +656,11 @@ func BuyToken(args BuyTokenArgs) {
 		return
 	}
 
-	buyerAccount, err := GetOrCreateAccount(args.BuyerAddress)
-	if err != nil {
-		log.Debug("could not get or create account", "err", err)
-		return
-	}
+	// buyerAccount, err := GetOrCreateAccount(args.BuyerAddress)
+	// if err != nil {
+	// 	log.Debug("could not get or create account", "err", err)
+	// 	return
+	// }
 
 	token, err := storage.GetTokenByTokenIdAndNonce(args.TokenId, args.Nonce)
 	if err != nil {
@@ -677,32 +679,49 @@ func BuyToken(args BuyTokenArgs) {
 	if args.TxConfirmed {
 		token.TxConfirmed = args.TxConfirmed
 	}
+
+	priceBigFloat, err := ConvertBigFloatToFloat(args.PriceNominal)
+	if err != nil {
+		log.Debug("could not convert big float string to big float object", "err", err)
+		return
+	}
+	fmt.Println(priceBigFloat.String())
+	priceBigFloat, ok := TurnBigFloatoBigFloatNDec(priceBigFloat, 18)
+	fmt.Println(priceBigFloat.String())
+	if !ok {
+		log.Debug("could not TurnBigFloatoBigFloatNDec priceBigFloat", "err", err)
+		return
+	}
+	finalPriceBigInt := new(big.Int)
+	priceBigFloat.Int(finalPriceBigInt)
+
 	// Owner ID was to be reset since the token will no longer be on the marketplace.
 	// Could have been kept like this, but bugs may appear when querying.
 	token.OwnerId = ownerAccount.ID
 	token.Status = entities.BuyToken
 	token.OnSale = false
 	token.LastBuyPriceNominal = priceNominal
-	dec18Float := TurnIntoBigFloat18Dec((priceNominal))
-	token.PriceString = dec18Float.String()
+	// dec18Float := TurnIntoBigFloat18Dec((priceNominal)) // priceNominal could be float and should be treated that way
+	token.PriceString = finalPriceBigInt.String()
 	err = storage.UpdateToken(token)
 	if err != nil {
 		log.Debug("could not update token", "err", err)
 		return
 	}
+	//indexer is safer till later review TODO
 
-	transaction := entities.Transaction{
-		Hash:         args.TxHash,
-		Type:         entities.BuyToken,
-		PriceNominal: priceNominal,
-		Timestamp:    args.Timestamp,
-		SellerID:     ownerAccount.ID,
-		BuyerID:      buyerAccount.ID,
-		TokenID:      token.ID,
-		CollectionID: token.CollectionID,
-	}
+	// transaction := entities.Transaction{
+	// 	Hash:         args.TxHash,
+	// 	Type:         entities.BuyToken,
+	// 	PriceNominal: priceNominal,
+	// 	Timestamp:    args.Timestamp,
+	// 	SellerID:     ownerAccount.ID,
+	// 	BuyerID:      buyerAccount.ID,
+	// 	TokenID:      token.ID,
+	// 	CollectionID: token.CollectionID,
+	// }
 
-	AddTransaction(&transaction)
+	// AddTransaction(&transaction)
 }
 
 func StartAuction(args StartAuctionArgs, blockchainProxy string, marketplaceAddress string) (*entities.Token, error) {
