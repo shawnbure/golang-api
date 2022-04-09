@@ -38,6 +38,7 @@ const (
 	setSpecialRolesFormatEndpoint              = "/set-roles/:userAddress/:tokenId/:contractAddress"
 	withdrawFromMinterFormatEndpoint           = "/withdraw-minter/:userAddress/:contractAddress"
 	requestWithdrawThroughMinterFormatEndpoint = "/request-withdraw/:userAddress/:contractAddress"
+	updateSaleStartFormatEndpoint              = "/update-sale-start/:userAddress/:contractAddress/:saleStart"
 )
 
 type txTemplateHandler struct {
@@ -72,6 +73,7 @@ func NewTxTemplateHandler(groupHandler *groupHandler, blockchainConfig config.Bl
 		{Method: http.MethodGet, Path: setSpecialRolesFormatEndpoint, HandlerFunc: handler.getSetSpecialRoles},
 		{Method: http.MethodGet, Path: withdrawFromMinterFormatEndpoint, HandlerFunc: handler.withdrawFromMinter},
 		{Method: http.MethodGet, Path: requestWithdrawThroughMinterFormatEndpoint, HandlerFunc: handler.requestWithdrawThroughMinter},
+		{Method: http.MethodGet, Path: updateSaleStartFormatEndpoint, HandlerFunc: handler.updateSaleStart},
 	}
 
 	endpointGroupHandler := EndpointGroupHandler{
@@ -808,6 +810,35 @@ func (handler *txTemplateHandler) requestWithdrawThroughMinter(c *gin.Context) {
 	contractAddress := c.Param("contractAddress")
 
 	template, err := handler.txFormatter.RequestWithdrawThroughMinterTxTemplate(userAddress, contractAddress)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	dtos.JsonResponse(c, http.StatusOK, template, "")
+}
+
+func (handler *txTemplateHandler) updateSaleStart(c *gin.Context) {
+	userAddress := c.Param("userAddress")
+	contractAddress := c.Param("contractAddress")
+	saleStartStr := c.Param("saleStart")
+
+	/*
+		fmt.Println("contract Address: ", contractAddress)
+
+		contractAddressFromBech32, _ := erdgoData.NewAddressFromBech32String(contractAddress)
+		contractAddressHex := hex.EncodeToString(contractAddressFromBech32.AddressBytes())
+
+		fmt.Println("newAddress2: " + contractAddressHex)
+	*/
+
+	saleStart, err := strconv.ParseUint(saleStartStr, 10, 64)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	template, err := handler.txFormatter.UpdateSaleStartTemplateTxTemplate(userAddress, contractAddress, saleStart)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return

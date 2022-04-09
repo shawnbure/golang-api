@@ -36,6 +36,7 @@ var (
 	setSpecialRoleEndpointName               = "setSpecialRole"
 	withdrawFromMinterEndpointName           = "withdraw"
 	requestWithdrawThroughMinterEndpointName = "requestWithdraw"
+	updateSaleStartEndpointName              = "updateSaleStart"
 )
 
 const RoyaltiesBP = 100
@@ -558,4 +559,28 @@ func (f *TxFormatter) RequestWithdrawThroughMinterTxTemplate(
 		Version:   1,
 		Options:   0,
 	}, nil
+}
+
+func (f *TxFormatter) UpdateSaleStartTemplateTxTemplate(
+	walletAddress string,
+	contractAddress string,
+	saleStartTimestamp uint64,
+) (*Transaction, error) {
+	txData := updateSaleStartEndpointName +
+		"@" + hex.EncodeToString(big.NewInt(int64(saleStartTimestamp)).Bytes())
+
+	return &Transaction{
+		Nonce:     0,
+		Value:     "0",
+		RcvAddr:   contractAddress,
+		SndAddr:   walletAddress,
+		GasPrice:  f.config.GasPrice,
+		GasLimit:  f.config.RequestWithdrawThroughMinterGasLimit,
+		Data:      txData,
+		Signature: "",
+		ChainID:   f.config.ChainID,
+		Version:   1,
+		Options:   0,
+	}, nil
+
 }
