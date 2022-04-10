@@ -81,17 +81,17 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			lerr.Println("error unmarshal nfts marketplace")
 			continue
 		}
-		if len(txResult) == 0 {
-			lastIndex = 0
-			marketStat.LastHash = lastHash
-			marketStat, err = storage.UpdateMarketPlaceHash(lastHash)
-			if err != nil {
-				lerr.Println(err.Error())
-				lerr.Println("error update marketplace index nfts ")
-				continue
-			}
-			continue
-		}
+		// if len(txResult) == 0 {
+		// 	lastIndex = 0
+		// 	marketStat.LastHash = txResult[0].Hash
+		// 	marketStat, err = storage.UpdateMarketPlaceHash(txResult[0].Hash)
+		// 	if err != nil {
+		// 		lerr.Println(err.Error())
+		// 		lerr.Println("error update marketplace index nfts ")
+		// 		continue
+		// 	}
+		// 	continue
+		// }
 		if txResult[0].Hash == marketStat.LastHash {
 			lastHashMet = true
 			lastIndex = 0
