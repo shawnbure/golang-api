@@ -124,8 +124,6 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			if tx.Hash == marketStat.LastHash {
 				lastHashMet = true
 				lastIndex = 0
-				log.Println("hash met")
-				break
 			}
 			if orgTx.Status == string(transaction.TxStatusPending) {
 				lerr.Println("REPEAT", "no final state of tx")
