@@ -4,6 +4,7 @@ go 1.17
 
 require (
 	cloud.google.com/go/storage v1.19.0
+	github.com/ElrondNetwork/elrond-go v1.1.50
 	github.com/ElrondNetwork/elrond-go-core v1.0.1-0.20210721164025-65cf7f169349
 	github.com/ElrondNetwork/elrond-go-logger v1.0.4
 	github.com/ElrondNetwork/elrond-sdk-erdgo v1.0.0
@@ -35,7 +36,6 @@ require (
 	cloud.google.com/go/compute v0.1.0 // indirect
 	cloud.google.com/go/iam v0.1.1 // indirect
 	github.com/ElrondNetwork/concurrent-map v0.1.3 // indirect
-	github.com/ElrondNetwork/elrond-go v1.1.50 // indirect
 	github.com/KyleBanks/depth v1.2.1 // indirect
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
