@@ -2,6 +2,7 @@ package storage
 
 import (
 	"database/sql"
+	"strings"
 
 	"gorm.io/gorm"
 
@@ -16,6 +17,29 @@ func AddTransaction(transaction *entities.Transaction) error {
 
 	txCreate := database.Create(&transaction)
 	if txCreate.Error != nil {
+		return txCreate.Error
+	}
+	if txCreate.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+
+	return nil
+}
+
+func AddOrUpdateTransaction(transaction *entities.Transaction) error {
+	database, err := GetDBOrError()
+	if err != nil {
+		return err
+	}
+
+	txCreate := database.Create(&transaction)
+	if txCreate.Error != nil {
+		if strings.Contains(txCreate.Error.Error(), "duplicate") {
+			txCreate = database.Updates(transaction)
+			if txCreate.Error != nil {
+				return txCreate.Error
+			}
+		}
 		return txCreate.Error
 	}
 	if txCreate.RowsAffected == 0 {
