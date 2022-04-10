@@ -344,7 +344,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				token.LastBuyPriceNominal, _ = fprice.Float64()
 				token.PriceNominal, _ = fprice.Float64()
 				token.PriceString = price.String()
-				err = storage.AddTransaction(&entities.Transaction{
+				err = storage.AddOrUpdateTransaction(&entities.Transaction{
 					PriceNominal: token.PriceNominal,
 					Type:         entities.ListToken,
 					Timestamp:    orgTx.Timestamp,
@@ -437,7 +437,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				token.LastBuyPriceNominal = lastBuyPriceNominal
 				token.PriceString = offer.String()
 				token.PriceNominal = lastBuyPriceNominal
-				err = storage.AddTransaction(&entities.Transaction{
+				err = storage.AddOrUpdateTransaction(&entities.Transaction{
 					PriceNominal: token.PriceNominal,
 					Type:         entities.BuyToken,
 					Timestamp:    orgTx.Timestamp,
@@ -486,7 +486,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				token.PriceNominal, _ = minBidfloat.Float64()
 				token.AuctionDeadline = auctionDeadline
 				token.AuctionStartTime = auctionStartTime
-				err = storage.AddTransaction(&entities.Transaction{
+				err = storage.AddOrUpdateTransaction(&entities.Transaction{
 					PriceNominal: lastBuyPriceNominal,
 					Type:         entities.AuctionToken,
 					Timestamp:    orgTx.Timestamp,
@@ -504,7 +504,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				token.OnSale = false
 				token.OwnerId = sender.ID
 				token.Status = entities.WithdrawToken
-				err = storage.AddTransaction(&entities.Transaction{
+				err = storage.AddOrUpdateTransaction(&entities.Transaction{
 					PriceNominal: token.PriceNominal,
 					Type:         entities.WithdrawToken,
 					Timestamp:    orgTx.Timestamp,
@@ -541,7 +541,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				token.LastBuyPriceNominal, _ = fprice.Float64()
 				token.PriceString = price
 				token.PriceNominal, _ = fprice.Float64()
-				err = storage.AddTransaction(&entities.Transaction{
+				err = storage.AddOrUpdateTransaction(&entities.Transaction{
 					PriceNominal: token.PriceNominal,
 					Type:         entities.BuyToken,
 					Timestamp:    orgTx.Timestamp,
@@ -600,7 +600,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				}
 
 				token.OwnerId = user.ID
-				err = storage.AddTransaction(&entities.Transaction{
+				err = storage.AddOrUpdateTransaction(&entities.Transaction{
 					PriceNominal: token.PriceNominal,
 					Type:         typeOfTx,
 					Timestamp:    orgTx.Timestamp,
