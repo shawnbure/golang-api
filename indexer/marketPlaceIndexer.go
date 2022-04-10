@@ -105,7 +105,8 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			orgtxByte, err := services.GetResponse(fmt.Sprintf("%s/transactions/%s", api, tx.OriginalTxHash))
 			if err != nil {
 				lerr.Println(err.Error())
-				if strings.Contains(err.Error(), "404") {
+				if strings.Contains(err.Error(), "429") || strings.Contains(err.Error(), "deadline") || strings.Contains(err.Error(), "404") {
+					time.Sleep(time.Second * 10)
 					continue
 				}
 				txCounter++
