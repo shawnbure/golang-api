@@ -121,10 +121,6 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				lerr.Println(err.Error())
 				continue
 			}
-			if tx.Hash == marketStat.LastHash {
-				lastHashMet = true
-				lastIndex = 0
-			}
 			if orgTx.Status == string(transaction.TxStatusPending) {
 				lerr.Println("REPEAT", "no final state of tx")
 				goto txloop
@@ -136,6 +132,11 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			} else {
 				lerr.Println("REPEAT", "no final state of tx")
 				goto txloop
+			}
+
+			if tx.Hash == marketStat.LastHash {
+				lastHashMet = true
+				lastIndex = 0
 			}
 			orgDataHex, err := base64.StdEncoding.DecodeString(orgTx.Data)
 			if err != nil {
