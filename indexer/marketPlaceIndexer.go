@@ -644,6 +644,8 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 		if !lastHashMet {
 			lastIndex += len(txResult)
 		} else {
+			lastHashMet = false
+			lastIndex = 0
 			marketStat, err = storage.UpdateMarketPlaceHash(lastHash)
 			if err != nil {
 				lerr.Println(err.Error())
