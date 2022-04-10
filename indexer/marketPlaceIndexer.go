@@ -43,7 +43,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 	lerr := mpi.Logger
 	lastHashMet := false
 	lastHash := ""
-	lastHashTimestamp := uint64(0)
+	// lastHashTimestamp := uint64(0)
 	lastIndex := 0
 
 	api := mpi.ElrondAPI
@@ -81,19 +81,20 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			lerr.Println("error unmarshal nfts marketplace")
 			continue
 		}
-		// if len(txResult) == 0 {
-		// 	lastIndex = 0
-		// 	marketStat.LastHash = txResult[0].Hash
-		// 	marketStat, err = storage.UpdateMarketPlaceHash(txResult[0].Hash)
-		// 	if err != nil {
-		// 		lerr.Println(err.Error())
-		// 		lerr.Println("error update marketplace index nfts ")
-		// 		continue
-		// 	}
-		// 	continue
-		// }
-		if txResult[0].Hash == marketStat.LastHash {
+		if len(txResult) == 0 {
+			// lastIndex = 0
+			// marketStat.LastHash = txResult[0].Hash
+			// marketStat, err = storage.UpdateMarketPlaceHash(txResult[0].Hash)
+			// if err != nil {
+			// 	lerr.Println(err.Error())
+			// 	lerr.Println("error update marketplace index nfts ")
+			// 	continue
+			// }
 			lastHashMet = true
+			continue
+		}
+		lastHash = txResult[0].Hash
+		if txResult[0].Hash == marketStat.LastHash {
 			lastIndex = 0
 			continue
 		}
@@ -635,10 +636,6 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					lerr.Println("MAINLOOP", "error updating token ", fmt.Sprintf("tokenID %d", token.ID))
 					goto mainLoop
 				}
-			}
-			if lastHashTimestamp < tx.Timestamp {
-				lastHashTimestamp = tx.Timestamp
-				lastHash = tx.Hash
 			}
 		}
 		if !lastHashMet {
