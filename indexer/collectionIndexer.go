@@ -371,12 +371,12 @@ func (ci *CollectionIndexer) StartWorker() {
 							err := storage.AddAccount(acc)
 							if err != nil {
 								if !strings.Contains(err.Error(), "duplicate") {
-									logErr.Println("CRITICAL can't create user")
+									logErr.Println("CRITICAL can't create user", err.Error())
 									continue
 								} else {
 									acc, err = storage.GetAccountByAddress(token.Owner)
 									if err != nil {
-										logErr.Println("CRITICAL can't get user")
+										logErr.Println("CRITICAL can't get user", err.Error())
 										continue
 									}
 								}
