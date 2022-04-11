@@ -1,6 +1,8 @@
 package storage
 
 import (
+	"fmt"
+
 	"gorm.io/gorm"
 
 	"github.com/ENFT-DAO/youbei-api/data/entities"
@@ -11,7 +13,9 @@ func AddAccount(account *entities.Account) error {
 	if err != nil {
 		return err
 	}
-
+	if account.Address == "" {
+		return fmt.Errorf("no address")
+	}
 	txCreate := database.Create(&account)
 	if txCreate.Error != nil {
 		return txCreate.Error
