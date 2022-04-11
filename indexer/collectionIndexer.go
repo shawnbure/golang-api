@@ -353,6 +353,7 @@ func (ci *CollectionIndexer) StartWorker() {
 							if strings.Contains(err.Error(), "deadline") {
 								goto tokenLoop
 							}
+							continue
 						}
 						json.Unmarshal(tokenRes, &token)
 					}
