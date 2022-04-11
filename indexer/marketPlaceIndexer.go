@@ -41,9 +41,6 @@ func NewMarketPlaceIndexer(marketPlaceAddr string, elrondAPI string, elrondAPISe
 
 func (mpi *MarketPlaceIndexer) StartWorker() {
 	lerr := mpi.Logger
-	lastHashMet := false
-	lastHash := ""
-	// lastHashTimestamp := uint64(0)
 	lastIndex := 0
 
 	api := mpi.ElrondAPI
@@ -65,7 +62,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				}
 			}
 		}
-		body, err := services.GetResponse(fmt.Sprintf("%s/accounts/%s/sc-results?from=%d&size=100", // sc-result endpoint doesn't have order!
+		body, err := services.GetResponse(fmt.Sprintf("%s/accounts/%s/sc-results?from=%d&size=1000", // sc-result endpoint doesn't have order!
 			api,
 			mpi.MarketPlaceAddr,
 			lastIndex,
@@ -81,22 +78,8 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			lerr.Println("error unmarshal nfts marketplace")
 			continue
 		}
-		if len(txResult) == 0 {
-			// lastIndex = 0
-			// marketStat.LastHash = txResult[0].Hash
-			// marketStat, err = storage.UpdateMarketPlaceHash(txResult[0].Hash)
-			// if err != nil {
-			// 	lerr.Println(err.Error())
-			// 	lerr.Println("error update marketplace index nfts ")
-			// 	continue
-			// }
-			lastHashMet = true
-			continue
-		}
-		lastHash = txResult[0].Hash
-		if txResult[0].Hash == marketStat.LastHash {
-			lastIndex = 0
-			continue
+		if marketStat.LastTimestamp >= txResult[0].Timestamp {
+			goto mainLoop
 		}
 		foundResults += uint64(len(txResult))
 
@@ -135,10 +118,6 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				lerr.Println("REPEAT", "no final state of tx")
 				goto txloop
 			}
-
-			if tx.Hash == marketStat.LastHash {
-				lastHashMet = true
-			}
 			orgDataHex, err := base64.StdEncoding.DecodeString(orgTx.Data)
 			if err != nil {
 				lerr.Println("BADERR", err.Error())
@@ -153,7 +132,9 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			}
 			orgData = []byte(orgDataHexParts[0] + string(orgData))
 			var actions map[string]bool = make(map[string]bool)
-
+			if strings.Contains(orgDataHexParts[0], "upgradeContract") {
+				continue
+			}
 			actions["isWithdrawn"] = strings.Contains(string(orgData), "withdrawNft")
 			actions["isOnSale"] = strings.Contains(string(orgData), "putNftForSale")
 			actions["isOnAuction"] = strings.Contains(string(orgData), "startAuction")
@@ -245,8 +226,8 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 							lerr.Println("collection not found for this token!!", tokenDetailObj.Collection)
 							col, err = services.CreateCollectionFromToken(tokenDetailObj, api)
 							if err != nil {
-								lerr.Println("REPEAT", err.Error(), "create collection failed on market indexer", tokenDetailObj.Collection)
-								goto txloop
+								lerr.Println("CONTINUE", err.Error(), "create collection failed on market indexer", tokenDetailObj.Collection)
+								continue
 							}
 						}
 					}
@@ -637,17 +618,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				}
 			}
 		}
-		if !lastHashMet {
-			lastIndex += len(txResult)
-		} else {
-			lastHashMet = false
-			lastIndex = 0
-			marketStat, err = storage.UpdateMarketPlaceHash(lastHash)
-			if err != nil {
-				lerr.Println(err.Error())
-				lerr.Println("error update marketplace index nfts ")
-			}
-		}
+		storage.UpdateMarketPlaceIndexerTimestamp(txResult[0].Timestamp)
 	}
 }
 func (mpi *MarketPlaceIndexer) DeleteFailedTX(orgTx entities.TransactionBC) bool {

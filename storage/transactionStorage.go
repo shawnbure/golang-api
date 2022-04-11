@@ -35,7 +35,7 @@ func AddOrUpdateTransaction(transaction *entities.Transaction) error {
 	txCreate := database.Create(&transaction)
 	if txCreate.Error != nil {
 		if strings.Contains(txCreate.Error.Error(), "duplicate") {
-			txCreate = database.Updates(transaction)
+			txCreate = database.Where("hash=?", transaction.Hash).Updates(transaction)
 			if txCreate.Error != nil {
 				return txCreate.Error
 			}

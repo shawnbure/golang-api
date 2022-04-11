@@ -52,7 +52,7 @@ func UpdateMarketPlaceHash(hash string) (entities.MarketPlaceStat, error) {
 	}
 	return stat, nil
 }
-func UpdateMarketPlaceIndexer(lastIndex uint64) (entities.MarketPlaceStat, error) {
+func UpdateMarketPlaceIndexerTimestamp(timestamp uint64) (entities.MarketPlaceStat, error) {
 	var stat entities.MarketPlaceStat
 
 	database, err := GetDBOrError()
@@ -67,10 +67,12 @@ func UpdateMarketPlaceIndexer(lastIndex uint64) (entities.MarketPlaceStat, error
 	if err != nil {
 		return stat, err
 	}
-	stat.LastIndex = lastIndex
-	err = database.Updates(stat).Where("id=?", stat.ID).Error
-	if err != nil {
-		return stat, err
+	if stat.LastTimestamp < timestamp {
+		stat.LastTimestamp = timestamp
+		err = database.Updates(stat).Where("id=?", stat.ID).Error
+		if err != nil {
+			return stat, err
+		}
 	}
 	return stat, nil
 }
