@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math/rand"
 	"os"
 	"strconv"
 	"strings"
@@ -216,6 +217,8 @@ func (ci *CollectionIndexer) StartWorker() {
 			logErr.Println(err.Error())
 			continue
 		}
+		rand.Seed(time.Now().UnixNano())
+		rand.Shuffle(len(cols), func(i, j int) { cols[i], cols[j] = cols[j], cols[i] })
 		for _, colObj := range cols {
 			if err := ci.CorrectIfAddressIsEmpty(&colObj, api); err != nil {
 				if err != nil {
@@ -242,7 +245,7 @@ func (ci *CollectionIndexer) StartWorker() {
 				}
 			}
 			if collectionIndexer.CollectionName == "" { //update collection name inside collection indexer
-				err := storage.UpdateCollectionndexerWhere(&collectionIndexer, map[string]interface{}{"collection_name": colObj.TokenID}, "id=?", collectionIndexer.ID)
+				err := storage.UpdateCollectionIndexerWhere(&collectionIndexer, map[string]interface{}{"collection_name": colObj.TokenID}, "id=?", collectionIndexer.ID)
 				if err != nil {
 					logErr.Println(err.Error())
 					logErr.Println("error UpdateCollectionndexerWhere collection indexer")
@@ -254,19 +257,15 @@ func (ci *CollectionIndexer) StartWorker() {
 			json.Unmarshal(countNftRes, &count)
 			lastIndex := 0
 			done := false
-			if count < collectionIndexer.CountIndexed {
+			if count <= collectionIndexer.CountIndexed {
 				continue
 			}
 			for !done {
-
-				if count < collectionIndexer.CountIndexed {
-					continue
-				}
 				if lastIndex > 9999 {
 					done = true
 				}
 				// Get NFTS from collection from lastIndex , index can't be higher than 10k as elastic query by default won't support that and api returns error
-				url := fmt.Sprintf(getCollectionNFTSAPI,
+				url := fmt.Sprintf(getCollectionNFTSAPI+"&size=100",
 					api,
 					collectionIndexer.CollectionName,
 					lastIndex)
@@ -290,7 +289,9 @@ func (ci *CollectionIndexer) StartWorker() {
 						"raw data", res)
 				}
 				if len(tokens) == 0 {
+					fmt.Println("DONE")
 					done = true
+					continue
 				}
 				for _, token := range tokens {
 					imageURI, attributeURI := services.GetTokenBaseURIs(token)
@@ -344,7 +345,6 @@ func (ci *CollectionIndexer) StartWorker() {
 
 					//get owner of token from database TODO
 					if token.Owner == "" {
-						token.Owner = token.Creator
 						tokenRes, err := services.GetResponse(fmt.Sprintf("%s/nfts/%s", api, token.Identifier))
 						if err != nil {
 							logErr.Println("CRITICAL can't get nft data", err.Error())
@@ -411,8 +411,7 @@ func (ci *CollectionIndexer) StartWorker() {
 				}
 				lastIndex += len(tokens)
 				countIndexed := collectionIndexer.CountIndexed + uint64(len(tokens))
-				// if collectionIndexer.LastNonce < lastNonce {
-				err = storage.UpdateCollectionndexerWhere(&collectionIndexer,
+				err = storage.UpdateCollectionIndexerWhere(&collectionIndexer,
 					map[string]interface{}{
 						"LastIndex":    lastIndex,
 						"CountIndexed": countIndexed,
@@ -422,7 +421,6 @@ func (ci *CollectionIndexer) StartWorker() {
 				if err != nil {
 					logErr.Println("CRITICAL", err.Error())
 				}
-				// }
 			}
 		}
 

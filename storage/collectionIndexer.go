@@ -37,7 +37,7 @@ func CreateCollectionStat(col entities.CollectionIndexer) (stat entities.Collect
 	return stat, nil
 }
 
-func UpdateCollectionndexerWhere(collectionIndexer *entities.CollectionIndexer, toUpdate map[string]interface{}, where string, args ...interface{}) error {
+func UpdateCollectionIndexerWhere(collectionIndexer *entities.CollectionIndexer, toUpdate map[string]interface{}, where string, args ...interface{}) error {
 	database, err := GetDBOrError()
 	if err != nil {
 		return err
