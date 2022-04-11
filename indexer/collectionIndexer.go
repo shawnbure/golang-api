@@ -398,9 +398,6 @@ func (ci *CollectionIndexer) StartWorker() {
 				}
 				lastIndex += len(tokens)
 				countIndexed := collectionIndexer.CountIndexed + uint64(len(tokens))
-				if countIndexed > count {
-					countIndexed = count
-				}
 				// if collectionIndexer.LastNonce < lastNonce {
 				err = storage.UpdateCollectionndexerWhere(&collectionIndexer,
 					map[string]interface{}{
