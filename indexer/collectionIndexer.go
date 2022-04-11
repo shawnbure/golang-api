@@ -295,6 +295,7 @@ func (ci *CollectionIndexer) StartWorker() {
 				}
 				tokenCount := 0
 				for _, token := range tokens {
+				tokenLoop:
 					imageURI, attributeURI := services.GetTokenBaseURIs(token)
 					nonce10Str := strconv.FormatUint(token.Nonce, 10)
 					nonceStr := strconv.FormatUint(token.Nonce, 16)
@@ -349,7 +350,9 @@ func (ci *CollectionIndexer) StartWorker() {
 						tokenRes, err := services.GetResponse(fmt.Sprintf("%s/nfts/%s", api, token.Identifier))
 						if err != nil {
 							logErr.Println("CRITICAL can't get nft data", err.Error())
-							continue
+							if strings.Contains(err.Error(), "deadline") {
+								goto tokenLoop
+							}
 						}
 						json.Unmarshal(tokenRes, &token)
 					}
