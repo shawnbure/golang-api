@@ -293,6 +293,7 @@ func (ci *CollectionIndexer) StartWorker() {
 					done = true
 					continue
 				}
+				tokenCount := 0
 				for _, token := range tokens {
 					imageURI, attributeURI := services.GetTokenBaseURIs(token)
 					nonce10Str := strconv.FormatUint(token.Nonce, 10)
@@ -352,6 +353,7 @@ func (ci *CollectionIndexer) StartWorker() {
 						}
 						json.Unmarshal(tokenRes, &token)
 					}
+
 					acc, err := storage.GetAccountByAddress(token.Owner)
 					if err != nil {
 						if err != gorm.ErrRecordNotFound {
@@ -408,9 +410,10 @@ func (ci *CollectionIndexer) StartWorker() {
 					if err != nil {
 						logErr.Println("BADERR", err.Error())
 					}
+					tokenCount++
 				}
-				lastIndex += len(tokens)
-				countIndexed := collectionIndexer.CountIndexed + uint64(len(tokens))
+				lastIndex += tokenCount
+				countIndexed := collectionIndexer.CountIndexed + uint64(tokenCount)
 				err = storage.UpdateCollectionIndexerWhere(&collectionIndexer,
 					map[string]interface{}{
 						"LastIndex":    lastIndex,
