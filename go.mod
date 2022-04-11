@@ -4,6 +4,7 @@ go 1.17
 
 require (
 	cloud.google.com/go/storage v1.19.0
+	github.com/ElrondNetwork/elrond-go v1.1.50
 	github.com/ElrondNetwork/elrond-go-core v1.0.1-0.20210721164025-65cf7f169349
 	github.com/ElrondNetwork/elrond-go-logger v1.0.4
 	github.com/ElrondNetwork/elrond-sdk-erdgo v1.0.0
@@ -24,6 +25,7 @@ require (
 	github.com/swaggo/swag v1.7.3
 	github.com/urfave/cli v1.22.5
 	go.uber.org/atomic v1.7.0
+	go.uber.org/zap v1.16.0
 	gopkg.in/tucnak/telebot.v2 v2.4.0
 	gorm.io/datatypes v1.0.2
 	gorm.io/driver/postgres v1.1.0
@@ -35,7 +37,6 @@ require (
 	cloud.google.com/go/compute v0.1.0 // indirect
 	cloud.google.com/go/iam v0.1.1 // indirect
 	github.com/ElrondNetwork/concurrent-map v0.1.3 // indirect
-	github.com/ElrondNetwork/elrond-go v1.1.50 // indirect
 	github.com/KyleBanks/depth v1.2.1 // indirect
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
@@ -105,6 +106,7 @@ require (
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	github.com/yusufpapurcu/wmi v1.2.2 // indirect
 	go.opencensus.io v0.23.0 // indirect
+	go.uber.org/multierr v1.6.0 // indirect
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
 	golang.org/x/exp v0.0.0-20210901193431-a062eea981d2 // indirect
 	golang.org/x/net v0.0.0-20210924151903-3ad01bbaa167 // indirect

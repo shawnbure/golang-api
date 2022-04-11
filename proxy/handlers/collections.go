@@ -15,6 +15,7 @@ import (
 	"github.com/ENFT-DAO/youbei-api/stats/collstats"
 	"github.com/ENFT-DAO/youbei-api/storage"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 type RankingEntry = collstats.LeaderboardEntry
@@ -629,6 +630,7 @@ func (handler *collectionsHandler) getMintInfo(c *gin.Context) {
 
 	mintInfo, err := services.GetMintInfoForContract(collection.ContractAddress)
 	if err != nil {
+		zlog.Error("get_mint_info", zap.Error(err))
 		dtos.JsonResponse(c, http.StatusInternalServerError, nil, "")
 		return
 	}
