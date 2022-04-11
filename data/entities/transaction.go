@@ -2,7 +2,7 @@ package entities
 
 type Transaction struct {
 	ID           uint64  `gorm:"primaryKey" json:"id"`
-	Hash         string  `json:"hash" gorm:"unique"`
+	Hash         string  `json:"hash" gorm:"uniqueIndex"`
 	Type         TxType  `json:"type" `
 	PriceNominal float64 `json:"priceNominal"`
 	Timestamp    uint64  `json:"timestamp"`

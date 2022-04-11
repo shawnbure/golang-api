@@ -2,8 +2,8 @@ package entities
 
 type Account struct {
 	ID               uint64 `gorm:"primaryKey" json:"id"`
-	Address          string `json:"address" gorm:"unique"`
-	Name             string `json:"name" gorm:"default:random()::text;unique"`
+	Address          string `json:"address" gorm:"uniqueIndex"`
+	Name             string `json:"name" gorm:"default:random()::text;uniqueIndex"`
 	Description      string `json:"description"`
 	Website          string `json:"website"`
 	TwitterLink      string `json:"twitterLink"`
