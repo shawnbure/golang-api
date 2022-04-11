@@ -74,7 +74,7 @@ func (ci *CollectionIndexer) StartWorker() {
 	logErr := ci.Logger
 	var colsToCheck []dtos.CollectionToCheck
 	api := ci.ElrondAPI
-	if api == "" {
+	if ci.ElrondAPISec != "" {
 		api = ci.ElrondAPISec
 		getCollectionNFTSAPI = "%s/nftsFromCollection?collection=%s&from=%d&withOwner=true"
 		getCollectionNFTSCountsAPI = "%s/nfts/count?collection=%s&withOwner=true"

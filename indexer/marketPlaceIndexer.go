@@ -44,7 +44,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 	lastIndex := 0
 
 	api := mpi.ElrondAPI
-	if api == "" {
+	if mpi.ElrondAPISec != "" {
 		api = mpi.ElrondAPISec
 	}
 	for {
