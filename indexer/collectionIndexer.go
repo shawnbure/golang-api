@@ -20,8 +20,8 @@ import (
 	"gorm.io/gorm"
 )
 
-var getCollectionNFTSAPI string = "%s/collections/%s/nfts?from=%d"
-var getCollectionNFTSCountsAPI string = "%s/collections/%s/nfts/count"
+var getCollectionNFTSAPI string = "%s/collections/%s/nfts?from=%d&withOwner=true"
+var getCollectionNFTSCountsAPI string = "%s/collections/%s/nfts/count?withOwner=true"
 
 type CollectionIndexer struct {
 	DeployerAddr string `json:"deployerAddr"`
@@ -75,8 +75,8 @@ func (ci *CollectionIndexer) StartWorker() {
 	api := ci.ElrondAPI
 	if api == "" {
 		api = ci.ElrondAPISec
-		getCollectionNFTSAPI = "%s/nftsFromCollection?collection=%s&from=%d"
-		getCollectionNFTSCountsAPI = "%s/nfts/count?collection=%s"
+		getCollectionNFTSAPI = "%s/nftsFromCollection?collection=%s&from=%d&withOwner=true"
+		getCollectionNFTSCountsAPI = "%s/nfts/count?collection=%s&withOwner=true"
 	}
 	for {
 	deployLoop:
