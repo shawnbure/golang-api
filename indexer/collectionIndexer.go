@@ -343,6 +343,15 @@ func (ci *CollectionIndexer) StartWorker() {
 					}
 
 					//get owner of token from database TODO
+					if token.Owner == "" {
+						token.Owner = token.Creator
+						tokenRes, err := services.GetResponse(fmt.Sprintf("%s/nfts/%s", api, token.Identifier))
+						if err != nil {
+							logErr.Println("CRITICAL can't get nft data", err.Error())
+							continue
+						}
+						json.Unmarshal(tokenRes, &token)
+					}
 					acc, err := storage.GetAccountByAddress(token.Owner)
 					if err != nil {
 						if err != gorm.ErrRecordNotFound {
