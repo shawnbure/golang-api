@@ -138,7 +138,6 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 
 			if tx.Hash == marketStat.LastHash {
 				lastHashMet = true
-				lastIndex = 0
 			}
 			orgDataHex, err := base64.StdEncoding.DecodeString(orgTx.Data)
 			if err != nil {

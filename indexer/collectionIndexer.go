@@ -21,6 +21,7 @@ import (
 )
 
 var getCollectionNFTSAPI string = "%s/collections/%s/nfts?from=%d"
+var getCollectionNFTSCountsAPI string = "%s/collections/%s/nfts/count"
 
 type CollectionIndexer struct {
 	DeployerAddr string `json:"deployerAddr"`
@@ -75,6 +76,7 @@ func (ci *CollectionIndexer) StartWorker() {
 	if api == "" {
 		api = ci.ElrondAPISec
 		getCollectionNFTSAPI = "%s/nftsFromCollection?collection=%s&from=%d"
+		getCollectionNFTSCountsAPI = "%s/nfts/count?collection=%s"
 	}
 	for {
 	deployLoop:
@@ -247,9 +249,14 @@ func (ci *CollectionIndexer) StartWorker() {
 					continue
 				}
 			}
+			countNftRes, _ := services.GetResponse(fmt.Sprintf(getCollectionNFTSCountsAPI, api, collectionIndexer.CollectionName))
+			var count uint64
+			json.Unmarshal(countNftRes, &count)
 			lastIndex := 0
-			var lastNonce uint64 = 0
 			done := false
+			if count < collectionIndexer.CountIndexed {
+				continue
+			}
 			for !done {
 				if lastIndex > 9999 {
 					done = true
@@ -282,10 +289,6 @@ func (ci *CollectionIndexer) StartWorker() {
 					done = true
 				}
 				for _, token := range tokens {
-					if collectionIndexer.LastNonce == token.Nonce {
-						done = true
-						goto endLoop
-					}
 					imageURI, attributeURI := services.GetTokenBaseURIs(token)
 					nonce10Str := strconv.FormatUint(token.Nonce, 10)
 					nonceStr := strconv.FormatUint(token.Nonce, 16)
@@ -393,22 +396,23 @@ func (ci *CollectionIndexer) StartWorker() {
 						logErr.Println("BADERR", err.Error())
 					}
 				}
-			endLoop:
-				if len(tokens) > 0 {
-					lastNonce = tokens[0].Nonce
-				}
 				lastIndex += len(tokens)
-				if collectionIndexer.LastNonce < lastNonce {
-					err = storage.UpdateCollectionndexerWhere(&collectionIndexer,
-						map[string]interface{}{
-							"LastNonce": lastNonce,
-						},
-						"id=?",
-						collectionIndexer.ID)
-					if err != nil {
-						logErr.Println("CRITICAL", err.Error())
-					}
+				countIndexed := collectionIndexer.CountIndexed + uint64(len(tokens))
+				if countIndexed > count {
+					countIndexed = count
 				}
+				// if collectionIndexer.LastNonce < lastNonce {
+				err = storage.UpdateCollectionndexerWhere(&collectionIndexer,
+					map[string]interface{}{
+						"LastIndex":    lastIndex,
+						"CountIndexed": countIndexed,
+					},
+					"id=?",
+					collectionIndexer.ID)
+				if err != nil {
+					logErr.Println("CRITICAL", err.Error())
+				}
+				// }
 			}
 		}
 
