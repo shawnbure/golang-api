@@ -258,6 +258,10 @@ func (ci *CollectionIndexer) StartWorker() {
 				continue
 			}
 			for !done {
+
+				if count < collectionIndexer.CountIndexed {
+					continue
+				}
 				if lastIndex > 9999 {
 					done = true
 				}
