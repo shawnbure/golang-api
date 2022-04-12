@@ -2,11 +2,10 @@ package handlers
 
 import (
 	"errors"
-	"net/http"
-	"strconv"
-
 	"github.com/ENFT-DAO/youbei-api/services"
 	"github.com/ENFT-DAO/youbei-api/stats/collstats"
+	"net/http"
+	"strconv"
 
 	"github.com/ENFT-DAO/youbei-api/data/dtos"
 	"github.com/ENFT-DAO/youbei-api/storage"

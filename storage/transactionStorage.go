@@ -257,15 +257,16 @@ func DeleteTransaction(id uint64) error {
 	if err != nil {
 		return err
 	}
-	txRead := database.Find(&transaction, "id = ?", id)
-	if txRead.Error != nil {
-		return txRead.Error
+	tx := database.Where("id = ?", id).Delete(&transaction)
+	if tx.Error != nil {
+		return tx.Error
 	}
-	if txRead.RowsAffected == 0 {
+	if tx.RowsAffected == 0 {
 		return gorm.ErrRecordNotFound
 	}
 	return nil
 }
+
 func GetMinBuyPriceForTransactionsWithCollectionId(collectionId uint64) (float64, error) {
 	var price float64
 
@@ -314,4 +315,97 @@ func GetSumBuyPriceForTransactionsWithCollectionId(collectionId uint64) (float64
 	}
 
 	return price, nil
+}
+
+func GetTransactionsCount() (int64, error) {
+	var total int64
+
+	database, err := GetDBOrError()
+	if err != nil {
+		return int64(0), err
+	}
+
+	txRead := database.
+		Table("transactions").
+		Count(&total)
+
+	if txRead.Error != nil {
+		return int64(0), txRead.Error
+	}
+
+	return total, nil
+}
+
+func GetTransactionsCountByType(_type string) (int64, error) {
+	var total int64
+
+	database, err := GetDBOrError()
+	if err != nil {
+		return int64(0), err
+	}
+
+	txRead := database.
+		Where("type = ?", _type).
+		Table("transactions").
+		Count(&total)
+
+	if txRead.Error != nil {
+		return int64(0), txRead.Error
+	}
+
+	return total, nil
+}
+
+func GetTransactionsCountByDate(date string) (int64, error) {
+	var total int64
+
+	database, err := GetDBOrError()
+	if err != nil {
+		return int64(0), err
+	}
+
+	txRead := database.
+		Where("date_trunc('day', to_timestamp(transactions.timestamp))=?", date).
+		Table("transactions").
+		Count(&total)
+
+	if txRead.Error != nil {
+		return int64(0), txRead.Error
+	}
+
+	return total, nil
+}
+
+func GetTransactionsCountByDateAndType(_type string, date string) (int64, error) {
+	var total int64
+
+	database, err := GetDBOrError()
+	if err != nil {
+		return int64(0), err
+	}
+
+	txRead := database.
+		Where("date_trunc('day', to_timestamp(transactions.timestamp))=? and type=?", date, _type).
+		Table("transactions").
+		Count(&total)
+
+	if txRead.Error != nil {
+		return int64(0), txRead.Error
+	}
+
+	return total, nil
+}
+
+func DeleteAllTransaction() (int64, error) {
+	database, err := GetDBOrError()
+	if err != nil {
+		return int64(0), err
+	}
+
+	tx := database.Where("1 = 1").Delete(&entities.Transaction{})
+	if tx.Error != nil {
+		return int64(0), err
+	}
+
+	return tx.RowsAffected, nil
 }

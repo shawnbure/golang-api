@@ -109,6 +109,7 @@ func NewWebServer(cfg *config.GeneralConfig) (*webServer, error) {
 	handlers.NewDepositsHandler(groupHandler, cfg.Blockchain)
 	handlers.NewRoyaltiesHandler(groupHandler, cfg.Blockchain)
 	handlers.NewImageHandler(groupHandler)
+	handlers.NewStatsHandler(groupHandler)
 
 	//
 
