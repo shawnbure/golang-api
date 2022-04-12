@@ -20,7 +20,3 @@ const (
 	WithdrawToken        = "Withdraw"
 	AuctionToken         = "Auction"
 )
-
-type TransactionsCount struct {
-	Counts map[TxType]int64
-}

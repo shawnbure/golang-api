@@ -2,12 +2,10 @@ package handlers
 
 import (
 	"errors"
-	"net/http"
-	"strconv"
-	"strings"
-
 	"github.com/ENFT-DAO/youbei-api/services"
 	"github.com/ENFT-DAO/youbei-api/stats/collstats"
+	"net/http"
+	"strconv"
 
 	"github.com/ENFT-DAO/youbei-api/data/dtos"
 	"github.com/ENFT-DAO/youbei-api/storage"
@@ -238,35 +236,6 @@ func (handler *transactionsHandler) getByCollection(c *gin.Context) {
 	}
 
 	transactions, err := storage.GetTransactionsByCollectionIdWithOffsetLimit(cacheInfo.CollectionId, int(offset), int(limit))
-	if err != nil {
-		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
-		return
-	}
-
-	dtos.JsonResponse(c, http.StatusOK, transactions, "")
-}
-
-// @Summary Gets transactions count.
-// @Description Gets transactions count (total/buy/withdraw/...) and can be filtered by date
-// @Tags transactions
-// @Accept json
-// @Produce json
-// @Param collectionId path string true "collection id"
-// @Param offset path uint true "offset"
-// @Param limit path uint true "limit"
-// @Success 200 {object} []entities.TransactionsCount
-// @Failure 400 {object} dtos.ApiResponse
-// @Failure 404 {object} dtos.ApiResponse
-// @Router /transactions/total/{date} [get]
-func (handler *transactionsHandler) getTradeCounts(c *gin.Context) {
-	filterDate := c.Param("date")
-
-	if strings.TrimSpace(filterDate) == "" {
-
-	} else {
-
-	}
-	transactions, err := storage.GetTransactionsCount()
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return
