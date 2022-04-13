@@ -2,6 +2,8 @@ package storage
 
 import (
 	"database/sql"
+	"errors"
+	"math/big"
 	"strings"
 
 	"gorm.io/gorm"
@@ -408,4 +410,56 @@ func DeleteAllTransaction() (int64, error) {
 	}
 
 	return tx.RowsAffected, nil
+}
+
+func GetTotalTradedVolume() (*big.Float, error) {
+	database, err := GetDBOrError()
+	if err != nil {
+		return big.NewFloat(0), err
+	}
+
+	var x sql.NullString
+
+	txRead := database.
+		Where("type=?", entities.BuyToken).
+		Table("transactions").
+		Select("sum(price_nominal)").
+		Scan(&x)
+
+	if txRead.Error != nil {
+		return big.NewFloat(0), txRead.Error
+	}
+
+	if x.Valid {
+		v, _ := new(big.Float).SetString(x.String)
+		return v, nil
+	}
+
+	return big.NewFloat(0), errors.New("Null String ...")
+}
+
+func GetTotalTradedVolumeByDate(dateStr string) (*big.Float, error) {
+	database, err := GetDBOrError()
+	if err != nil {
+		return big.NewFloat(0), err
+	}
+
+	var x sql.NullString
+
+	txRead := database.
+		Where("type=? and date_trunc('day', to_timestamp(transactions.timestamp))=?", entities.BuyToken, dateStr).
+		Table("transactions").
+		Select("sum(price_nominal)").
+		Scan(&x)
+
+	if txRead.Error != nil {
+		return big.NewFloat(0), txRead.Error
+	}
+
+	if x.Valid {
+		v, _ := new(big.Float).SetString(x.String)
+		return v, nil
+	}
+
+	return big.NewFloat(0), errors.New("Null String ...")
 }

@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"math/big"
 	"testing"
 	"time"
 
@@ -192,7 +193,37 @@ func Test_GetTotalTradesCount(t *testing.T) {
 		require.Nil(t, err)
 		require.Equal(t, int64(0), total, "Total buy trades does not match")
 	})
+}
 
+func Test_GetTotalTradedVolume(t *testing.T) {
+	connectToTestDb()
+
+	// first clean all transactions
+	err := cleanTransactionTable()
+	require.Nil(t, err)
+
+	//insert some records
+	err = insertBulkTransactions()
+	require.Nil(t, err)
+
+	t.Run("Get Total Volumes Traded all the time", func(t *testing.T) {
+		total, err := GetTotalTradedVolume()
+		require.Nil(t, err)
+		v, _ := new(big.Int).SetString("2000000000000000000000", 10)
+		require.Equal(t, v, total, "Total traded volume does not match")
+	})
+
+	t.Run("Get Total For two different days", func(t *testing.T) {
+		total, err := GetTotalTradedVolumeByDate("2020-04-09")
+		require.Nil(t, err)
+		v, _ := new(big.Int).SetString("1000000000000000000000", 10)
+		require.Equal(t, v, total, "Total traded volume for specific date does not match")
+
+		total, err = GetTotalTradedVolumeByDate("2020-04-10")
+		require.Nil(t, err)
+		v, _ = new(big.Int).SetString("1000000000000000000000", 10)
+		require.Equal(t, v, total, "Total traded volume for specific date does not match")
+	})
 }
 
 func defaultTransaction() entities.Transaction {
@@ -222,6 +253,15 @@ func insertBulkTransactions() error {
 	transaction.Hash = "my_unique_hash1"
 	transaction.Timestamp = uint64(time.Date(2020, 04, 9, 1, 0, 0, 0, time.UTC).Unix())
 	err := AddTransaction(&transaction)
+	if err != nil {
+		return err
+	}
+
+	transaction = defaultTransaction()
+	transaction.Type = entities.BuyToken
+	transaction.Hash = "my_unique_hash5"
+	transaction.Timestamp = uint64(time.Date(2020, 04, 10, 1, 0, 0, 0, time.UTC).Unix())
+	err = AddTransaction(&transaction)
 	if err != nil {
 		return err
 	}
