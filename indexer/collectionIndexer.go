@@ -357,7 +357,9 @@ func (ci *CollectionIndexer) StartWorker() {
 						}
 						json.Unmarshal(tokenRes, &token)
 					}
-
+					if token.Owner == "" {
+						token.Owner = token.Creator
+					}
 					acc, err := storage.GetAccountByAddress(token.Owner)
 					if err != nil {
 						if err != gorm.ErrRecordNotFound {
