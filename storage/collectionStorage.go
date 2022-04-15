@@ -316,7 +316,7 @@ func GetCollectionsVerified(limit int) ([]entities.Collection, error) {
 	}
 
 	//is_verifed and create_at in desc in order (most recent first)
-	txRead := database.Limit(limit).Find(&collections, "is_verified = true AND profile_image_link <> ''").Order("created_at desc")
+	txRead := database.Limit(limit).Order("created_at desc").Find(&collections, "is_verified = true AND profile_image_link <> ''")
 	if txRead.Error != nil {
 		return nil, txRead.Error
 	}
@@ -332,7 +332,7 @@ func GetCollectionsNoteworthy(limit int) ([]entities.Collection, error) {
 		return nil, err
 	}
 
-	txRead := database.Limit(limit).Find(&collections, "type = 2 AND profile_image_link <> ''").Order("priority desc")
+	txRead := database.Limit(limit).Order("priority desc").Find(&collections, "type = 2 AND profile_image_link <> ''")
 	if txRead.Error != nil {
 		return nil, txRead.Error
 	}
@@ -358,7 +358,7 @@ func GetCollectionsTrending(limit int) ([]entities.Collection, error) {
 	//Do not include in verified and noteworthy accounts
 	//right now, we are just getting the recently added collection
 	//TODO: determine the metrics for
-	txRead := database.Limit(limit).Find(&collections, "is_verified <> true AND type <> 2 AND profile_image_link <> ''").Order("created_at desc")
+	txRead := database.Limit(limit).Order("created_at desc").Find(&collections, "is_verified <> true AND type <> 2 AND profile_image_link <> ''")
 	if txRead.Error != nil {
 		return nil, txRead.Error
 	}
