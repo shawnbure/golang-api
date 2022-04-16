@@ -253,7 +253,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					token = &entities.Token{
 						TokenID:      tokenDetailObj.Collection,
 						MintTxHash:   "",
-						OwnerId:      sender.ID,
+						OwnerID:      sender.ID,
 						CollectionID: col.ID,
 						Nonce:        tokenDetailObj.Nonce,
 						NonceStr:     nonceStr,
@@ -322,7 +322,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 
 				token.OnSale = true
 				token.Status = entities.List
-				token.OwnerId = sender.ID
+				token.OwnerID = sender.ID
 				token.LastBuyPriceNominal, _ = fprice.Float64()
 				token.PriceNominal, _ = fprice.Float64()
 				token.PriceString = price.String()
@@ -386,7 +386,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					lerr.Println("MAINLOOP", err.Error())
 					goto mainLoop
 				}
-				token.OwnerId = user.ID
+				token.OwnerID = user.ID
 
 				offerStr := mainDataParts[4]
 				offer, _ := big.NewInt(0).SetString(offerStr, 16)
@@ -462,7 +462,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 
 				token.OnSale = true
 				token.Status = entities.AuctionToken
-				token.OwnerId = sender.ID
+				token.OwnerID = sender.ID
 				token.LastBuyPriceNominal = lastBuyPriceNominal
 				token.PriceString = minBid.String()
 				token.PriceNominal, _ = minBidfloat.Float64()
@@ -484,7 +484,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			} else if actions["isWithdrawn"] && !failedTx {
 				toUpdate = true
 				token.OnSale = false
-				token.OwnerId = sender.ID
+				token.OwnerID = sender.ID
 				token.Status = entities.WithdrawToken
 				err = storage.AddOrUpdateTransaction(&entities.Transaction{
 					PriceNominal: token.PriceNominal,
@@ -502,7 +502,8 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				toUpdate = true
 				token.OnSale = false
 				token.Status = entities.BuyToken
-				token.OwnerId = sender.ID
+				sellerID := token.OwnerID
+				token.OwnerID = sender.ID
 				err = storage.DeleteOffersForTokenId(token.ID)
 				if err != nil {
 					lerr.Println(err.Error())
@@ -527,7 +528,8 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					PriceNominal: token.PriceNominal,
 					Type:         entities.BuyToken,
 					Timestamp:    orgTx.Timestamp,
-					SellerID:     sender.ID,
+					BuyerID:      sender.ID,
+					SellerID:     sellerID,
 					TokenID:      token.ID,
 					CollectionID: token.CollectionID,
 					Hash:         orgTx.TxHash,
@@ -566,7 +568,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					goto mainLoop
 				}
 				var typeOfTx entities.TxType = entities.BuyToken
-				if token.OwnerId == sender.ID {
+				if token.OwnerID == sender.ID {
 					// auction had no winner
 					typeOfTx = entities.WithdrawToken
 					token.Status = entities.WithdrawToken
@@ -581,7 +583,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					lerr.Println(err.Error())
 				}
 
-				token.OwnerId = user.ID
+				token.OwnerID = user.ID
 				err = storage.AddOrUpdateTransaction(&entities.Transaction{
 					PriceNominal: token.PriceNominal,
 					Type:         typeOfTx,
@@ -603,7 +605,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					"PriceString":         token.PriceString,
 					"PriceNominal":        token.PriceNominal,
 					"LastMarketTimestamp": token.LastMarketTimestamp,
-					"OwnerId":             token.OwnerId,
+					"OwnerID":             token.OwnerID,
 					"AuctionDeadline":     token.AuctionDeadline,
 					"AuctionStartTime":    token.AuctionStartTime,
 				}, "token_id=? AND nonce_str=?", tokenId, hexNonce)

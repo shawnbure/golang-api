@@ -408,7 +408,7 @@ func (ci *CollectionIndexer) StartWorker() {
 						ImageLink:    string(imageURI),
 						TokenName:    token.Name,
 						Attributes:   attributes,
-						OwnerId:      acc.ID,
+						OwnerID:      acc.ID,
 						OnSale:       false,
 						PriceString:  dbToken.PriceString,
 						PriceNominal: dbToken.PriceNominal,
@@ -424,6 +424,9 @@ func (ci *CollectionIndexer) StartWorker() {
 				}
 				lastIndex += tokenCountSuc
 				countIndexed := collectionIndexer.CountIndexed + uint64(tokenCountSuc)
+				if countIndexed > count {
+					countIndexed = count
+				}
 				err = storage.UpdateCollectionIndexerWhere(&collectionIndexer,
 					map[string]interface{}{
 						"LastIndex":    lastIndex,

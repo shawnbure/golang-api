@@ -87,7 +87,7 @@ func Test_GetTokensForSaleOwnedBy(t *testing.T) {
 	require.GreaterOrEqual(t, len(tokensRead), 2)
 
 	for _, tokenRead := range tokensRead {
-		require.Equal(t, tokenRead.OwnerId, ownerId)
+		require.Equal(t, tokenRead.OwnerID, ownerId)
 	}
 }
 
@@ -156,7 +156,7 @@ func Test_GetTokensByCollectionIdWithOffsetLimit(t *testing.T) {
 	token1 := entities.Token{
 		CollectionID: coll.ID,
 		Status:       entities.List,
-		OwnerId:      1,
+		OwnerID:      1,
 		Attributes:   datatypes.JSON(`{"hair": "red", "background": "dark"}`),
 	}
 	err = AddToken(&token1)
@@ -165,7 +165,7 @@ func Test_GetTokensByCollectionIdWithOffsetLimit(t *testing.T) {
 	token2 := entities.Token{
 		CollectionID: coll.ID,
 		Status:       entities.List,
-		OwnerId:      1,
+		OwnerID:      1,
 		Attributes:   datatypes.JSON(`{"hair": "green", "background": "dark"}`),
 	}
 	err = AddToken(&token2)
@@ -210,7 +210,7 @@ func defaultToken() entities.Token {
 		PriceNominal: 1_000_000_000_000_000_000_000,
 		Status:       entities.List,
 		MetadataLink: "link.com",
-		OwnerId:      1,
+		OwnerID:      1,
 		CollectionID: 1,
 	}
 }

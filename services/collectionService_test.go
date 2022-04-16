@@ -127,7 +127,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 	token1 := entities.Token{
 		CollectionID: coll.ID,
 		Status:       entities.List,
-		OwnerId:      1,
+		OwnerID:      1,
 		Attributes:   datatypes.JSON(`{"hair": "red", "background": "dark"}`),
 	}
 	err = storage.AddToken(&token1)
@@ -136,7 +136,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 	token2 := entities.Token{
 		CollectionID: coll.ID,
 		Status:       entities.List,
-		OwnerId:      1,
+		OwnerID:      1,
 		Attributes:   datatypes.JSON(`{"hair": "green", "background": "dark"}`),
 	}
 	err = storage.AddToken(&token2)
@@ -145,7 +145,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 	token3 := entities.Token{
 		CollectionID: coll.ID,
 		Status:       entities.List,
-		OwnerId:      1,
+		OwnerID:      1,
 		Attributes:   datatypes.JSON(`{"hair": "blue", "background": "dark"}`),
 	}
 	err = storage.AddToken(&token3)
@@ -154,7 +154,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 	token4 := entities.Token{
 		CollectionID: coll.ID,
 		Status:       entities.List,
-		OwnerId:      1,
+		OwnerID:      1,
 		Attributes:   datatypes.JSON(`{}`),
 	}
 	err = storage.AddToken(&token4)
@@ -163,7 +163,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 	token5 := entities.Token{
 		CollectionID: coll.ID,
 		Status:       entities.List,
-		OwnerId:      1,
+		OwnerID:      1,
 		Attributes:   datatypes.JSON(`{"hair": "green", "background": "dark"}`),
 	}
 	err = storage.AddToken(&token5)
@@ -172,7 +172,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 	token6 := entities.Token{
 		CollectionID: coll.ID,
 		Status:       entities.List,
-		OwnerId:      1,
+		OwnerID:      1,
 		Attributes:   datatypes.JSON(`{"background": "dark"}`),
 	}
 	err = storage.AddToken(&token6)
@@ -181,7 +181,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 	token7 := entities.Token{
 		CollectionID: coll.ID,
 		Status:       entities.List,
-		OwnerId:      1,
+		OwnerID:      1,
 		Attributes:   datatypes.JSON(`{"hair": "yellow", "background": "dark"}`),
 	}
 	err = storage.AddToken(&token7)
@@ -190,7 +190,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 	token8 := entities.Token{
 		CollectionID: coll.ID,
 		Status:       entities.List,
-		OwnerId:      1,
+		OwnerID:      1,
 		Attributes:   datatypes.JSON(`{"hair": "white", "background": "dark"}`),
 	}
 	err = storage.AddToken(&token8)
@@ -199,7 +199,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 	token9 := entities.Token{
 		CollectionID: coll.ID,
 		Status:       entities.List,
-		OwnerId:      1,
+		OwnerID:      1,
 		Attributes:   datatypes.JSON(`{"hair": "white", "background": "dark"}`),
 	}
 	err = storage.AddToken(&token9)
@@ -208,7 +208,7 @@ func Test_GetCollectionMetadata(t *testing.T) {
 	token10 := entities.Token{
 		CollectionID: coll.ID,
 		Status:       entities.List,
-		OwnerId:      1,
+		OwnerID:      1,
 		Attributes:   datatypes.JSON(`{"something_else": "yea"}`),
 	}
 	err = storage.AddToken(&token10)

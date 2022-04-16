@@ -49,7 +49,7 @@ func Test_GetStats(t *testing.T) {
 		TokenID:      collection.TokenID,
 		CollectionID: collection.ID,
 		PriceNominal: float64(11),
-		OwnerId:      0,
+		OwnerID:      0,
 	}
 	err = storage.AddToken(&token)
 	require.Nil(t, err)

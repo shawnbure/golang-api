@@ -60,7 +60,7 @@ func Test_ListToken(t *testing.T) {
 		Nonce:        13,
 		PriceNominal: 1_000,
 		Status:       entities.List,
-		OwnerId:      ownerAccount.ID,
+		OwnerID:      ownerAccount.ID,
 		CollectionID: token.CollectionID,
 	}
 	require.Equal(t, expectedToken, *token)
@@ -117,7 +117,7 @@ func Test_SellToken(t *testing.T) {
 		Nonce:        13,
 		PriceNominal: 1_000,
 		Status:       entities.List,
-		OwnerId:      0,
+		OwnerID:      0,
 		CollectionID: token.CollectionID,
 	}
 	require.Equal(t, expectedToken, *token)
@@ -169,7 +169,7 @@ func Test_WithdrawToken(t *testing.T) {
 		Nonce:        13,
 		PriceNominal: 1_000,
 		Status:       entities.List,
-		OwnerId:      0,
+		OwnerID:      0,
 		CollectionID: token.CollectionID,
 	}
 	require.Equal(t, expectedToken, *token)
@@ -319,7 +319,7 @@ func Test_StartAuction(t *testing.T) {
 	require.Equal(t, "abcdef", token.ImageLink)
 	require.Equal(t, "1000000000000000000", token.PriceString)
 	require.Equal(t, entities.TokenStatus(entities.Auction), token.Status)
-	require.Equal(t, owner.ID, token.OwnerId)
+	require.Equal(t, owner.ID, token.OwnerID)
 }
 
 func Test_StartAuctionEndAuction(t *testing.T) {
@@ -348,7 +348,7 @@ func Test_StartAuctionEndAuction(t *testing.T) {
 	require.Equal(t, "abcdef", token.ImageLink)
 	require.Equal(t, "1000000000000000000", token.PriceString)
 	require.Equal(t, entities.TokenStatus(entities.Auction), token.Status)
-	require.Equal(t, owner.ID, token.OwnerId)
+	require.Equal(t, owner.ID, token.OwnerID)
 
 	EndAuction(EndAuctionArgs{
 		TokenId: token.TokenID,
@@ -359,7 +359,7 @@ func Test_StartAuctionEndAuction(t *testing.T) {
 
 	tokenAfterEnd, err := storage.GetTokenByTokenIdAndNonce(token.TokenID, token.Nonce)
 	require.Nil(t, err)
-	require.Equal(t, uint64(0), tokenAfterEnd.OwnerId)
+	require.Equal(t, uint64(0), tokenAfterEnd.OwnerID)
 	require.Equal(t, 4722.366, tokenAfterEnd.LastBuyPriceNominal)
 	require.Equal(t, entities.TokenStatus(entities.None), tokenAfterEnd.Status)
 }

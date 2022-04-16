@@ -22,7 +22,7 @@ type Token struct {
 	AuctionStartTime    uint64         `json:"auctionStartTime"`
 	AuctionDeadline     uint64         `json:"auctionDeadline"`
 	OnSale              bool           `json:"onSale"`
-	OwnerId             uint64         `json:"ownerId"`
+	OwnerID             uint64         `json:"ownerId"`
 	CollectionID        uint64         `json:"collectionId"`
 	LastMarketTimestamp uint64         `json:"lastMarketTimestamp"`
 	Owner               Account        `json:"owner"`

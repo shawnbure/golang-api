@@ -53,8 +53,8 @@ func AcceptOffer(args AcceptOfferArgs) {
 		return
 	}
 
-	sellerId := token.OwnerId
-	token.OwnerId = 0
+	sellerId := token.OwnerID
+	token.OwnerID = 0
 	token.Status = entities.BuyToken
 	token.LastBuyPriceNominal = amountNominal
 	err = storage.UpdateToken(token)

@@ -343,7 +343,7 @@ func ListTokenFromClient(request *ListTokenRequest, blockchainApi string) error 
 		MintTxHash:       request.TxHash,
 		Nonce:            tokenData.Nonce,
 		NonceStr:         stringNonce,
-		OwnerId:          account.ID,
+		OwnerID:          account.ID,
 		CollectionID:     collection.ID,
 		TokenID:          tokenData.Collection,
 		RoyaltiesPercent: tokenData.Royalties,
@@ -538,7 +538,7 @@ func ListToken(args ListTokenArgs, blockchainProxy string, marketplaceAddress st
 	// token.PriceString = args.Price
 	token.PriceString = finalPriceBigInt.String()
 	token.PriceNominal = priceNominal
-	token.OwnerId = ownerAccount.ID
+	token.OwnerID = ownerAccount.ID
 	token.CollectionID = collectionId
 
 	if args.NonceStr != "" {
@@ -697,7 +697,7 @@ func BuyToken(args BuyTokenArgs) {
 
 	// Owner ID was to be reset since the token will no longer be on the marketplace.
 	// Could have been kept like this, but bugs may appear when querying.
-	token.OwnerId = ownerAccount.ID
+	token.OwnerID = ownerAccount.ID
 	token.Status = entities.BuyToken
 	token.OnSale = false
 	token.LastBuyPriceNominal = priceNominal
@@ -780,7 +780,7 @@ func StartAuction(args StartAuctionArgs, blockchainProxy string, marketplaceAddr
 	token.OnSale = true
 	token.PriceString = args.MinBid
 	token.PriceNominal = amountNominal
-	token.OwnerId = accountID
+	token.OwnerID = accountID
 	token.CollectionID = collectionId
 	token.AuctionStartTime = args.StartTime
 	token.AuctionDeadline = args.Deadline
@@ -843,8 +843,8 @@ func EndAuction(args EndAuctionArgs) {
 		txType = entities.WithdrawToken
 		winner = false
 	}
-	sellerId := token.OwnerId
-	token.OwnerId = buyer.AccountId
+	sellerId := token.OwnerID
+	token.OwnerID = buyer.AccountId
 	token.Status = txType
 	token.OnSale = false
 	if winner {
@@ -889,7 +889,7 @@ func GetExtendedTokenData(tokenId string, nonce uint64) (*dtos.ExtendedTokenDto,
 		return nil, err
 	}
 
-	owner, err := storage.GetAccountById(token.OwnerId)
+	owner, err := storage.GetAccountById(token.OwnerID)
 	if err != nil {
 		return nil, err
 	}

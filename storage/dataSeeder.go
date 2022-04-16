@@ -154,7 +154,7 @@ func addCollections() error {
 
 func addTokens() error {
 	for index := range _tokens {
-		_tokens[index].OwnerId = _accounts[rand.Intn(len(_accounts))].ID
+		_tokens[index].OwnerID = _accounts[rand.Intn(len(_accounts))].ID
 		_tokens[index].CollectionID = _collections[rand.Intn(len(_collections))].ID
 		if err := AddToken(&_tokens[index]); err != nil {
 			return err
