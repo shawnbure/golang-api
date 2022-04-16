@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"go.uber.org/zap"
 	"gorm.io/datatypes"
 
 	"github.com/ENFT-DAO/youbei-api/cache"
@@ -523,10 +524,30 @@ func ListToken(args ListTokenArgs, blockchainProxy string, marketplaceAddress st
 		log.Debug("could not TurnBigFloatoBigFloatNDec priceBigFloat", "err", err)
 		return
 	}
+
+	intNonce, err := strconv.ParseUint(args.NonceStr, 10, 64)
+	if err != nil {
+		log.Debug("could not convert string nince to biguint nonce", "err", err)
+		return
+	}
+	hexNonce := strconv.FormatInt(int64(intNonce), 16)
+	args.NonceStr = hexNonce
+	tokenDetail, err := GetResponse(fmt.Sprintf(`%s/nfts/%s`, blockchainProxy, string(args.TokenId)+"-"+hexNonce))
+	if err != nil {
+		if strings.Contains(err.Error(), "404") {
+			zlog.Error("BADERR", zap.Error(err))
+		}
+	}
+	var tokenDetailObj entities.TokenBC
+	err = json.Unmarshal(tokenDetail, &tokenDetailObj)
+	if err != nil {
+		zlog.Error("BADERR", zap.Error(err))
+	}
+
 	finalPriceBigInt := new(big.Int)
 	priceBigFloat.Int(finalPriceBigInt)
 	token.TokenID = args.TokenId
-	token.Nonce = args.Nonce
+	token.Nonce = tokenDetailObj.Nonce
 	token.RoyaltiesPercent = GetRoyaltiesPercentNominal(args.RoyaltiesPercent)
 	token.MetadataLink = metadataLink
 	token.CreatedAt = args.Timestamp

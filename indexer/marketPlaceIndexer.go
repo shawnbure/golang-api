@@ -567,6 +567,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				toUpdate = true
 				token.OnSale = false
 				token.Status = entities.BuyToken
+
 				user, err := services.GetOrCreateAccount(string(tx.Receiver))
 				if err != nil {
 					lerr.Println("MAINLOOP", err.Error())
