@@ -20,3 +20,16 @@ const (
 	WithdrawToken        = "Withdraw"
 	AuctionToken         = "Auction"
 )
+
+type TransactionDetail struct {
+	TxId           uint64  `json:"txId"`
+	TxType         string  `json:"txType"`
+	TxHash         string  `json:"txHash"`
+	TxPriceNominal float64 `json:"txPriceNominal"`
+	TxTimestamp    int64   `json:"txTimestamp"`
+	TokenId        string  `json:"tokenId"`
+	TokenName      string  `json:"tokenName"`
+	TokenImageLink string  `json:"tokenImageLink"`
+	FromAddress    string  `json:"fromAddress"`
+	ToAddress      string  `json:"toAddress"`
+}

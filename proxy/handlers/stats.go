@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"math/big"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -37,6 +38,11 @@ const (
 	StatTotalVolumeEndpoint             = "/volume/total"
 	StatTotalVolumeLastWeekPerDay       = "/volume/lastWeek"
 	StatTokensTotalCount                = "/tokens/totalCount"
+	StatListTransactionsWithPagination  = "/transactions/list/:timestamp/:id"
+)
+
+const (
+	PageSize = 20
 )
 
 type statsHandler struct {
@@ -51,6 +57,7 @@ func NewStatsHandler(groupHandler *groupHandler) {
 		{Method: http.MethodGet, Path: StatTotalVolumeEndpoint, HandlerFunc: handler.getTotalTradesVolume},
 		{Method: http.MethodGet, Path: StatTotalVolumeLastWeekPerDay, HandlerFunc: handler.getTotalTradesVolumeLastWeek},
 		{Method: http.MethodGet, Path: StatTokensTotalCount, HandlerFunc: handler.getTokensTotalCount},
+		{Method: http.MethodGet, Path: StatListTransactionsWithPagination, HandlerFunc: handler.getTransactionsListWithPagination},
 	}
 
 	endpointGroupHandler := EndpointGroupHandler{
@@ -67,6 +74,7 @@ func NewStatsHandler(groupHandler *groupHandler) {
 // @Tags stats
 // @Accept json
 // @Produce json
+// @Param date path string true "specific date"
 // @Success 200 {object} dtos.TradesCount
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 404 {object} dtos.ApiResponse
@@ -263,5 +271,45 @@ func (handler *statsHandler) getTokensTotalCount(c *gin.Context) {
 	}
 
 	result.Sum = totalCount
+	dtos.JsonResponse(c, http.StatusOK, result, "")
+}
+
+// @Summary Gets Transactions List With Pagination
+// @Description Gets Transactions List With Pagination
+// @Tags stats
+// @Accept json
+// @Produce json
+// @Param timestamp path int64 true "last timestamp"
+// @Param id path int64 true "last fetched id"
+// @Success 200 {object} dtos.StatTransactionsList
+// @Failure 400 {object} dtos.ApiResponse
+// @Failure 404 {object} dtos.ApiResponse
+// @Router /stats/transactions/list/{timestamp}/{id} [get]
+func (handler *statsHandler) getTransactionsListWithPagination(c *gin.Context) {
+	result := dtos.StatTransactionsList{}
+
+	timeSt := c.Param("timestamp")
+	id := c.Param("id")
+
+	var ts int64 = 0
+	var lastId int64 = 0
+
+	ts, err := strconv.ParseInt(timeSt, 10, 64)
+	if err != nil {
+		ts = 0
+	}
+
+	lastId, err = strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		lastId = 0
+	}
+
+	transactions, err := storage.GetAllTransactionsWithPagination(lastId, ts, PageSize)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		return
+	}
+	result.Transactions = transactions
+
 	dtos.JsonResponse(c, http.StatusOK, result, "")
 }
