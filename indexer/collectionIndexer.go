@@ -220,7 +220,7 @@ func (ci *CollectionIndexer) StartWorker() {
 		rand.Seed(time.Now().UnixNano())
 		rand.Shuffle(len(cols), func(i, j int) { cols[i], cols[j] = cols[j], cols[i] })
 		for _, colObj := range cols {
-			fmt.Println("iterate_col")
+			fmt.Println("iterate_col", colObj)
 			if err := ci.CorrectIfAddressIsEmpty(&colObj, api); err != nil {
 				if err != nil {
 					logErr.Println(err.Error())
