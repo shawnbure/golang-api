@@ -293,7 +293,7 @@ func (ci *CollectionIndexer) StartWorker() {
 					done = true
 					continue
 				}
-				tokenCount := 0
+				tokenCountSuc := 0
 				for _, token := range tokens {
 				tokenLoop:
 					imageURI, attributeURI := services.GetTokenBaseURIs(token)
@@ -416,11 +416,11 @@ func (ci *CollectionIndexer) StartWorker() {
 					if err != nil {
 						logErr.Println("BADERR", err.Error())
 					} else {
-						tokenCount++
+						tokenCountSuc++
 					}
 				}
-				lastIndex += tokenCount
-				countIndexed := collectionIndexer.CountIndexed + uint64(tokenCount)
+				lastIndex += tokenCountSuc
+				countIndexed := collectionIndexer.CountIndexed + uint64(tokenCountSuc)
 				err = storage.UpdateCollectionIndexerWhere(&collectionIndexer,
 					map[string]interface{}{
 						"LastIndex":    lastIndex,
