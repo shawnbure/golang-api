@@ -415,6 +415,9 @@ func (ci *CollectionIndexer) StartWorker() {
 					})
 					if err != nil {
 						logErr.Println("BADERR", err.Error())
+						if err == gorm.ErrRegistered {
+							tokenCountSuc++
+						}
 					} else {
 						tokenCountSuc++
 					}
