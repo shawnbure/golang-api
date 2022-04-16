@@ -15,3 +15,7 @@ type TradesVolume struct {
 	Sum  string `json:"sum"`
 	Date string `json:"date"`
 }
+
+type TokensTotalCount struct {
+	Sum int64 `json:"sum"`
+}

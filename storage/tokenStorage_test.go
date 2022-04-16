@@ -186,6 +186,23 @@ func Test_GetTokensByCollectionIdWithOffsetLimit(t *testing.T) {
 
 }
 
+func Test_GetTotalTokens(t *testing.T) {
+	connectToTestDb()
+
+	err := cleanTokenTable()
+	require.Nil(t, err)
+
+	err = insertSomeTokenRecords()
+	require.Nil(t, err)
+
+	t.Run("Get total tokens that is existed on out platform", func(t *testing.T) {
+		total, err := GetTotalTokenCount()
+		require.Nil(t, err)
+
+		require.Equal(t, total, int64(3), "Total Token Count does not match")
+	})
+}
+
 func defaultToken() entities.Token {
 	return entities.Token{
 		TokenID:      "my_token",
@@ -196,4 +213,41 @@ func defaultToken() entities.Token {
 		OwnerId:      1,
 		CollectionID: 1,
 	}
+}
+
+func cleanTokenTable() error {
+	_, err := DeleteAllTokens()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func insertSomeTokenRecords() error {
+	token := defaultToken()
+	token.TokenID = "my_token_1"
+	token.PriceNominal = 2_000_000_000_000_000_000_000
+	err := AddToken(&token)
+	if err != nil {
+		return err
+	}
+
+	token = defaultToken()
+	token.TokenID = "my_token_2"
+	token.PriceNominal = 2_300_000_000_000_000_000_000
+	err = AddToken(&token)
+	if err != nil {
+		return err
+	}
+
+	token = defaultToken()
+	token.TokenID = "my_token_3"
+	token.PriceNominal = 1_453_000_000_000_000_000_000
+	err = AddToken(&token)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

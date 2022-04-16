@@ -402,3 +402,36 @@ func GetEndAuctionTokens() ([]entities.Token, error) {
 	return tokens, nil
 
 }
+
+func DeleteAllTokens() (int64, error) {
+	database, err := GetDBOrError()
+	if err != nil {
+		return int64(0), err
+	}
+
+	tx := database.Where("1 = 1").Delete(&entities.Token{})
+	if tx.Error != nil {
+		return int64(0), err
+	}
+
+	return tx.RowsAffected, nil
+}
+
+func GetTotalTokenCount() (int64, error) {
+	var total int64
+
+	database, err := GetDBOrError()
+	if err != nil {
+		return int64(0), err
+	}
+
+	txRead := database.
+		Table("tokens").
+		Count(&total)
+
+	if txRead.Error != nil {
+		return int64(0), txRead.Error
+	}
+
+	return total, nil
+}

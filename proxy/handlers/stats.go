@@ -21,6 +21,9 @@ var (
 
 	StatsTotalVolumePerDayKeyFormat    = "Stats:Volume:%s"
 	StatsTotalVolumePerDayExpirePeriod = time.Hour * 24 * 1
+
+	StatsTokensTotalCountKeyFormat    = "Stats:Tokens:TotalCount"
+	StatsTokensTotalCountExpirePeriod = 15 * time.Minute
 )
 
 var (
@@ -32,7 +35,8 @@ const (
 	StatTransactionsCountEndpoint       = "/txCount"
 	StatTransactionsCountByDateEndpoint = "/txCount/:date"
 	StatTotalVolumeEndpoint             = "/volume/total"
-	StatTotalVolumeLastWeekPerDay       = "/volume/last_week"
+	StatTotalVolumeLastWeekPerDay       = "/volume/lastWeek"
+	StatTokensTotalCount                = "/tokens/totalCount"
 )
 
 type statsHandler struct {
@@ -46,6 +50,7 @@ func NewStatsHandler(groupHandler *groupHandler) {
 		{Method: http.MethodGet, Path: StatTransactionsCountByDateEndpoint, HandlerFunc: handler.getTradeCounts},
 		{Method: http.MethodGet, Path: StatTotalVolumeEndpoint, HandlerFunc: handler.getTotalTradesVolume},
 		{Method: http.MethodGet, Path: StatTotalVolumeLastWeekPerDay, HandlerFunc: handler.getTotalTradesVolumeLastWeek},
+		{Method: http.MethodGet, Path: StatTokensTotalCount, HandlerFunc: handler.getTokensTotalCount},
 	}
 
 	endpointGroupHandler := EndpointGroupHandler{
@@ -59,7 +64,7 @@ func NewStatsHandler(groupHandler *groupHandler) {
 
 // @Summary Gets transactions count.
 // @Description Gets transactions count (total/buy/withdraw/...) and can be filtered by date
-// @Tags transactions
+// @Tags stats
 // @Accept json
 // @Produce json
 // @Success 200 {object} dtos.TradesCount
@@ -120,7 +125,7 @@ func (handler *statsHandler) getTradeCounts(c *gin.Context) {
 
 // @Summary Gets Total Volume
 // @Description Gets Total Volume
-// @Tags transactions
+// @Tags stats
 // @Accept json
 // @Produce json
 // @Success 200 {object} dtos.TradesVolumeTotal
@@ -170,7 +175,7 @@ func (handler *statsHandler) getTotalTradesVolume(c *gin.Context) {
 
 // @Summary Gets Total Volume Per Day For Last Week
 // @Description Gets Total Volume Per Day For Last Week
-// @Tags transactions
+// @Tags stats
 // @Accept json
 // @Produce json
 // @Success 200 {object} []dtos.TradesVolume
@@ -219,5 +224,44 @@ func (handler *statsHandler) getTotalTradesVolumeLastWeek(c *gin.Context) {
 		})
 	}
 
+	dtos.JsonResponse(c, http.StatusOK, result, "")
+}
+
+// @Summary Gets Total Tokens Count
+// @Description Gets Total Tokens Count
+// @Tags stats
+// @Accept json
+// @Produce json
+// @Success 200 {object} dtos.TokensTotalCount
+// @Failure 400 {object} dtos.ApiResponse
+// @Failure 404 {object} dtos.ApiResponse
+// @Router /stats/tokens/totalCount [get]
+func (handler *statsHandler) getTokensTotalCount(c *gin.Context) {
+	result := dtos.TokensTotalCount{}
+
+	// Let's check the cache first
+	localCacher := cache.GetLocalCacher()
+
+	var totalCount int64
+
+	totalC, errRead := localCacher.Get(StatsTokensTotalCountKeyFormat)
+	if errRead == nil {
+		totalCount = totalC.(int64)
+	} else {
+		// get it from database and also cache it
+		totalC, err := storage.GetTotalTokenCount()
+		if err != nil {
+			dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+			return
+		}
+		totalCount = totalC
+
+		err = localCacher.SetWithTTLSync(StatsTokensTotalCountKeyFormat, totalCount, StatsTokensTotalCountExpirePeriod)
+		if err != nil {
+			logInstance.Debug("could not set cache", "err", err)
+		}
+	}
+
+	result.Sum = totalCount
 	dtos.JsonResponse(c, http.StatusOK, result, "")
 }
