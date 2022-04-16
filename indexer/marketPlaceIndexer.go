@@ -282,7 +282,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				if err != nil {
 					if err == gorm.ErrRecordNotFound {
 						err = storage.UpdateTokenWhere(token, map[string]interface{}{
-							"isOnSale": false, // TODO we can't be sure if tx is messed up
+							"OnSale": false, // TODO we can't be sure if tx is messed up
 						}, "token_id=? AND nonce_str=?", tokenId, hexNonce)
 						if err != nil {
 							lerr.Println("failed to update token when tx failed")
