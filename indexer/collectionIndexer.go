@@ -17,6 +17,7 @@ import (
 	"github.com/ENFT-DAO/youbei-api/services"
 	"github.com/ENFT-DAO/youbei-api/storage"
 	"github.com/btcsuite/btcutil/bech32"
+	"go.uber.org/zap"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
@@ -219,11 +220,12 @@ func (ci *CollectionIndexer) StartWorker() {
 		}
 		rand.Seed(time.Now().UnixNano())
 		rand.Shuffle(len(cols), func(i, j int) { cols[i], cols[j] = cols[j], cols[i] })
+		zlog.Info("going into cols loop")
 		for _, colObj := range cols {
 			fmt.Println("iterate_col", colObj)
 			if err := ci.CorrectIfAddressIsEmpty(&colObj, api); err != nil {
 				if err != nil {
-					logErr.Println(err.Error())
+					zlog.Error(err.Error())
 					continue
 				}
 			}
@@ -235,21 +237,18 @@ func (ci *CollectionIndexer) StartWorker() {
 						CollectionName: colObj.TokenID,
 					})
 					if err != nil { // bad error
-						logErr.Println(err.Error())
-						logErr.Println("error create colleciton indexer")
+						zlog.Error("error create colleciton indexer", zap.Error(err))
 						continue
 					}
 				} else { // unknown error
-					logErr.Println(err.Error())
-					logErr.Println("error getting collection indexer")
+					zlog.Error("error getting colleciton indexer", zap.Error(err))
 					continue
 				}
 			}
 			if collectionIndexer.CollectionName == "" { //update collection name inside collection indexer
 				err := storage.UpdateCollectionIndexerWhere(&collectionIndexer, map[string]interface{}{"collection_name": colObj.TokenID}, "id=?", collectionIndexer.ID)
 				if err != nil {
-					logErr.Println(err.Error())
-					logErr.Println("error UpdateCollectionndexerWhere collection indexer")
+					zlog.Error("error UpdateCollectionndexerWhere collection indexer", zap.Error(err))
 					continue
 				}
 			}
@@ -416,8 +415,9 @@ func (ci *CollectionIndexer) StartWorker() {
 					})
 					if err != nil {
 						logErr.Println("BADERR", err.Error())
+					} else {
+						tokenCount++
 					}
-					tokenCount++
 				}
 				lastIndex += tokenCount
 				countIndexed := collectionIndexer.CountIndexed + uint64(tokenCount)
