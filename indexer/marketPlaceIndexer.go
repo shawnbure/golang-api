@@ -499,12 +499,16 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				if err != nil {
 					lerr.Println(err.Error())
 				}
-			} else if actions["isBuyNft"] && !failedTx {
+			} else if actions["isBuyNft"] && strings.Contains(string(data), "Seller") && !failedTx {
 				toUpdate = true
 				token.OnSale = false
 				token.Status = entities.BuyToken
-				sellerID := token.OwnerID
 				token.OwnerID = sender.ID
+				user, err := services.GetOrCreateAccount(string(tx.Receiver))
+				if err != nil {
+					lerr.Println("MAINLOOP", err.Error())
+					goto mainLoop
+				}
 				err = storage.DeleteOffersForTokenId(token.ID)
 				if err != nil {
 					lerr.Println(err.Error())
@@ -530,7 +534,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					Type:         entities.BuyToken,
 					Timestamp:    orgTx.Timestamp,
 					BuyerID:      sender.ID,
-					SellerID:     sellerID,
+					SellerID:     user.ID,
 					TokenID:      token.ID,
 					CollectionID: token.CollectionID,
 					Hash:         orgTx.TxHash,
