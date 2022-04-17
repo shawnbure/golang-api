@@ -47,6 +47,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 	if mpi.ElrondAPISec != "" {
 		api = mpi.ElrondAPISec
 	}
+
 	for {
 	mainLoop:
 		var foundResults uint64 = 0
@@ -56,8 +57,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			if err == gorm.ErrRecordNotFound {
 				marketStat, err = storage.CreateMarketPlaceStat()
 				if err != nil {
-					lerr.Println(err.Error())
-					lerr.Println("something went wrong creating marketstat")
+					lerr.Println("something went wrong creating marketstat", err.Error())
 					continue
 				}
 			}
@@ -74,8 +74,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 		var txResult []entities.SCResult
 		err = json.Unmarshal(body, &txResult)
 		if err != nil {
-			lerr.Println(err.Error())
-			lerr.Println("error unmarshal nfts marketplace")
+			lerr.Println("error unmarshal nfts marketplace", err.Error())
 			continue
 		}
 		if marketStat.LastTimestamp >= txResult[0].Timestamp {
@@ -99,6 +98,9 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					continue
 				}
 				goto txloop
+			}
+			if marketStat.LastTimestamp >= tx.Timestamp {
+				goto mainLoop
 			}
 			var orgTx entities.TransactionBC
 			err = json.Unmarshal(orgtxByte, &orgTx)
@@ -621,8 +623,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 						lerr.Println("MAINLOOP", err.Error())
 						goto mainLoop
 					}
-					lerr.Println(err.Error())
-					lerr.Println("MAINLOOP", "error updating token ", fmt.Sprintf("tokenID %d", token.ID))
+					lerr.Println(err.Error(), "MAINLOOP", "error updating token ", fmt.Sprintf("tokenID %d", token.ID))
 					goto mainLoop
 				}
 			}
