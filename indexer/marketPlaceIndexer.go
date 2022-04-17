@@ -154,7 +154,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				}
 			}
 			if !next {
-				lerr.Println("REPEAT", "no final state of tx")
+				lerr.Println("REPEAT", "no relevant tx found", orgData)
 				continue
 			}
 
