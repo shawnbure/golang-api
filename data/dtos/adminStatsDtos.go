@@ -1,5 +1,7 @@
 package dtos
 
+import "github.com/ENFT-DAO/youbei-api/data/entities"
+
 type TradesCount struct {
 	Total    int64 `json:"Total"`
 	Buy      int64 `json:"Buy"`
@@ -18,4 +20,8 @@ type TradesVolume struct {
 
 type TokensTotalCount struct {
 	Sum int64 `json:"sum"`
+}
+
+type StatTransactionsList struct {
+	Transactions []entities.TransactionDetail `json:"transactions"`
 }
