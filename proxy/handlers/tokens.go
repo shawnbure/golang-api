@@ -388,7 +388,7 @@ func (handler *tokensHandler) relayMetadataResponse(c *gin.Context) {
 		}
 		var metadata dtos.MetadataLinkResponse
 		err = json.Unmarshal([]byte(responseBytes), &metadata)
-		if err != nil {
+		if err != nil && len(metadata.Attributes) == 0 {
 			dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 			return
 		}
