@@ -226,14 +226,47 @@ func Test_GetTotalTradedVolume(t *testing.T) {
 	})
 }
 
+func Test_GetAllTransactionsWithDetail(t *testing.T) {
+	connectToTestDb()
+
+	// first clean all transactions
+	//err := cleanTransactionTable()
+	//require.Nil(t, err)
+
+	//insert some records
+	//err = insertBulkTransactions()
+	//require.Nil(t, err)
+
+	t.Run("Get Transactions With Detail", func(t *testing.T) {
+		lastFetchedId := int64(-1)
+		lastTimestamp := int64(-1)
+		howMuchRow := 2
+		transactions, err := GetAllTransactionsWithPagination(lastFetchedId, lastTimestamp, howMuchRow)
+		require.Nil(t, err)
+
+		require.Equal(t, len(transactions), 2, "The returned transactions array length does not matched")
+	})
+
+	t.Run("Get Transactions With Detail with pagination", func(t *testing.T) {
+		lastFetchedId := int64(107)
+		lastTimestamp := int64(1586480400)
+		howMuchRow := 2
+		transactions, err := GetAllTransactionsWithPagination(lastFetchedId, lastTimestamp, howMuchRow)
+		require.Nil(t, err)
+
+		require.Equal(t, len(transactions), 2, "The returned transactions array length does not matched")
+	})
+
+}
+
 func defaultTransaction() entities.Transaction {
 	return entities.Transaction{
 		Hash:         "hash",
 		Type:         "test",
 		PriceNominal: 1_000_000_000_000_000_000_000,
 		SellerID:     1,
-		BuyerID:      2,
-		TokenID:      3,
+		BuyerID:      3,
+		TokenID:      5,
 		CollectionID: 1,
 	}
 }

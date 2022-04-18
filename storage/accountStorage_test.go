@@ -61,6 +61,21 @@ func Test_GetAccountsWithNameAlikeWithLimit(t *testing.T) {
 	require.Equal(t, retrievedAccounts[1].Name, "default")
 }
 
+func Test_AddSecondAccount(t *testing.T) {
+	connectToTestDb()
+
+	account := defaultAccount()
+	account.Address = account.Address + "4"
+	account.Name = account.Name + "2"
+
+	err := AddAccount(&account)
+	//require.Nil(t, err)
+
+	count, err := GetAccountsCount()
+	require.Nil(t, err)
+	require.Equal(t, count, int64(2))
+}
+
 func defaultAccount() entities.Account {
 	return entities.Account{
 		Address: "erd123",

@@ -169,3 +169,22 @@ func GetAccountsExcludingAccountIDWithNameAlike(accountId uint64, name string) (
 
 	return &account, nil
 }
+
+func GetAccountsCount() (int64, error) {
+	database, err := GetDBOrError()
+	if err != nil {
+		return int64(0), err
+	}
+
+	var total int64
+
+	txRead := database.
+		Table("accounts").
+		Count(&total)
+
+	if txRead.Error != nil {
+		return int64(0), txRead.Error
+	}
+
+	return total, nil
+}
