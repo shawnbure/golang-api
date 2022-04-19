@@ -200,7 +200,7 @@ func (handler *statsHandler) getTotalTradesVolumeLastWeek(c *gin.Context) {
 	// Let's check the cache first
 	localCacher := cache.GetLocalCacher()
 
-	for i := 1; i < 8; i++ {
+	for i := 0; i < 7; i++ {
 		tempDate := today.Add(-24 * time.Duration(i) * time.Hour)
 		finalDate := fmt.Sprintf("%4d-%02d-%02d", tempDate.Year(), tempDate.Month(), tempDate.Day())
 
