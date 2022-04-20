@@ -99,6 +99,10 @@ type UpdateCollectionMintStartDateRequest struct {
 	MintStartDate uint64 `json:"mintStartDate"`
 }
 
+type UpdateCollectionIsWhiteListedRequest struct {
+	IsWhiteListed bool `json:"isWhiteListed"`
+}
+
 type UpdateCollectionObj struct {
 	UpdateCollectionRequest
 	Address string `json:"string"`

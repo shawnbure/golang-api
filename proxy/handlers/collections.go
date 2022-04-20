@@ -3,6 +3,7 @@ package handlers
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -278,6 +279,9 @@ func (handler *collectionsHandler) getCollectionByTokenID(c *gin.Context) {
 }
 
 func (handler *collectionsHandler) updateMintStartDate(c *gin.Context) {
+
+	fmt.Println("######### updateMintStartDate")
+
 	var request services.UpdateCollectionMintStartDateRequest
 	tokenId := c.Param("collectionId")
 

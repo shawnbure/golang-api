@@ -1440,6 +1440,40 @@ func GetTokensUnlistedWithTokenIdAlikeWithStatus(tokenId string, limit int) ([]e
 	return tokenArray, nil
 }
 
+func GetBuyerWhiteListCheck(contractAddress string) (string, error) {
+
+	strWhiteListCheck, err := DoGetBuyerWhitelistCheckVmQuery(contractAddress)
+	if err != nil {
+		return "", err
+	}
+
+	return strWhiteListCheck, nil //return "ON" | "OFF"
+}
+
+func DoGetBuyerWhitelistCheckVmQuery(contractAddress string) (string, error) {
+
+	bi := interaction.GetBlockchainInteractor()
+
+	whiteListCheck, errWhiteListCheck := bi.DoVmQuery(contractAddress, "getBuyerWhiteListCheck", []string{})
+	if errWhiteListCheck != nil {
+		return "", errWhiteListCheck
+	}
+
+	whiteListReturn := "ON"
+
+	if len(whiteListCheck) != 0 {
+		whiteListCheckInt := big.NewInt(0).SetBytes(whiteListCheck[0])
+		if whiteListCheckInt.String() == "1" {
+			whiteListReturn = "ON"
+		} else {
+			whiteListReturn = "OFF"
+		}
+
+	}
+
+	return whiteListReturn, nil
+}
+
 func GetWhitelistBuyCountLimit(contractAddress string, userAddress string) (string, error) {
 	localCacher := cache.GetLocalCacher()
 	key := fmt.Sprintf(GetBuyerLimitCount, userAddress, contractAddress)
