@@ -517,6 +517,9 @@ func ListToken(args ListTokenArgs, blockchainProxy string, marketplaceAddress st
 	}
 
 	hexNonce := strconv.FormatInt(int64(token.Nonce), 16)
+	if len(hexNonce)%2 != 0 {
+		hexNonce = "0" + hexNonce
+	}
 	args.NonceStr = hexNonce
 	args.Nonce = token.Nonce
 
