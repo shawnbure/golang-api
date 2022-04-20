@@ -39,6 +39,8 @@ const (
 	withdrawFromMinterFormatEndpoint           = "/withdraw-minter/:userAddress/:contractAddress"
 	requestWithdrawThroughMinterFormatEndpoint = "/request-withdraw/:userAddress/:contractAddress"
 	updateSaleStartFormatEndpoint              = "/update-sale-start/:userAddress/:contractAddress/:saleStart"
+	updateBuyerWhiteListCheckFormatEndpoint    = "/update-buyer-whitelist-check/:userAddress/:contractAddress/:whiteListCheck"
+	getBuyerWhiteListCheckFormatEndpoint       = "/get-buyer-whitelist-check/:userAddress/:contractAddress"
 )
 
 type txTemplateHandler struct {
@@ -74,6 +76,8 @@ func NewTxTemplateHandler(groupHandler *groupHandler, blockchainConfig config.Bl
 		{Method: http.MethodGet, Path: withdrawFromMinterFormatEndpoint, HandlerFunc: handler.withdrawFromMinter},
 		{Method: http.MethodGet, Path: requestWithdrawThroughMinterFormatEndpoint, HandlerFunc: handler.requestWithdrawThroughMinter},
 		{Method: http.MethodGet, Path: updateSaleStartFormatEndpoint, HandlerFunc: handler.updateSaleStart},
+		{Method: http.MethodGet, Path: updateBuyerWhiteListCheckFormatEndpoint, HandlerFunc: handler.updateBuyerWhiteListCheck},
+		{Method: http.MethodGet, Path: getBuyerWhiteListCheckFormatEndpoint, HandlerFunc: handler.getBuyerWhiteListCheck},
 	}
 
 	endpointGroupHandler := EndpointGroupHandler{
@@ -839,6 +843,48 @@ func (handler *txTemplateHandler) updateSaleStart(c *gin.Context) {
 	}
 
 	template, err := handler.txFormatter.UpdateSaleStartTemplateTxTemplate(userAddress, contractAddress, saleStart)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	dtos.JsonResponse(c, http.StatusOK, template, "")
+}
+
+func (handler *txTemplateHandler) updateBuyerWhiteListCheck(c *gin.Context) {
+	userAddress := c.Param("userAddress")
+	contractAddress := c.Param("contractAddress")
+	whiteListCheckStr := c.Param("whiteListCheck")
+
+	/*
+		fmt.Println("contract Address: ", contractAddress)
+
+		contractAddressFromBech32, _ := erdgoData.NewAddressFromBech32String(contractAddress)
+		contractAddressHex := hex.EncodeToString(contractAddressFromBech32.AddressBytes())
+
+		fmt.Println("newAddress2: " + contractAddressHex)
+	*/
+
+	whiteListCheck, err := strconv.ParseUint(whiteListCheckStr, 10, 64)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	template, err := handler.txFormatter.UpdateBuyerWhiteListCheckTemplateTxTemplate(userAddress, contractAddress, whiteListCheck)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	dtos.JsonResponse(c, http.StatusOK, template, "")
+}
+
+func (handler *txTemplateHandler) getBuyerWhiteListCheck(c *gin.Context) {
+	userAddress := c.Param("userAddress")
+	contractAddress := c.Param("contractAddress")
+
+	template, err := handler.txFormatter.GetBuyerWhiteListCheckTemplateTxTemplate(userAddress, contractAddress)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 		return

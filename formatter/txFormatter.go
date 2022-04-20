@@ -37,6 +37,8 @@ var (
 	withdrawFromMinterEndpointName           = "withdraw"
 	requestWithdrawThroughMinterEndpointName = "requestWithdraw"
 	updateSaleStartEndpointName              = "updateSaleStart"
+	updateBuyerWhiteListCheckEndpointName    = "updateBuyerWhitelistCheck"
+	getBuyerWhiteListCheckEndpointName       = "getBuyerWhiteListCheck"
 )
 
 const RoyaltiesBP = 100
@@ -576,6 +578,52 @@ func (f *TxFormatter) UpdateSaleStartTemplateTxTemplate(
 		SndAddr:   walletAddress,
 		GasPrice:  f.config.GasPrice,
 		GasLimit:  f.config.RequestWithdrawThroughMinterGasLimit,
+		Data:      txData,
+		Signature: "",
+		ChainID:   f.config.ChainID,
+		Version:   1,
+		Options:   0,
+	}, nil
+
+}
+
+func (f *TxFormatter) UpdateBuyerWhiteListCheckTemplateTxTemplate(
+	walletAddress string,
+	contractAddress string,
+	whiteListCheck uint64,
+) (*Transaction, error) {
+	txData := updateBuyerWhiteListCheckEndpointName +
+		"@" + hex.EncodeToString(big.NewInt(int64(whiteListCheck)).Bytes())
+
+	return &Transaction{
+		Nonce:     0,
+		Value:     "0",
+		RcvAddr:   contractAddress,
+		SndAddr:   walletAddress,
+		GasPrice:  f.config.GasPrice,
+		GasLimit:  f.config.RequestWithdrawThroughMinterGasLimit,
+		Data:      txData,
+		Signature: "",
+		ChainID:   f.config.ChainID,
+		Version:   1,
+		Options:   0,
+	}, nil
+
+}
+
+func (f *TxFormatter) GetBuyerWhiteListCheckTemplateTxTemplate(
+	walletAddress string,
+	contractAddress string,
+) (*Transaction, error) {
+	txData := getBuyerWhiteListCheckEndpointName
+
+	return &Transaction{
+		Nonce:   0,
+		Value:   "0",
+		RcvAddr: contractAddress,
+		SndAddr: walletAddress,
+		//GasPrice:  f.config.GasPrice,
+		//GasLimit:  f.config.RequestWithdrawThroughMinterGasLimit,
 		Data:      txData,
 		Signature: "",
 		ChainID:   f.config.ChainID,
