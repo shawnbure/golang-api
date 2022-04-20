@@ -611,6 +611,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				err = storage.UpdateTokenWhere(token, map[string]interface{}{
 					"OnSale":              token.OnSale,
 					"Status":              token.Status,
+					"NonceStr":            hexNonce,
 					"PriceString":         token.PriceString,
 					"PriceNominal":        token.PriceNominal,
 					"LastMarketTimestamp": token.LastMarketTimestamp,

@@ -486,15 +486,6 @@ func ListToken(args ListTokenArgs, blockchainProxy string, marketplaceAddress st
 		collectionId = collection.ID
 	}
 
-	if args.NonceStr != "" {
-		intNonce, err := strconv.ParseUint(args.NonceStr, 10, 64)
-		if err != nil {
-			log.Debug("could not convert string nince to biguint nonce", "err", err)
-			return
-		}
-		args.Nonce = intNonce
-	}
-
 	var metadataLink = ""
 	if args.SecondLink != "" {
 		metadataLink = args.SecondLink
@@ -525,13 +516,10 @@ func ListToken(args ListTokenArgs, blockchainProxy string, marketplaceAddress st
 		return
 	}
 
-	intNonce, err := strconv.ParseUint(args.NonceStr, 10, 64)
-	if err != nil {
-		log.Debug("could not convert string nince to biguint nonce", "err", err)
-		return
-	}
-	hexNonce := strconv.FormatInt(int64(intNonce), 16)
+	hexNonce := strconv.FormatInt(int64(token.Nonce), 16)
 	args.NonceStr = hexNonce
+	args.Nonce = token.Nonce
+
 	tokenDetail, err := GetResponse(fmt.Sprintf(`%s/nfts/%s`, blockchainProxy, string(args.TokenId)+"-"+hexNonce))
 	if err != nil {
 		if strings.Contains(err.Error(), "404") {
