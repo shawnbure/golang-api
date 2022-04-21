@@ -32,6 +32,8 @@ type Collection struct {
 	MintEndDate              uint64         `json:"mintEndDate"`
 	CreatorID                uint64         `json:"creatorId"`
 
+	//`gorm:"type:bool;default:false"`
+
 	//AccountName              string `json:"accountName"`
 	//AcccountProfileImageLink string `json:"accountProfileImageLink"`
 }
