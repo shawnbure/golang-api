@@ -517,6 +517,9 @@ func ListToken(args ListTokenArgs, blockchainProxy string, marketplaceAddress st
 	}
 
 	hexNonce := strconv.FormatInt(int64(token.Nonce), 16)
+	if len(hexNonce)%2 != 0 {
+		hexNonce = "0" + hexNonce
+	}
 	args.NonceStr = hexNonce
 	args.Nonce = token.Nonce
 
@@ -530,12 +533,21 @@ func ListToken(args ListTokenArgs, blockchainProxy string, marketplaceAddress st
 	err = json.Unmarshal(tokenDetail, &tokenDetailObj)
 	if err != nil {
 		zlog.Error("BADERR", zap.Error(err))
+
 	}
 
 	finalPriceBigInt := new(big.Int)
 	priceBigFloat.Int(finalPriceBigInt)
 	token.TokenID = args.TokenId
-	token.Nonce = tokenDetailObj.Nonce
+	if tokenDetailObj.Nonce != 0 {
+		token.Nonce = tokenDetailObj.Nonce
+		hexNonce := strconv.FormatInt(int64(token.Nonce), 16)
+		if len(hexNonce)%2 != 0 {
+			hexNonce = "0" + hexNonce
+		}
+		args.NonceStr = hexNonce
+		args.Nonce = token.Nonce
+	}
 	token.RoyaltiesPercent = GetRoyaltiesPercentNominal(args.RoyaltiesPercent)
 	token.MetadataLink = metadataLink
 	token.CreatedAt = args.Timestamp
