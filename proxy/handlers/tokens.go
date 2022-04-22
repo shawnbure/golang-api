@@ -106,9 +106,12 @@ func (handler *tokensHandler) list(c *gin.Context) {
 		dtos.JsonResponse(c, http.StatusUnauthorized, nil, "jwt and request addresses differ")
 		return
 	}
-
+	api := handler.blockchainConfig.ApiUrl
+	if api == "" {
+		api = handler.blockchainConfig.ApiUrlSec
+	}
 	//errListToken := services.ListTokenFromClient(&request, handler.blockchainConfig.ApiUrl)
-	services.ListToken(request, handler.blockchainConfig.ApiUrl, handler.blockchainConfig.MarketplaceAddress)
+	services.ListToken(request, api, handler.blockchainConfig.MarketplaceAddress)
 	//if errListToken != nil {
 	//	dtos.JsonResponse(c, http.StatusInternalServerError, nil, errListToken.Error())
 	//	return
