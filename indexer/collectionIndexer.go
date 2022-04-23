@@ -398,7 +398,7 @@ func (ci *CollectionIndexer) StartWorker() {
 					if dbToken == nil {
 						dbToken = &entities.Token{}
 					}
-					err = storage.AddToken(&entities.Token{
+					err = storage.AddOrUpdateToken(&entities.Token{
 						TokenID:      token.Collection,
 						MintTxHash:   dbToken.MintTxHash,
 						CollectionID: colObj.ID,

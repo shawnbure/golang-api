@@ -50,6 +50,54 @@ func AddToken(token *entities.Token) error {
 	return nil
 }
 
+func AddOrUpdateToken(token *entities.Token) error {
+
+	database, err := GetDBOrError()
+	if err != nil {
+		return err
+	}
+
+	//verify the collection exists retun error if not
+
+	collectionCount := int64(0)
+	err = db.Model(&entities.Collection{}).
+		Where("id = ?", token.CollectionID).
+		Count(&collectionCount).
+		Error
+
+	if collectionCount > 0 {
+
+		//if the token does not exixts in the db create it return error
+		tokenCount := int64(0)
+		err = db.Model(token).
+			Where("token_id = ? AND nonce_str = ?", token.TokenID, token.NonceStr).
+			Count(&tokenCount).
+			Error
+
+		if tokenCount == 0 {
+			txCreate := database.Create(&token)
+			if txCreate.Error != nil {
+				return txCreate.Error
+			}
+			if txCreate.RowsAffected == 0 {
+				return gorm.ErrRecordNotFound
+			}
+		} else {
+			txCreate := database.Save(&token)
+			if txCreate.Error != nil {
+				return txCreate.Error
+			}
+			if txCreate.RowsAffected == 0 {
+				return gorm.ErrRecordNotFound
+			}
+		}
+	} else {
+		return err
+	}
+
+	return nil
+}
+
 func UpdateToken(token *entities.Token) error {
 	database, err := GetDBOrError()
 	if err != nil {
