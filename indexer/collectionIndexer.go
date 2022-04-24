@@ -329,14 +329,34 @@ func (ci *CollectionIndexer) StartWorker() {
 						logErr.Println(err.Error(), string(url), token.Collection, token.Attributes, token.Identifier, token.Media, token.Metadata)
 					}
 					var attributes datatypes.JSON
-					attributesBytes, err := json.Marshal(metadataJSON["attributes"])
-					if err != nil {
-						logErr.Println(err.Error())
-						attributesBytes = []byte{}
-					}
-					err = json.Unmarshal(attributesBytes, &attributes)
-					if err != nil {
-						logErr.Println(err.Error())
+					if token.Attributes != "" {
+						attributesStr, err := base64.StdEncoding.DecodeString(token.Attributes)
+						resultStr := `[`
+						if err != nil {
+							zlog.Error("attribute decoding failed", zap.Error(err))
+						} else {
+							attrbutesParts := strings.Split(string(attributesStr), ";")
+							var prefix string = ""
+							for i, ap := range attrbutesParts {
+								if i != 0 {
+									prefix = ","
+								}
+								resultStr = resultStr + prefix + "{" + ap + "}"
+							}
+							resultStr = resultStr + "]"
+						}
+						attributes = datatypes.JSON(resultStr)
+
+					} else {
+						attributesBytes, err := json.Marshal(metadataJSON["attributes"])
+						if err != nil {
+							logErr.Println(err.Error())
+							attributesBytes = []byte{}
+						}
+						err = json.Unmarshal(attributesBytes, &attributes)
+						if err != nil {
+							logErr.Println(err.Error())
+						}
 					}
 
 					//get owner of token from database TODO
