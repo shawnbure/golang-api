@@ -46,6 +46,7 @@ func NewWebServer(cfg *config.GeneralConfig) (*webServer, error) {
 	corsCfg.AllowAllOrigins = true
 	//Access-Control-Allow-Origin
 	//corsCfg.a
+
 	router.Use(cors.New(corsCfg))
 
 	groupHandler := handlers.NewGroupHandler()

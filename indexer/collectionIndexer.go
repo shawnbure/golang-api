@@ -333,7 +333,7 @@ func (ci *CollectionIndexer) StartWorker() {
 					}
 					var attributes datatypes.JSON
 					if token.Attributes != "" {
-						attributesStr, err := base64.StdEncoding.DecodeString(token.Attributes)
+						attributesStr, err := base64.RawStdEncoding.DecodeString(token.Attributes)
 						resultStr := `[`
 						if err != nil {
 							zlog.Error("attribute decoding failed", zap.Error(err))
