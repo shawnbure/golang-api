@@ -83,7 +83,7 @@ func AddOrUpdateToken(token *entities.Token) error {
 				return gorm.ErrRecordNotFound
 			}
 		} else {
-			txCreate := database.Model(token).Where("token_id = ? AND nonce_str = ?").Updates(token)
+			txCreate := database.Model(token).Where("token_id = ? AND nonce_str = ?", token.TokenID, token.NonceStr).Updates(token)
 			if txCreate.Error != nil {
 				return txCreate.Error
 			}
