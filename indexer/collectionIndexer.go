@@ -296,7 +296,7 @@ func (ci *CollectionIndexer) StartWorker() {
 				tokenCountSuc := 0
 				for _, token := range tokens {
 				tokenLoop:
-					imageURI, attributeURI := services.GetTokenBaseURIs(token)
+					imageURI, attributeURI := services.GetTokenUris(token)
 					nonce10Str := strconv.FormatUint(token.Nonce, 10)
 					nonceStr := strconv.FormatUint(token.Nonce, 16)
 					if len(nonceStr)%2 != 0 {
