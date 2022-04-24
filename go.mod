@@ -24,8 +24,8 @@ require (
 	github.com/swaggo/gin-swagger v1.3.2
 	github.com/swaggo/swag v1.7.3
 	github.com/urfave/cli v1.22.5
-	go.uber.org/atomic v1.7.0
-	go.uber.org/zap v1.16.0
+	go.uber.org/atomic v1.9.0
+	go.uber.org/zap v1.20.0
 	gopkg.in/tucnak/telebot.v2 v2.4.0
 	gorm.io/datatypes v1.0.2
 	gorm.io/driver/postgres v1.1.0
@@ -106,7 +106,7 @@ require (
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	github.com/yusufpapurcu/wmi v1.2.2 // indirect
 	go.opencensus.io v0.23.0 // indirect
-	go.uber.org/multierr v1.6.0 // indirect
+	go.uber.org/multierr v1.8.0 // indirect
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
 	golang.org/x/exp v0.0.0-20210901193431-a062eea981d2 // indirect
 	golang.org/x/net v0.0.0-20210924151903-3ad01bbaa167 // indirect

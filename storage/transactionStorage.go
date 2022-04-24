@@ -500,3 +500,51 @@ func GetAllTransactionsWithPagination(lastFetchedId int64, lastTimestamp int64, 
 
 	return transactions, nil
 }
+
+func GetLast24HoursSalesTransactions(fromTime string, toTime string) ([]entities.TransactionDetail, error) {
+	database, err := GetDBOrError()
+	if err != nil {
+		return nil, err
+	}
+
+	transactions := []entities.TransactionDetail{}
+	txRead := database.Table("transactions").Select("transactions.type as tx_type, transactions.hash as tx_hash, transactions.id as tx_id, transactions.price_nominal as tx_price_nominal, transactions.timestamp as tx_timestamp, tokens.token_id as token_id, tokens.token_name as token_name, tokens.image_link as token_image_link, seller_account.address as from_address, buyer_account.address as to_address").
+		Joins("inner join tokens on tokens.id=transactions.token_id ").
+		Joins("inner join accounts as seller_account on seller_account.id=transactions.seller_id ").
+		Joins("inner join accounts as buyer_account on buyer_account.id=transactions.buyer_id ").
+		Order("transactions.timestamp desc").
+		Where("date_trunc('hour', to_timestamp(transactions.timestamp))<? and date_trunc('hour', to_timestamp(transactions.timestamp))>=? and transactions.type=?", toTime, fromTime, entities.BuyToken).
+		Scan(&transactions)
+
+	if txRead.Error != nil {
+		return nil, txRead.Error
+	}
+
+	return transactions, nil
+}
+
+func GetLast24HoursTotalVolume(fromTime, toTime string) (*big.Float, error) {
+	database, err := GetDBOrError()
+	if err != nil {
+		return big.NewFloat(0), err
+	}
+
+	var x sql.NullString
+
+	txRead := database.
+		Where("date_trunc('hour', to_timestamp(transactions.timestamp))<? and date_trunc('hour', to_timestamp(transactions.timestamp))>=? and transactions.type=?", toTime, fromTime, entities.BuyToken).
+		Table("transactions").
+		Select("sum(price_nominal)").
+		Scan(&x)
+
+	if txRead.Error != nil {
+		return big.NewFloat(0), txRead.Error
+	}
+
+	if x.Valid {
+		v, _ := new(big.Float).SetString(x.String)
+		return v, nil
+	}
+
+	return big.NewFloat(0), errors.New("Null String ...")
+}

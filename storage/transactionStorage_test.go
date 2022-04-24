@@ -256,7 +256,38 @@ func Test_GetAllTransactionsWithDetail(t *testing.T) {
 
 		require.Equal(t, len(transactions), 2, "The returned transactions array length does not matched")
 	})
+}
 
+func Test_GetDailySales(t *testing.T) {
+	connectToTestDb()
+
+	// first clean all transactions
+	err := cleanTransactionTable()
+	require.Nil(t, err)
+
+	//insert some records
+	err = insertBulkTransactions()
+	require.Nil(t, err)
+
+	t.Run("Get the last 24 hours transactions", func(t *testing.T) {
+		fromTime := "2020-04-23 12:00:00"
+		toTime := "2020-04-24 12:00:00"
+
+		transactions, err := GetLast24HoursSalesTransactions(fromTime, toTime)
+		require.Nil(t, err)
+
+		require.Equal(t, len(transactions), 2, "The returned transactions count is incorrect")
+	})
+
+	t.Run("Get the total volume last 24 hours", func(t *testing.T) {
+		fromTime := "2020-04-23 12:00:00"
+		toTime := "2020-04-24 12:00:00"
+
+		total, err := GetLast24HoursTotalVolume(fromTime, toTime)
+		require.Nil(t, err)
+		v, _ := new(big.Float).SetString("2000000000000000000000")
+		require.Equal(t, total, v, "The total volume is not correct")
+	})
 }
 
 func defaultTransaction() entities.Transaction {
@@ -265,8 +296,8 @@ func defaultTransaction() entities.Transaction {
 		Type:         "test",
 		PriceNominal: 1_000_000_000_000_000_000_000,
 		SellerID:     1,
-		BuyerID:      3,
-		TokenID:      5,
+		BuyerID:      2,
+		TokenID:      1,
 		CollectionID: 1,
 	}
 }
@@ -284,7 +315,7 @@ func insertBulkTransactions() error {
 	transaction := defaultTransaction()
 	transaction.Type = entities.BuyToken
 	transaction.Hash = "my_unique_hash1"
-	transaction.Timestamp = uint64(time.Date(2020, 04, 9, 1, 0, 0, 0, time.UTC).Unix())
+	transaction.Timestamp = uint64(time.Date(2020, 04, 23, 20, 2, 0, 0, time.UTC).Unix())
 	err := AddTransaction(&transaction)
 	if err != nil {
 		return err
@@ -293,7 +324,7 @@ func insertBulkTransactions() error {
 	transaction = defaultTransaction()
 	transaction.Type = entities.BuyToken
 	transaction.Hash = "my_unique_hash5"
-	transaction.Timestamp = uint64(time.Date(2020, 04, 10, 1, 0, 0, 0, time.UTC).Unix())
+	transaction.Timestamp = uint64(time.Date(2020, 04, 24, 1, 0, 0, 0, time.UTC).Unix())
 	err = AddTransaction(&transaction)
 	if err != nil {
 		return err
@@ -302,7 +333,7 @@ func insertBulkTransactions() error {
 	transaction = defaultTransaction()
 	transaction.Type = entities.WithdrawToken
 	transaction.Hash = "my_unique_hash2"
-	transaction.Timestamp = uint64(time.Date(2020, 04, 10, 1, 0, 0, 0, time.UTC).Unix())
+	transaction.Timestamp = uint64(time.Date(2020, 04, 23, 15, 0, 0, 0, time.UTC).Unix())
 	err = AddTransaction(&transaction)
 	if err != nil {
 		return err
@@ -311,7 +342,7 @@ func insertBulkTransactions() error {
 	transaction = defaultTransaction()
 	transaction.Type = entities.AuctionToken
 	transaction.Hash = "my_unique_hash3"
-	transaction.Timestamp = uint64(time.Date(2020, 04, 9, 1, 0, 0, 0, time.UTC).Unix())
+	transaction.Timestamp = uint64(time.Date(2020, 04, 24, 12, 3, 0, 0, time.UTC).Unix())
 	err = AddTransaction(&transaction)
 	if err != nil {
 		return err
@@ -327,5 +358,4 @@ func insertBulkTransactions() error {
 	}
 
 	return nil
-
 }
