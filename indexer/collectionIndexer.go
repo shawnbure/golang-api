@@ -322,6 +322,9 @@ func (ci *CollectionIndexer) StartWorker() {
 
 					url := fmt.Sprintf("%s/%s.json", youbeiMeta, nonce10Str)
 					attrbs, err := services.GetResponse(url)
+					if err != nil {
+						logErr.Println(err.Error(), string(url), token.Collection, token.Attributes, token.Identifier, token.Media, token.Metadata)
+					}
 
 					metadataJSON := make(map[string]interface{})
 					err = json.Unmarshal(attrbs, &metadataJSON)
@@ -428,7 +431,7 @@ func (ci *CollectionIndexer) StartWorker() {
 						PriceNominal: dbToken.PriceNominal,
 					})
 					if err != nil {
-						logErr.Println("BADERR", err.Error())
+						logErr.Println("BADERR", err.Error(), token)
 						if err == gorm.ErrRegistered {
 							tokenCountSuc++
 						}
