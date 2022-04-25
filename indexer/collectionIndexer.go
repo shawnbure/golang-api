@@ -336,7 +336,8 @@ func (ci *CollectionIndexer) StartWorker() {
 						attributesStr, err := base64.RawStdEncoding.DecodeString(token.Attributes)
 						resultStr := `[`
 						if err != nil {
-							zlog.Error("attribute decoding failed", zap.Error(err))
+							zlog.Error("attribute decoding failed", zap.Error(err), zap.String("attribute", token.Attributes))
+							break
 						} else {
 							attrbutesParts := strings.Split(string(attributesStr), ";")
 							var prefix string = ""
@@ -349,7 +350,6 @@ func (ci *CollectionIndexer) StartWorker() {
 							resultStr = resultStr + "]"
 						}
 						attributes = datatypes.JSON(resultStr)
-
 					} else {
 						attributesBytes, err := json.Marshal(metadataJSON["attributes"])
 						if err != nil {
