@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -40,6 +41,7 @@ func NewReportHandler(groupHandler *groupHandler) {
 // @Description Gets Last 24 Hours Total Volume
 // @Tags reports
 // @Accept json
+// @Param format query string false  "format of the output"
 // @Produce application/csv
 // @Success 200 {file} file
 // @Failure 400 {object} dtos.ApiResponse
@@ -47,6 +49,13 @@ func NewReportHandler(groupHandler *groupHandler) {
 // @Failure 500 {object} dtos.ApiResponse
 // @Router /reports/sales/daily/overall [get]
 func (handler *reportHandler) getLast24HoursSalesOverall(c *gin.Context) {
+	q := c.Request.URL.Query().Get("format")
+	if strings.TrimSpace(q) == "" {
+		q = "csv"
+	} else {
+		q = strings.TrimSpace(q)
+	}
+
 	currentTime := time.Now().UTC()
 	oneDayBefore := currentTime.Add(-24 * time.Hour)
 
@@ -62,36 +71,57 @@ func (handler *reportHandler) getLast24HoursSalesOverall(c *gin.Context) {
 	}
 	transactionsLength := len(transactions)
 
-	csvWrapper, err := utils.NewCsvWrapper()
-	if err != nil {
-		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
-		return
+	if q == "csv" || q == "raw" {
+
+		csvWrapper, err := utils.NewCsvWrapper()
+		if err != nil {
+			dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+			return
+		}
+		defer csvWrapper.Close()
+
+		// Create csv wrapper and return the result
+		result := [][]string{}
+		result = append(result, []string{
+			"From Time", "To Time", "Total Volume", "Total Transactions",
+		})
+		result = append(result, []string{
+			oneDayBeforeStr, currentTimeStr, totalC.String(), strconv.Itoa(transactionsLength),
+		})
+
+		err = csvWrapper.WriteBulkRecord(result)
+		if err != nil {
+			dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+			return
+		}
+
+		if q == "csv" {
+			buff := csvWrapper.GetBuffer()
+			dtos.ContentAsFileResponse(c, "data.csv", buff)
+		} else {
+			finalResult := csvWrapper.GetData()
+			dtos.StringResponse(c, finalResult)
+		}
+	} else if q == "json" {
+		f, _ := totalC.Float64()
+		result := dtos.ReportLast24HoursOverall{
+			FromTime:          oneDayBeforeStr,
+			ToTime:            currentTimeStr,
+			TotalVolume:       f,
+			TotalVolumeStr:    totalC.String(),
+			TotalTransactions: transactionsLength,
+		}
+		dtos.JsonResponse(c, http.StatusOK, result, "")
+	} else {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
 	}
-	defer csvWrapper.Close()
-
-	// Create csv wrapper and return the result
-	result := [][]string{}
-	result = append(result, []string{
-		"From Time", "To Time", "Total Volume", "Total Transactions",
-	})
-	result = append(result, []string{
-		oneDayBeforeStr, currentTimeStr, totalC.String(), strconv.Itoa(transactionsLength),
-	})
-
-	err = csvWrapper.WriteBulkRecord(result)
-	if err != nil {
-		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
-		return
-	}
-
-	buff := csvWrapper.GetBuffer()
-	dtos.ContentAsFileResponse(c, "data.csv", buff)
 }
 
 // @Summary Gets Last 24 Hours Transactions
 // @Description Gets Last 24 Hours Transactions
 // @Tags reports
 // @Accept json
+// @Param format query string false  "format of the output"
 // @Produce application/csv
 // @Success 200 {file} file
 // @Failure 400 {object} dtos.ApiResponse
@@ -99,6 +129,13 @@ func (handler *reportHandler) getLast24HoursSalesOverall(c *gin.Context) {
 // @Failure 500 {object} dtos.ApiResponse
 // @Router /reports/sales/daily/transactions [get]
 func (handler *reportHandler) getLast24HoursSalesTransactions(c *gin.Context) {
+	q := c.Request.URL.Query().Get("format")
+	if strings.TrimSpace(q) == "" {
+		q = "csv"
+	} else {
+		q = strings.TrimSpace(q)
+	}
+
 	currentTime := time.Now().UTC()
 	oneDayBefore := currentTime.Add(-24 * time.Hour)
 
@@ -111,45 +148,57 @@ func (handler *reportHandler) getLast24HoursSalesTransactions(c *gin.Context) {
 		return
 	}
 
-	csvWrapper, err := utils.NewCsvWrapper()
-	if err != nil {
-		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
-		return
-	}
-	defer csvWrapper.Close()
-
-	// Create csv wrapper and return the result
-	csvWrapper2, err := utils.NewCsvWrapper()
-	if err != nil {
-		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
-		return
-	}
-	defer csvWrapper2.Close()
-
-	result := [][]string{}
-	result = append(result, []string{
-		"Tx Hash", "Seller Address", "Buyer Address", "Token Id", "Token Name", "Token Media Link", "Price", "Time",
-	})
-	for _, item := range transactions {
-		d := []string{
-			item.TxHash,
-			item.FromAddress,
-			item.ToAddress,
-			item.TokenId,
-			item.TokenName,
-			item.TokenImageLink,
-			fmt.Sprintf("%f", item.TxPriceNominal),
-			time.Unix(item.TxTimestamp, 0).String(),
+	if q == "csv" || q == "raw" {
+		csvWrapper, err := utils.NewCsvWrapper()
+		if err != nil {
+			dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+			return
 		}
-		result = append(result, d)
-	}
+		defer csvWrapper.Close()
 
-	err = csvWrapper2.WriteBulkRecord(result)
-	if err != nil {
-		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
-		return
-	}
+		// Create csv wrapper and return the result
+		csvWrapper2, err := utils.NewCsvWrapper()
+		if err != nil {
+			dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+			return
+		}
+		defer csvWrapper2.Close()
 
-	buff2 := csvWrapper2.GetBuffer()
-	dtos.ContentAsFileResponse(c, "data.csv", buff2)
+		result := [][]string{}
+		result = append(result, []string{
+			"Tx Hash", "Seller Address", "Buyer Address", "Token Id", "Token Name", "Token Media Link", "Price", "Time",
+		})
+		for _, item := range transactions {
+			d := []string{
+				item.TxHash,
+				item.FromAddress,
+				item.ToAddress,
+				item.TokenId,
+				item.TokenName,
+				item.TokenImageLink,
+				fmt.Sprintf("%f", item.TxPriceNominal),
+				time.Unix(item.TxTimestamp, 0).String(),
+			}
+			result = append(result, d)
+		}
+
+		err = csvWrapper2.WriteBulkRecord(result)
+		if err != nil {
+			dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+			return
+		}
+
+		if q == "csv" {
+			buff2 := csvWrapper2.GetBuffer()
+			dtos.ContentAsFileResponse(c, "data.csv", buff2)
+		} else {
+			finalResult := csvWrapper2.GetData()
+			dtos.StringResponse(c, finalResult)
+		}
+	} else if q == "json" {
+		result := dtos.ReportLast24HoursTransactionsList{Transactions: transactions}
+		dtos.JsonResponse(c, http.StatusOK, result, "")
+	} else {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+	}
 }
