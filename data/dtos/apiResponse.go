@@ -26,3 +26,7 @@ func ContentAsFileResponse(c *gin.Context, filename string, data *bytes.Buffer) 
 	c.Header("Content-Length", fmt.Sprintf("%d", len(data.Bytes())))
 	c.Writer.Write(data.Bytes())
 }
+
+func StringResponse(c *gin.Context, data string) {
+	c.String(http.StatusOK, "%v", data)
+}
