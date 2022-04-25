@@ -60,7 +60,7 @@ func connectToTestDb() {
 		Port:          5432,
 		DbName:        "youbeiapi_test",
 		User:          "youbeiapi",
-		Password:      "youbei2020",
+		Password:      "youbeiapi",
 		SslMode:       "disable",
 		MaxOpenConns:  50,
 		MaxIdleConns:  10,

@@ -111,6 +111,7 @@ func NewWebServer(cfg *config.GeneralConfig) (*webServer, error) {
 	handlers.NewImageHandler(groupHandler)
 	handlers.NewStatsHandler(groupHandler)
 	handlers.NewReportHandler(groupHandler)
+	handlers.NewActivitiesHandler(groupHandler)
 
 	//
 

@@ -290,6 +290,38 @@ func Test_GetDailySales(t *testing.T) {
 	})
 }
 
+func Test_GetAllActivities(t *testing.T) {
+	connectToTestDb()
+
+	// first clean all transactions
+	//err := cleanTransactionTable()
+	//require.Nil(t, err)
+
+	//insert some records
+	//err = insertBulkTransactions()
+	//require.Nil(t, err)
+
+	t.Run("Get all activities and check the list", func(t *testing.T) {
+		lastFetchedId := int64(0)
+		lastTimestamp := int64(0)
+		howMuchRow := 3
+		transactions, err := GetAllActivitiesWithPagination(lastFetchedId, lastTimestamp, howMuchRow)
+		require.Nil(t, err)
+
+		require.Equal(t, len(transactions), 3, "The returned transactions array length does not matched")
+	})
+
+	t.Run("Get all activities With Detail with pagination", func(t *testing.T) {
+		lastFetchedId := int64(107)
+		lastTimestamp := int64(1586480400)
+		howMuchRow := 2
+		transactions, err := GetAllActivitiesWithPagination(lastFetchedId, lastTimestamp, howMuchRow)
+		require.Nil(t, err)
+
+		require.Equal(t, len(transactions), 0, "The returned transactions array length does not matched")
+	})
+}
+
 func defaultTransaction() entities.Transaction {
 	return entities.Transaction{
 		Hash:         "hash",
