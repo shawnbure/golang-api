@@ -37,6 +37,7 @@ const (
 	collectionTrendingEndpoint            = "/trending/:limit"
 	collectionByTokenIDEndpoint           = "/tokenId/:tokenId"
 	collectionUpdateMintStartDateEndpoint = "/:collectionId/mintStartDate"
+	collectionUpdateAdminSectionEndpoint  = "/:collectionId/adminSection"
 )
 
 type CollectionTokensQueryBody struct {
@@ -67,6 +68,7 @@ func NewCollectionsHandler(groupHandler *groupHandler, authCfg config.AuthConfig
 		{Method: http.MethodPost, Path: collectionProfileEndpoint, HandlerFunc: handler.setCollectionProfile},
 		{Method: http.MethodPost, Path: collectionCoverEndpoint, HandlerFunc: handler.setCollectionCover},
 		{Method: http.MethodPost, Path: collectionUpdateMintStartDateEndpoint, HandlerFunc: handler.updateMintStartDate},
+		{Method: http.MethodPost, Path: collectionUpdateAdminSectionEndpoint, HandlerFunc: handler.updateAdminSection},
 	}
 	endpointGroupHandler := EndpointGroupHandler{
 		Root:             baseCollectionsEndpoint,
@@ -309,13 +311,61 @@ func (handler *collectionsHandler) updateMintStartDate(c *gin.Context) {
 		return
 	}
 
+	isAdmin := c.GetBool(middleware.IsAdminKey)
 	jwtAddress := c.GetString(middleware.AddressKey)
-	if creator.Address != jwtAddress {
+	if creator.Address != jwtAddress && !isAdmin {
 		dtos.JsonResponse(c, http.StatusUnauthorized, nil, "")
 		return
 	}
 
 	err = services.UpdateCollectionMintStartDate(collection, &request)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		return
+	}
+
+	dtos.JsonResponse(c, http.StatusOK, collection, "")
+}
+
+func (handler *collectionsHandler) updateAdminSection(c *gin.Context) {
+
+	var request services.UpdateCollectionAdminSectionRequest
+	tokenId := c.Param("collectionId")
+
+	err := c.BindJSON(&request)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	cacheInfo, err := collstats.GetOrAddCollectionCacheInfo(tokenId)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	collection, err := storage.GetCollectionById(cacheInfo.CollectionId)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	/*
+		creator, err := storage.GetAccountById(collection.CreatorID)
+		if err != nil {
+			dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+			return
+		}
+	*/
+
+	isAdmin := c.GetBool(middleware.IsAdminKey)
+
+	if !isAdmin {
+		dtos.JsonResponse(c, http.StatusUnauthorized, nil, "")
+		return
+	}
+
+	err = services.UpdateCollectionAdminSection(collection, &request)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
@@ -358,16 +408,21 @@ func (handler *collectionsHandler) set(c *gin.Context) {
 		return
 	}
 
-	creator, err := storage.GetAccountById(collection.CreatorID)
-	if err != nil {
-		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
-		return
-	}
+	isAdmin := c.GetBool(middleware.IsAdminKey)
 
-	jwtAddress := c.GetString(middleware.AddressKey)
-	if creator.Address != jwtAddress {
-		dtos.JsonResponse(c, http.StatusUnauthorized, nil, "")
-		return
+	if !isAdmin {
+
+		creator, err := storage.GetAccountById(collection.CreatorID)
+		if err != nil {
+			dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+			return
+		}
+
+		jwtAddress := c.GetString(middleware.AddressKey)
+		if creator.Address != jwtAddress {
+			dtos.JsonResponse(c, http.StatusUnauthorized, nil, "")
+			return
+		}
 	}
 
 	err = services.UpdateCollection(collection, &request)
