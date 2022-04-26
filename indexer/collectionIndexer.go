@@ -333,7 +333,7 @@ func (ci *CollectionIndexer) StartWorker() {
 					}
 					var attributes datatypes.JSON
 					if token.Attributes != "" {
-						token.Attributes = strings.Replace(token.Attributes, ",", "", -1)
+						token.Attributes = strings.ReplaceAll(token.Attributes, ",", "")
 						attributesStr, err := base64.RawStdEncoding.DecodeString(token.Attributes)
 						resultStr := `[`
 						if err != nil {
