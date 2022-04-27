@@ -587,3 +587,48 @@ func GetAllActivitiesWithPagination(lastFetchedId int64, lastTimestamp int64, pa
 
 	return transactions, nil
 }
+
+func GetTopBestSellerLastWeek(limit int, fromDateTimestamp string, toDateTimestamp string) ([]entities.TopVolumeByAddress, error) {
+	database, err := GetDBOrError()
+	if err != nil {
+		return nil, err
+	}
+
+	records := []entities.TopVolumeByAddress{}
+	txRead := database.Table("transactions").
+		Select("seller_account.address as address, sum(transactions.price_nominal) as volume").
+		Joins("inner join accounts as seller_account on seller_account.id=transactions.seller_id ").
+		Group("address").
+		Where("date_trunc('day', to_timestamp(transactions.timestamp))>=? and date_trunc('day', to_timestamp(transactions.timestamp))<? and transactions.type=?", fromDateTimestamp, toDateTimestamp, entities.BuyToken).
+		Limit(limit).Order("volume desc").
+		Scan(&records)
+
+	if txRead.Error != nil {
+		return nil, txRead.Error
+	}
+
+	return records, nil
+}
+
+func GetTopBestSellerLastWeekTransactions(fromDateTimestamp string, toDateTimestamp string, addresses []string) ([]entities.TransactionDetail, error) {
+	database, err := GetDBOrError()
+	if err != nil {
+		return nil, err
+	}
+
+	records := []entities.TransactionDetail{}
+	txRead := database.Table("transactions").
+		Select("transactions.type as tx_type, transactions.hash as tx_hash, transactions.id as tx_id, transactions.price_nominal as tx_price_nominal, transactions.timestamp as tx_timestamp, tokens.token_id as token_id, tokens.token_name as token_name, tokens.image_link as token_image_link, seller_account.address as from_address, buyer_account.address as to_address").
+		Joins("inner join tokens on tokens.id=transactions.token_id ").
+		Joins("inner join accounts as seller_account on seller_account.id=transactions.seller_id ").
+		Joins("inner join accounts as buyer_account on buyer_account.id=transactions.buyer_id ").
+		Where("date_trunc('day', to_timestamp(transactions.timestamp))>=? and date_trunc('day', to_timestamp(transactions.timestamp))<? and seller_account.address in (?) and transactions.type=?", fromDateTimestamp, toDateTimestamp, addresses, entities.BuyToken).
+		Order("from_address asc").
+		Scan(&records)
+
+	if txRead.Error != nil {
+		return nil, txRead.Error
+	}
+
+	return records, nil
+}
