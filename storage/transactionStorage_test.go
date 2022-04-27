@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"errors"
 	"math/big"
 	"testing"
 	"time"
@@ -322,6 +323,55 @@ func Test_GetAllActivities(t *testing.T) {
 	})
 }
 
+func Test_GetWeeklyReport(t *testing.T) {
+	connectToTestDb()
+
+	//first clean all transactions
+	err := cleanTransactionTable()
+	require.Nil(t, err)
+
+	//insert some records
+	err = insertBulkTransactions()
+	require.Nil(t, err)
+
+	t.Run("Get best seller per week", func(t *testing.T) {
+		howMuch := 10
+		fromDate := "2020-04-22"
+		toDate := "2020-04-27"
+
+		records, err := GetTopBestSellerLastWeek(howMuch, fromDate, toDate)
+		require.Nil(t, err)
+		require.Equal(t, len(records), 2, "The result does not match")
+
+		for _, r := range records {
+			if r.Volume != float64(2_000_000_000_000_000_000_000) && r.Volume != float64(3_000_000_000_000_000_000_000) {
+				require.Error(t, errors.New("The volumes do not matched properly"))
+			}
+		}
+	})
+
+	t.Run("Test Limit of returned result", func(t *testing.T) {
+		howMuch := 1
+		fromDate := "2020-04-22"
+		toDate := "2020-04-27"
+
+		records, err := GetTopBestSellerLastWeek(howMuch, fromDate, toDate)
+		require.Nil(t, err)
+		require.Equal(t, len(records), 1, "The result does not match")
+	})
+
+	t.Run("Get Transactions for last week", func(t *testing.T) {
+		address1 := "erd123"
+		address2 := "erd1234"
+		fromDate := "2020-04-22"
+		toDate := "2020-04-27"
+
+		records, err := GetTopBestSellerLastWeekTransactions(fromDate, toDate, []string{address1, address2})
+		require.Nil(t, err)
+		require.Equal(t, len(records), 4, "The result does not match")
+	})
+}
+
 func defaultTransaction() entities.Transaction {
 	return entities.Transaction{
 		Hash:         "hash",
@@ -329,7 +379,7 @@ func defaultTransaction() entities.Transaction {
 		PriceNominal: 1_000_000_000_000_000_000_000,
 		SellerID:     1,
 		BuyerID:      2,
-		TokenID:      1,
+		TokenID:      5,
 		CollectionID: 1,
 	}
 }
@@ -356,6 +406,8 @@ func insertBulkTransactions() error {
 	transaction = defaultTransaction()
 	transaction.Type = entities.BuyToken
 	transaction.Hash = "my_unique_hash5"
+	transaction.SellerID = 3
+	transaction.BuyerID = 1
 	transaction.Timestamp = uint64(time.Date(2020, 04, 24, 1, 0, 0, 0, time.UTC).Unix())
 	err = AddTransaction(&transaction)
 	if err != nil {
@@ -374,6 +426,8 @@ func insertBulkTransactions() error {
 	transaction = defaultTransaction()
 	transaction.Type = entities.AuctionToken
 	transaction.Hash = "my_unique_hash3"
+	transaction.SellerID = 3
+	transaction.BuyerID = 1
 	transaction.Timestamp = uint64(time.Date(2020, 04, 24, 12, 3, 0, 0, time.UTC).Unix())
 	err = AddTransaction(&transaction)
 	if err != nil {

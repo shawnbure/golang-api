@@ -13,3 +13,11 @@ type ReportLast24HoursOverall struct {
 	TotalVolumeStr    string  `json:"total_volume_str"`
 	TotalTransactions int     `json:"total_transactions"`
 }
+
+type ReportTopVolumeByAddress struct {
+	Records []entities.TopVolumeByAddress `json:"records"`
+}
+
+type ReportTopVolumeByAddressTransactionsList struct {
+	Transactions []entities.TransactionDetail `json:"transactions"`
+}
