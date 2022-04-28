@@ -18,6 +18,8 @@ const (
 	ReportSalesLast24HoursTransactionsEndpoint       = "/sales/daily/transactions"
 	ReportSalesLastWeekTopSellerOverallEndpoint      = "/sales/weekly/top/overall"
 	ReportSalesLastWeekTopSellerTransactionsEndpoint = "/sales/weekly/top/transactions"
+	ReportBuyLastWeekTopSellerOverallEndpoint        = "/buy/weekly/top/overall"
+	ReportBuyLastWeekTopSellerTransactionsEndpoint   = "/buy/weekly/top/transactions"
 )
 
 const (
@@ -35,6 +37,8 @@ func NewReportHandler(groupHandler *groupHandler) {
 		{Method: http.MethodGet, Path: ReportSalesLast24HoursTransactionsEndpoint, HandlerFunc: handler.getLast24HoursSalesTransactions},
 		{Method: http.MethodGet, Path: ReportSalesLastWeekTopSellerOverallEndpoint, HandlerFunc: handler.getLastWeekTopSellerOverall},
 		{Method: http.MethodGet, Path: ReportSalesLastWeekTopSellerTransactionsEndpoint, HandlerFunc: handler.getLastWeekTopSellerTransactions},
+		{Method: http.MethodGet, Path: ReportBuyLastWeekTopSellerOverallEndpoint, HandlerFunc: handler.getLastWeekTopBuyerOverall},
+		{Method: http.MethodGet, Path: ReportBuyLastWeekTopSellerTransactionsEndpoint, HandlerFunc: handler.getLastWeekTopBuyerTransactions},
 	}
 
 	endpointGroupHandler := EndpointGroupHandler{
@@ -326,6 +330,181 @@ func (handler *reportHandler) getLastWeekTopSellerTransactions(c *gin.Context) {
 	}
 
 	transactions, err := storage.GetTopBestSellerLastWeekTransactions(oneWeekBeforeStr, currentTimeStr, addresses)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		return
+	}
+
+	if q == "csv" || q == "raw" {
+		csvWrapper, err := utils.NewCsvWrapper()
+		if err != nil {
+			dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+			return
+		}
+		defer csvWrapper.Close()
+
+		// Create csv wrapper and return the result
+		csvWrapper2, err := utils.NewCsvWrapper()
+		if err != nil {
+			dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+			return
+		}
+		defer csvWrapper2.Close()
+
+		result := [][]string{}
+		result = append(result, []string{
+			"Tx Hash", "Seller Address", "Buyer Address", "Token Id", "Token Name", "Token Media Link", "Price", "Time",
+		})
+		for _, item := range transactions {
+			d := []string{
+				item.TxHash,
+				item.FromAddress,
+				item.ToAddress,
+				item.TokenId,
+				item.TokenName,
+				item.TokenImageLink,
+				fmt.Sprintf("%f", item.TxPriceNominal),
+				time.Unix(item.TxTimestamp, 0).String(),
+			}
+			result = append(result, d)
+		}
+
+		err = csvWrapper2.WriteBulkRecord(result)
+		if err != nil {
+			dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+			return
+		}
+
+		if q == "csv" {
+			buff2 := csvWrapper2.GetBuffer()
+			dtos.ContentAsFileResponse(c, "data.csv", buff2)
+		} else {
+			finalResult := csvWrapper2.GetData()
+			dtos.StringResponse(c, finalResult)
+		}
+	} else if q == "json" {
+		result := dtos.ReportTopVolumeByAddressTransactionsList{Transactions: transactions}
+		dtos.JsonResponse(c, http.StatusOK, result, "")
+	} else {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+	}
+}
+
+// @Summary Gets Last Week Top Buyers
+// @Description Gets Last Week Top Buyers
+// @Tags reports
+// @Accept json
+// @Param format query string false  "format of the output"
+// @Produce application/csv
+// @Success 200 {file} file
+// @Failure 400 {object} dtos.ApiResponse
+// @Failure 404 {object} dtos.ApiResponse
+// @Failure 500 {object} dtos.ApiResponse
+// @Router /reports/buy/weekly/top/overall [get]
+func (handler *reportHandler) getLastWeekTopBuyerOverall(c *gin.Context) {
+	q := c.Request.URL.Query().Get("format")
+	if strings.TrimSpace(q) == "" {
+		q = "csv"
+	} else {
+		q = strings.TrimSpace(q)
+	}
+
+	currentTime := time.Now().UTC()
+	oneWeekBefore := currentTime.Add(-24 * 20 * time.Hour)
+
+	currentTimeStr := fmt.Sprintf("%4d-%02d-%02d 00:00:00", currentTime.Year(), currentTime.Month(), currentTime.Day())
+	oneWeekBeforeStr := fmt.Sprintf("%4d-%02d-%02d 00:00:00", oneWeekBefore.Year(), oneWeekBefore.Month(), oneWeekBefore.Day())
+
+	records, err := storage.GetTopBestBuyerLastWeek(TopListThreshold, oneWeekBeforeStr, currentTimeStr)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		return
+	}
+
+	if q == "csv" || q == "raw" {
+		csvWrapper, err := utils.NewCsvWrapper()
+		if err != nil {
+			dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+			return
+		}
+		defer csvWrapper.Close()
+
+		// Create csv wrapper and return the result
+		result := [][]string{}
+		result = append(result, []string{
+			"From Time", "To Time", "Address", "Volume",
+		})
+
+		for _, record := range records {
+			result = append(result, []string{
+				oneWeekBeforeStr, currentTimeStr, record.Address, fmt.Sprintf("%f", record.Volume),
+			})
+		}
+
+		err = csvWrapper.WriteBulkRecord(result)
+		if err != nil {
+			dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+			return
+		}
+
+		if q == "csv" {
+			buff := csvWrapper.GetBuffer()
+			dtos.ContentAsFileResponse(c, "data.csv", buff)
+		} else {
+			finalResult := csvWrapper.GetData()
+			dtos.StringResponse(c, finalResult)
+		}
+	} else if q == "json" {
+		for index, rec := range records {
+			rec.FromTime = oneWeekBeforeStr
+			rec.ToTime = currentTimeStr
+			records[index] = rec
+		}
+
+		result := dtos.ReportTopVolumeByAddress{Records: records}
+		dtos.JsonResponse(c, http.StatusOK, result, "")
+	} else {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+	}
+}
+
+// @Summary Gets Last Week Top Buyers Transactions
+// @Description Gets Last Week Top Buyers Transactions
+// @Tags reports
+// @Accept json
+// @Param format query string false  "format of the output"
+// @Produce application/csv
+// @Success 200 {file} file
+// @Failure 400 {object} dtos.ApiResponse
+// @Failure 404 {object} dtos.ApiResponse
+// @Failure 500 {object} dtos.ApiResponse
+// @Router /reports/buy/weekly/top/transactions [get]
+func (handler *reportHandler) getLastWeekTopBuyerTransactions(c *gin.Context) {
+	q := c.Request.URL.Query().Get("format")
+	if strings.TrimSpace(q) == "" {
+		q = "csv"
+	} else {
+		q = strings.TrimSpace(q)
+	}
+
+	currentTime := time.Now().UTC()
+	oneWeekBefore := currentTime.Add(-24 * 7 * time.Hour)
+
+	currentTimeStr := fmt.Sprintf("%4d-%02d-%02d 00:00:00", currentTime.Year(), currentTime.Month(), currentTime.Day())
+	oneWeekBeforeStr := fmt.Sprintf("%4d-%02d-%02d 00:00:00", oneWeekBefore.Year(), oneWeekBefore.Month(), oneWeekBefore.Day())
+
+	records, err := storage.GetTopBestBuyerLastWeek(TopListThreshold, oneWeekBeforeStr, currentTimeStr)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		return
+	}
+
+	addresses := []string{}
+	for _, r := range records {
+		addresses = append(addresses, r.Address)
+	}
+
+	transactions, err := storage.GetTopBestBuyerLastWeekTransactions(oneWeekBeforeStr, currentTimeStr, addresses)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
