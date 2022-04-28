@@ -360,13 +360,40 @@ func Test_GetWeeklyReport(t *testing.T) {
 		require.Equal(t, len(records), 1, "The result does not match")
 	})
 
-	t.Run("Get Transactions for last week", func(t *testing.T) {
+	t.Run("Get Transactions of best seller for last week", func(t *testing.T) {
 		address1 := "erd123"
 		address2 := "erd1234"
 		fromDate := "2020-04-22"
 		toDate := "2020-04-27"
 
 		records, err := GetTopBestSellerLastWeekTransactions(fromDate, toDate, []string{address1, address2})
+		require.Nil(t, err)
+		require.Equal(t, len(records), 4, "The result does not match")
+	})
+
+	t.Run("Get best buyers per week", func(t *testing.T) {
+		howMuch := 10
+		fromDate := "2020-04-22"
+		toDate := "2020-04-27"
+
+		records, err := GetTopBestBuyerLastWeek(howMuch, fromDate, toDate)
+		require.Nil(t, err)
+		require.Equal(t, len(records), 2, "The result does not match")
+
+		for _, r := range records {
+			if r.Volume != float64(2_000_000_000_000_000_000_000) && r.Volume != float64(3_000_000_000_000_000_000_000) {
+				require.Error(t, errors.New("The volumes do not matched properly"))
+			}
+		}
+	})
+
+	t.Run("Get Transactions of best buyers for last week", func(t *testing.T) {
+		address1 := "erd123"
+		address2 := "erd1234"
+		fromDate := "2020-04-22"
+		toDate := "2020-04-27"
+
+		records, err := GetTopBestBuyerLastWeekTransactions(fromDate, toDate, []string{address1, address2})
 		require.Nil(t, err)
 		require.Equal(t, len(records), 4, "The result does not match")
 	})
