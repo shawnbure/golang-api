@@ -372,6 +372,28 @@ func Test_GetWeeklyReport(t *testing.T) {
 	})
 }
 
+func Test_DailyReportOfListingTransactions(t *testing.T) {
+	connectToTestDb()
+
+	//first clean all transactions
+	err := cleanTransactionTable()
+	require.Nil(t, err)
+
+	//insert some records
+	err = insertBulkTransactions()
+	require.Nil(t, err)
+
+	t.Run("Daily Report of Verified Transactions of Type=List", func(t *testing.T) {
+		fromTime := "2020-04-23 12:00:00"
+		toTime := "2020-04-24 12:00:00"
+
+		records, err := GetLast24HoursVerifiedListingTransactions(fromTime, toTime)
+		require.Nil(t, err)
+
+		require.Equal(t, len(records), 1, "The returned result is empty")
+	})
+}
+
 func defaultTransaction() entities.Transaction {
 	return entities.Transaction{
 		Hash:         "hash",
