@@ -606,7 +606,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					lerr.Println(err.Error())
 				}
 			}
-			if token.LastMarketTimestamp < txTimestamp && toUpdate && !failedTx {
+			if token.LastMarketTimestamp <= txTimestamp && toUpdate && !failedTx {
 				token.LastMarketTimestamp = txTimestamp
 				err = storage.UpdateTokenWhere(token, map[string]interface{}{
 					"OnSale":              token.OnSale,
