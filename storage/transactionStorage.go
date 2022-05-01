@@ -489,7 +489,7 @@ func GetAllTransactionsWithPagination(lastFetchedId int64, lastTimestamp int64, 
 			Joins("inner join accounts as seller_account on seller_account.id=transactions.seller_id ").
 			Joins("inner join accounts as buyer_account on buyer_account.id=transactions.buyer_id ").
 			Order("transactions.timestamp desc ").
-			Where("transactions.timestamp<? && transactions.id<?", lastTimestamp, lastFetchedId).
+			Where("transactions.timestamp<? and transactions.id<?", lastTimestamp, lastFetchedId).
 			Limit(pageSize).
 			Scan(&transactions)
 
@@ -499,4 +499,203 @@ func GetAllTransactionsWithPagination(lastFetchedId int64, lastTimestamp int64, 
 	}
 
 	return transactions, nil
+}
+
+func GetLast24HoursSalesTransactions(fromTime string, toTime string) ([]entities.TransactionDetail, error) {
+	database, err := GetDBOrError()
+	if err != nil {
+		return nil, err
+	}
+
+	transactions := []entities.TransactionDetail{}
+	txRead := database.Table("transactions").Select("transactions.type as tx_type, transactions.hash as tx_hash, transactions.id as tx_id, transactions.price_nominal as tx_price_nominal, transactions.timestamp as tx_timestamp, tokens.token_id as token_id, tokens.token_name as token_name, tokens.image_link as token_image_link, seller_account.address as from_address, buyer_account.address as to_address").
+		Joins("inner join tokens on tokens.id=transactions.token_id ").
+		Joins("inner join accounts as seller_account on seller_account.id=transactions.seller_id ").
+		Joins("inner join accounts as buyer_account on buyer_account.id=transactions.buyer_id ").
+		Order("transactions.timestamp desc").
+		Where("date_trunc('hour', to_timestamp(transactions.timestamp))<? and date_trunc('hour', to_timestamp(transactions.timestamp))>=? and transactions.type=?", toTime, fromTime, entities.BuyToken).
+		Scan(&transactions)
+
+	if txRead.Error != nil {
+		return nil, txRead.Error
+	}
+
+	return transactions, nil
+}
+
+func GetLast24HoursTotalVolume(fromTime, toTime string) (*big.Float, error) {
+	database, err := GetDBOrError()
+	if err != nil {
+		return big.NewFloat(0), err
+	}
+
+	var x sql.NullString
+
+	txRead := database.
+		Where("date_trunc('hour', to_timestamp(transactions.timestamp))<? and date_trunc('hour', to_timestamp(transactions.timestamp))>=? and transactions.type=?", toTime, fromTime, entities.BuyToken).
+		Table("transactions").
+		Select("sum(price_nominal)").
+		Scan(&x)
+
+	if txRead.Error != nil {
+		return big.NewFloat(0), txRead.Error
+	}
+
+	if x.Valid {
+		v, _ := new(big.Float).SetString(x.String)
+		return v, nil
+	}
+
+	return big.NewFloat(0), errors.New("Null String ...")
+}
+
+func GetAllActivitiesWithPagination(lastFetchedId int64, lastTimestamp int64, pageSize int) ([]entities.Activity, error) {
+	database, err := GetDBOrError()
+	if err != nil {
+		return nil, err
+	}
+
+	transactions := []entities.Activity{}
+	if lastTimestamp == 0 && lastFetchedId == 0 {
+		txRead := database.Table("transactions").Select("transactions.type as tx_type, transactions.hash as tx_hash, transactions.id as tx_id, transactions.price_nominal as tx_price_nominal, transactions.timestamp as tx_timestamp, tokens.token_id as token_id, tokens.token_name as token_name, tokens.image_link as token_image_link, seller_account.address as from_address, buyer_account.address as to_address, collections.id as collection_id, collections.name as collection_name, collections.token_id as collection_token_id").
+			Joins("inner join tokens on tokens.id=transactions.token_id ").
+			Joins("inner join collections on collections.id=transactions.collection_id ").
+			Joins("inner join accounts as seller_account on seller_account.id=transactions.seller_id ").
+			Joins("inner join accounts as buyer_account on buyer_account.id=transactions.buyer_id ").
+			Order("transactions.timestamp desc").
+			Limit(pageSize).
+			Scan(&transactions)
+
+		if txRead.Error != nil {
+			return nil, txRead.Error
+		}
+	} else {
+		txRead := database.Table("transactions").Select("transactions.type as tx_type, transactions.hash as tx_hash, transactions.id as tx_id, transactions.price_nominal as tx_price_nominal, transactions.timestamp as tx_timestamp, tokens.token_id as token_id, tokens.token_name as token_name, tokens.image_link as token_image_link, seller_account.address as from_address, buyer_account.address as to_address, collections.id as collection_id, collections.name as collection_name, collections.token_id as collection_token_id").
+			Joins("inner join tokens on tokens.id=transactions.token_id ").
+			Joins("inner join collections on collections.id=transactions.collection_id ").
+			Joins("inner join accounts as seller_account on seller_account.id=transactions.seller_id ").
+			Joins("inner join accounts as buyer_account on buyer_account.id=transactions.buyer_id ").
+			Order("transactions.timestamp desc ").
+			Where("transactions.timestamp<? and transactions.id<?", lastTimestamp, lastFetchedId).
+			Limit(pageSize).
+			Scan(&transactions)
+
+		if txRead.Error != nil {
+			return nil, txRead.Error
+		}
+	}
+
+	return transactions, nil
+}
+
+func GetTopBestSellerLastWeek(limit int, fromDateTimestamp string, toDateTimestamp string) ([]entities.TopVolumeByAddress, error) {
+	database, err := GetDBOrError()
+	if err != nil {
+		return nil, err
+	}
+
+	records := []entities.TopVolumeByAddress{}
+	txRead := database.Table("transactions").
+		Select("seller_account.address as address, sum(transactions.price_nominal) as volume").
+		Joins("inner join accounts as seller_account on seller_account.id=transactions.seller_id ").
+		Group("address").
+		Where("date_trunc('day', to_timestamp(transactions.timestamp))>=? and date_trunc('day', to_timestamp(transactions.timestamp))<? and transactions.type=?", fromDateTimestamp, toDateTimestamp, entities.BuyToken).
+		Limit(limit).Order("volume desc").
+		Scan(&records)
+
+	if txRead.Error != nil {
+		return nil, txRead.Error
+	}
+
+	return records, nil
+}
+
+func GetTopBestSellerLastWeekTransactions(fromDateTimestamp string, toDateTimestamp string, addresses []string) ([]entities.TransactionDetail, error) {
+	database, err := GetDBOrError()
+	if err != nil {
+		return nil, err
+	}
+
+	records := []entities.TransactionDetail{}
+	txRead := database.Table("transactions").
+		Select("transactions.type as tx_type, transactions.hash as tx_hash, transactions.id as tx_id, transactions.price_nominal as tx_price_nominal, transactions.timestamp as tx_timestamp, tokens.token_id as token_id, tokens.token_name as token_name, tokens.image_link as token_image_link, seller_account.address as from_address, buyer_account.address as to_address").
+		Joins("inner join tokens on tokens.id=transactions.token_id ").
+		Joins("inner join accounts as seller_account on seller_account.id=transactions.seller_id ").
+		Joins("inner join accounts as buyer_account on buyer_account.id=transactions.buyer_id ").
+		Where("date_trunc('day', to_timestamp(transactions.timestamp))>=? and date_trunc('day', to_timestamp(transactions.timestamp))<? and seller_account.address in (?) and transactions.type=?", fromDateTimestamp, toDateTimestamp, addresses, entities.BuyToken).
+		Order("from_address asc").
+		Scan(&records)
+
+	if txRead.Error != nil {
+		return nil, txRead.Error
+	}
+
+	return records, nil
+}
+
+func GetTopBestBuyerLastWeek(limit int, fromDateTimestamp string, toDateTimestamp string) ([]entities.TopVolumeByAddress, error) {
+	database, err := GetDBOrError()
+	if err != nil {
+		return nil, err
+	}
+
+	records := []entities.TopVolumeByAddress{}
+	txRead := database.Table("transactions").
+		Select("buyer_account.address as address, sum(transactions.price_nominal) as volume").
+		Joins("inner join accounts as buyer_account on buyer_account.id=transactions.buyer_id ").
+		Group("address").
+		Where("date_trunc('day', to_timestamp(transactions.timestamp))>=? and date_trunc('day', to_timestamp(transactions.timestamp))<? and transactions.type=?", fromDateTimestamp, toDateTimestamp, entities.BuyToken).
+		Limit(limit).Order("volume desc").
+		Scan(&records)
+
+	if txRead.Error != nil {
+		return nil, txRead.Error
+	}
+
+	return records, nil
+}
+
+func GetTopBestBuyerLastWeekTransactions(fromDateTimestamp string, toDateTimestamp string, addresses []string) ([]entities.TransactionDetail, error) {
+	database, err := GetDBOrError()
+	if err != nil {
+		return nil, err
+	}
+
+	records := []entities.TransactionDetail{}
+	txRead := database.Table("transactions").
+		Select("transactions.type as tx_type, transactions.hash as tx_hash, transactions.id as tx_id, transactions.price_nominal as tx_price_nominal, transactions.timestamp as tx_timestamp, tokens.token_id as token_id, tokens.token_name as token_name, tokens.image_link as token_image_link, seller_account.address as from_address, buyer_account.address as to_address").
+		Joins("inner join tokens on tokens.id=transactions.token_id ").
+		Joins("inner join accounts as seller_account on seller_account.id=transactions.seller_id ").
+		Joins("inner join accounts as buyer_account on buyer_account.id=transactions.buyer_id ").
+		Where("date_trunc('day', to_timestamp(transactions.timestamp))>=? and date_trunc('day', to_timestamp(transactions.timestamp))<? and buyer_account.address in (?) and transactions.type=?", fromDateTimestamp, toDateTimestamp, addresses, entities.BuyToken).
+		Order("to_address asc").
+		Scan(&records)
+
+	if txRead.Error != nil {
+		return nil, txRead.Error
+	}
+
+	return records, nil
+}
+
+func GetLast24HoursVerifiedListingTransactions(fromDateTimestamp string, toDateTimestamp string) ([]entities.VerifiedListingTransaction, error) {
+	database, err := GetDBOrError()
+	if err != nil {
+		return nil, err
+	}
+
+	records := []entities.VerifiedListingTransaction{}
+	txRead := database.Table("transactions").
+		Select("transactions.hash as tx_hash, transactions.id as tx_id, transactions.price_nominal as tx_price_nominal, transactions.timestamp as tx_timestamp, tokens.token_name as token_name, tokens.image_link as token_image_link, seller_account.address as address, collections.name as collection_name, collections.token_id as collection_token_id").
+		Joins("inner join tokens on tokens.id=transactions.token_id ").
+		Joins("inner join accounts as seller_account on seller_account.id=transactions.seller_id ").
+		Joins("inner join collections on collections.id=transactions.collection_id").
+		Where("date_trunc('hour', to_timestamp(transactions.timestamp))>=? and date_trunc('hour', to_timestamp(transactions.timestamp))<? and collections.is_verified=? and transactions.type=?", fromDateTimestamp, toDateTimestamp, true, entities.ListToken).
+		Scan(&records)
+
+	if txRead.Error != nil {
+		return nil, txRead.Error
+	}
+
+	return records, nil
 }

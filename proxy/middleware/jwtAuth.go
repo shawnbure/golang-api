@@ -6,6 +6,7 @@ import (
 
 	"github.com/ENFT-DAO/youbei-api/crypto"
 	"github.com/ENFT-DAO/youbei-api/data/dtos"
+	"github.com/ENFT-DAO/youbei-api/services"
 	"github.com/gin-gonic/gin"
 )
 
@@ -18,6 +19,7 @@ const (
 	authHeaderKey = "Authorization"
 
 	AddressKey = "address"
+	IsAdminKey = "isAdmin"
 )
 
 var returnUnauthorized = func(c *gin.Context, errMessage string) {
@@ -47,7 +49,15 @@ func Authorization(secret string) gin.HandlerFunc {
 			return
 		}
 
+		//claims.Address
+		// Get the account base on web-wallet address
+		// check the role if it's "RoleAdmin"
+
+		account, _ := services.GetOrCreateAccount(claims.Address)
+		isRoleAdmin := (account.Role == "RoleAdmin")
+
 		c.Set(AddressKey, claims.Address)
+		c.Set(IsAdminKey, isRoleAdmin)
 		c.Next()
 	}
 }

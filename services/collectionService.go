@@ -99,6 +99,11 @@ type UpdateCollectionMintStartDateRequest struct {
 	MintStartDate uint64 `json:"mintStartDate"`
 }
 
+type UpdateCollectionAdminSectionRequest struct {
+	IsVerified   bool `json:"isVerified"`
+	IsNoteworthy bool `json:"isNoteworthy"`
+}
+
 type UpdateCollectionIsWhiteListedRequest struct {
 	IsWhiteListed bool `json:"isWhiteListed"`
 }
@@ -437,6 +442,24 @@ func AutoCreateCollection(request *AutoCreateCollectionRequest, blockchainApi st
 func UpdateCollectionMintStartDate(collection *entities.Collection, request *UpdateCollectionMintStartDateRequest) error {
 
 	collection.MintStartDate = request.MintStartDate
+
+	err := storage.UpdateCollection(collection)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func UpdateCollectionAdminSection(collection *entities.Collection, request *UpdateCollectionAdminSectionRequest) error {
+
+	collection.IsVerified = request.IsVerified
+
+	if request.IsNoteworthy {
+		collection.Type = 2
+	} else {
+		collection.Type = 0
+	}
 
 	err := storage.UpdateCollection(collection)
 	if err != nil {
