@@ -356,7 +356,7 @@ func ListTokenFromClient(request *ListTokenRequest, blockchainApi string) error 
 		Attributes:       GetAttributesFromMetadata(string(metaDataURI)),
 		TokenName:        tokenData.Name,
 		Hash:             tokenData.Hash,
-		Status:           entities.TokenStatus(request.Status),
+		Status:           entities.TxType(request.Status),
 		PriceString:      request.StringPrice,
 		PriceNominal:     request.NominalPrice,
 		AuctionStartTime: request.SaleStartDate,
@@ -557,7 +557,7 @@ func ListToken(args ListTokenArgs, blockchainProxy string, marketplaceAddress st
 	token.ImageLink = args.FirstLink
 	token.Hash = args.Hash
 	token.TokenName = args.TokenName
-	token.Status = entities.List
+	token.Status = entities.ListToken
 	// token.PriceString = args.Price
 	token.PriceString = finalPriceBigInt.String()
 	token.PriceNominal = priceNominal
@@ -799,7 +799,7 @@ func StartAuction(args StartAuctionArgs, blockchainProxy string, marketplaceAddr
 		}
 	}
 
-	token.Status = entities.Auction
+	token.Status = entities.AuctionToken
 	token.OnSale = true
 	token.PriceString = args.MinBid
 	token.PriceNominal = amountNominal
@@ -859,7 +859,7 @@ func EndAuction(args EndAuctionArgs) {
 		log.Debug("could not get token", "err", err)
 		return
 	}
-	var txType entities.TokenStatus = entities.BuyToken
+	var txType entities.TxType = entities.BuyToken
 	var winner bool = true
 	if token.Owner.Address == args.Caller {
 		//had no winner

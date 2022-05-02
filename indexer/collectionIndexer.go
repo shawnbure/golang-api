@@ -358,6 +358,17 @@ func (ci *CollectionIndexer) StartWorker() {
 									if err != nil {
 										logErr.Println(err.Error(), string(url), token.Collection, token.Attributes, token.Identifier, token.Media, token.Metadata)
 									}
+									attributesBytes, err := json.Marshal(metadataJSON["attributes"])
+									if err != nil {
+										logErr.Println(err.Error())
+										attributesBytes = []byte{}
+									}
+									err = json.Unmarshal(attributesBytes, &attributes)
+									if err != nil {
+										logErr.Println(err.Error())
+									} else {
+										break
+									}
 								}
 							}
 							resultStr := `[`

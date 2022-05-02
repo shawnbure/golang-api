@@ -323,7 +323,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				}
 
 				token.OnSale = true
-				token.Status = entities.List
+				token.Status = entities.ListToken
 				token.OwnerID = sender.ID
 				token.LastBuyPriceNominal, _ = fprice.Float64()
 				token.PriceNominal, _ = fprice.Float64()
