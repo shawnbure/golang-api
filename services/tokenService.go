@@ -204,6 +204,8 @@ func GetTokenUris(tokenData entities.TokenBC) (string, string) {
 		}
 		if strings.Contains(string(attributeUrlByte), ".json") {
 			attributeUrl = string(attributeUrlByte)
+		} else {
+			attributeUrl = string(attributeUrlByte)
 			urlParts := strings.Split(attributeUrl, "/")
 			lastPart := urlParts[len(urlParts)-1]
 			attributeUrl = strings.Replace(attributeUrl, lastPart, "", 1)
