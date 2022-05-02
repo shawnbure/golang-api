@@ -319,8 +319,13 @@ func (ci *CollectionIndexer) StartWorker() {
 							youbeiMeta = youbeiMeta[:len(youbeiMeta)-1]
 						}
 					}
+					var url string
+					if strings.Contains(youbeiMeta, ".json") {
+						url = youbeiMeta
 
-					url := youbeiMeta
+					} else {
+						url = fmt.Sprintf("%s/%s.json", youbeiMeta, nonce10Str)
+					}
 					attrbs, err := services.GetResponse(url)
 					if err != nil {
 						logErr.Println(err.Error(), string(url), token.Collection, token.Attributes, token.Identifier, token.Media, token.Metadata)
@@ -333,24 +338,43 @@ func (ci *CollectionIndexer) StartWorker() {
 					}
 					var attributes datatypes.JSON
 					if token.Attributes != "" {
-						token.Attributes = strings.ReplaceAll(token.Attributes, ",", "")
-						attributesStr, err := base64.StdEncoding.DecodeString(token.Attributes)
-						resultStr := `[`
-						if err != nil {
-							zlog.Error("attribute decoding failed", zap.Error(err), zap.String("attribute", token.Attributes))
-							break
-						} else {
-							attrbutesParts := strings.Split(string(attributesStr), ";")
-							var prefix string = ""
-							for i, ap := range attrbutesParts {
-								if i != 0 {
-									prefix = ","
+						if _, ok := metadataJSON["attributes"]; !ok {
+							token.Attributes = strings.ReplaceAll(token.Attributes, ",", "")
+							attributesStr, err := base64.StdEncoding.DecodeString(token.Attributes)
+							if strings.Contains(string(attributesStr), ".json") {
+								if strings.Contains(string(attributesStr), "metadata:") {
+									attributesStr = []byte(strings.Replace(string(attributesStr), "metadata:", "", 1))
+									url = (`https://media.elrond.com/nfts/asset/` + string(attributesStr))
+									attrbs, err := services.GetResponse(url)
+									if err != nil {
+										logErr.Println(err.Error(), string(url), token.Collection, token.Attributes, token.Identifier, token.Media, token.Metadata)
+									}
+
+									metadataJSON := make(map[string]interface{})
+									err = json.Unmarshal(attrbs, &metadataJSON)
+									if err != nil {
+										logErr.Println(err.Error(), string(url), token.Collection, token.Attributes, token.Identifier, token.Media, token.Metadata)
+									}
 								}
-								resultStr = resultStr + prefix + "{" + ap + "}"
 							}
-							resultStr = resultStr + "]"
+							resultStr := `[`
+							if err != nil {
+								zlog.Error("attribute decoding failed", zap.Error(err), zap.String("attribute", token.Attributes))
+								break
+							} else {
+								attrbutesParts := strings.Split(string(attributesStr), ";")
+								var prefix string = ""
+								for i, ap := range attrbutesParts {
+									if i != 0 {
+										prefix = ","
+									}
+									resultStr = resultStr + prefix + "{" + ap + "}"
+								}
+								resultStr = resultStr + "]"
+							}
+							attributes = datatypes.JSON(resultStr)
 						}
-						attributes = datatypes.JSON(resultStr)
+
 					} else {
 						attributesBytes, err := json.Marshal(metadataJSON["attributes"])
 						if err != nil {
