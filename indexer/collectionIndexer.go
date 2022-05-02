@@ -366,27 +366,28 @@ func (ci *CollectionIndexer) StartWorker() {
 									err = json.Unmarshal(attributesBytes, &attributes)
 									if err != nil {
 										logErr.Println(err.Error())
-									} else {
-										break
 									}
+
 								}
 							}
-							resultStr := `[`
-							if err != nil {
-								zlog.Error("attribute decoding failed", zap.Error(err), zap.String("attribute", token.Attributes))
-								break
-							} else {
-								attrbutesParts := strings.Split(string(attributesStr), ";")
-								var prefix string = ""
-								for i, ap := range attrbutesParts {
-									if i != 0 {
-										prefix = ","
+							if attributes.String() == "" {
+								resultStr := `[`
+								if err != nil {
+									zlog.Error("attribute decoding failed", zap.Error(err), zap.String("attribute", token.Attributes))
+									break
+								} else {
+									attrbutesParts := strings.Split(string(attributesStr), ";")
+									var prefix string = ""
+									for i, ap := range attrbutesParts {
+										if i != 0 {
+											prefix = ","
+										}
+										resultStr = resultStr + prefix + "{" + ap + "}"
 									}
-									resultStr = resultStr + prefix + "{" + ap + "}"
+									resultStr = resultStr + "]"
 								}
-								resultStr = resultStr + "]"
+								attributes = datatypes.JSON(resultStr)
 							}
-							attributes = datatypes.JSON(resultStr)
 						}
 
 					} else {
