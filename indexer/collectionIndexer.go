@@ -229,7 +229,7 @@ func (ci *CollectionIndexer) StartWorker() {
 					continue
 				}
 			}
-			collectionIndexer, err := storage.GetCollectionIndexer(colObj.ContractAddress)
+			collectionIndexer, err := storage.GetCollectionIndexer("erd14z39tvps8jvchaqn7mepjpmm6hydys2hv57dftky4cy9rd35cplqf09yc9")
 			if err != nil {
 				if err == gorm.ErrRecordNotFound { //indexer not found
 					collectionIndexer, err = storage.CreateCollectionStat(entities.CollectionIndexer{
@@ -326,15 +326,18 @@ func (ci *CollectionIndexer) StartWorker() {
 					} else {
 						url = fmt.Sprintf("%s/%s.json", youbeiMeta, nonce10Str)
 					}
-					attrbs, err := services.GetResponse(url)
-					if err != nil {
-						logErr.Println(err.Error(), string(url), token.Collection, token.Attributes, token.Identifier, token.Media, token.Metadata)
-					}
-
+					var attrbs []byte
 					metadataJSON := make(map[string]interface{})
-					err = json.Unmarshal(attrbs, &metadataJSON)
-					if err != nil {
-						logErr.Println(err.Error(), string(url), token.Collection, token.Attributes, token.Identifier, token.Media, token.Metadata)
+
+					if token.Attributes != "" {
+						attrbs, err = services.GetResponse(url)
+						if err != nil {
+							logErr.Println(err.Error(), string(url), token.Collection, token.Attributes, token.Identifier, token.Media, token.Metadata)
+						}
+						err = json.Unmarshal(attrbs, &metadataJSON)
+						if err != nil {
+							logErr.Println(err.Error(), string(url), token.Collection, token.Attributes, token.Identifier, token.Media, token.Metadata)
+						}
 					}
 					var attributes datatypes.JSON
 					if token.Attributes != "" {
@@ -350,7 +353,7 @@ func (ci *CollectionIndexer) StartWorker() {
 										logErr.Println(err.Error(), string(url), token.Collection, token.Attributes, token.Identifier, token.Media, token.Metadata)
 									}
 
-									metadataJSON := make(map[string]interface{})
+									metadataJSON = make(map[string]interface{})
 									err = json.Unmarshal(attrbs, &metadataJSON)
 									if err != nil {
 										logErr.Println(err.Error(), string(url), token.Collection, token.Attributes, token.Identifier, token.Media, token.Metadata)
