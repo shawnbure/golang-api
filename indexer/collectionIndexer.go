@@ -320,7 +320,7 @@ func (ci *CollectionIndexer) StartWorker() {
 						}
 					}
 
-					url := fmt.Sprintf("%s/%s.json", youbeiMeta, nonce10Str)
+					url := youbeiMeta
 					attrbs, err := services.GetResponse(url)
 					if err != nil {
 						logErr.Println(err.Error(), string(url), token.Collection, token.Attributes, token.Identifier, token.Media, token.Metadata)
@@ -334,7 +334,7 @@ func (ci *CollectionIndexer) StartWorker() {
 					var attributes datatypes.JSON
 					if token.Attributes != "" {
 						token.Attributes = strings.ReplaceAll(token.Attributes, ",", "")
-						attributesStr, err := base64.RawStdEncoding.DecodeString(token.Attributes)
+						attributesStr, err := base64.StdEncoding.DecodeString(token.Attributes)
 						resultStr := `[`
 						if err != nil {
 							zlog.Error("attribute decoding failed", zap.Error(err), zap.String("attribute", token.Attributes))
