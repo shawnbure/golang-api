@@ -27,7 +27,7 @@ type Token struct {
 	LastMarketTimestamp uint64         `json:"lastMarketTimestamp"`
 	Owner               Account        `json:"owner"`
 	TxConfirmed         bool           `json:"txConfirmed"`
-	OnStake             bool           `json:"onStake"`
+	OnStake             bool           `json:"onStake" gorm:"default:false"`
 	StakeDate           uint64         `json:"stakeDate"`
 	StakeType           string         `json:"stakeType"`
 }
