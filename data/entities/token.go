@@ -27,6 +27,9 @@ type Token struct {
 	LastMarketTimestamp uint64         `json:"lastMarketTimestamp"`
 	Owner               Account        `json:"owner"`
 	TxConfirmed         bool           `json:"txConfirmed"`
+	OnStake             bool           `json:"onStake"`
+	StakeDate           uint64         `json:"stakeDate"`
+	StakeType           string         `json:"stakeType"`
 }
 
 type TokenBC struct {
@@ -73,6 +76,14 @@ type TokenStatus string
 
 const (
 	List    TokenStatus = "List"
-	Auction             = "Auction"
-	None                = "None"
+	Stake   TokenStatus = "Stake"
+	Auction TokenStatus = "Auction"
+	None    TokenStatus = "None"
+)
+
+type StakeType string
+
+const (
+	UBI StakeType = "UBI"
+	DAO StakeType = "DAO"
 )
