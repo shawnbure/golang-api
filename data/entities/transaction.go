@@ -16,9 +16,9 @@ type TxType string
 
 const (
 	ListToken     TxType = "List"
-	BuyToken             = "Buy"
-	WithdrawToken        = "Withdraw"
-	AuctionToken         = "Auction"
+	BuyToken      TxType = "Buy"
+	WithdrawToken TxType = "Withdraw"
+	AuctionToken  TxType = "Auction"
 )
 
 type TransactionDetail struct {
@@ -48,4 +48,10 @@ type Activity struct {
 	CollectionId      string  `json:"collectionId"`
 	CollectionTokenId string  `json:"collectionTokenId"`
 	CollectionName    string  `json:"collectionName"`
+}
+
+type AggregatedTradeVolume struct {
+	BuyVolume      float64 `json:"buy_volume"`
+	WithdrawVolume float64 `json:"withdraw_volume"`
+	ListVolume     float64 `json:"list_volume"`
 }

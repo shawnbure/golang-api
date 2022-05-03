@@ -338,7 +338,7 @@ func GetTransactionsCount() (int64, error) {
 	return total, nil
 }
 
-func GetTransactionsCountByType(_type string) (int64, error) {
+func GetTransactionsCountByType(_type entities.TxType) (int64, error) {
 	var total int64
 
 	database, err := GetDBOrError()
@@ -378,7 +378,7 @@ func GetTransactionsCountByDate(date string) (int64, error) {
 	return total, nil
 }
 
-func GetTransactionsCountByDateAndType(_type string, date string) (int64, error) {
+func GetTransactionsCountByDateAndType(_type entities.TxType, date string) (int64, error) {
 	var total int64
 
 	database, err := GetDBOrError()
@@ -698,4 +698,28 @@ func GetLast24HoursVerifiedListingTransactions(fromDateTimestamp string, toDateT
 	}
 
 	return records, nil
+}
+
+func GetAggregatedTradedVolumeHourly(fromDate, toDate string, _type entities.TxType) (float64, error) {
+	database, err := GetDBOrError()
+	if err != nil {
+		return 0, err
+	}
+
+	nullFloat := sql.NullFloat64{}
+
+	txRead := database.Table("transactions").
+		Select("sum(transactions.price_nominal)").
+		Where("date_trunc('hour', to_timestamp(transactions.timestamp))>=? and date_trunc('hour', to_timestamp(transactions.timestamp))<? and transactions.type=?", fromDate, toDate, _type).
+		Scan(&nullFloat)
+
+	if txRead.Error != nil {
+		return 0, txRead.Error
+	}
+
+	if !nullFloat.Valid {
+		return 0, errors.New("Error in reading data from database")
+	}
+
+	return nullFloat.Float64, nil
 }
