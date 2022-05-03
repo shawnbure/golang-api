@@ -239,20 +239,18 @@ func Test_GetAllTransactionsWithDetail(t *testing.T) {
 	//require.Nil(t, err)
 
 	t.Run("Get Transactions With Detail", func(t *testing.T) {
-		lastFetchedId := int64(-1)
 		lastTimestamp := int64(-1)
 		howMuchRow := 2
-		transactions, err := GetAllTransactionsWithPagination(lastFetchedId, lastTimestamp, howMuchRow)
+		transactions, err := GetAllTransactionsWithPagination(lastTimestamp, howMuchRow)
 		require.Nil(t, err)
 
 		require.Equal(t, len(transactions), 2, "The returned transactions array length does not matched")
 	})
 
 	t.Run("Get Transactions With Detail with pagination", func(t *testing.T) {
-		lastFetchedId := int64(107)
 		lastTimestamp := int64(1586480400)
 		howMuchRow := 2
-		transactions, err := GetAllTransactionsWithPagination(lastFetchedId, lastTimestamp, howMuchRow)
+		transactions, err := GetAllTransactionsWithPagination(lastTimestamp, howMuchRow)
 		require.Nil(t, err)
 
 		require.Equal(t, len(transactions), 2, "The returned transactions array length does not matched")

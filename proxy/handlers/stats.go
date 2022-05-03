@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"github.com/ENFT-DAO/youbei-api/services"
 	"math/big"
 	"net/http"
 	"strconv"
@@ -39,7 +40,7 @@ const (
 	StatTotalVolumeEndpoint             = "/volume/total"
 	StatTotalVolumeLastWeekPerDay       = "/volume/lastWeek"
 	StatTokensTotalCount                = "/tokens/totalCount"
-	StatListTransactionsWithPagination  = "/transactions/list/:timestamp/:id"
+	StatListTransactionsWithPagination  = "/transactions/list/:timestamp/:limit"
 )
 
 const (
@@ -281,31 +282,40 @@ func (handler *statsHandler) getTokensTotalCount(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param timestamp path int64 true "last timestamp"
-// @Param id path int64 true "last fetched id"
+// @Param limit path int64 true "page size limit"
+// @Param filter query string false  "filter parameter"
 // @Success 200 {object} dtos.StatTransactionsList
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 404 {object} dtos.ApiResponse
-// @Router /stats/transactions/list/{timestamp}/{id} [get]
+// @Router /stats/transactions/list/{timestamp}/{limit} [get]
 func (handler *statsHandler) getTransactionsListWithPagination(c *gin.Context) {
 	result := dtos.StatTransactionsList{}
 
 	timeSt := c.Param("timestamp")
-	id := c.Param("id")
+	limit := c.Param("limit")
+
+	filter := c.Request.URL.Query().Get("filter")
+	querySQL, queryValues, _ := services.ConvertFilterToQuery("collections", filter)
+	sqlFilter := entities.QueryFilter{Query: querySQL, Values: queryValues}
 
 	var ts int64 = 0
-	var lastId int64 = 0
+	var limitInt int = PageSize
 
 	ts, err := strconv.ParseInt(timeSt, 10, 64)
 	if err != nil {
 		ts = 0
 	}
 
-	lastId, err = strconv.ParseInt(id, 10, 64)
-	if err != nil {
-		lastId = 0
+	limitInt, err = strconv.Atoi(limit)
+	if err != nil || limitInt == 0 {
+		limitInt = PageSize
 	}
 
-	transactions, err := storage.GetAllTransactionsWithPagination(lastId, ts, PageSize)
+	transactions, err := services.GetAllTransactionsWithPagination(services.GetAllTransactionsWithPaginationArgs{
+		LastTimestamp: ts,
+		Limit:         limitInt,
+		Filter:        &sqlFilter,
+	})
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
