@@ -19,6 +19,7 @@ const (
 	BuyToken      TxType = "Buy"
 	WithdrawToken TxType = "Withdraw"
 	AuctionToken  TxType = "Auction"
+	None          TxType = "None"
 )
 
 type TransactionDetail struct {

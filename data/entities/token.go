@@ -12,7 +12,7 @@ type Token struct {
 	RoyaltiesPercent    float64        `json:"royaltiesPercent"`
 	MetadataLink        string         `json:"metadataLink"`
 	CreatedAt           uint64         `json:"createdAt"`
-	Status              TokenStatus    `json:"state"`
+	Status              TxType         `json:"state"`
 	Attributes          datatypes.JSON `json:"attributes"`
 	TokenName           string         `json:"tokenName"`
 	ImageLink           string         `json:"imageLink"`
@@ -68,11 +68,3 @@ type TokenBC struct {
 		}
 	*/
 }
-
-type TokenStatus string
-
-const (
-	List    TokenStatus = "List"
-	Auction             = "Auction"
-	None                = "None"
-)

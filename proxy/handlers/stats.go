@@ -2,17 +2,18 @@ package handlers
 
 import (
 	"fmt"
+	"math/big"
+	"net/http"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/ENFT-DAO/youbei-api/cache"
 	"github.com/ENFT-DAO/youbei-api/data/dtos"
 	"github.com/ENFT-DAO/youbei-api/data/entities"
 	"github.com/ENFT-DAO/youbei-api/storage"
 	logger "github.com/ElrondNetwork/elrond-go-logger"
 	"github.com/gin-gonic/gin"
-	"math/big"
-	"net/http"
-	"strconv"
-	"strings"
-	"time"
 )
 
 var (
@@ -91,14 +92,14 @@ func (handler *statsHandler) getTradeCounts(c *gin.Context) {
 		}
 		result.Total = totalCount
 
-		totalBuy, err := storage.GetTransactionsCountByType(entities.BuyToken)
+		totalBuy, err := storage.GetTransactionsCountByType((entities.ListToken))
 		if err != nil {
 			dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 			return
 		}
 		result.Buy = totalBuy
 
-		totalWithdraw, err := storage.GetTransactionsCountByType(entities.WithdrawToken)
+		totalWithdraw, err := storage.GetTransactionsCountByType((entities.WithdrawToken))
 		if err != nil {
 			dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 			return
