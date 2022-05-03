@@ -2,7 +2,8 @@ package handlers
 
 import (
 	"github.com/ENFT-DAO/youbei-api/data/dtos"
-	"github.com/ENFT-DAO/youbei-api/storage"
+	"github.com/ENFT-DAO/youbei-api/data/entities"
+	"github.com/ENFT-DAO/youbei-api/services"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
@@ -10,7 +11,9 @@ import (
 
 const (
 	baseActivityEndpoint  = "/activities"
-	ActivitiesAllEndpoint = "/all/:timestamp/:id"
+	ActivitiesAllEndpoint = "/all/:timestamp/:limit"
+
+	ActivityPageSize = 7
 )
 
 type activityHandler struct {
@@ -38,36 +41,45 @@ func NewActivitiesHandler(groupHandler *groupHandler) {
 // @Accept json
 // @Produce json
 // @Param timestamp path int64 true "last timestamp"
-// @Param id path int64 true "last fetched id"
+// @Param limit path int64 true "page size limit"
+// @Param filter query string false  "filter parameter"
 // @Success 200 {object} dtos.ActivityLogsList
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 404 {object} dtos.ApiResponse
-// @Router /activities/all/{timestamp}/{id} [get]
+// @Router /activities/all/{timestamp}/{limit} [get]
 func (handler *activityHandler) getActivityListWithPagination(c *gin.Context) {
 	result := dtos.ActivityLogsList{}
 
 	timeSt := c.Param("timestamp")
-	id := c.Param("id")
+	limit := c.Param("limit")
+
+	filter := c.Request.URL.Query().Get("filter")
+	querySQL, queryValues, _ := services.ConvertFilterToQuery("transactions", filter)
+	sqlFilter := entities.QueryFilter{Query: querySQL, Values: queryValues}
 
 	var ts int64 = 0
-	var lastId int64 = 0
+	var limitInt int = ActivityPageSize
 
 	ts, err := strconv.ParseInt(timeSt, 10, 64)
 	if err != nil {
 		ts = 0
 	}
 
-	lastId, err = strconv.ParseInt(id, 10, 64)
-	if err != nil {
-		lastId = 0
+	limitInt, err = strconv.Atoi(limit)
+	if err != nil || limitInt == 0 {
+		limitInt = ActivityPageSize
 	}
 
-	transactions, err := storage.GetAllActivitiesWithPagination(lastId, ts, PageSize)
+	transactions, err := services.GetAllActivities(services.GetAllActivityArgs{
+		LastTimestamp: ts,
+		Limit:         limitInt,
+		Filter:        &sqlFilter,
+	})
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
 	}
-	result.Activities = transactions
 
+	result.Activities = transactions
 	dtos.JsonResponse(c, http.StatusOK, result, "")
 }
