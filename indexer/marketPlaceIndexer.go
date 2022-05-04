@@ -323,7 +323,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				}
 
 				token.OnSale = true
-				token.Status = entities.List
+				token.Status = entities.ListToken
 				token.OwnerID = sender.ID
 				token.LastBuyPriceNominal, _ = fprice.Float64()
 				token.PriceNominal, _ = fprice.Float64()
@@ -606,7 +606,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					lerr.Println(err.Error())
 				}
 			}
-			if token.LastMarketTimestamp < txTimestamp && toUpdate && !failedTx {
+			if token.LastMarketTimestamp <= txTimestamp && toUpdate && !failedTx {
 				token.LastMarketTimestamp = txTimestamp
 				err = storage.UpdateTokenWhere(token, map[string]interface{}{
 					"OnSale":              token.OnSale,
