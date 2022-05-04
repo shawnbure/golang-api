@@ -72,7 +72,7 @@ var _tokens = []entities.Token{
 		RoyaltiesPercent: 200,
 		MetadataLink:     "https://galacticapes.mypinata.cloud/ipfs/QmcX6g2xXiFP5j1iAfXREuP9EucRRpuMCAnoYaVYjtrJeK/1",
 		CreatedAt:        uint64(time.Now().Unix()),
-		Status:           entities.List,
+		Status:           entities.ListToken,
 		Attributes: toJson(map[string]string{
 			"background": "azure",
 			"face":       "grey",
@@ -89,7 +89,7 @@ var _tokens = []entities.Token{
 		RoyaltiesPercent: 200,
 		MetadataLink:     "https://galacticapes.mypinata.cloud/ipfs/QmcX6g2xXiFP5j1iAfXREuP9EucRRpuMCAnoYaVYjtrJeK/2",
 		CreatedAt:        uint64(time.Now().Unix()),
-		Status:           entities.List,
+		Status:           entities.ListToken,
 		Attributes: toJson(map[string]string{
 			"background": "green",
 			"face":       "blue",

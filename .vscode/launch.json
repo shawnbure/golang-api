@@ -12,6 +12,7 @@
             "env":{"CFLAGS":"-Wno-undef-prefix","CGO_CFLAGS":"-Wno-undef-prefix","GOOS":"darwin","GOARCH":"arm64","GOOGLE_APPLICATION_CREDENTIALS":"./config/youbei-339521-92c28a408747.json"},
             "program": "${workspaceFolder}/cmd/main.go",
             "cwd": "./"
+            // "args": ["--general-config", "./config/config-local.toml"]
         },
         {
             "name": "Local",

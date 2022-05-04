@@ -296,7 +296,7 @@ func (ci *CollectionIndexer) StartWorker() {
 				tokenCountSuc := 0
 				for _, token := range tokens {
 				tokenLoop:
-					imageURI, attributeURI := services.GetTokenBaseURIs(token)
+					imageURI, attributeURI := services.GetTokenUris(token)
 					nonce10Str := strconv.FormatUint(token.Nonce, 10)
 					nonceStr := strconv.FormatUint(token.Nonce, 16)
 					if len(nonceStr)%2 != 0 {
@@ -310,12 +310,6 @@ func (ci *CollectionIndexer) StartWorker() {
 						imageURI = strings.Replace(imageURI, "https://ipfs.io/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
 						imageURI = strings.Replace(imageURI, "ipfs://", "https://media.elrond.com/nfts/asset/", 1)
 					}
-					if imageURI != "" {
-						if string(imageURI[len(imageURI)-1]) == "/" {
-							imageURI = imageURI[:len(imageURI)-1]
-						}
-					}
-
 					youbeiMeta := strings.Replace(attributeURI, "https://gateway.pinata.cloud/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
 					youbeiMeta = strings.Replace(youbeiMeta, "https://ipfs.io/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
 					youbeiMeta = strings.Replace(youbeiMeta, "https://ipfs.io/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
@@ -325,24 +319,87 @@ func (ci *CollectionIndexer) StartWorker() {
 							youbeiMeta = youbeiMeta[:len(youbeiMeta)-1]
 						}
 					}
+					var url string
+					if strings.Contains(youbeiMeta, ".json") {
+						url = youbeiMeta
 
-					url := fmt.Sprintf("%s/%s.json", youbeiMeta, nonce10Str)
-					attrbs, err := services.GetResponse(url)
-
+					} else {
+						url = fmt.Sprintf("%s/%s.json", youbeiMeta, nonce10Str)
+					}
+					var attrbs []byte
 					metadataJSON := make(map[string]interface{})
-					err = json.Unmarshal(attrbs, &metadataJSON)
-					if err != nil {
-						logErr.Println(err.Error(), string(url), token.Collection, token.Attributes, token.Identifier, token.Media, token.Metadata)
+
+					if token.Attributes == "" {
+						attrbs, err = services.GetResponse(url)
+						if err != nil {
+							logErr.Println(err.Error(), string(url), token.Collection, token.Attributes, token.Identifier, token.Media, token.Metadata)
+						}
+						err = json.Unmarshal(attrbs, &metadataJSON)
+						if err != nil {
+							logErr.Println(err.Error(), string(url), token.Collection, token.Attributes, token.Identifier, token.Media, token.Metadata)
+						}
 					}
 					var attributes datatypes.JSON
-					attributesBytes, err := json.Marshal(metadataJSON["attributes"])
-					if err != nil {
-						logErr.Println(err.Error())
-						attributesBytes = []byte{}
-					}
-					err = json.Unmarshal(attributesBytes, &attributes)
-					if err != nil {
-						logErr.Println(err.Error())
+					if token.Attributes != "" {
+						if _, ok := metadataJSON["attributes"]; !ok {
+							token.Attributes = strings.ReplaceAll(token.Attributes, ",", "")
+							attributesStr, err := base64.StdEncoding.DecodeString(token.Attributes)
+							if strings.Contains(string(attributesStr), ".json") {
+								if strings.Contains(string(attributesStr), "metadata:") {
+									attributesStr = []byte(strings.Replace(string(attributesStr), "metadata:", "", 1))
+									url = (`https://media.elrond.com/nfts/asset/` + string(attributesStr))
+									attrbs, err := services.GetResponse(url)
+									if err != nil {
+										logErr.Println(err.Error(), string(url), token.Collection, token.Attributes, token.Identifier, token.Media, token.Metadata)
+									}
+
+									metadataJSON = make(map[string]interface{})
+									err = json.Unmarshal(attrbs, &metadataJSON)
+									if err != nil {
+										logErr.Println(err.Error(), string(url), token.Collection, token.Attributes, token.Identifier, token.Media, token.Metadata)
+									}
+									attributesBytes, err := json.Marshal(metadataJSON["attributes"])
+									if err != nil {
+										logErr.Println(err.Error())
+										attributesBytes = []byte{}
+									}
+									err = json.Unmarshal(attributesBytes, &attributes)
+									if err != nil {
+										logErr.Println(err.Error())
+									}
+
+								}
+							}
+							if attributes.String() == "" {
+								resultStr := `[`
+								if err != nil {
+									zlog.Error("attribute decoding failed", zap.Error(err), zap.String("attribute", token.Attributes))
+									break
+								} else {
+									attrbutesParts := strings.Split(string(attributesStr), ";")
+									var prefix string = ""
+									for i, ap := range attrbutesParts {
+										if i != 0 {
+											prefix = ","
+										}
+										resultStr = resultStr + prefix + "{" + ap + "}"
+									}
+									resultStr = resultStr + "]"
+								}
+								attributes = datatypes.JSON(resultStr)
+							}
+						}
+
+					} else {
+						attributesBytes, err := json.Marshal(metadataJSON["attributes"])
+						if err != nil {
+							logErr.Println(err.Error())
+							attributesBytes = []byte{}
+						}
+						err = json.Unmarshal(attributesBytes, &attributes)
+						if err != nil {
+							logErr.Println(err.Error())
+						}
 					}
 
 					//get owner of token from database TODO
@@ -398,13 +455,13 @@ func (ci *CollectionIndexer) StartWorker() {
 					if dbToken == nil {
 						dbToken = &entities.Token{}
 					}
-					err = storage.AddToken(&entities.Token{
+					err = storage.AddOrUpdateToken(&entities.Token{
 						TokenID:      token.Collection,
 						MintTxHash:   dbToken.MintTxHash,
 						CollectionID: colObj.ID,
 						Nonce:        token.Nonce,
 						NonceStr:     nonceStr,
-						MetadataLink: string(youbeiMeta) + "/" + nonce10Str + ".json",
+						MetadataLink: string(youbeiMeta),
 						ImageLink:    string(imageURI),
 						TokenName:    token.Name,
 						Attributes:   attributes,
@@ -414,7 +471,7 @@ func (ci *CollectionIndexer) StartWorker() {
 						PriceNominal: dbToken.PriceNominal,
 					})
 					if err != nil {
-						logErr.Println("BADERR", err.Error())
+						logErr.Println("BADERR", err.Error(), token)
 						if err == gorm.ErrRegistered {
 							tokenCountSuc++
 						}

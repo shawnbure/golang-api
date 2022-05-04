@@ -338,7 +338,7 @@ func GetTransactionsCount() (int64, error) {
 	return total, nil
 }
 
-func GetTransactionsCountByType(_type string) (int64, error) {
+func GetTransactionsCountByType(_type entities.TxType) (int64, error) {
 	var total int64
 
 	database, err := GetDBOrError()
@@ -378,7 +378,7 @@ func GetTransactionsCountByDate(date string) (int64, error) {
 	return total, nil
 }
 
-func GetTransactionsCountByDateAndType(_type string, date string) (int64, error) {
+func GetTransactionsCountByDateAndType(_type entities.TxType, date string) (int64, error) {
 	var total int64
 
 	database, err := GetDBOrError()

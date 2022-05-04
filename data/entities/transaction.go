@@ -16,9 +16,10 @@ type TxType string
 
 const (
 	ListToken     TxType = "List"
-	BuyToken             = "Buy"
-	WithdrawToken        = "Withdraw"
-	AuctionToken         = "Auction"
+	BuyToken      TxType = "Buy"
+	WithdrawToken TxType = "Withdraw"
+	AuctionToken  TxType = "Auction"
+	None          TxType = "None"
 )
 
 type TransactionDetail struct {
