@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"math"
 	"math/big"
 	"strings"
 
@@ -472,6 +473,7 @@ func GetAllTransactionsWithPagination(lastFetchedId int64, lastTimestamp int64, 
 	}
 
 	transactions := []entities.TransactionDetail{}
+
 	if lastTimestamp == 0 && lastFetchedId == 0 {
 		txRead := database.Table("transactions").Select("transactions.type as tx_type, transactions.hash as tx_hash, transactions.id as tx_id, transactions.price_nominal as tx_price_nominal, transactions.timestamp as tx_timestamp, tokens.token_id as token_id, tokens.token_name as token_name, tokens.image_link as token_image_link, seller_account.address as from_address, buyer_account.address as to_address").
 			Joins("inner join tokens on tokens.id=transactions.token_id ").
@@ -550,44 +552,48 @@ func GetLast24HoursTotalVolume(fromTime, toTime string) (*big.Float, error) {
 	return big.NewFloat(0), errors.New("Null String ...")
 }
 
-func GetAllActivitiesWithPagination(lastTimestamp int64, pageSize int, filter *entities.QueryFilter) ([]entities.Activity, error) {
+func GetAllActivitiesWithPagination(lastTimestamp int64, currentPage, requestedPage, pageSize int, filter *entities.QueryFilter) ([]entities.Activity, error) {
 	database, err := GetDBOrError()
 	if err != nil {
 		return nil, err
 	}
 
 	transactions := []entities.Activity{}
-	if lastTimestamp == 0 {
-		txRead := database.Table("transactions").Select("transactions.type as tx_type, transactions.hash as tx_hash, transactions.id as tx_id, transactions.price_nominal as tx_price_nominal, transactions.timestamp as tx_timestamp, tokens.token_id as token_id, tokens.token_name as token_name, tokens.image_link as token_image_link, seller_account.address as from_address, transactions.buyer_id as to_id, collections.id as collection_id, collections.name as collection_name, collections.token_id as collection_token_id").
-			Joins("inner join tokens on tokens.id=transactions.token_id ").
-			Joins("inner join collections on collections.id=transactions.collection_id ").
-			Joins("inner join accounts as seller_account on seller_account.id=transactions.seller_id ").
-			Order("transactions.timestamp desc").
-			Where(filter.Query, filter.Values...).
-			Limit(pageSize).
-			Scan(&transactions)
 
-		if txRead.Error != nil {
-			return nil, txRead.Error
-		}
+	query := ""
+	order := "transactions.timestamp desc "
+	offset := 0
+	if lastTimestamp == 0 {
+		query = filter.Query
 	} else {
-		query := "transactions.timestamp<?"
+		query = "transactions.timestamp<?"
+		if requestedPage < currentPage {
+			query = "transactions.timestamp>?"
+			order = "transactions.timestamp asc "
+		}
+
+		if requestedPage != currentPage {
+			offset = (int(math.Abs(float64(requestedPage-currentPage))) - 1) * pageSize
+		}
+
 		if filter.Query != "" {
-			query = fmt.Sprintf("(%s) and transactions.timestamp<=?", filter.Query)
+			query = fmt.Sprintf("(%s) and %s", filter.Query, query)
 		}
 		filter.Values = append(filter.Values, lastTimestamp)
-		txRead := database.Table("transactions").Select("transactions.type as tx_type, transactions.hash as tx_hash, transactions.id as tx_id, transactions.price_nominal as tx_price_nominal, transactions.timestamp as tx_timestamp, tokens.token_id as token_id, tokens.token_name as token_name, tokens.image_link as token_image_link, seller_account.address as from_address, transactions.buyer_id as to_id, collections.id as collection_id, collections.name as collection_name, collections.token_id as collection_token_id").
-			Joins("inner join tokens on tokens.id=transactions.token_id ").
-			Joins("inner join collections on collections.id=transactions.collection_id ").
-			Joins("inner join accounts as seller_account on seller_account.id=transactions.seller_id ").
-			Order("transactions.timestamp desc ").
-			Where(query, filter.Values...).
-			Limit(pageSize).
-			Scan(&transactions)
+	}
 
-		if txRead.Error != nil {
-			return nil, txRead.Error
-		}
+	txRead := database.Table("transactions").Select("transactions.type as tx_type, transactions.hash as tx_hash, transactions.id as tx_id, transactions.price_nominal as tx_price_nominal, transactions.timestamp as tx_timestamp, tokens.token_id as token_id, tokens.token_name as token_name, tokens.image_link as token_image_link, seller_account.address as from_address, transactions.buyer_id as to_id, collections.id as collection_id, collections.name as collection_name, collections.token_id as collection_token_id").
+		Joins("inner join tokens on tokens.id=transactions.token_id ").
+		Joins("inner join collections on collections.id=transactions.collection_id ").
+		Joins("inner join accounts as seller_account on seller_account.id=transactions.seller_id ").
+		Order(order).
+		Where(query, filter.Values...).
+		Offset(offset).
+		Limit(pageSize).
+		Scan(&transactions)
+
+	if txRead.Error != nil {
+		return nil, txRead.Error
 	}
 
 	return transactions, nil

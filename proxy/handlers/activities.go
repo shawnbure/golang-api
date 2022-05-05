@@ -11,7 +11,7 @@ import (
 
 const (
 	baseActivityEndpoint  = "/activities"
-	ActivitiesAllEndpoint = "/all/:timestamp/:limit"
+	ActivitiesAllEndpoint = "/all/:timestamp/:currentPage/:nextPage"
 
 	ActivityPageSize = 7
 )
@@ -41,17 +41,23 @@ func NewActivitiesHandler(groupHandler *groupHandler) {
 // @Accept json
 // @Produce json
 // @Param timestamp path int64 true "last timestamp"
-// @Param limit path int64 true "page size limit"
+// @Param currentPage path int64 true "the current page"
+// @Param nextPage path int64 true "the current page"
+// @Param timestamp path int64 true "last timestamp"
+// @Param limit query int64 true "page size limit"
 // @Param filter query string false  "filter parameter"
 // @Success 200 {object} dtos.ActivityLogsList
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 404 {object} dtos.ApiResponse
-// @Router /activities/all/{timestamp}/{limit} [get]
+// @Router /activities/all/{timestamp}/{currentPage}/{nextPage} [get]
 func (handler *activityHandler) getActivityListWithPagination(c *gin.Context) {
 	result := dtos.ActivityLogsList{}
 
 	timeSt := c.Param("timestamp")
-	limit := c.Param("limit")
+	limit := c.Request.URL.Query().Get("limit")
+
+	currentPageStr := c.Param("currentPage")
+	nextPageStr := c.Param("nextPage")
 
 	filter := c.Request.URL.Query().Get("filter")
 	querySQL, queryValues, _ := services.ConvertFilterToQuery("transactions", filter)
@@ -65,6 +71,15 @@ func (handler *activityHandler) getActivityListWithPagination(c *gin.Context) {
 		ts = 0
 	}
 
+	currentPage, err := strconv.Atoi(currentPageStr)
+	if err != nil {
+		currentPage = 0
+	}
+	nextPage, err := strconv.Atoi(nextPageStr)
+	if err != nil {
+		nextPage = 0
+	}
+
 	limitInt, err = strconv.Atoi(limit)
 	if err != nil || limitInt == 0 {
 		limitInt = ActivityPageSize
@@ -74,6 +89,8 @@ func (handler *activityHandler) getActivityListWithPagination(c *gin.Context) {
 		LastTimestamp: ts,
 		Limit:         limitInt,
 		Filter:        &sqlFilter,
+		CurrentPage:   currentPage,
+		NextPage:      nextPage,
 	})
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())

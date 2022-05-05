@@ -14,7 +14,7 @@ const (
 )
 
 func GetAllActivities(args GetAllActivityArgs) ([]entities.Activity, error) {
-	transactions, err := storage.GetAllActivitiesWithPagination(args.LastTimestamp, args.Limit, args.Filter)
+	transactions, err := storage.GetAllActivitiesWithPagination(args.LastTimestamp, args.CurrentPage, args.NextPage, args.Limit, args.Filter)
 	if err != nil {
 		return nil, err
 	}
@@ -40,6 +40,13 @@ func GetAllActivities(args GetAllActivityArgs) ([]entities.Activity, error) {
 					_ = localCacher.SetWithTTL(fmt.Sprintf(AddressByIdKeyFormat, item.ToId), acc.Address, AddressByIdExpirePeriod)
 				}
 			}
+		}
+	}
+
+	if args.NextPage < args.CurrentPage {
+		// reversing array
+		for i, j := 0, len(transactions)-1; i < j; i, j = i+1, j-1 {
+			transactions[i], transactions[j] = transactions[j], transactions[i]
 		}
 	}
 
