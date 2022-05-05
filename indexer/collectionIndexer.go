@@ -382,7 +382,8 @@ func (ci *CollectionIndexer) StartWorker() {
 										if i != 0 {
 											prefix = ","
 										}
-										resultStr = resultStr + prefix + "{" + ap + "}"
+										traitKeyValue := strings.Split(ap, ":")
+										resultStr = resultStr + prefix + `{"` + traitKeyValue[0] + `":"` + traitKeyValue[1] + `"}`
 									}
 									resultStr = resultStr + "]"
 								}
