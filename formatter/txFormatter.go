@@ -32,6 +32,7 @@ var (
 	withdrawCreatorRoyaltiesEndpointName     = "withdrawCreatorRoyalties"
 	issueNFTEndpointName                     = "issueNonFungible"
 	deployNFTTemplateEndpointName            = "deployNFTTemplateContract"
+	stakeNFTTemplateEndpointName             = "stakeNFTTemplateContract"
 	changeOwnerEndpointName                  = "changeOwner"
 	setSpecialRoleEndpointName               = "setSpecialRole"
 	withdrawFromMinterEndpointName           = "withdraw"
@@ -453,6 +454,26 @@ func (f *TxFormatter) DeployNFTTemplateTxTemplate(
 		SndAddr:   walletAddress,
 		GasPrice:  f.config.GasPrice,
 		GasLimit:  f.config.DeployNFTTemplateGasLimit,
+		Data:      txData,
+		Signature: "",
+		ChainID:   f.config.ChainID,
+		Version:   1,
+		Options:   0,
+	}
+}
+
+func (f *TxFormatter) StakeNFTTemplateTxTemplate(walletAddress string, collectionId string, nonce uint64) Transaction {
+	txData := stakeNFTTemplateEndpointName +
+		"@" + hex.EncodeToString([]byte(collectionId)) +
+		"@" + hex.EncodeToString(big.NewInt(int64(nonce)).Bytes())
+
+	return Transaction{
+		Nonce:     0,
+		Value:     f.config.StakeNFTEGLDCost,
+		RcvAddr:   f.config.MarketplaceAddress,
+		SndAddr:   walletAddress,
+		GasPrice:  f.config.GasPrice,
+		GasLimit:  f.config.StakeNFTTemplateGasLimit,
 		Data:      txData,
 		Signature: "",
 		ChainID:   f.config.ChainID,

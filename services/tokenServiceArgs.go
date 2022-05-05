@@ -48,3 +48,13 @@ type WithdrawTokenArgs struct {
 	TxConfirmed  bool
 	OnSale       bool
 }
+
+type StakeTokenArgs struct {
+	OwnerAddress string
+	TokenId      string
+	Nonce        uint64
+	TxHash       string
+	OnStake      bool
+	StakeDate    uint64
+	StakeType    string
+}

@@ -44,6 +44,7 @@ type CollectionTokensQueryBody struct {
 	Filters      map[string]string `json:"filters"`
 	SortRules    map[string]string `json:"sortRules"`
 	OnSaleFlag   bool              `json:"onSaleFlag"`
+	OnStakeFlag  bool              `json:"onStakeFlag"`
 	QueryFilters string            `json:"queryFilters"`
 }
 
@@ -495,6 +496,7 @@ func (handler *collectionsHandler) getTokens(c *gin.Context) {
 	sortRules := queries.SortRules
 	filters := queries.Filters
 	onSaleFlag := queries.OnSaleFlag
+	onStakeFlag := queries.OnStakeFlag
 	queryFilters := queries.QueryFilters
 
 	//fmt.Println("queryFilters: ", queryFilters)
@@ -536,7 +538,7 @@ func (handler *collectionsHandler) getTokens(c *gin.Context) {
 		return
 	}
 
-	tokens, err := storage.GetTokensByCollectionIdWithOffsetLimit(cacheInfo.CollectionId, int(offset), int(limit), filters, sortRules, onSaleFlag, sqlFilter)
+	tokens, err := storage.GetTokensByCollectionIdWithOffsetLimit(cacheInfo.CollectionId, int(offset), int(limit), filters, sortRules, onSaleFlag, onStakeFlag, sqlFilter)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return

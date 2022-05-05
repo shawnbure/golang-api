@@ -25,6 +25,7 @@ const (
 	availableTokensEndpoint          = "/available"
 	tokenListEndpoint                = "/list-fc/:walletAddress/:tokenName/:tokenNonce"
 	tokenBuyEndpoint                 = "/buy-fc/:walletAddress/:tokenName/:tokenNonce"
+	tokenStakeEndpoint               = "/stake-fc/:walletAddress/:tokenName/:tokenNonce"
 	offersForTokenIdAndNonceEndpoint = "/:tokenId/:nonce/offers/:offset/:limit"
 	bidsForTokenIdAndNonceEndpoint   = "/:tokenId/:nonce/bids/:offset/:limit"
 	refreshTokenMetadataEndpoint     = "/:tokenId/:nonce/refresh"
@@ -49,6 +50,7 @@ func NewTokensHandler(groupHandler *groupHandler, authCfg config.AuthConfig, cfg
 		{Method: http.MethodPost, Path: tokenListEndpoint, HandlerFunc: handler.list},
 		{Method: http.MethodPost, Path: tokenBuyEndpoint, HandlerFunc: handler.buy},
 		{Method: http.MethodPost, Path: tokenWithdrawEndpoint, HandlerFunc: handler.withdraw},
+		{Method: http.MethodPost, Path: tokenStakeEndpoint, HandlerFunc: handler.stake},
 	}
 
 	endpointGroupHandler := EndpointGroupHandler{
@@ -142,6 +144,33 @@ func (handler *tokensHandler) buy(c *gin.Context) {
 	}
 
 	services.BuyToken(request)
+
+	dtos.JsonResponse(c, http.StatusOK, nil, "")
+}
+
+func (handler *tokensHandler) stake(c *gin.Context) {
+
+	var request services.StakeTokenArgs
+
+	errBindJSON := c.BindJSON(&request)
+	if errBindJSON != nil {
+		fmt.Printf("%+v\n", errBindJSON)
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, errBindJSON.Error())
+		return
+	}
+
+	jwtAddress := c.GetString(middleware.AddressKey)
+	if jwtAddress != request.OwnerAddress {
+		dtos.JsonResponse(c, http.StatusUnauthorized, nil, "jwt and request addresses differ")
+		return
+	}
+
+	api := handler.blockchainConfig.ApiUrl
+	if api == "" {
+		api = handler.blockchainConfig.ApiUrlSec
+	}
+
+	services.StakeToken(request, api, handler.blockchainConfig.MarketplaceAddress)
 
 	dtos.JsonResponse(c, http.StatusOK, nil, "")
 }
