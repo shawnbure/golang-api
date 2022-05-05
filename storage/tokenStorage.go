@@ -264,6 +264,7 @@ func GetTokensByCollectionIdWithOffsetLimit(
 	attributesFilters map[string]string,
 	sortRules map[string]string,
 	onSaleFlag bool,
+	onStakeFlag bool,
 	sqlFilter entities.QueryFilter,
 ) ([]entities.Token, error) {
 	var tokens []entities.Token
@@ -295,13 +296,19 @@ func GetTokensByCollectionIdWithOffsetLimit(
 			txRead.Where(sqlFilter.Query, sqlFilter.Values...)
 			fmt.Printf("txRead.Where: %v\n", txRead.Where.stri)
 		}
+
+		txRead.Preload("Owner").Find(&tokens, "collection_id = ? and on_sale = ? and on_stake = ?", collectionId, onSaleFlag, onStakeFlag)
 	*/
 
-	//fmt.Println("collection_id = ? and on_sale = ?", collectionId, onSaleFlag)
-
-	txRead.
-		Preload("Owner").
-		Find(&tokens, "collection_id = ? and on_sale = ?", collectionId, onSaleFlag)
+	if onSaleFlag {
+		txRead.Preload("Owner").Where("on_sale = True and (on_stake = False or on_stake is null)").Find(&tokens, "collection_id = ?", collectionId)
+	}
+	if onStakeFlag {
+		txRead.Preload("Owner").Where("(on_sale = False or on_sale is null) and on_stake = True").Find(&tokens, "collection_id = ?", collectionId)
+	}
+	if !onStakeFlag && !onSaleFlag {
+		txRead.Preload("Owner").Where("(on_sale = False or on_sale is null) and (on_stake = False or on_stake is null)").Find(&tokens, "collection_id = ?", collectionId)
+	}
 
 	if txRead.Error != nil {
 		return nil, txRead.Error
