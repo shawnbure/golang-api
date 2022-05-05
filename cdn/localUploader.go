@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"image"
+	"image/gif"
 	"image/jpeg"
 	"image/png"
 	"io"
@@ -80,6 +81,8 @@ func (lu *localUploader) encodeImageByType(imgType string, img image.Image, w io
 		return jpeg.Encode(w, img, nil)
 	case "png":
 		return png.Encode(w, img)
+	case "gif":
+		return gif.Encode(w, img, nil)
 	default:
 		return UnknownImgTypeErr
 	}
