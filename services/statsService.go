@@ -8,7 +8,7 @@ import (
 )
 
 func GetAllTransactionsWithPagination(args GetAllTransactionsWithPaginationArgs) ([]entities.TransactionDetail, error) {
-	transactions, err := storage.GetAllTransactionsWithPagination(args.LastTimestamp, args.Limit, args.Filter)
+	transactions, err := storage.GetAllTransactionsWithPagination(args.LastTimestamp, args.CurrentPage, args.NextPage, args.Limit, args.Filter)
 	if err != nil {
 		return nil, err
 	}
@@ -34,6 +34,13 @@ func GetAllTransactionsWithPagination(args GetAllTransactionsWithPaginationArgs)
 					_ = localCacher.SetWithTTL(fmt.Sprintf(AddressByIdKeyFormat, item.ToId), acc.Address, AddressByIdExpirePeriod)
 				}
 			}
+		}
+	}
+
+	if args.NextPage < args.CurrentPage {
+		// reversing array
+		for i, j := 0, len(transactions)-1; i < j; i, j = i+1, j-1 {
+			transactions[i], transactions[j] = transactions[j], transactions[i]
 		}
 	}
 
