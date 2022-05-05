@@ -22,6 +22,7 @@ const (
 	listNftFormatEndpoint                      = "/list-nft/:userAddress/:tokenId/:nonce/:price"
 	buyNftFormatEndpoint                       = "/buy-nft/:userAddress/:tokenId/:nonce/:price"
 	withdrawNftFormatEndpoint                  = "/withdraw-nft/:userAddress/:tokenId/:nonce"
+	stakeNftFormatEndpoint                     = "/stake/:userAddress/:tokenId/:nonce"
 	makeOfferFormatEndpoint                    = "/make-offer/:userAddress/:tokenId/:nonce/:amount/:expire"
 	acceptOfferFormatEndpoint                  = "/accept-offer/:userAddress/:tokenId/:nonce/:offerorAddress/:amount"
 	cancelOfferFormatEndpoint                  = "/cancel-offer/:userAddress/:tokenId/:nonce/:amount"
@@ -59,6 +60,7 @@ func NewTxTemplateHandler(groupHandler *groupHandler, blockchainConfig config.Bl
 		{Method: http.MethodGet, Path: listNftFormatEndpoint, HandlerFunc: handler.getListNftTemplate},
 		{Method: http.MethodGet, Path: buyNftFormatEndpoint, HandlerFunc: handler.getBuyNftTemplate},
 		{Method: http.MethodGet, Path: withdrawNftFormatEndpoint, HandlerFunc: handler.getWithdrawNftTemplate},
+		{Method: http.MethodGet, Path: stakeNftFormatEndpoint, HandlerFunc: handler.getStakeNftTemplate},
 		{Method: http.MethodGet, Path: makeOfferFormatEndpoint, HandlerFunc: handler.getMakeOfferTemplate},
 		{Method: http.MethodGet, Path: acceptOfferFormatEndpoint, HandlerFunc: handler.getAcceptOfferTemplate},
 		{Method: http.MethodGet, Path: cancelOfferFormatEndpoint, HandlerFunc: handler.getCancelOfferTemplate},
@@ -721,6 +723,38 @@ func (handler *txTemplateHandler) getDeployNFTTemplate(c *gin.Context) {
 		maxSupply,
 		saleStart,
 		metadataBase,
+	)
+
+	//TODO: Grab this response erd SC address
+	dtos.JsonResponse(c, http.StatusOK, template, "")
+}
+
+// @Summary Gets tx-template for Staking NFT.
+// @Description
+// @Tags tx-template
+// @Accept json
+// @Produce json
+// @Param userAddress path string true "user address"
+// @Param collectionId path string true "collection id"
+// @Param nonce path string true "token nonce"
+// @Success 200 {object} formatter.Transaction
+// @Failure 400 {object} dtos.ApiResponse
+// @Router /tx-template/deploy-template/{userAddress}/{tokenId}/{royalties}/{tokenNameBase}/{imageExt}/{price}/{maxSupply}/{saleStart} [get]
+func (handler *txTemplateHandler) getStakeNftTemplate(c *gin.Context) {
+	userAddress := c.Param("userAddress")
+	collectionId := c.Param("collectionId")
+	nonce := c.Param("nonce")
+
+	intNonce, err := strconv.ParseUint(nonce, 10, 64)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	template := handler.txFormatter.StakeNFTTemplateTxTemplate(
+		userAddress,
+		collectionId,
+		intNonce,
 	)
 
 	//TODO: Grab this response erd SC address

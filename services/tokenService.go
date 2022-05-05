@@ -616,6 +616,56 @@ func ListToken(args ListTokenArgs, blockchainProxy string, marketplaceAddress st
 	// AddTransaction(&transaction)
 }
 
+func StakeToken(args StakeTokenArgs, blockchainProxy string, marketplaceAddress string) {
+
+	var err error
+
+	var updateToken = false
+	token, err := storage.GetTokenByTokenIdAndNonce(args.TokenId, args.Nonce)
+	if err != nil {
+		token = &entities.Token{}
+	}
+
+	//this logic should be expanded to other stake types
+
+	token.Status = entities.Stake
+	token.StakeType = string(entities.DAO)
+	token.OnStake = args.OnStake
+	token.StakeDate = args.StakeDate
+
+	var innerErr error
+	if !updateToken {
+		innerErr = storage.AddToken(token)
+		if innerErr == nil {
+			_, cacheErr := AddTokenToCache(token.TokenID, token.Nonce, token.TokenName, token.ID)
+			if cacheErr != nil {
+				log.Error("could not add token to cache")
+			}
+			//}
+		} else {
+			innerErr = storage.UpdateToken(token)
+		}
+	}
+	if innerErr != nil {
+		log.Debug("could not create or update token", "err", innerErr)
+		return
+	}
+
+	// Indexer is safer till later review
+	// transaction := entities.Transaction{
+	// 	Hash:         args.TxHash,
+	// 	Type:         entities.ListToken,
+	// 	PriceNominal: priceNominal,
+	// 	Timestamp:    args.Timestamp,
+	// 	SellerID:     ownerAccount.ID,
+	// 	BuyerID:      0,
+	// 	TokenID:      token.ID,
+	// 	CollectionID: collectionId,
+	// }
+
+	// AddTransaction(&transaction)
+}
+
 func getTokenByNonce(tokenName string, tokenNonce string, blockchainApi string) (NonFungibleToken, error) {
 	//var resp ProxyTokenResponse
 	var token NonFungibleToken

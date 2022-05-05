@@ -27,6 +27,9 @@ type Token struct {
 	LastMarketTimestamp uint64         `json:"lastMarketTimestamp"`
 	Owner               Account        `json:"owner"`
 	TxConfirmed         bool           `json:"txConfirmed"`
+	OnStake             bool           `json:"onStake" gorm:"default:false"`
+	StakeDate           uint64         `json:"stakeDate"`
+	StakeType           string         `json:"stakeType"`
 }
 
 type TokenBC struct {
@@ -67,4 +70,19 @@ type TokenBC struct {
 		  "scamInfo": {}
 		}
 	*/
-}
+
+type TokenStatus string
+
+const (
+	List    TokenStatus = "List"
+	Stake   TokenStatus = "Stake"
+	Auction TokenStatus = "Auction"
+	None    TokenStatus = "None"
+)
+
+type StakeType string
+
+const (
+	UBI StakeType = "UBI"
+	DAO StakeType = "DAO"
+)
