@@ -34,6 +34,7 @@ type TransactionDetail struct {
 	TokenImageLink string  `json:"tokenImageLink"`
 	FromAddress    string  `json:"fromAddress"`
 	ToAddress      string  `json:"toAddress"`
+	ToId           int64   `json:"to_id"`
 }
 
 type Activity struct {

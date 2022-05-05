@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"github.com/ENFT-DAO/youbei-api/services"
 	"math/big"
 	"net/http"
 	"strconv"
@@ -39,11 +40,11 @@ const (
 	StatTotalVolumeEndpoint             = "/volume/total"
 	StatTotalVolumeLastWeekPerDay       = "/volume/lastWeek"
 	StatTokensTotalCount                = "/tokens/totalCount"
-	StatListTransactionsWithPagination  = "/transactions/list/:timestamp/:id"
+	StatListTransactionsWithPagination  = "/transactions/list/:timestamp/:currentPage/:nextPage"
 )
 
 const (
-	PageSize = 20
+	StatsPageSize = 20
 )
 
 type statsHandler struct {
@@ -281,36 +282,62 @@ func (handler *statsHandler) getTokensTotalCount(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param timestamp path int64 true "last timestamp"
-// @Param id path int64 true "last fetched id"
+// @Param currentPage path int64 true "the current page"
+// @Param nextPage path int64 true "the current page"
+// @Param timestamp path int64 true "last timestamp"
+// @Param limit query int64 true "page size limit"
+// @Param filter query string false  "filter parameter"
 // @Success 200 {object} dtos.StatTransactionsList
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 404 {object} dtos.ApiResponse
-// @Router /stats/transactions/list/{timestamp}/{id} [get]
+// @Router /stats/transactions/list/{timestamp}/{currentPage}/{nextPage} [get]
 func (handler *statsHandler) getTransactionsListWithPagination(c *gin.Context) {
 	result := dtos.StatTransactionsList{}
 
 	timeSt := c.Param("timestamp")
-	id := c.Param("id")
+	limit := c.Request.URL.Query().Get("limit")
+
+	currentPageStr := c.Param("currentPage")
+	nextPageStr := c.Param("nextPage")
+
+	filter := c.Request.URL.Query().Get("filter")
+	querySQL, queryValues, _ := services.ConvertFilterToQuery("collections", filter)
+	sqlFilter := entities.QueryFilter{Query: querySQL, Values: queryValues}
 
 	var ts int64 = 0
-	var lastId int64 = 0
+	var limitInt int = StatsPageSize
 
 	ts, err := strconv.ParseInt(timeSt, 10, 64)
 	if err != nil {
 		ts = 0
 	}
 
-	lastId, err = strconv.ParseInt(id, 10, 64)
+	currentPage, err := strconv.Atoi(currentPageStr)
 	if err != nil {
-		lastId = 0
+		currentPage = 0
+	}
+	nextPage, err := strconv.Atoi(nextPageStr)
+	if err != nil {
+		nextPage = 0
 	}
 
-	transactions, err := storage.GetAllTransactionsWithPagination(lastId, ts, PageSize)
+	limitInt, err = strconv.Atoi(limit)
+	if err != nil || limitInt == 0 {
+		limitInt = StatsPageSize
+	}
+
+	transactions, err := services.GetAllTransactionsWithPagination(services.GetAllTransactionsWithPaginationArgs{
+		LastTimestamp: ts,
+		Limit:         limitInt,
+		Filter:        &sqlFilter,
+		CurrentPage:   currentPage,
+		NextPage:      nextPage,
+	})
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
 	}
-	result.Transactions = transactions
 
+	result.Transactions = transactions
 	dtos.JsonResponse(c, http.StatusOK, result, "")
 }
