@@ -155,7 +155,7 @@ func Test_GetTokensByCollectionIdWithOffsetLimit(t *testing.T) {
 
 	token1 := entities.Token{
 		CollectionID: coll.ID,
-		Status:       entities.List,
+		Status:       entities.ListToken,
 		OwnerID:      1,
 		Attributes:   datatypes.JSON(`{"hair": "red", "background": "dark"}`),
 	}
@@ -164,7 +164,7 @@ func Test_GetTokensByCollectionIdWithOffsetLimit(t *testing.T) {
 
 	token2 := entities.Token{
 		CollectionID: coll.ID,
-		Status:       entities.List,
+		Status:       entities.ListToken,
 		OwnerID:      1,
 		Attributes:   datatypes.JSON(`{"hair": "green", "background": "dark"}`),
 	}
@@ -208,7 +208,7 @@ func defaultToken() entities.Token {
 		TokenID:      "my_token",
 		Nonce:        10,
 		PriceNominal: 1_000_000_000_000_000_000_000,
-		Status:       entities.List,
+		Status:       entities.ListToken,
 		MetadataLink: "link.com",
 		OwnerID:      1,
 		CollectionID: 1,
