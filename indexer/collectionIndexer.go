@@ -383,6 +383,9 @@ func (ci *CollectionIndexer) StartWorker() {
 											prefix = ","
 										}
 										traitKeyValue := strings.Split(ap, ":")
+										if len(traitKeyValue) < 2 {
+											continue
+										}
 										resultStr = resultStr + prefix + `{"` + traitKeyValue[0] + `":"` + traitKeyValue[1] + `"}`
 									}
 									resultStr = resultStr + "]"
