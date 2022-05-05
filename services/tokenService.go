@@ -628,7 +628,7 @@ func StakeToken(args StakeTokenArgs, blockchainProxy string, marketplaceAddress 
 
 	//this logic should be expanded to other stake types
 
-	token.Status = entities.Stake
+	token.Status = entities.ListToken
 	token.StakeType = string(entities.DAO)
 	token.OnStake = args.OnStake
 	token.StakeDate = args.StakeDate

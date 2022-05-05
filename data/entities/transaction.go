@@ -19,6 +19,7 @@ const (
 	BuyToken      TxType = "Buy"
 	WithdrawToken TxType = "Withdraw"
 	AuctionToken  TxType = "Auction"
+	TxStake       TxType = "Stake"
 	None          TxType = "None"
 )
 

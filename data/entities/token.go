@@ -70,15 +70,16 @@ type TokenBC struct {
 		  "scamInfo": {}
 		}
 	*/
+}
 
-type TokenStatus string
+// type TokenStatus string
 
-const (
-	List    TokenStatus = "List"
-	Stake   TokenStatus = "Stake"
-	Auction TokenStatus = "Auction"
-	None    TokenStatus = "None"
-)
+// const (
+// 	List    TokenStatus = "List"
+// 	Stake   TokenStatus = "Stake"
+// 	Auction TokenStatus = "Auction"
+// 	None    TokenStatus = "None"
+// )
 
 type StakeType string
 
