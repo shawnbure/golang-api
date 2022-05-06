@@ -243,7 +243,7 @@ func Test_GetAllTransactionsWithDetail(t *testing.T) {
 		howMuchRow := 2
 		filter := entities.QueryFilter{}
 
-		transactions, err := GetAllTransactionsWithPagination(lastTimestamp, howMuchRow, &filter)
+		transactions, err := GetAllTransactionsWithPagination(lastTimestamp, 1, 1, howMuchRow, &filter)
 		require.Nil(t, err)
 		require.Equal(t, len(transactions), 2, "The returned transactions array length does not matched")
 	})
@@ -253,7 +253,7 @@ func Test_GetAllTransactionsWithDetail(t *testing.T) {
 		howMuchRow := 2
 		filter := entities.QueryFilter{}
 
-		transactions, err := GetAllTransactionsWithPagination(lastTimestamp, howMuchRow, &filter)
+		transactions, err := GetAllTransactionsWithPagination(lastTimestamp, 1, 1, howMuchRow, &filter)
 		require.Nil(t, err)
 		require.Equal(t, len(transactions), 2, "The returned transactions array length does not matched")
 	})

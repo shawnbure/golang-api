@@ -113,6 +113,7 @@ func NewWebServer(cfg *config.GeneralConfig) (*webServer, error) {
 	handlers.NewStatsHandler(groupHandler)
 	handlers.NewReportHandler(groupHandler)
 	handlers.NewActivitiesHandler(groupHandler)
+	handlers.NewExplorerHandler(groupHandler)
 
 	//
 
