@@ -466,6 +466,25 @@ func GetTotalTradedVolumeByDate(dateStr string) (*big.Float, error) {
 	return big.NewFloat(0), errors.New("Null String ...")
 }
 
+func GetTransactionsCountWithCriteria(filter *entities.QueryFilter) (int64, error) {
+	database, err := GetDBOrError()
+	if err != nil {
+		return 0, err
+	}
+
+	var total int64
+
+	txRead := database.Table("transactions").
+		Where(filter.Query, filter.Values...).
+		Count(&total)
+
+	if txRead.Error != nil {
+		return 0, txRead.Error
+	}
+
+	return total, nil
+}
+
 func GetAllTransactionsWithPagination(lastTimestamp int64, currentPage, requestedPage, pageSize int, filter *entities.QueryFilter) ([]entities.TransactionDetail, error) {
 	database, err := GetDBOrError()
 	if err != nil {

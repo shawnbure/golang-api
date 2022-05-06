@@ -7,10 +7,15 @@ import (
 	"github.com/ENFT-DAO/youbei-api/storage"
 )
 
-func GetAllTransactionsWithPagination(args GetAllTransactionsWithPaginationArgs) ([]entities.TransactionDetail, error) {
+func GetAllTransactionsWithPagination(args GetAllTransactionsWithPaginationArgs) ([]entities.TransactionDetail, int64, error) {
+	total, err := storage.GetTransactionsCountWithCriteria(args.Filter)
+	if err != nil {
+		return nil, 0, err
+	}
+
 	transactions, err := storage.GetAllTransactionsWithPagination(args.LastTimestamp, args.CurrentPage, args.NextPage, args.Limit, args.Filter)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	// Let's check the cache first
@@ -44,5 +49,5 @@ func GetAllTransactionsWithPagination(args GetAllTransactionsWithPaginationArgs)
 		}
 	}
 
-	return transactions, nil
+	return transactions, total, nil
 }

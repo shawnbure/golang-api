@@ -326,7 +326,7 @@ func (handler *statsHandler) getTransactionsListWithPagination(c *gin.Context) {
 		limitInt = StatsPageSize
 	}
 
-	transactions, err := services.GetAllTransactionsWithPagination(services.GetAllTransactionsWithPaginationArgs{
+	transactions, totalCount, err := services.GetAllTransactionsWithPagination(services.GetAllTransactionsWithPaginationArgs{
 		LastTimestamp: ts,
 		Limit:         limitInt,
 		Filter:        &sqlFilter,
@@ -339,5 +339,7 @@ func (handler *statsHandler) getTransactionsListWithPagination(c *gin.Context) {
 	}
 
 	result.Transactions = transactions
+	result.TotalCount = totalCount
+
 	dtos.JsonResponse(c, http.StatusOK, result, "")
 }

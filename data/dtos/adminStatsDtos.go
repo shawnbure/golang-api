@@ -24,4 +24,5 @@ type TokensTotalCount struct {
 
 type StatTransactionsList struct {
 	Transactions []entities.TransactionDetail `json:"transactions"`
+	TotalCount   int64                        `json:"total"`
 }
