@@ -85,7 +85,7 @@ func (handler *activityHandler) getActivityListWithPagination(c *gin.Context) {
 		limitInt = ActivityPageSize
 	}
 
-	transactions, err := services.GetAllActivities(services.GetAllActivityArgs{
+	transactions, totalCount, err := services.GetAllActivities(services.GetAllActivityArgs{
 		LastTimestamp: ts,
 		Limit:         limitInt,
 		Filter:        &sqlFilter,
@@ -98,5 +98,7 @@ func (handler *activityHandler) getActivityListWithPagination(c *gin.Context) {
 	}
 
 	result.Activities = transactions
+	result.TotalCount = totalCount
+
 	dtos.JsonResponse(c, http.StatusOK, result, "")
 }

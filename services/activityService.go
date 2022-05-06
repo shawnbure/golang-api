@@ -13,10 +13,15 @@ const (
 	AddressByIdExpirePeriod = 24 * 2 * time.Hour
 )
 
-func GetAllActivities(args GetAllActivityArgs) ([]entities.Activity, error) {
+func GetAllActivities(args GetAllActivityArgs) ([]entities.Activity, int64, error) {
+	total, err := storage.GetTransactionsCountWithCriteria(args.Filter)
+	if err != nil {
+		return nil, 0, err
+	}
+
 	transactions, err := storage.GetAllActivitiesWithPagination(args.LastTimestamp, args.CurrentPage, args.NextPage, args.Limit, args.Filter)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	// Let's check the cache first
@@ -50,5 +55,5 @@ func GetAllActivities(args GetAllActivityArgs) ([]entities.Activity, error) {
 		}
 	}
 
-	return transactions, nil
+	return transactions, total, nil
 }
