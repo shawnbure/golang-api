@@ -203,6 +203,23 @@ func Test_GetTotalTokens(t *testing.T) {
 	})
 }
 
+func Test_GetAllTokens(t *testing.T) {
+	t.Run("Get tokens that is existed on the platform", func(t *testing.T) {
+		lastTimeStamp := int64(0)
+		currentPage := 1
+		nextPage := 1
+		filter := entities.QueryFilter{}
+		sortOption := entities.SortOptions{}
+		howMuchRows := 2
+
+		tokens, err := GetAllTokens(lastTimeStamp, currentPage, nextPage, howMuchRows, &filter, &sortOption)
+		require.Nil(t, err)
+
+		require.Equal(t, len(tokens), int64(2), "Tokens list length is not correct")
+	})
+
+}
+
 func defaultToken() entities.Token {
 	return entities.Token{
 		TokenID:      "my_token",

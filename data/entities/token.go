@@ -87,3 +87,21 @@ const (
 	UBI StakeType = "UBI"
 	DAO StakeType = "DAO"
 )
+
+type TokenExplorer struct {
+	TokenId                  string  `json:"tokenId"`
+	TokenStatus              string  `json:"tokenStatus"`
+	TokenName                string  `json:"tokenName"`
+	TokenImage               string  `json:"tokenImage"`
+	TokenAuctionStartTime    int64   `json:"tokenAuctionStartTime"`
+	TokenAuctionDeadline     int64   `json:"tokenAuctionDeadline"`
+	TokenCreatedAt           int64   `json:"tokenCreatedAt"`
+	TokenLastMarketTimestamp int64   `json:"token_last_market_timestamp"`
+	TokenLastBuyPriceNominal float64 `json:"tokenLastBuyPriceNominal"`
+	TokenPriceNominal        float64 `json:"tokenPriceNominal"`
+	OwnerAddress             string  `json:"ownerAddress"`
+	OwnerName                string  `json:"ownerName"`
+	CollectionId             string  `json:"collectionId"`
+	CollectionTokenId        string  `json:"collectionTokenId"`
+	CollectionName           string  `json:"collectionName"`
+}
