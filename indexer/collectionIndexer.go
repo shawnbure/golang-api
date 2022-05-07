@@ -470,7 +470,6 @@ func (ci *CollectionIndexer) StartWorker() {
 						TokenName:    token.Name,
 						Attributes:   attributes,
 						OwnerID:      acc.ID,
-						OnSale:       false,
 						PriceString:  dbToken.PriceString,
 						PriceNominal: dbToken.PriceNominal,
 					})
