@@ -466,7 +466,26 @@ func GetTotalTradedVolumeByDate(dateStr string) (*big.Float, error) {
 	return big.NewFloat(0), errors.New("Null String ...")
 }
 
-func GetAllTransactionsWithPagination(lastFetchedId int64, lastTimestamp int64, pageSize int) ([]entities.TransactionDetail, error) {
+func GetTransactionsCountWithCriteria(filter *entities.QueryFilter) (int64, error) {
+	database, err := GetDBOrError()
+	if err != nil {
+		return 0, err
+	}
+
+	var total int64
+
+	txRead := database.Table("transactions").
+		Where(filter.Query, filter.Values...).
+		Count(&total)
+
+	if txRead.Error != nil {
+		return 0, txRead.Error
+	}
+
+	return total, nil
+}
+
+func GetAllTransactionsWithPagination(lastTimestamp int64, currentPage, requestedPage, pageSize int, filter *entities.QueryFilter) ([]entities.TransactionDetail, error) {
 	database, err := GetDBOrError()
 	if err != nil {
 		return nil, err
@@ -474,31 +493,40 @@ func GetAllTransactionsWithPagination(lastFetchedId int64, lastTimestamp int64, 
 
 	transactions := []entities.TransactionDetail{}
 
-	if lastTimestamp == 0 && lastFetchedId == 0 {
-		txRead := database.Table("transactions").Select("transactions.type as tx_type, transactions.hash as tx_hash, transactions.id as tx_id, transactions.price_nominal as tx_price_nominal, transactions.timestamp as tx_timestamp, tokens.token_id as token_id, tokens.token_name as token_name, tokens.image_link as token_image_link, seller_account.address as from_address, buyer_account.address as to_address").
-			Joins("inner join tokens on tokens.id=transactions.token_id ").
-			Joins("inner join accounts as seller_account on seller_account.id=transactions.seller_id ").
-			Joins("inner join accounts as buyer_account on buyer_account.id=transactions.buyer_id ").
-			Order("transactions.timestamp desc").
-			Limit(pageSize).
-			Scan(&transactions)
-
-		if txRead.Error != nil {
-			return nil, txRead.Error
-		}
+	query := ""
+	order := "transactions.timestamp desc "
+	offset := 0
+	if lastTimestamp == 0 {
+		query = filter.Query
 	} else {
-		txRead := database.Table("transactions").Select("transactions.type as tx_type, transactions.hash as tx_hash, transactions.id as tx_id, transactions.price_nominal as tx_price_nominal, transactions.timestamp as tx_timestamp, tokens.token_id as token_id, tokens.token_name as token_name, tokens.image_link as token_image_link, seller_account.address as from_address, buyer_account.address as to_address").
-			Joins("inner join tokens on tokens.id=transactions.token_id ").
-			Joins("inner join accounts as seller_account on seller_account.id=transactions.seller_id ").
-			Joins("inner join accounts as buyer_account on buyer_account.id=transactions.buyer_id ").
-			Order("transactions.timestamp desc ").
-			Where("transactions.timestamp<? and transactions.id<?", lastTimestamp, lastFetchedId).
-			Limit(pageSize).
-			Scan(&transactions)
-
-		if txRead.Error != nil {
-			return nil, txRead.Error
+		query = "transactions.timestamp<?"
+		if requestedPage < currentPage {
+			query = "transactions.timestamp>?"
+			order = "transactions.timestamp asc "
 		}
+
+		if requestedPage != currentPage {
+			offset = (int(math.Abs(float64(requestedPage-currentPage))) - 1) * pageSize
+		}
+
+		if filter.Query != "" {
+			query = fmt.Sprintf("(%s) and %s", filter.Query, query)
+		}
+		filter.Values = append(filter.Values, lastTimestamp)
+	}
+
+	txRead := database.Table("transactions").Select("transactions.type as tx_type, transactions.hash as tx_hash, transactions.id as tx_id, transactions.price_nominal as tx_price_nominal, transactions.timestamp as tx_timestamp, tokens.token_id as token_id, tokens.token_name as token_name, tokens.image_link as token_image_link, seller_account.address as from_address, transactions.buyer_id as to_id").
+		Joins("inner join tokens on tokens.id=transactions.token_id ").
+		Joins("inner join accounts as seller_account on seller_account.id=transactions.seller_id ").
+		Order("transactions.timestamp desc ").
+		Order(order).
+		Where(query, filter.Values...).
+		Offset(offset).
+		Limit(pageSize).
+		Scan(&transactions)
+
+	if txRead.Error != nil {
+		return nil, txRead.Error
 	}
 
 	return transactions, nil

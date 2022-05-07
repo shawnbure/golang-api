@@ -5,21 +5,15 @@ import (
 	"github.com/ENFT-DAO/youbei-api/cache"
 	"github.com/ENFT-DAO/youbei-api/data/entities"
 	"github.com/ENFT-DAO/youbei-api/storage"
-	"time"
 )
 
-const (
-	AddressByIdKeyFormat    = "Address:ByDbId:%d"
-	AddressByIdExpirePeriod = 24 * 2 * time.Hour
-)
-
-func GetAllActivities(args GetAllActivityArgs) ([]entities.Activity, int64, error) {
+func GetAllTransactionsWithPagination(args GetAllTransactionsWithPaginationArgs) ([]entities.TransactionDetail, int64, error) {
 	total, err := storage.GetTransactionsCountWithCriteria(args.Filter)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	transactions, err := storage.GetAllActivitiesWithPagination(args.LastTimestamp, args.CurrentPage, args.NextPage, args.Limit, args.Filter)
+	transactions, err := storage.GetAllTransactionsWithPagination(args.LastTimestamp, args.CurrentPage, args.NextPage, args.Limit, args.Filter)
 	if err != nil {
 		return nil, 0, err
 	}

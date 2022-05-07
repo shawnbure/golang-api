@@ -69,6 +69,56 @@ func ConvertFilterToQuery(tableName string, filter string) (string, []interface{
 	return stm, values, nil
 }
 
+func ConvertSortToQuery(tableName string, sort string) (string, []interface{}, error) { //Field|(asc/desc);...
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Printf("recovered in %v", r)
+		}
+	}()
+	var stm string
+	var values []interface{}
+	if sort == "" {
+		return stm, values, nil
+	}
+	clauses := strings.Split(sort, ";")
+	if len(clauses) > 1 {
+		return stm, values, nil
+	}
+
+	for index, c := range clauses {
+		params := strings.Split(c, "|")
+		// We must have only 3 length of params. field|value|operator
+		if len(params) != 2 {
+			fmt.Printf("we have wrong params structure '%s' in '%s'", c, sort)
+			continue
+		}
+		field := params[0]
+		value := params[1]
+		if !(value == "asc" || value == "desc") {
+			fmt.Printf("we have wrong params structure '%s' in '%s'", c, sort)
+			continue
+		}
+
+		prefix := tableName
+		subObjects := strings.Split(field, ".")
+
+		if len(subObjects) > 1 {
+			prefix = "\"" + subObjects[0] + "\""
+			field = strings.Join(subObjects[1:], ".")
+		}
+
+		var query string
+
+		query = prefix + "." + field + " " + "%s"
+		values = append(values, value)
+		if index < len(clauses)-1 {
+			query += ", "
+		}
+		stm += query
+	}
+	return stm, values, nil
+}
+
 func GetResponse(url string) ([]byte, error) {
 	var client http.Client
 	client.Timeout = time.Second * 10

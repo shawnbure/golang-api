@@ -10,24 +10,24 @@ import (
 )
 
 const (
-	baseActivityEndpoint  = "/activities"
-	ActivitiesAllEndpoint = "/all/:timestamp/:currentPage/:nextPage"
+	baseExplorerEndpoint      = "/explorer"
+	ExplorerTokenListEndpoint = "/all/:timestamp/:currentPage/:nextPage"
 
-	ActivityPageSize = 7
+	ExplorerPageSize = 20
 )
 
-type activityHandler struct {
+type explorerHandler struct {
 }
 
-func NewActivitiesHandler(groupHandler *groupHandler) {
-	handler := &activityHandler{}
+func NewExplorerHandler(groupHandler *groupHandler) {
+	handler := &explorerHandler{}
 
 	endpoints := []EndpointHandler{
-		{Method: http.MethodGet, Path: ActivitiesAllEndpoint, HandlerFunc: handler.getActivityListWithPagination},
+		{Method: http.MethodGet, Path: ExplorerTokenListEndpoint, HandlerFunc: handler.getExplorerTokensWithPagination},
 	}
 
 	endpointGroupHandler := EndpointGroupHandler{
-		Root:             baseActivityEndpoint,
+		Root:             baseExplorerEndpoint,
 		Middlewares:      []gin.HandlerFunc{},
 		EndpointHandlers: endpoints,
 	}
@@ -35,23 +35,23 @@ func NewActivitiesHandler(groupHandler *groupHandler) {
 	groupHandler.AddEndpointGroupHandler(endpointGroupHandler)
 }
 
-// @Summary Gets Transactions Logs With Pagination
-// @Description Gets Transactions Logs With Pagination
-// @Tags activity
+// @Summary Gets Explorer Tokens With Pagination And Filtering
+// @Description Gets Explorer Tokens With Pagination And Filtering
+// @Tags explorer
 // @Accept json
 // @Produce json
 // @Param timestamp path int64 true "last timestamp"
 // @Param currentPage path int64 true "the current page"
 // @Param nextPage path int64 true "the current page"
-// @Param timestamp path int64 true "last timestamp"
 // @Param limit query int64 true "page size limit"
 // @Param filter query string false  "filter parameter"
-// @Success 200 {object} dtos.ActivityLogsList
+// @Param sort query string false  "sort option parameter"
+// @Success 200 {object} dtos.ExplorerTokenList
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 404 {object} dtos.ApiResponse
-// @Router /activities/all/{timestamp}/{currentPage}/{nextPage} [get]
-func (handler *activityHandler) getActivityListWithPagination(c *gin.Context) {
-	result := dtos.ActivityLogsList{}
+// @Router /explorer/all/{timestamp}/{currentPage}/{nextPage} [get]
+func (handler *explorerHandler) getExplorerTokensWithPagination(c *gin.Context) {
+	result := dtos.ExplorerTokenList{}
 
 	timeSt := c.Param("timestamp")
 	limit := c.Request.URL.Query().Get("limit")
@@ -60,11 +60,15 @@ func (handler *activityHandler) getActivityListWithPagination(c *gin.Context) {
 	nextPageStr := c.Param("nextPage")
 
 	filter := c.Request.URL.Query().Get("filter")
-	querySQL, queryValues, _ := services.ConvertFilterToQuery("transactions", filter)
+	querySQL, queryValues, _ := services.ConvertFilterToQuery("tokens", filter)
 	sqlFilter := entities.QueryFilter{Query: querySQL, Values: queryValues}
 
+	sortStr := c.Request.URL.Query().Get("sort")
+	sortSQL, sortValues, _ := services.ConvertSortToQuery("tokens", sortStr)
+	sortOptions := entities.SortOptions{Query: sortSQL, Values: sortValues}
+
 	var ts int64 = 0
-	var limitInt int = ActivityPageSize
+	var limitInt int = ExplorerPageSize
 
 	ts, err := strconv.ParseInt(timeSt, 10, 64)
 	if err != nil {
@@ -82,23 +86,22 @@ func (handler *activityHandler) getActivityListWithPagination(c *gin.Context) {
 
 	limitInt, err = strconv.Atoi(limit)
 	if err != nil || limitInt == 0 {
-		limitInt = ActivityPageSize
+		limitInt = ExplorerPageSize
 	}
 
-	transactions, totalCount, err := services.GetAllActivities(services.GetAllActivityArgs{
+	tokens, err := services.GetAllExplorerTokens(services.GetAllExplorerTokensArgs{
 		LastTimestamp: ts,
 		Limit:         limitInt,
 		Filter:        &sqlFilter,
 		CurrentPage:   currentPage,
 		NextPage:      nextPage,
+		SortOptions:   &sortOptions,
 	})
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
 	}
 
-	result.Activities = transactions
-	result.TotalCount = totalCount
-
+	result.Tokens = tokens
 	dtos.JsonResponse(c, http.StatusOK, result, "")
 }

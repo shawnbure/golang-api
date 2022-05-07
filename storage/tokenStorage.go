@@ -2,6 +2,7 @@ package storage
 
 import (
 	"fmt"
+	"math"
 
 	"gorm.io/gorm"
 
@@ -489,4 +490,79 @@ func GetTotalTokenCount() (int64, error) {
 	}
 
 	return total, nil
+}
+
+func GetAllTokens(lastTimestamp int64, currentPage, requestedPage, pageSize int, filter *entities.QueryFilter, sortOptions *entities.SortOptions) ([]entities.TokenExplorer, error) {
+	database, err := GetDBOrError()
+	if err != nil {
+		return nil, err
+	}
+
+	tokens := []entities.TokenExplorer{}
+
+	if sortOptions.Query == "" {
+		sortOptions.Query = "tokens.last_market_timestamp %s"
+		sortOptions.Values = []interface{}{"desc"}
+	}
+	query := ""
+	offset := 0
+
+	if lastTimestamp == 0 {
+		query = filter.Query
+	} else {
+		query = "tokens.last_market_timestamp<?"
+		if requestedPage < currentPage {
+			query = "tokens.last_market_timestamp>?"
+
+			if sortOptions.Values[0] == "asc" {
+				sortOptions.Values[0] = "desc"
+			} else {
+				sortOptions.Values[0] = "asc"
+			}
+		}
+
+		if requestedPage != currentPage {
+			offset = (int(math.Abs(float64(requestedPage-currentPage))) - 1) * pageSize
+		}
+
+		if filter.Query != "" {
+			query = fmt.Sprintf("(%s) and %s", filter.Query, query)
+		}
+		filter.Values = append(filter.Values, lastTimestamp)
+	}
+
+	order := fmt.Sprintf(sortOptions.Query, sortOptions.Values...)
+
+	selectQuery := `
+tokens.token_id as token_id, 
+tokens.status as token_status, 
+tokens.token_name as token_name, 
+tokens.image_link as token_image, 
+tokens.auction_start_time as token_auction_start_time,
+tokens.auction_deadline as token_auction_deadline,
+tokens.created_at as token_created_at,
+tokens.last_market_timestamp as token_last_market_timestamp,
+tokens.last_buy_price_nominal as token_last_buy_price_nominal,
+tokens.price_nominal as token_price_nominal,
+accounts.address as owner_address,
+accounts.name as owner_name,
+collections.name as collection_name,
+collections.token_id as collection_token_id,
+collections.name as collection_name
+`
+
+	txRead := database.Table("tokens").Select(selectQuery).
+		Joins("inner join collections on collections.id=tokens.collection_id ").
+		Joins("inner join accounts on accounts.id=tokens.owner_id ").
+		Order(order).
+		Where(query, filter.Values...).
+		Offset(offset).
+		Limit(pageSize).
+		Scan(&tokens)
+
+	if txRead.Error != nil {
+		return nil, txRead.Error
+	}
+
+	return tokens, nil
 }
