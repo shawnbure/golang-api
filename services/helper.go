@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math/big"
+	"math/rand"
 	"net/http"
 	"strings"
 	"time"
@@ -119,7 +120,13 @@ func ConvertSortToQuery(tableName string, sort string) (string, []interface{}, e
 	return stm, values, nil
 }
 
+var timeElapsed = 0
+
 func GetResponse(url string) ([]byte, error) {
+	for int(time.Now().UnixMilli())-timeElapsed < 3000 && rand.Int63n(10000) < 7000 {
+		time.Sleep(time.Millisecond * 100)
+	}
+	timeElapsed = int(time.Now().UnixMilli())
 	var client http.Client
 	client.Timeout = time.Second * 10
 	req, err := http.
