@@ -12,9 +12,10 @@ import (
 )
 
 var (
-	GetDepositView             = "getEgldDeposit"
-	DepositLocalCacheKeyFormat = "Deposit:%s"
-	DepositExpirePeriod        = 15 * time.Minute
+	GetDepositView                = "getEgldDeposit"
+	GetStakingRewardsViewFunction = "getStakingRewardBalance"
+	DepositLocalCacheKeyFormat    = "Deposit:%s"
+	DepositExpirePeriod           = 15 * time.Minute
 )
 
 func UpdateDeposit(args DepositUpdateArgs) error {
@@ -102,4 +103,23 @@ func DoGetDepositVmQuery(marketplaceAddress string, address string) (string, err
 	deposit := big.NewInt(0).SetBytes(result[0])
 	depositBytes := deposit.Bytes()
 	return hex.EncodeToString(depositBytes), nil
+}
+
+func GetStakingRewardsView(marketplaceAddress string, address string) (string, error) {
+	bi := interaction.GetBlockchainInteractor()
+
+	addressDecoded, err := data.NewAddressFromBech32String(address)
+	if err != nil {
+		return "", err
+	}
+
+	addressHex := hex.EncodeToString(addressDecoded.AddressBytes())
+	result, err := bi.DoVmQuery(marketplaceAddress, GetStakingRewardsViewFunction, []string{addressHex})
+	if err != nil || len(result) == 0 {
+		return "", nil
+	}
+
+	rewards := big.NewInt(0).SetBytes(result[0])
+	rewardsBytes := rewards.Bytes()
+	return hex.EncodeToString(rewardsBytes), nil
 }
