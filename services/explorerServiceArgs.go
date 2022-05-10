@@ -9,4 +9,6 @@ type GetAllExplorerTokensArgs struct {
 	NextPage      int
 	Filter        *entities.QueryFilter
 	SortOptions   *entities.SortOptions
+	IsVerified    bool
+	Attributes    [][]string
 }

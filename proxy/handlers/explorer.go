@@ -54,18 +54,22 @@ func (handler *explorerHandler) getExplorerTokensWithPagination(c *gin.Context) 
 	result := dtos.ExplorerTokenList{}
 
 	timeSt := c.Param("timestamp")
-	limit := c.Request.URL.Query().Get("limit")
-
 	currentPageStr := c.Param("currentPage")
 	nextPageStr := c.Param("nextPage")
 
+	isVerifiedStr := c.Request.URL.Query().Get("verified")
+	limit := c.Request.URL.Query().Get("limit")
 	filter := c.Request.URL.Query().Get("filter")
+	attrFilter := c.Request.URL.Query().Get("attrs")
+
 	querySQL, queryValues, _ := services.ConvertFilterToQuery("tokens", filter)
 	sqlFilter := entities.QueryFilter{Query: querySQL, Values: queryValues}
 
 	sortStr := c.Request.URL.Query().Get("sort")
 	sortSQL, sortValues, _ := services.ConvertSortToQuery("tokens", sortStr)
 	sortOptions := entities.SortOptions{Query: sortSQL, Values: sortValues}
+
+	attributes, _ := services.ConvertAttributeFilterToQuery(attrFilter)
 
 	var ts int64 = 0
 	var limitInt int = ExplorerPageSize
@@ -89,13 +93,20 @@ func (handler *explorerHandler) getExplorerTokensWithPagination(c *gin.Context) 
 		limitInt = ExplorerPageSize
 	}
 
-	tokens, err := services.GetAllExplorerTokens(services.GetAllExplorerTokensArgs{
+	isVerified, err := strconv.ParseBool(isVerifiedStr)
+	if err != nil {
+		isVerified = false
+	}
+
+	tokens, totalCount, minPrice, maxPrice, err := services.GetAllExplorerTokens(services.GetAllExplorerTokensArgs{
 		LastTimestamp: ts,
 		Limit:         limitInt,
 		Filter:        &sqlFilter,
 		CurrentPage:   currentPage,
 		NextPage:      nextPage,
 		SortOptions:   &sortOptions,
+		IsVerified:    isVerified,
+		Attributes:    attributes,
 	})
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
@@ -103,5 +114,9 @@ func (handler *explorerHandler) getExplorerTokensWithPagination(c *gin.Context) 
 	}
 
 	result.Tokens = tokens
+	result.TotalCount = totalCount
+	result.MinPrice = minPrice
+	result.MaxPrice = maxPrice
+
 	dtos.JsonResponse(c, http.StatusOK, result, "")
 }

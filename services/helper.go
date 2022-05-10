@@ -120,6 +120,31 @@ func ConvertSortToQuery(tableName string, sort string) (string, []interface{}, e
 	return stm, values, nil
 }
 
+func ConvertAttributeFilterToQuery(filter string) ([][]string, error) { //Field|(asc/desc);...
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Printf("recovered in %v", r)
+		}
+	}()
+
+	var values [][]string
+
+	if filter == "" {
+		return values, nil
+	}
+
+	clauses := strings.Split(filter, ";")
+	for _, c := range clauses {
+		params := strings.Split(c, "|")
+
+		field := params[0]
+		value := params[1]
+
+		values = append(values, []string{field, value})
+	}
+	return values, nil
+}
+
 var timeElapsed = 0
 
 func GetResponse(url string) ([]byte, error) {
@@ -158,6 +183,62 @@ func GetResponse(url string) ([]byte, error) {
 	}
 	return body, nil
 }
+
+// ConvertAttributeFilterToJsonQuery converts a querystring conversion attribute filter to a sql jsonb where clause
+func ConvertAttributeFilterToJsonQuery(tableName string, filter string) (string, []interface{}, error) { //Field|Value|Operator;AND;...
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Printf("recovered in %v", r)
+		}
+	}()
+	var stm string
+	var values []interface{}
+	if filter == "" {
+		return stm, values, nil
+	}
+	clauses := strings.Split(filter, ";")
+	for _, c := range clauses {
+		if c == "OR" || c == "AND" {
+			stm += " " + c + " "
+			continue
+		}
+		params := strings.Split(c, "|")
+		// We must have only 3 length of params. field|value|operator
+		if len(params) != 3 {
+			fmt.Printf("we have wrong params structure '%s' in '%s'", c, filter)
+			continue
+		}
+		field := params[0]
+		value := params[1]
+		operator := params[2]
+		prefix := tableName
+		subObjects := strings.Split(field, ".")
+
+		if len(subObjects) > 1 {
+			prefix = "\"" + subObjects[0] + "\""
+			field = strings.Join(subObjects[1:], ".")
+		}
+
+		var query string
+
+		if operator == "BETWEEN" {
+			ranges := strings.Split(value, "AND")
+			if len(ranges) != 2 {
+				err := errors.New("bad given between range")
+				return "", nil, err
+			}
+			query = prefix + "." + field + " BETWEEN " + "?" + " AND " + "?"
+			values = append(values, ranges[0])
+			values = append(values, ranges[1])
+		} else {
+			query = prefix + "." + field + " " + operator + " " + "?"
+			values = append(values, value)
+		}
+		stm += query
+	}
+	return stm, values, nil
+}
+
 func TurnIntoBigInt18Dec(num int64) *big.Int {
 	bigNum := big.NewInt(num)
 	bigNum = bigNum.Mul(big.NewInt(10).Exp(big.NewInt(10), big.NewInt(18), nil), bigNum)
