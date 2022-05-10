@@ -1,6 +1,8 @@
 package storage
 
 import (
+	"database/sql"
+	"errors"
 	"fmt"
 	"math"
 
@@ -492,7 +494,7 @@ func GetTotalTokenCount() (int64, error) {
 	return total, nil
 }
 
-func GetAllTokens(lastTimestamp int64, currentPage, requestedPage, pageSize int, filter *entities.QueryFilter, sortOptions *entities.SortOptions) ([]entities.TokenExplorer, error) {
+func GetAllTokens(lastTimestamp int64, currentPage, requestedPage, pageSize int, filter *entities.QueryFilter, sortOptions *entities.SortOptions, isVerified bool, attributes [][]string) ([]entities.TokenExplorer, error) {
 	database, err := GetDBOrError()
 	if err != nil {
 		return nil, err
@@ -531,6 +533,11 @@ func GetAllTokens(lastTimestamp int64, currentPage, requestedPage, pageSize int,
 		filter.Values = append(filter.Values, lastTimestamp)
 	}
 
+	if isVerified {
+		query += " and collections.is_verified=? "
+		filter.Values = append(filter.Values, true)
+	}
+
 	order := fmt.Sprintf(sortOptions.Query, sortOptions.Values...)
 
 	selectQuery := `
@@ -555,7 +562,13 @@ collections.name as collection_name
 		Joins("inner join collections on collections.id=tokens.collection_id ").
 		Joins("inner join accounts on accounts.id=tokens.owner_id ").
 		Order(order).
-		Where(query, filter.Values...).
+		Where(query, filter.Values...)
+
+	for _, item := range attributes {
+		txRead.Where(fmt.Sprintf(`attributes @> '[{"trait_type":"%s","value":"%s"}]'`, item[0], item[1]))
+	}
+
+	txRead.
 		Offset(offset).
 		Limit(pageSize).
 		Scan(&tokens)
@@ -565,4 +578,115 @@ collections.name as collection_name
 	}
 
 	return tokens, nil
+}
+
+func GetTokensCountWithCriteria(filter *entities.QueryFilter, isVerified bool, attributes [][]string) (int64, error) {
+	database, err := GetDBOrError()
+	if err != nil {
+		return 0, err
+	}
+
+	var total int64
+
+	if isVerified {
+		filter.Query += " and collections.is_verified=? "
+		filter.Values = append(filter.Values, true)
+	}
+
+	var txRead *gorm.DB
+	if isVerified {
+		txRead = database.Table("tokens").
+			Joins("inner join collections on tokens.collection_id=collections.id").
+			Where(filter.Query, filter.Values...)
+
+		for _, item := range attributes {
+			txRead.Where(fmt.Sprintf(`attributes @> '[{"trait_type":"%s","value":"%s"}]'`, item[0], item[1]))
+		}
+
+		txRead.Count(&total)
+	} else {
+		txRead = database.Table("tokens").
+			Where(filter.Query, filter.Values...)
+
+		for _, item := range attributes {
+			txRead.Where(fmt.Sprintf(`attributes @> '[{"trait_type":"%s","value":"%s"}]'`, item[0], item[1]))
+		}
+
+		txRead.Count(&total)
+	}
+
+	if txRead.Error != nil {
+		return 0, txRead.Error
+	}
+
+	return total, nil
+}
+
+func GetTokensPriceBoundary(filter *entities.QueryFilter, attributes [][]string) (float64, float64, error) {
+	database, err := GetDBOrError()
+	if err != nil {
+		return 0, 0, err
+	}
+
+	type tempStruct struct {
+		Min sql.NullFloat64 `json:"min"`
+		Max sql.NullFloat64 `json:"max"`
+	}
+
+	p := tempStruct{}
+
+	txRead := database.Table("tokens").
+		Select("min(tokens.price_nominal) as min, max(tokens.price_nominal) as max").
+		Where(filter.Query, filter.Values...)
+
+	for _, item := range attributes {
+		txRead.Where(fmt.Sprintf(`attributes @> '[{"trait_type":"%s","value":"%s"}]'`, item[0], item[1]))
+	}
+
+	txRead.Scan(&p)
+
+	if txRead.Error != nil {
+		return 0, 0, txRead.Error
+	}
+
+	if p.Min.Valid && p.Max.Valid {
+		return p.Min.Float64, p.Max.Float64, nil
+	}
+
+	return 0, 0, errors.New("Cannot get values from database")
+}
+
+func GetVerifiedTokensPriceBoundary(filter *entities.QueryFilter, attributes [][]string) (float64, float64, error) {
+	database, err := GetDBOrError()
+	if err != nil {
+		return 0, 0, err
+	}
+
+	type tempStruct struct {
+		Min sql.NullFloat64 `json:"min"`
+		Max sql.NullFloat64 `json:"max"`
+	}
+	p := tempStruct{}
+
+	txRead := database.Table("tokens").
+		Select("min(tokens.price_nominal) as min, max(tokens.price_nominal) as max").
+		Joins("inner join collections on collections.id=tokens.collection_id").
+		Where("collections.is_verified=?", true).
+		Where(filter.Query, filter.Values...)
+
+	for _, item := range attributes {
+		txRead.Where(fmt.Sprintf(`attributes @> '[{"trait_type":"%s","value":"%s"}]'`, item[0], item[1]))
+	}
+
+	txRead.Scan(&p)
+
+	if txRead.Error != nil {
+		return 0, 0, txRead.Error
+	}
+
+	if p.Min.Valid && p.Max.Valid {
+		return p.Min.Float64, p.Max.Float64, nil
+	}
+
+	return 0, 0, errors.New("Cannot get values from database")
 }
