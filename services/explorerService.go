@@ -5,10 +5,28 @@ import (
 	"github.com/ENFT-DAO/youbei-api/storage"
 )
 
-func GetAllExplorerTokens(args GetAllExplorerTokensArgs) ([]entities.TokenExplorer, error) {
-	tokens, err := storage.GetAllTokens(args.LastTimestamp, args.CurrentPage, args.NextPage, args.Limit, args.Filter, args.SortOptions)
+func GetAllExplorerTokens(args GetAllExplorerTokensArgs) ([]entities.TokenExplorer, int64, float64, float64, error) {
+	// Get tokens count by filter
+	total, err := storage.GetTokensCountWithCriteria(args.Filter, args.IsVerified, args.Attributes)
 	if err != nil {
-		return nil, err
+		return nil, 0, 0, 0, err
+	}
+
+	var min, max float64
+	var err1 error
+	if args.IsVerified {
+		min, max, err1 = storage.GetVerifiedTokensPriceBoundary(args.Filter, args.Attributes)
+	} else {
+		min, max, err1 = storage.GetTokensPriceBoundary(args.Filter, args.Attributes)
+	}
+
+	if err1 != nil {
+		return nil, 0, 0, 0, err1
+	}
+
+	tokens, err := storage.GetAllTokens(args.LastTimestamp, args.CurrentPage, args.NextPage, args.Limit, args.Filter, args.SortOptions, args.IsVerified, args.Attributes)
+	if err != nil {
+		return nil, 0, 0, 0, err
 	}
 
 	if args.NextPage < args.CurrentPage {
@@ -18,5 +36,5 @@ func GetAllExplorerTokens(args GetAllExplorerTokensArgs) ([]entities.TokenExplor
 		}
 	}
 
-	return tokens, nil
+	return tokens, total, min, max, nil
 }
