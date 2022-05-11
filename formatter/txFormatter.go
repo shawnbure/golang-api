@@ -30,9 +30,11 @@ var (
 	depositEndpointName                      = "deposit"
 	withdrawEndpointName                     = "withdraw"
 	withdrawCreatorRoyaltiesEndpointName     = "withdrawCreatorRoyalties"
+	redeemStakingRewards                     = "redeemStakingRewards"
 	issueNFTEndpointName                     = "issueNonFungible"
 	deployNFTTemplateEndpointName            = "deployNFTTemplateContract"
-	stakeNFTTemplateEndpointName             = "stakeNFTTemplateContract"
+	stakeNFTTemplateEndpointName             = "stakeAddressNFT"
+	unstakeNFTTemplateEndpointName           = "unstakeAddressNFT"
 	changeOwnerEndpointName                  = "changeOwner"
 	setSpecialRoleEndpointName               = "setSpecialRole"
 	withdrawFromMinterEndpointName           = "withdraw"
@@ -40,6 +42,8 @@ var (
 	updateSaleStartEndpointName              = "updateSaleStart"
 	updateBuyerWhiteListCheckEndpointName    = "updateBuyerWhitelistCheck"
 	getBuyerWhiteListCheckEndpointName       = "getBuyerWhiteListCheck"
+	stakeCollectionTemplateEndpointName      = "addStakableTokenIdentifier"
+	unstakeCollectionTemplateEndpointName    = "removeStakableTokenIdentifier"
 )
 
 const RoyaltiesBP = 100
@@ -345,6 +349,24 @@ func (f *TxFormatter) WithdrawCreatorRoyaltiesTxTemplate(senderAddr string) Tran
 	}
 }
 
+func (f *TxFormatter) RedeemStakingTxTemplate(senderAddr string) Transaction {
+	txData := redeemStakingRewards
+
+	return Transaction{
+		Nonce:     0,
+		Value:     "0",
+		RcvAddr:   f.config.StakingAddress,
+		SndAddr:   senderAddr,
+		GasPrice:  f.config.GasPrice,
+		GasLimit:  f.config.WithdrawGasLimit,
+		Data:      txData,
+		Signature: "",
+		ChainID:   f.config.ChainID,
+		Version:   1,
+		Options:   0,
+	}
+}
+
 func (f *TxFormatter) NewMintNftsTxTemplate(
 	walletAddress string,
 	contractAddress string,
@@ -469,8 +491,66 @@ func (f *TxFormatter) StakeNFTTemplateTxTemplate(walletAddress string, collectio
 
 	return Transaction{
 		Nonce:     0,
-		Value:     f.config.StakeNFTEGLDCost,
-		RcvAddr:   f.config.MarketplaceAddress,
+		Value:     "0",
+		RcvAddr:   f.config.StakingAddress,
+		SndAddr:   walletAddress,
+		GasPrice:  f.config.GasPrice,
+		GasLimit:  f.config.StakeNFTTemplateGasLimit,
+		Data:      txData,
+		Signature: "",
+		ChainID:   f.config.ChainID,
+		Version:   1,
+		Options:   0,
+	}
+}
+
+func (f *TxFormatter) UnstakeNFTTemplateTxTemplate(walletAddress string, collectionId string, nonce uint64) Transaction {
+	txData := unstakeNFTTemplateEndpointName +
+		"@" + hex.EncodeToString([]byte(collectionId)) +
+		"@" + hex.EncodeToString(big.NewInt(int64(nonce)).Bytes())
+
+	return Transaction{
+		Nonce:     0,
+		Value:     "0",
+		RcvAddr:   f.config.StakingAddress,
+		SndAddr:   walletAddress,
+		GasPrice:  f.config.GasPrice,
+		GasLimit:  f.config.StakeNFTTemplateGasLimit,
+		Data:      txData,
+		Signature: "",
+		ChainID:   f.config.ChainID,
+		Version:   1,
+		Options:   0,
+	}
+}
+
+func (f *TxFormatter) StakeCollectionTemplateTxTemplate(walletAddress string, collectionId string) Transaction {
+	txData := stakeCollectionTemplateEndpointName +
+		"@" + hex.EncodeToString([]byte(collectionId))
+
+	return Transaction{
+		Nonce:     0,
+		Value:     "0",
+		RcvAddr:   f.config.StakingAddress,
+		SndAddr:   walletAddress,
+		GasPrice:  f.config.GasPrice,
+		GasLimit:  f.config.StakeNFTTemplateGasLimit,
+		Data:      txData,
+		Signature: "",
+		ChainID:   f.config.ChainID,
+		Version:   1,
+		Options:   0,
+	}
+}
+
+func (f *TxFormatter) UnstakeCollectionTemplateTxTemplate(walletAddress string, collectionId string) Transaction {
+	txData := unstakeCollectionTemplateEndpointName +
+		"@" + hex.EncodeToString([]byte(collectionId))
+
+	return Transaction{
+		Nonce:     0,
+		Value:     "0",
+		RcvAddr:   f.config.StakingAddress,
 		SndAddr:   walletAddress,
 		GasPrice:  f.config.GasPrice,
 		GasLimit:  f.config.StakeNFTTemplateGasLimit,

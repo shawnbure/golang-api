@@ -471,6 +471,18 @@ func UpdateCollectionAdminSection(collection *entities.Collection, request *Upda
 	return nil
 }
 
+func UpdateCollectionStaking(collection *entities.Collection, IsStakeable bool) error {
+
+	collection.IsStakeable = IsStakeable
+	fmt.Println(IsStakeable)
+	err := storage.UpdateCollection(collection)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func UpdateCollection(collection *entities.Collection, request *UpdateCollectionRequest) error {
 	err := checkValidInputOnUpdate(request)
 	if err != nil {

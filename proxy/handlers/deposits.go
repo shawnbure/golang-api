@@ -12,6 +12,7 @@ import (
 const (
 	baseDepositsEndpoint      = "/deposits"
 	depositForAddressEndpoint = "/:userAddress"
+	stakingRewardsEndpoint    = "/stakingrewards/:userAddress"
 )
 
 type depositsHandler struct {
@@ -23,6 +24,7 @@ func NewDepositsHandler(groupHandler *groupHandler, cfg config.BlockchainConfig)
 
 	endpoints := []EndpointHandler{
 		{Method: http.MethodGet, Path: depositForAddressEndpoint, HandlerFunc: handler.getDepositForAddress},
+		{Method: http.MethodGet, Path: stakingRewardsEndpoint, HandlerFunc: handler.getStakingRewardsForAddress},
 	}
 
 	endpointGroupHandler := EndpointGroupHandler{
@@ -59,4 +61,31 @@ func (handler *depositsHandler) getDepositForAddress(c *gin.Context) {
 	}
 
 	dtos.JsonResponse(c, http.StatusOK, deposit, "")
+}
+
+// @Summary Gets the deposit (EGLD) located in the marketplace for an address.
+// @Description Retrieves deposit amount for an address.
+// @Tags deposits
+// @Accept json
+// @Produce json
+// @Param userAddress path string true "userAddress"
+// @Success 200 {object} float64
+// @Failure 400 {object} dtos.ApiResponse
+// @Router /deposits/{userAddress} [get]
+func (handler *depositsHandler) getStakingRewardsForAddress(c *gin.Context) {
+	userAddress := c.Param("userAddress")
+
+	_, err := services.GetOrAddAccountCacheInfo(userAddress)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	rewards, err := services.GetStakingRewardsView(handler.cfg.MarketplaceAddress, userAddress)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		return
+	}
+
+	dtos.JsonResponse(c, http.StatusOK, rewards, "")
 }

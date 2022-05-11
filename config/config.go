@@ -38,6 +38,7 @@ type BlockchainConfig struct {
 	MarketplaceAddress                   string
 	DeployerAddress                      string
 	SystemSCAddress                      string
+	StakingAddress                       string
 	ListNftGasLimit                      uint64
 	BuyNftGasLimit                       uint64
 	WithdrawNftGasLimit                  uint64
