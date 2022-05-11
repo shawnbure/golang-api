@@ -24,6 +24,8 @@ const (
 	withdrawNftFormatEndpoint                  = "/withdraw-nft/:userAddress/:tokenId/:nonce"
 	stakeNftFormatEndpoint                     = "/stake/:userAddress/:collectionId/:nonce"
 	unstakeNftFormatEndpoint                   = "/unstake/:userAddress/:collectionId/:nonce"
+	stakeCollectionFormatEndpoint              = "/stakecol/:userAddress/:collectionId"
+	unstakeCollectionFormatEndpoint            = "/unstakecol/:userAddress/:collectionId"
 	makeOfferFormatEndpoint                    = "/make-offer/:userAddress/:tokenId/:nonce/:amount/:expire"
 	acceptOfferFormatEndpoint                  = "/accept-offer/:userAddress/:tokenId/:nonce/:offerorAddress/:amount"
 	cancelOfferFormatEndpoint                  = "/cancel-offer/:userAddress/:tokenId/:nonce/:amount"
@@ -64,6 +66,8 @@ func NewTxTemplateHandler(groupHandler *groupHandler, blockchainConfig config.Bl
 		{Method: http.MethodGet, Path: withdrawNftFormatEndpoint, HandlerFunc: handler.getWithdrawNftTemplate},
 		{Method: http.MethodGet, Path: stakeNftFormatEndpoint, HandlerFunc: handler.getStakeNftTemplate},
 		{Method: http.MethodGet, Path: unstakeNftFormatEndpoint, HandlerFunc: handler.getUnstakeNftTemplate},
+		{Method: http.MethodGet, Path: stakeCollectionFormatEndpoint, HandlerFunc: handler.getStakeCollectionTemplate},
+		{Method: http.MethodGet, Path: unstakeCollectionFormatEndpoint, HandlerFunc: handler.getUnstakeCollectionTemplate},
 		{Method: http.MethodGet, Path: makeOfferFormatEndpoint, HandlerFunc: handler.getMakeOfferTemplate},
 		{Method: http.MethodGet, Path: acceptOfferFormatEndpoint, HandlerFunc: handler.getAcceptOfferTemplate},
 		{Method: http.MethodGet, Path: cancelOfferFormatEndpoint, HandlerFunc: handler.getCancelOfferTemplate},
@@ -806,6 +810,32 @@ func (handler *txTemplateHandler) getUnstakeNftTemplate(c *gin.Context) {
 		userAddress,
 		collectionId,
 		intNonce,
+	)
+
+	//TODO: Grab this response erd SC address
+	dtos.JsonResponse(c, http.StatusOK, template, "")
+}
+
+func (handler *txTemplateHandler) getStakeCollectionTemplate(c *gin.Context) {
+	userAddress := c.Param("userAddress")
+	collectionId := c.Param("collectionId")
+
+	template := handler.txFormatter.StakeCollectionTemplateTxTemplate(
+		userAddress,
+		collectionId,
+	)
+
+	//TODO: Grab this response erd SC address
+	dtos.JsonResponse(c, http.StatusOK, template, "")
+}
+
+func (handler *txTemplateHandler) getUnstakeCollectionTemplate(c *gin.Context) {
+	userAddress := c.Param("userAddress")
+	collectionId := c.Param("collectionId")
+
+	template := handler.txFormatter.UnstakeCollectionTemplateTxTemplate(
+		userAddress,
+		collectionId,
 	)
 
 	//TODO: Grab this response erd SC address
