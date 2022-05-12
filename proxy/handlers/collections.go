@@ -38,12 +38,15 @@ const (
 	collectionByTokenIDEndpoint           = "/tokenId/:tokenId"
 	collectionUpdateMintStartDateEndpoint = "/:collectionId/mintStartDate"
 	collectionUpdateAdminSectionEndpoint  = "/:collectionId/adminSection"
+	collectionUpdateStakingOn             = "/:collectionId/stake"
+	collectionUpdateStakingOff            = "/:collectionId/unstake"
 )
 
 type CollectionTokensQueryBody struct {
 	Filters      map[string]string `json:"filters"`
 	SortRules    map[string]string `json:"sortRules"`
 	OnSaleFlag   bool              `json:"onSaleFlag"`
+	OnStakeFlag  bool              `json:"onStakeFlag"`
 	QueryFilters string            `json:"queryFilters"`
 }
 
@@ -69,6 +72,8 @@ func NewCollectionsHandler(groupHandler *groupHandler, authCfg config.AuthConfig
 		{Method: http.MethodPost, Path: collectionCoverEndpoint, HandlerFunc: handler.setCollectionCover},
 		{Method: http.MethodPost, Path: collectionUpdateMintStartDateEndpoint, HandlerFunc: handler.updateMintStartDate},
 		{Method: http.MethodPost, Path: collectionUpdateAdminSectionEndpoint, HandlerFunc: handler.updateAdminSection},
+		{Method: http.MethodPost, Path: collectionUpdateStakingOn, HandlerFunc: handler.updateStakingOn},
+		{Method: http.MethodPost, Path: collectionUpdateStakingOff, HandlerFunc: handler.updateStakingOff},
 	}
 	endpointGroupHandler := EndpointGroupHandler{
 		Root:             baseCollectionsEndpoint,
@@ -350,14 +355,6 @@ func (handler *collectionsHandler) updateAdminSection(c *gin.Context) {
 		return
 	}
 
-	/*
-		creator, err := storage.GetAccountById(collection.CreatorID)
-		if err != nil {
-			dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
-			return
-		}
-	*/
-
 	isAdmin := c.GetBool(middleware.IsAdminKey)
 
 	if !isAdmin {
@@ -366,6 +363,70 @@ func (handler *collectionsHandler) updateAdminSection(c *gin.Context) {
 	}
 
 	err = services.UpdateCollectionAdminSection(collection, &request)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		return
+	}
+
+	dtos.JsonResponse(c, http.StatusOK, collection, "")
+}
+
+func (handler *collectionsHandler) updateStakingOn(c *gin.Context) {
+
+	tokenId := c.Param("collectionId")
+
+	cacheInfo, err := collstats.GetOrAddCollectionCacheInfo(tokenId)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	collection, err := storage.GetCollectionById(cacheInfo.CollectionId)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	isAdmin := c.GetBool(middleware.IsAdminKey)
+
+	if !isAdmin {
+		dtos.JsonResponse(c, http.StatusUnauthorized, nil, "")
+		return
+	}
+
+	err = services.UpdateCollectionStaking(collection, true)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		return
+	}
+
+	dtos.JsonResponse(c, http.StatusOK, collection, "")
+}
+
+func (handler *collectionsHandler) updateStakingOff(c *gin.Context) {
+
+	tokenId := c.Param("collectionId")
+
+	cacheInfo, err := collstats.GetOrAddCollectionCacheInfo(tokenId)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	collection, err := storage.GetCollectionById(cacheInfo.CollectionId)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	isAdmin := c.GetBool(middleware.IsAdminKey)
+
+	if !isAdmin {
+		dtos.JsonResponse(c, http.StatusUnauthorized, nil, "")
+		return
+	}
+
+	err = services.UpdateCollectionStaking(collection, false)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
@@ -495,6 +556,7 @@ func (handler *collectionsHandler) getTokens(c *gin.Context) {
 	sortRules := queries.SortRules
 	filters := queries.Filters
 	onSaleFlag := queries.OnSaleFlag
+	onStakeFlag := queries.OnStakeFlag
 	queryFilters := queries.QueryFilters
 
 	//fmt.Println("queryFilters: ", queryFilters)
@@ -536,7 +598,7 @@ func (handler *collectionsHandler) getTokens(c *gin.Context) {
 		return
 	}
 
-	tokens, err := storage.GetTokensByCollectionIdWithOffsetLimit(cacheInfo.CollectionId, int(offset), int(limit), filters, sortRules, onSaleFlag, sqlFilter)
+	tokens, err := storage.GetTokensByCollectionIdWithOffsetLimit(cacheInfo.CollectionId, int(offset), int(limit), filters, sortRules, onSaleFlag, onStakeFlag, sqlFilter)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return

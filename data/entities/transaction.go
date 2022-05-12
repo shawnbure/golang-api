@@ -19,6 +19,7 @@ const (
 	BuyToken      TxType = "Buy"
 	WithdrawToken TxType = "Withdraw"
 	AuctionToken  TxType = "Auction"
+	TxStake       TxType = "Stake"
 	None          TxType = "None"
 )
 
@@ -33,6 +34,7 @@ type TransactionDetail struct {
 	TokenImageLink string  `json:"tokenImageLink"`
 	FromAddress    string  `json:"fromAddress"`
 	ToAddress      string  `json:"toAddress"`
+	ToId           int64   `json:"to_id"`
 }
 
 type Activity struct {
@@ -46,6 +48,7 @@ type Activity struct {
 	TokenImageLink    string  `json:"tokenImageLink"`
 	FromAddress       string  `json:"fromAddress"`
 	ToAddress         string  `json:"toAddress"`
+	ToId              int64   `json:"to_id"`
 	CollectionId      string  `json:"collectionId"`
 	CollectionTokenId string  `json:"collectionTokenId"`
 	CollectionName    string  `json:"collectionName"`

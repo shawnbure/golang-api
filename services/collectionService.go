@@ -102,6 +102,7 @@ type UpdateCollectionMintStartDateRequest struct {
 type UpdateCollectionAdminSectionRequest struct {
 	IsVerified   bool `json:"isVerified"`
 	IsNoteworthy bool `json:"isNoteworthy"`
+	IsStakeable  bool `json:"isStakeable"`
 }
 
 type UpdateCollectionIsWhiteListedRequest struct {
@@ -454,6 +455,7 @@ func UpdateCollectionMintStartDate(collection *entities.Collection, request *Upd
 func UpdateCollectionAdminSection(collection *entities.Collection, request *UpdateCollectionAdminSectionRequest) error {
 
 	collection.IsVerified = request.IsVerified
+	collection.IsStakeable = request.IsStakeable
 
 	if request.IsNoteworthy {
 		collection.Type = 2
@@ -461,6 +463,18 @@ func UpdateCollectionAdminSection(collection *entities.Collection, request *Upda
 		collection.Type = 0
 	}
 
+	err := storage.UpdateCollection(collection)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func UpdateCollectionStaking(collection *entities.Collection, IsStakeable bool) error {
+
+	collection.IsStakeable = IsStakeable
+	fmt.Println(IsStakeable)
 	err := storage.UpdateCollection(collection)
 	if err != nil {
 		return err

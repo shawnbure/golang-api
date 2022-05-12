@@ -27,6 +27,9 @@ type Token struct {
 	LastMarketTimestamp uint64         `json:"lastMarketTimestamp"`
 	Owner               Account        `json:"owner"`
 	TxConfirmed         bool           `json:"txConfirmed"`
+	OnStake             bool           `json:"onStake" gorm:"default:false"`
+	StakeDate           uint64         `json:"stakeDate"`
+	StakeType           string         `json:"stakeType"`
 }
 
 type TokenBC struct {
@@ -67,4 +70,38 @@ type TokenBC struct {
 		  "scamInfo": {}
 		}
 	*/
+}
+
+// type TokenStatus string
+
+// const (
+// 	List    TokenStatus = "List"
+// 	Stake   TokenStatus = "Stake"
+// 	Auction TokenStatus = "Auction"
+// 	None    TokenStatus = "None"
+// )
+
+type StakeType string
+
+const (
+	UBI StakeType = "UBI"
+	DAO StakeType = "DAO"
+)
+
+type TokenExplorer struct {
+	TokenId                  string  `json:"tokenId"`
+	TokenStatus              string  `json:"tokenStatus"`
+	TokenName                string  `json:"tokenName"`
+	TokenImage               string  `json:"tokenImage"`
+	TokenAuctionStartTime    int64   `json:"tokenAuctionStartTime"`
+	TokenAuctionDeadline     int64   `json:"tokenAuctionDeadline"`
+	TokenCreatedAt           int64   `json:"tokenCreatedAt"`
+	TokenLastMarketTimestamp int64   `json:"tokenLastMarketTimestamp"`
+	TokenLastBuyPriceNominal float64 `json:"tokenLastBuyPriceNominal"`
+	TokenPriceNominal        float64 `json:"tokenPriceNominal"`
+	OwnerAddress             string  `json:"ownerAddress"`
+	OwnerName                string  `json:"ownerName"`
+	CollectionId             string  `json:"collectionId"`
+	CollectionTokenId        string  `json:"collectionTokenId"`
+	CollectionName           string  `json:"collectionName"`
 }

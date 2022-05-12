@@ -24,6 +24,7 @@ type Collection struct {
 	ProfileImageLink         string         `json:"profileImageLink"`
 	CoverImageLink           string         `json:"coverImageLink"`
 	IsVerified               bool           `json:"isVerified"`
+	IsStakeable              bool           `json:"isStakeable" gorm:"default:false"`
 	Type                     uint64         `json:"type"`
 	TokenBaseURI             string         `json:"tokenBaseURI"`
 	MaxSupply                uint64         `json:"maxSupply"`

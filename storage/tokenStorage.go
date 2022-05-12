@@ -1,7 +1,10 @@
 package storage
 
 import (
+	"database/sql"
+	"errors"
 	"fmt"
+	"math"
 
 	"gorm.io/gorm"
 
@@ -264,6 +267,7 @@ func GetTokensByCollectionIdWithOffsetLimit(
 	attributesFilters map[string]string,
 	sortRules map[string]string,
 	onSaleFlag bool,
+	onStakeFlag bool,
 	sqlFilter entities.QueryFilter,
 ) ([]entities.Token, error) {
 	var tokens []entities.Token
@@ -295,13 +299,19 @@ func GetTokensByCollectionIdWithOffsetLimit(
 			txRead.Where(sqlFilter.Query, sqlFilter.Values...)
 			fmt.Printf("txRead.Where: %v\n", txRead.Where.stri)
 		}
+
+		txRead.Preload("Owner").Find(&tokens, "collection_id = ? and on_sale = ? and on_stake = ?", collectionId, onSaleFlag, onStakeFlag)
 	*/
 
-	//fmt.Println("collection_id = ? and on_sale = ?", collectionId, onSaleFlag)
-
-	txRead.
-		Preload("Owner").
-		Find(&tokens, "collection_id = ? and on_sale = ?", collectionId, onSaleFlag)
+	if onSaleFlag {
+		txRead.Preload("Owner").Where("on_sale = True and (on_stake = False or on_stake is null)").Find(&tokens, "collection_id = ?", collectionId)
+	}
+	if onStakeFlag {
+		txRead.Preload("Owner").Where("(on_sale = False or on_sale is null) and on_stake = True").Find(&tokens, "collection_id = ?", collectionId)
+	}
+	if !onStakeFlag && !onSaleFlag {
+		txRead.Preload("Owner").Where("(on_sale = False or on_sale is null) and (on_stake = False or on_stake is null)").Find(&tokens, "collection_id = ?", collectionId)
+	}
 
 	if txRead.Error != nil {
 		return nil, txRead.Error
@@ -482,4 +492,201 @@ func GetTotalTokenCount() (int64, error) {
 	}
 
 	return total, nil
+}
+
+func GetAllTokens(lastTimestamp int64, currentPage, requestedPage, pageSize int, filter *entities.QueryFilter, sortOptions *entities.SortOptions, isVerified bool, attributes [][]string) ([]entities.TokenExplorer, error) {
+	database, err := GetDBOrError()
+	if err != nil {
+		return nil, err
+	}
+
+	tokens := []entities.TokenExplorer{}
+
+	if sortOptions.Query == "" {
+		sortOptions.Query = "tokens.last_market_timestamp %s"
+		sortOptions.Values = []interface{}{"desc"}
+	}
+	query := ""
+	offset := 0
+
+	if lastTimestamp == 0 {
+		query = filter.Query
+	} else {
+		query = "tokens.last_market_timestamp<?"
+		if requestedPage < currentPage {
+			query = "tokens.last_market_timestamp>?"
+
+			if sortOptions.Values[0] == "asc" {
+				sortOptions.Values[0] = "desc"
+			} else {
+				sortOptions.Values[0] = "asc"
+			}
+		}
+
+		if requestedPage != currentPage {
+			offset = (int(math.Abs(float64(requestedPage-currentPage))) - 1) * pageSize
+		}
+
+		if filter.Query != "" {
+			query = fmt.Sprintf("(%s) and %s", filter.Query, query)
+		}
+		filter.Values = append(filter.Values, lastTimestamp)
+	}
+
+	if isVerified {
+		query += " and collections.is_verified=? "
+		filter.Values = append(filter.Values, true)
+	}
+
+	order := fmt.Sprintf(sortOptions.Query, sortOptions.Values...)
+
+	selectQuery := `
+tokens.token_id as token_id, 
+tokens.status as token_status, 
+tokens.token_name as token_name, 
+tokens.image_link as token_image, 
+tokens.auction_start_time as token_auction_start_time,
+tokens.auction_deadline as token_auction_deadline,
+tokens.created_at as token_created_at,
+tokens.last_market_timestamp as token_last_market_timestamp,
+tokens.last_buy_price_nominal as token_last_buy_price_nominal,
+tokens.price_nominal as token_price_nominal,
+accounts.address as owner_address,
+accounts.name as owner_name,
+collections.name as collection_name,
+collections.token_id as collection_token_id,
+collections.name as collection_name
+`
+
+	txRead := database.Table("tokens").Select(selectQuery).
+		Joins("inner join collections on collections.id=tokens.collection_id ").
+		Joins("inner join accounts on accounts.id=tokens.owner_id ").
+		Order(order).
+		Where(query, filter.Values...)
+
+	for _, item := range attributes {
+		txRead.Where(fmt.Sprintf(`attributes @> '[{"trait_type":"%s","value":"%s"}]'`, item[0], item[1]))
+	}
+
+	txRead.
+		Offset(offset).
+		Limit(pageSize).
+		Scan(&tokens)
+
+	if txRead.Error != nil {
+		return nil, txRead.Error
+	}
+
+	return tokens, nil
+}
+
+func GetTokensCountWithCriteria(filter *entities.QueryFilter, isVerified bool, attributes [][]string) (int64, error) {
+	database, err := GetDBOrError()
+	if err != nil {
+		return 0, err
+	}
+
+	var total int64
+
+	if isVerified {
+		filter.Query += " and collections.is_verified=? "
+		filter.Values = append(filter.Values, true)
+	}
+
+	var txRead *gorm.DB
+	if isVerified {
+		txRead = database.Table("tokens").
+			Joins("inner join collections on tokens.collection_id=collections.id").
+			Where(filter.Query, filter.Values...)
+
+		for _, item := range attributes {
+			txRead.Where(fmt.Sprintf(`attributes @> '[{"trait_type":"%s","value":"%s"}]'`, item[0], item[1]))
+		}
+
+		txRead.Count(&total)
+	} else {
+		txRead = database.Table("tokens").
+			Where(filter.Query, filter.Values...)
+
+		for _, item := range attributes {
+			txRead.Where(fmt.Sprintf(`attributes @> '[{"trait_type":"%s","value":"%s"}]'`, item[0], item[1]))
+		}
+
+		txRead.Count(&total)
+	}
+
+	if txRead.Error != nil {
+		return 0, txRead.Error
+	}
+
+	return total, nil
+}
+
+func GetTokensPriceBoundary(filter *entities.QueryFilter, attributes [][]string) (float64, float64, error) {
+	database, err := GetDBOrError()
+	if err != nil {
+		return 0, 0, err
+	}
+
+	type tempStruct struct {
+		Min sql.NullFloat64 `json:"min"`
+		Max sql.NullFloat64 `json:"max"`
+	}
+
+	p := tempStruct{}
+
+	txRead := database.Table("tokens").
+		Select("min(tokens.price_nominal) as min, max(tokens.price_nominal) as max").
+		Where(filter.Query, filter.Values...)
+
+	for _, item := range attributes {
+		txRead.Where(fmt.Sprintf(`attributes @> '[{"trait_type":"%s","value":"%s"}]'`, item[0], item[1]))
+	}
+
+	txRead.Scan(&p)
+
+	if txRead.Error != nil {
+		return 0, 0, txRead.Error
+	}
+
+	if p.Min.Valid && p.Max.Valid {
+		return p.Min.Float64, p.Max.Float64, nil
+	}
+
+	return 0, 0, errors.New("Cannot get values from database")
+}
+
+func GetVerifiedTokensPriceBoundary(filter *entities.QueryFilter, attributes [][]string) (float64, float64, error) {
+	database, err := GetDBOrError()
+	if err != nil {
+		return 0, 0, err
+	}
+
+	type tempStruct struct {
+		Min sql.NullFloat64 `json:"min"`
+		Max sql.NullFloat64 `json:"max"`
+	}
+	p := tempStruct{}
+
+	txRead := database.Table("tokens").
+		Select("min(tokens.price_nominal) as min, max(tokens.price_nominal) as max").
+		Joins("inner join collections on collections.id=tokens.collection_id").
+		Where("collections.is_verified=?", true).
+		Where(filter.Query, filter.Values...)
+
+	for _, item := range attributes {
+		txRead.Where(fmt.Sprintf(`attributes @> '[{"trait_type":"%s","value":"%s"}]'`, item[0], item[1]))
+	}
+
+	txRead.Scan(&p)
+
+	if txRead.Error != nil {
+		return 0, 0, txRead.Error
+	}
+
+	if p.Min.Valid && p.Max.Valid {
+		return p.Min.Float64, p.Max.Float64, nil
+	}
+
+	return 0, 0, errors.New("Cannot get values from database")
 }

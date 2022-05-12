@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"math/big"
 	"strconv"
 	"testing"
 	"time"
@@ -155,7 +156,7 @@ func Test_GetTokensByCollectionIdWithOffsetLimit(t *testing.T) {
 
 	token1 := entities.Token{
 		CollectionID: coll.ID,
-		Status:       entities.List,
+		Status:       entities.ListToken,
 		OwnerID:      1,
 		Attributes:   datatypes.JSON(`{"hair": "red", "background": "dark"}`),
 	}
@@ -164,7 +165,7 @@ func Test_GetTokensByCollectionIdWithOffsetLimit(t *testing.T) {
 
 	token2 := entities.Token{
 		CollectionID: coll.ID,
-		Status:       entities.List,
+		Status:       entities.ListToken,
 		OwnerID:      1,
 		Attributes:   datatypes.JSON(`{"hair": "green", "background": "dark"}`),
 	}
@@ -203,12 +204,68 @@ func Test_GetTotalTokens(t *testing.T) {
 	})
 }
 
+func Test_GetAllTokens(t *testing.T) {
+	t.Run("Get tokens that is existed on the platform", func(t *testing.T) {
+		connectToTestDb()
+
+		lastTimeStamp := int64(0)
+		currentPage := 1
+		nextPage := 1
+		filter := entities.QueryFilter{}
+		sortOption := entities.SortOptions{}
+		howMuchRows := 2
+
+		tokens, err := GetAllTokens(lastTimeStamp, currentPage, nextPage, howMuchRows, &filter, &sortOption)
+		require.Nil(t, err)
+
+		require.Equal(t, len(tokens), int64(2), "Tokens list length is not correct")
+	})
+
+	t.Run("Get total counts tokens based on query for explorer page", func(t *testing.T) {
+		connectToTestDb()
+
+		filter := entities.QueryFilter{}
+
+		total, err := GetTokensCountWithCriteria(&filter)
+		require.Nil(t, err)
+
+		require.Equal(t, int64(3), total, "The total counts of tokens does not match")
+	})
+
+	t.Run("Get min and max of price in tokens table", func(t *testing.T) {
+		connectToTestDb()
+
+		min, max, err := GetTokensPriceBoundary()
+		require.Nil(t, err)
+
+		v, _ := new(big.Float).SetString("2000000000000000000000")
+		require.Equal(t, min, v, "The min value is not correct")
+
+		v, _ = new(big.Float).SetString("2000000000000000000000")
+		require.Equal(t, max, v, "The max value is not correct")
+	})
+
+	t.Run("Get min and max of price in tokens(verified=true) table", func(t *testing.T) {
+		connectToTestDb()
+
+		min, max, err := GetVerifiedTokensPriceBoundary()
+		require.Nil(t, err)
+
+		v, _ := new(big.Float).SetString("2000000000000000000000")
+		require.Equal(t, min, v, "The min value is not correct")
+
+		v, _ = new(big.Float).SetString("2000000000000000000000")
+		require.Equal(t, max, v, "The max value is not correct")
+	})
+
+}
+
 func defaultToken() entities.Token {
 	return entities.Token{
 		TokenID:      "my_token",
 		Nonce:        10,
 		PriceNominal: 1_000_000_000_000_000_000_000,
-		Status:       entities.List,
+		Status:       entities.ListToken,
 		MetadataLink: "link.com",
 		OwnerID:      1,
 		CollectionID: 1,

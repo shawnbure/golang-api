@@ -229,7 +229,7 @@ func (ci *CollectionIndexer) StartWorker() {
 					continue
 				}
 			}
-			collectionIndexer, err := storage.GetCollectionIndexer("erd14z39tvps8jvchaqn7mepjpmm6hydys2hv57dftky4cy9rd35cplqf09yc9")
+			collectionIndexer, err := storage.GetCollectionIndexer(colObj.ContractAddress)
 			if err != nil {
 				if err == gorm.ErrRecordNotFound { //indexer not found
 					collectionIndexer, err = storage.CreateCollectionStat(entities.CollectionIndexer{
@@ -329,7 +329,7 @@ func (ci *CollectionIndexer) StartWorker() {
 					var attrbs []byte
 					metadataJSON := make(map[string]interface{})
 
-					if token.Attributes != "" {
+					if token.Attributes == "" {
 						attrbs, err = services.GetResponse(url)
 						if err != nil {
 							logErr.Println(err.Error(), string(url), token.Collection, token.Attributes, token.Identifier, token.Media, token.Metadata)
@@ -382,7 +382,11 @@ func (ci *CollectionIndexer) StartWorker() {
 										if i != 0 {
 											prefix = ","
 										}
-										resultStr = resultStr + prefix + "{" + ap + "}"
+										traitKeyValue := strings.Split(ap, ":")
+										if len(traitKeyValue) < 2 {
+											continue
+										}
+										resultStr = resultStr + prefix + `{"` + traitKeyValue[0] + `":"` + traitKeyValue[1] + `"}`
 									}
 									resultStr = resultStr + "]"
 								}
@@ -461,12 +465,11 @@ func (ci *CollectionIndexer) StartWorker() {
 						CollectionID: colObj.ID,
 						Nonce:        token.Nonce,
 						NonceStr:     nonceStr,
-						MetadataLink: string(youbeiMeta) + "/" + nonce10Str + ".json",
+						MetadataLink: string(youbeiMeta),
 						ImageLink:    string(imageURI),
 						TokenName:    token.Name,
 						Attributes:   attributes,
 						OwnerID:      acc.ID,
-						OnSale:       false,
 						PriceString:  dbToken.PriceString,
 						PriceNominal: dbToken.PriceNominal,
 					})

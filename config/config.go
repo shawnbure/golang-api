@@ -38,6 +38,7 @@ type BlockchainConfig struct {
 	MarketplaceAddress                   string
 	DeployerAddress                      string
 	SystemSCAddress                      string
+	StakingAddress                       string
 	ListNftGasLimit                      uint64
 	BuyNftGasLimit                       uint64
 	WithdrawNftGasLimit                  uint64
@@ -54,10 +55,12 @@ type BlockchainConfig struct {
 	WithdrawCreatorRoyaltiesGasLimit     uint64
 	IssueNFTGasLimit                     uint64
 	DeployNFTTemplateGasLimit            uint64
+	StakeNFTTemplateGasLimit             uint64
 	ChangeOwnerGasLimit                  uint64
 	SetSpecialRolesGasLimit              uint64
 	IssueTokenEGLDCost                   string
 	DeployNFTTemplateEGLDCost            string
+	StakeNFTEGLDCost                     string
 	WithdrawFromMinterGasLimit           uint64
 	RequestWithdrawThroughMinterGasLimit uint64
 	UpdateSaleStartGasLimit              uint64
