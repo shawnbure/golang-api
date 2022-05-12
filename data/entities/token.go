@@ -96,7 +96,7 @@ type TokenExplorer struct {
 	TokenAuctionStartTime    int64   `json:"tokenAuctionStartTime"`
 	TokenAuctionDeadline     int64   `json:"tokenAuctionDeadline"`
 	TokenCreatedAt           int64   `json:"tokenCreatedAt"`
-	TokenLastMarketTimestamp int64   `json:"token_last_market_timestamp"`
+	TokenLastMarketTimestamp int64   `json:"tokenLastMarketTimestamp"`
 	TokenLastBuyPriceNominal float64 `json:"tokenLastBuyPriceNominal"`
 	TokenPriceNominal        float64 `json:"tokenPriceNominal"`
 	OwnerAddress             string  `json:"ownerAddress"`
