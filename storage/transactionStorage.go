@@ -592,11 +592,14 @@ func GetAllActivitiesWithPagination(lastTimestamp int64, currentPage, requestedP
 	order := "transactions.timestamp desc "
 	offset := 0
 	if lastTimestamp == 0 {
-		query = filter.Query
+		query = "collections.is_verified=?"
+		query = fmt.Sprintf("(%s) and %s", filter.Query, query)
+
+		filter.Values = append(filter.Values, true)
 	} else {
-		query = "transactions.timestamp<?"
+		query = "transactions.timestamp<? and collections.is_verified=?"
 		if requestedPage < currentPage {
-			query = "transactions.timestamp>?"
+			query = "transactions.timestamp>? and collections.is_verified=?"
 			order = "transactions.timestamp asc "
 		}
 
@@ -608,6 +611,7 @@ func GetAllActivitiesWithPagination(lastTimestamp int64, currentPage, requestedP
 			query = fmt.Sprintf("(%s) and %s", filter.Query, query)
 		}
 		filter.Values = append(filter.Values, lastTimestamp)
+		filter.Values = append(filter.Values, true)
 	}
 
 	txRead := database.Table("transactions").Select("transactions.type as tx_type, transactions.hash as tx_hash, transactions.id as tx_id, transactions.price_nominal as tx_price_nominal, transactions.timestamp as tx_timestamp, tokens.token_id as token_id, tokens.token_name as token_name, tokens.image_link as token_image_link, seller_account.address as from_address, transactions.buyer_id as to_id, collections.id as collection_id, collections.name as collection_name, collections.token_id as collection_token_id").
