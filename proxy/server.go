@@ -114,6 +114,8 @@ func NewWebServer(cfg *config.GeneralConfig) (*webServer, error) {
 	handlers.NewActivitiesHandler(groupHandler)
 	handlers.NewExplorerHandler(groupHandler)
 
+	handlers.NewDreamshipHandler(groupHandler)
+
 	//
 
 	groupHandler.RegisterEndpoints(router)
