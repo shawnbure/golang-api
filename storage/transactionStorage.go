@@ -474,8 +474,16 @@ func GetTransactionsCountWithCriteria(filter *entities.QueryFilter) (int64, erro
 
 	var total int64
 
+	query := "collections.is_verified=?"
+	if filter.Query != "" {
+		query = fmt.Sprintf("(%s) and %s", filter.Query, query)
+	}
+
+	filter.Values = append(filter.Values, true)
+
 	txRead := database.Table("transactions").
-		Where(filter.Query, filter.Values...).
+		Joins("inner join collections on collections.id=transactions.collection_id ").
+		Where(query, filter.Values...).
 		Count(&total)
 
 	if txRead.Error != nil {
@@ -593,7 +601,9 @@ func GetAllActivitiesWithPagination(lastTimestamp int64, currentPage, requestedP
 	offset := 0
 	if lastTimestamp == 0 {
 		query = "collections.is_verified=?"
-		query = fmt.Sprintf("(%s) and %s", filter.Query, query)
+		if filter.Query != "" {
+			query = fmt.Sprintf("(%s) and %s", filter.Query, query)
+		}
 
 		filter.Values = append(filter.Values, true)
 	} else {
