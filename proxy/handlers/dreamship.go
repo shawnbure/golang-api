@@ -10,8 +10,9 @@ import (
 
 const (
 	baseDreamshipUrl	=	"/print"
-	getAvailableItems	=	"/available_items"
-	checkShippingStatus	=	"/shipping_status/:countryCode/:stateCode"
+	availableItemsUrl	=	"/available_items"
+	itemsVariantsUrl	=	"/item_variants"
+	shippingStatusUrl	=	"/shipping_status/:countryCode/:stateCode"
 )
 
 type dreamshipHandler struct {
@@ -21,7 +22,8 @@ func NewDreamshipHandler(groupHandler *groupHandler) {
 	handler := &dreamshipHandler{}
 
 	endpoints := []EndpointHandler{
-		{Method: http.MethodGet, Path: checkShippingStatus, HandlerFunc: handler.get},
+		{Method: http.MethodGet, Path: shippingStatusUrl, HandlerFunc: handler.getShippingStatus},
+		{Method: http.MethodGet, Path: availableItemsUrl, HandlerFunc: handler.getAvailableItems},
 	}
 
 	endpointGroupHandler := EndpointGroupHandler {
@@ -33,7 +35,16 @@ func NewDreamshipHandler(groupHandler *groupHandler) {
 	groupHandler.AddEndpointGroupHandler(endpointGroupHandler)
 }
 
-func (d *dreamshipHandler) get(c *gin.Context) {
+func (d *dreamshipHandler) getAvailableItems(c *gin.Context) {
+	data, err := services.GetAvailableVariants()
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, "Cannot Fetch Data")
+		return
+	}
+	dtos.JsonResponse(c, http.StatusOK, data, "")
+}
+
+func (d *dreamshipHandler) getShippingStatus(c *gin.Context) {
 	countryCode := c.Param("countryCode")
 	stateCode := c.Param("stateCode")
 	data, err := services.GetShipmentMethodsAndCosts(countryCode, stateCode, 19)
