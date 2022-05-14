@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sync"
 
+	"go.uber.org/zap"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
@@ -52,57 +53,57 @@ func Connect(cfg config.DatabaseConfig) {
 func TryMigrate() error {
 	err := db.AutoMigrate(&entities.Account{})
 	if err != nil {
-		return err
+		zlog.Error("account migration", zap.Error(err))
 	}
 
 	err = db.AutoMigrate(&entities.Token{})
 	if err != nil {
-		return err
+		zlog.Error("Token migration", zap.Error(err))
 	}
 
 	err = db.AutoMigrate(&entities.Transaction{})
 	if err != nil {
-		return err
+		zlog.Error("Transaction migration", zap.Error(err))
 	}
 
 	err = db.AutoMigrate(&entities.Collection{})
 	if err != nil {
-		return err
+		zlog.Error("Collection migration", zap.Error(err))
 	}
 
 	err = db.AutoMigrate(&entities.Offer{})
 	if err != nil {
-		return err
+		zlog.Error("Offer migration", zap.Error(err))
 	}
 
 	err = db.AutoMigrate(&entities.Bid{})
 	if err != nil {
-		return err
+		zlog.Error("Bid migration", zap.Error(err))
 	}
 
 	err = db.AutoMigrate(&entities.Whitelist{})
 	if err != nil {
-		return err
+		zlog.Error("Whitelist migration", zap.Error(err))
 	}
 
 	err = db.AutoMigrate(&entities.SessionState{})
 	if err != nil {
-		return err
+		zlog.Error("SessionState migration", zap.Error(err))
 	}
 
 	err = db.AutoMigrate(&entities.MarketPlaceStat{})
 	if err != nil {
-		return err
+		zlog.Error("MarketPlaceStat migration", zap.Error(err))
 	}
 
 	err = db.AutoMigrate(&entities.DeployerStat{})
 	if err != nil {
-		return err
+		zlog.Error("DeployerStat migration", zap.Error(err))
 	}
 
 	err = db.AutoMigrate(&entities.CollectionIndexer{})
 	if err != nil {
-		return err
+		zlog.Error("CollectionIndexer migration", zap.Error(err))
 	}
 	return nil
 }

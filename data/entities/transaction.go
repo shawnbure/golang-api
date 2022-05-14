@@ -11,7 +11,7 @@ type Transaction struct {
 	Buyer        Account    `json:"buyer"`
 	BuyerID      uint64     `json:"buyerId"`
 	TokenID      uint64     `json:"tokenId"`
-	Token        Token      `json:"token"  `
+	Token        Token      `json:"token"`
 	CollectionID uint64     `json:"collectionId"`
 	Collection   Collection `json:"collection"`
 }
