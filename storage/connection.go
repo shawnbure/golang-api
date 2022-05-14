@@ -104,6 +104,11 @@ func TryMigrate() error {
 	if err != nil {
 		return err
 	}
+
+	err = db.AutoMigrate(&entities.AggregatedVolumePerHour{})
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

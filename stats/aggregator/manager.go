@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/ENFT-DAO/youbei-api/data/entities"
 	"github.com/ENFT-DAO/youbei-api/storage"
-	"log"
+	logger "github.com/ElrondNetwork/elrond-go-logger"
 	"strconv"
 	"sync"
 	"time"
@@ -25,10 +25,9 @@ type manager struct {
 var managerInstance *manager = nil
 var once sync.Once
 
-// Module init function
-func init() {
-	log.Println("Logger Manager Package Initialized...")
-}
+var (
+	logInstance = logger.GetOrCreate("aggregator-manager")
+)
 
 // Manager Constructor - It initializes the db configuration params
 func (m *manager) init() {
@@ -86,8 +85,8 @@ func (m *manager) getAggregatedVolumePerHour() {
 		oneHourBeforeTime := currentTime.Add(-1 * time.Hour)
 		oneHourBeforeTimeStr := fmt.Sprintf("%04d-%2d-%2d %2d:00:00", oneHourBeforeTime.Year(), oneHourBeforeTime.Month(), oneHourBeforeTime.Day(), oneHourBeforeTime.Hour())
 
-		intHourStr := fmt.Sprintf("%4d%2d%2d%2d", oneHourBeforeTime.Year(), oneHourBeforeTime.Month(), oneHourBeforeTime.Day(), oneHourBeforeTime.Hour())
-		intHour, _ := strconv.Atoi(intHourStr)
+		intHourStr := fmt.Sprintf("%4d%02d%02d%02d", oneHourBeforeTime.Year(), oneHourBeforeTime.Month(), oneHourBeforeTime.Day(), oneHourBeforeTime.Hour())
+		intHour, _ := strconv.ParseInt(intHourStr, 10, 64)
 
 		if index < MaxOverComputeThreshold {
 			buyVolume, err := storage.GetAggregatedTradedVolumeHourly(oneHourBeforeTimeStr, currentTimeStr, entities.BuyToken)
@@ -103,10 +102,49 @@ func (m *manager) getAggregatedVolumePerHour() {
 				break
 			}
 
-			// TODO: insert or update database
+			newRecord := entities.AggregatedVolumePerHour{
+				Hour:           intHour,
+				BuyVolume:      buyVolume,
+				ListVolume:     listVolume,
+				WithdrawVolume: withdrawVolume,
+			}
+			err2 := storage.AddOrUpdateAggregatedVolumePerHour(&newRecord)
+			if err2 != nil {
+				logInstance.Debug(fmt.Sprintf("cannot insert row for %d", intHour))
+				break
+			}
+
 			index += 1
 		} else {
-			// TODO: Check See Whether it exist in database -> If exist return from the function else add it to database (with watching the threshold)
+			_, err := storage.GetOneAggregatedVolumePerHour(intHour)
+			if err != nil {
+				// insert a new one
+				buyVolume, err := storage.GetAggregatedTradedVolumeHourly(oneHourBeforeTimeStr, currentTimeStr, entities.BuyToken)
+				if err != nil {
+					break
+				}
+				listVolume, err := storage.GetAggregatedTradedVolumeHourly(oneHourBeforeTimeStr, currentTimeStr, entities.ListToken)
+				if err != nil {
+					break
+				}
+				withdrawVolume, err := storage.GetAggregatedTradedVolumeHourly(oneHourBeforeTimeStr, currentTimeStr, entities.WithdrawToken)
+				if err != nil {
+					break
+				}
+
+				newRecord := entities.AggregatedVolumePerHour{
+					Hour:           intHour,
+					BuyVolume:      buyVolume,
+					ListVolume:     listVolume,
+					WithdrawVolume: withdrawVolume,
+				}
+				err2 := storage.AddOrUpdateAggregatedVolumePerHour(&newRecord)
+				if err2 != nil {
+					logInstance.Debug(fmt.Sprintf("cannot insert row for %d", intHour))
+				}
+			} else {
+				return
+			}
 		}
 		subtractIndex++
 	}

@@ -215,7 +215,7 @@ func Test_GetAllTokens(t *testing.T) {
 		sortOption := entities.SortOptions{}
 		howMuchRows := 2
 
-		tokens, err := GetAllTokens(lastTimeStamp, currentPage, nextPage, howMuchRows, &filter, &sortOption)
+		tokens, err := GetAllTokens(lastTimeStamp, currentPage, nextPage, howMuchRows, &filter, &sortOption, false, [][]string{})
 		require.Nil(t, err)
 
 		require.Equal(t, len(tokens), int64(2), "Tokens list length is not correct")
@@ -226,7 +226,7 @@ func Test_GetAllTokens(t *testing.T) {
 
 		filter := entities.QueryFilter{}
 
-		total, err := GetTokensCountWithCriteria(&filter)
+		total, err := GetTokensCountWithCriteria(&filter, false, [][]string{})
 		require.Nil(t, err)
 
 		require.Equal(t, int64(3), total, "The total counts of tokens does not match")
@@ -235,7 +235,8 @@ func Test_GetAllTokens(t *testing.T) {
 	t.Run("Get min and max of price in tokens table", func(t *testing.T) {
 		connectToTestDb()
 
-		min, max, err := GetTokensPriceBoundary()
+		filter := entities.QueryFilter{}
+		min, max, err := GetTokensPriceBoundary(&filter, [][]string{})
 		require.Nil(t, err)
 
 		v, _ := new(big.Float).SetString("2000000000000000000000")
@@ -248,7 +249,8 @@ func Test_GetAllTokens(t *testing.T) {
 	t.Run("Get min and max of price in tokens(verified=true) table", func(t *testing.T) {
 		connectToTestDb()
 
-		min, max, err := GetVerifiedTokensPriceBoundary()
+		filter := entities.QueryFilter{}
+		min, max, err := GetVerifiedTokensPriceBoundary(&filter, [][]string{})
 		require.Nil(t, err)
 
 		v, _ := new(big.Float).SetString("2000000000000000000000")

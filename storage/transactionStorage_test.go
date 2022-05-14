@@ -306,8 +306,9 @@ func Test_GetAllActivities(t *testing.T) {
 		lastTimestamp := int64(0)
 		howMuchRow := 3
 		filter := entities.QueryFilter{}
+		collectFilter := entities.QueryFilter{}
 
-		transactions, err := GetAllActivitiesWithPagination(lastTimestamp, 1, 1, howMuchRow, &filter)
+		transactions, err := GetAllActivitiesWithPagination(lastTimestamp, 1, 1, howMuchRow, &filter, &collectFilter)
 		require.Nil(t, err)
 
 		require.Equal(t, len(transactions), 3, "The returned transactions array length does not matched")
@@ -317,8 +318,9 @@ func Test_GetAllActivities(t *testing.T) {
 		lastTimestamp := int64(1586480400)
 		howMuchRow := 2
 		filter := entities.QueryFilter{}
+		collectFilter := entities.QueryFilter{}
 
-		transactions, err := GetAllActivitiesWithPagination(lastTimestamp, 1, 1, howMuchRow, &filter)
+		transactions, err := GetAllActivitiesWithPagination(lastTimestamp, 1, 1, howMuchRow, &filter, &collectFilter)
 		require.Nil(t, err)
 
 		require.Equal(t, len(transactions), 0, "The returned transactions array length does not matched")
@@ -332,7 +334,9 @@ func Test_GetAllActivities(t *testing.T) {
 			Values: []interface{}{"List", "Buy"},
 		}
 
-		transactions, err := GetAllActivitiesWithPagination(lastTimestamp, 0, 0, howMuchRow, &filter)
+		collectFilter := entities.QueryFilter{}
+
+		transactions, err := GetAllActivitiesWithPagination(lastTimestamp, 0, 0, howMuchRow, &filter, &collectFilter)
 		require.Nil(t, err)
 
 		require.Equal(t, len(transactions), 2, "The returned transactions array length does not matched")
