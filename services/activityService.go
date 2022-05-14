@@ -2,10 +2,11 @@ package services
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/ENFT-DAO/youbei-api/cache"
 	"github.com/ENFT-DAO/youbei-api/data/entities"
 	"github.com/ENFT-DAO/youbei-api/storage"
-	"time"
 )
 
 const (
@@ -14,12 +15,12 @@ const (
 )
 
 func GetAllActivities(args GetAllActivityArgs) ([]entities.Activity, int64, error) {
-	total, err := storage.GetTransactionsCountWithCriteria(args.Filter)
+	total, err := storage.GetTransactionsCountWithCriteria(args.CollectionFilter)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	transactions, err := storage.GetAllActivitiesWithPagination(args.LastTimestamp, args.CurrentPage, args.NextPage, args.Limit, args.Filter)
+	transactions, err := storage.GetAllActivitiesWithPagination(args.LastTimestamp, args.CurrentPage, args.NextPage, args.Limit, args.Filter, args.CollectionFilter)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -28,21 +29,19 @@ func GetAllActivities(args GetAllActivityArgs) ([]entities.Activity, int64, erro
 	localCacher := cache.GetLocalCacher()
 
 	for index, item := range transactions {
-		if item.TxType == string(entities.BuyToken) {
+		if string(item.Transaction.Type) == string(entities.BuyToken) {
 			// Get the buyer address from cache
-			address, err := localCacher.Get(fmt.Sprintf(AddressByIdKeyFormat, item.ToId))
+			// address, err := localCacher.Get(fmt.Sprintf(AddressByIdKeyFormat, item.ToId))
 			if err == nil {
-				item.ToAddress = address.(string)
 				transactions[index] = item
 			} else {
 				// Get address from database
-				acc, err := storage.GetAccountById(uint64(item.ToId))
+				acc, err := storage.GetAccountById(uint64(item.Transaction.BuyerID))
 				if err == nil {
-					item.ToAddress = acc.Address
 					transactions[index] = item
 
 					// set the cache
-					_ = localCacher.SetWithTTL(fmt.Sprintf(AddressByIdKeyFormat, item.ToId), acc.Address, AddressByIdExpirePeriod)
+					_ = localCacher.SetWithTTL(fmt.Sprintf(AddressByIdKeyFormat, item.Transaction.BuyerID), acc.Address, AddressByIdExpirePeriod)
 				}
 			}
 		}
