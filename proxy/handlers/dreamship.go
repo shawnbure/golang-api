@@ -36,7 +36,7 @@ func NewDreamshipHandler(groupHandler *groupHandler) {
 }
 
 func (d *dreamshipHandler) getAvailableItems(c *gin.Context) {
-	data, err := services.GetAvailableVariants()
+	data, err := services.GetAvailableVariantsHandler()
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusInternalServerError, nil, "Cannot Fetch Data")
 		return
@@ -47,7 +47,7 @@ func (d *dreamshipHandler) getAvailableItems(c *gin.Context) {
 func (d *dreamshipHandler) getShippingStatus(c *gin.Context) {
 	countryCode := c.Param("countryCode")
 	stateCode := c.Param("stateCode")
-	data, err := services.GetShipmentMethodsAndCosts(countryCode, stateCode, 19)
+	data, err := services.GetShipmentMethodsAndCostsHandler(countryCode, stateCode, 19)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusInternalServerError, nil, "can not fetch data")
 		return
