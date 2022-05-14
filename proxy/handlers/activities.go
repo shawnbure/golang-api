@@ -1,12 +1,13 @@
 package handlers
 
 import (
+	"net/http"
+	"strconv"
+
 	"github.com/ENFT-DAO/youbei-api/data/dtos"
 	"github.com/ENFT-DAO/youbei-api/data/entities"
 	"github.com/ENFT-DAO/youbei-api/services"
 	"github.com/gin-gonic/gin"
-	"net/http"
-	"strconv"
 )
 
 const (
@@ -60,8 +61,11 @@ func (handler *activityHandler) getActivityListWithPagination(c *gin.Context) {
 	nextPageStr := c.Param("nextPage")
 
 	filter := c.Request.URL.Query().Get("filter")
+	colFilter := c.Request.URL.Query().Get("collectionFilter")
 	querySQL, queryValues, _ := services.ConvertFilterToQuery("transactions", filter)
 	sqlFilter := entities.QueryFilter{Query: querySQL, Values: queryValues}
+	colQuerySQL, colQueryValues, _ := services.ConvertFilterToQuery("collections", colFilter)
+	collectionSqlFilter := entities.QueryFilter{Query: colQuerySQL, Values: colQueryValues}
 
 	var ts int64 = 0
 	var limitInt int = ActivityPageSize
@@ -86,11 +90,12 @@ func (handler *activityHandler) getActivityListWithPagination(c *gin.Context) {
 	}
 
 	transactions, totalCount, err := services.GetAllActivities(services.GetAllActivityArgs{
-		LastTimestamp: ts,
-		Limit:         limitInt,
-		Filter:        &sqlFilter,
-		CurrentPage:   currentPage,
-		NextPage:      nextPage,
+		LastTimestamp:    ts,
+		Limit:            limitInt,
+		Filter:           &sqlFilter,
+		CollectionFilter: &collectionSqlFilter,
+		CurrentPage:      currentPage,
+		NextPage:         nextPage,
 	})
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
