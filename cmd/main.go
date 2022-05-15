@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/ENFT-DAO/youbei-api/stats/aggregator"
 	"net/http"
 	"os"
 	"os/signal"
@@ -124,6 +125,12 @@ func startProxy(ctx *cli.Context) error {
 
 	server := api.Run()
 
+	// data warehouse engine
+	agg := aggregator.GetManager()
+	if agg != nil {
+		agg.Start()
+	}
+
 	waitForGracefulShutdown(server)
 	log.Debug("closing youbei-api proxy...")
 	if !check.IfNil(fileLogging) {
@@ -181,6 +188,12 @@ func waitForGracefulShutdown(server *http.Server) {
 	quit := make(chan os.Signal)
 	signal.Notify(quit, os.Interrupt, os.Kill)
 	<-quit
+
+	// showdown data warehouse
+	agg := aggregator.GetManager()
+	if agg != nil {
+		agg.Stop()
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), backgroundContextTimeout)
 	defer cancel()

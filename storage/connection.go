@@ -105,6 +105,11 @@ func TryMigrate() error {
 	if err != nil {
 		zlog.Error("CollectionIndexer migration", zap.Error(err))
 	}
+
+	err = db.AutoMigrate(&entities.AggregatedVolumePerHour{})
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

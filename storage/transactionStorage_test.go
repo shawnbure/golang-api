@@ -306,8 +306,9 @@ func Test_GetAllActivities(t *testing.T) {
 		lastTimestamp := int64(0)
 		howMuchRow := 3
 		filter := entities.QueryFilter{}
+		collectFilter := entities.QueryFilter{}
 
-		transactions, err := GetAllActivitiesWithPagination(lastTimestamp, 1, 1, howMuchRow, &filter)
+		transactions, err := GetAllActivitiesWithPagination(lastTimestamp, 1, 1, howMuchRow, &filter, &collectFilter)
 		require.Nil(t, err)
 
 		require.Equal(t, len(transactions), 3, "The returned transactions array length does not matched")
@@ -317,8 +318,9 @@ func Test_GetAllActivities(t *testing.T) {
 		lastTimestamp := int64(1586480400)
 		howMuchRow := 2
 		filter := entities.QueryFilter{}
+		collectFilter := entities.QueryFilter{}
 
-		transactions, err := GetAllActivitiesWithPagination(lastTimestamp, 1, 1, howMuchRow, &filter)
+		transactions, err := GetAllActivitiesWithPagination(lastTimestamp, 1, 1, howMuchRow, &filter, &collectFilter)
 		require.Nil(t, err)
 
 		require.Equal(t, len(transactions), 0, "The returned transactions array length does not matched")
@@ -332,7 +334,9 @@ func Test_GetAllActivities(t *testing.T) {
 			Values: []interface{}{"List", "Buy"},
 		}
 
-		transactions, err := GetAllActivitiesWithPagination(lastTimestamp, 0, 0, howMuchRow, &filter)
+		collectFilter := entities.QueryFilter{}
+
+		transactions, err := GetAllActivitiesWithPagination(lastTimestamp, 0, 0, howMuchRow, &filter, &collectFilter)
 		require.Nil(t, err)
 
 		require.Equal(t, len(transactions), 2, "The returned transactions array length does not matched")
@@ -438,6 +442,35 @@ func Test_DailyReportOfListingTransactions(t *testing.T) {
 	})
 }
 
+func Test_hourlyAggregatedTrades(t *testing.T) {
+	connectToTestDb()
+
+	//first clean all transactions
+	err := cleanTransactionTable()
+	require.Nil(t, err)
+
+	//insert some records
+	err = insertBulkTransactions2()
+	require.Nil(t, err)
+
+	t.Run("Hourly Traded Volume", func(t *testing.T) {
+		fromTime := "2020-04-23 20:00:00"
+		toTime := "2020-04-23 21:00:00"
+
+		result, err := GetAggregatedTradedVolumeHourly(fromTime, toTime, entities.BuyToken)
+		require.Nil(t, err)
+		require.Equal(t, result, float64(2_000_000_000_000_000_000_000), "Buy Volume don't match")
+
+		result, err = GetAggregatedTradedVolumeHourly(fromTime, toTime, entities.ListToken)
+		require.Nil(t, err)
+		require.Equal(t, result, float64(2_000_000_000_000_000_000_000), "List Volume don't match")
+
+		result, err = GetAggregatedTradedVolumeHourly(fromTime, toTime, entities.WithdrawToken)
+		require.Nil(t, err)
+		require.Equal(t, result, float64(1_000_000_000_000_000_000_000), "Withdraw Volume don't match")
+	})
+}
+
 func defaultTransaction() entities.Transaction {
 	return entities.Transaction{
 		Hash:         "hash",
@@ -504,6 +537,59 @@ func insertBulkTransactions() error {
 	transaction.Type = entities.ListToken
 	transaction.Hash = "my_unique_hash4"
 	transaction.Timestamp = uint64(time.Date(2020, 04, 10, 1, 0, 0, 0, time.UTC).Unix())
+	err = AddTransaction(&transaction)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func insertBulkTransactions2() error {
+	transaction := defaultTransaction()
+	transaction.Type = entities.BuyToken
+	transaction.Hash = "my_unique_hash1"
+	transaction.Timestamp = uint64(time.Date(2020, 04, 23, 20, 2, 0, 0, time.UTC).Unix())
+	err := AddTransaction(&transaction)
+	if err != nil {
+		return err
+	}
+
+	transaction = defaultTransaction()
+	transaction.Type = entities.BuyToken
+	transaction.Hash = "my_unique_hash5"
+	transaction.SellerID = 3
+	transaction.BuyerID = 1
+	transaction.Timestamp = uint64(time.Date(2020, 04, 23, 20, 0, 0, 0, time.UTC).Unix())
+	err = AddTransaction(&transaction)
+	if err != nil {
+		return err
+	}
+
+	transaction = defaultTransaction()
+	transaction.Type = entities.WithdrawToken
+	transaction.Hash = "my_unique_hash2"
+	transaction.Timestamp = uint64(time.Date(2020, 04, 23, 20, 40, 0, 0, time.UTC).Unix())
+	err = AddTransaction(&transaction)
+	if err != nil {
+		return err
+	}
+
+	transaction = defaultTransaction()
+	transaction.Type = entities.ListToken
+	transaction.Hash = "my_unique_hash3"
+	transaction.SellerID = 3
+	transaction.BuyerID = 1
+	transaction.Timestamp = uint64(time.Date(2020, 04, 23, 20, 59, 0, 0, time.UTC).Unix())
+	err = AddTransaction(&transaction)
+	if err != nil {
+		return err
+	}
+
+	transaction = defaultTransaction()
+	transaction.Type = entities.ListToken
+	transaction.Hash = "my_unique_hash4"
+	transaction.Timestamp = uint64(time.Date(2020, 04, 23, 20, 3, 0, 0, time.UTC).Unix())
 	err = AddTransaction(&transaction)
 	if err != nil {
 		return err
