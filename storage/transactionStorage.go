@@ -780,7 +780,7 @@ func GetAggregatedTradedVolumeHourly(fromDate, toDate string, _type entities.TxT
 	}
 
 	if !nullFloat.Valid {
-		return 0, errors.New("Error in reading data from database")
+		return 0, nil
 	}
 
 	return nullFloat.Float64, nil
