@@ -605,6 +605,7 @@ func GetAllActivitiesWithPagination(lastTimestamp int64,
 		// }
 
 		// collectionFilter.Values = append(collectionFilter.Values, true)
+		query = filter.Query
 	} else {
 		query = "transactions.timestamp<? "
 		// colQuery := ""
@@ -636,7 +637,7 @@ func GetAllActivitiesWithPagination(lastTimestamp int64,
 		Joins(`INNER JOIN collections  ON collections.id = transactions.collection_id`).
 		Preload("Collection").
 		Order(order).
-		Where(filter.Query, filter.Values...).
+		Where(query, filter.Values...).
 		Where(collectionFilter.Query, collectionFilter.Values...).
 		Offset(offset).
 		Limit(pageSize).
