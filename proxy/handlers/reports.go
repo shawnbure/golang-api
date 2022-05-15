@@ -19,8 +19,8 @@ const (
 	ReportSalesLastWeekTopSellerOverallEndpoint          = "/sales/weekly/top/overall"
 	ReportSalesLastWeekTopSellerTransactionsEndpoint     = "/sales/weekly/top/transactions"
 	ReportListingLast24HoursVerifiedTransactionsEndpoint = "/listing/daily/transactions/verified"
-	ReportBuyLastWeekTopSellerOverallEndpoint        = "/buy/weekly/top/overall"
-	ReportBuyLastWeekTopSellerTransactionsEndpoint   = "/buy/weekly/top/transactions"
+	ReportBuyLastWeekTopSellerOverallEndpoint            = "/buy/weekly/top/overall"
+	ReportBuyLastWeekTopSellerTransactionsEndpoint       = "/buy/weekly/top/transactions"
 )
 
 const (
@@ -237,7 +237,7 @@ func (handler *reportHandler) getLastWeekTopSellerOverall(c *gin.Context) {
 	}
 
 	currentTime := time.Now().UTC()
-	oneWeekBefore := currentTime.Add(-24 * 20 * time.Hour)
+	oneWeekBefore := currentTime.Add(-24 * 7 * time.Hour)
 
 	currentTimeStr := fmt.Sprintf("%4d-%02d-%02d 00:00:00", currentTime.Year(), currentTime.Month(), currentTime.Day())
 	oneWeekBeforeStr := fmt.Sprintf("%4d-%02d-%02d 00:00:00", oneWeekBefore.Year(), oneWeekBefore.Month(), oneWeekBefore.Day())
@@ -412,7 +412,7 @@ func (handler *reportHandler) getLastWeekTopBuyerOverall(c *gin.Context) {
 	}
 
 	currentTime := time.Now().UTC()
-	oneWeekBefore := currentTime.Add(-24 * 20 * time.Hour)
+	oneWeekBefore := currentTime.Add(-24 * 7 * time.Hour)
 
 	currentTimeStr := fmt.Sprintf("%4d-%02d-%02d 00:00:00", currentTime.Year(), currentTime.Month(), currentTime.Day())
 	oneWeekBeforeStr := fmt.Sprintf("%4d-%02d-%02d 00:00:00", oneWeekBefore.Year(), oneWeekBefore.Month(), oneWeekBefore.Day())
