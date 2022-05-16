@@ -7,15 +7,16 @@ import (
 )
 
 type GeneralConfig struct {
-	ConnectorApi ConnectorApiConfig
-	Blockchain   BlockchainConfig
-	Database     DatabaseConfig
-	Auth         AuthConfig
-	Cache        CacheConfig
-	Swagger      SwaggerConfig
-	Bot          BotConfig
-	Monitor      MonitorConfig
-	CDN          CDNConfig
+	ConnectorApi 		ConnectorApiConfig
+	Blockchain		  	BlockchainConfig
+	Database     		DatabaseConfig
+	Auth         		AuthConfig
+	Cache        		CacheConfig
+	Swagger      		SwaggerConfig
+	Bot          		BotConfig
+	Monitor      		MonitorConfig
+	CDN          		CDNConfig
+	ExternalCredential	ExternalCredentialConfig
 }
 
 type ConnectorApiConfig struct {
@@ -118,6 +119,10 @@ type CDNConfig struct {
 	Selector string
 	BaseUrl  string
 	RootDir  string
+}
+
+type ExternalCredentialConfig struct {
+	DreamshipAPIKey	string
 }
 
 func (d DatabaseConfig) Url() string {
