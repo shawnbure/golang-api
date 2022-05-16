@@ -98,3 +98,6 @@
     # Selector = "local"
     BaseUrl = "https://dev-api.youbei.io/image/"
     RootDir = "/home/amir/pics"
+
+[ExternalCredential]
+    DreamshipAPIKey = "APIGoesHere"

@@ -93,3 +93,6 @@
     Selector = "local"
     BaseUrl = "http://localhost:5000/image/"
     RootDir = "/home/root/pics"
+
+[ExternalCredential]
+    DreamshipAPIKey = "APIGoesHere"
