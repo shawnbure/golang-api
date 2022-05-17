@@ -37,8 +37,8 @@ func GetAllExplorerTokens(args GetAllExplorerTokensArgs) ([]entities.TokenExplor
 	}
 
 	for index, token := range tokens {
-		if token.TokenLastMarketTimestamp == 0 {
-			token.TokenLastMarketTimestamp = token.TokenCreatedAt
+		if token.Token.LastMarketTimestamp == 0 {
+			token.Token.LastMarketTimestamp = token.Token.CreatedAt
 			tokens[index] = token
 		}
 	}
