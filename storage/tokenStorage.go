@@ -540,29 +540,36 @@ func GetAllTokens(lastTimestamp int64, currentPage, requestedPage, pageSize int,
 
 	order := fmt.Sprintf(sortOptions.Query, sortOptions.Values...)
 
-	selectQuery := `
-tokens.token_id as token_id, 
-tokens.status as token_status, 
-tokens.token_name as token_name, 
-tokens.image_link as token_image, 
-tokens.auction_start_time as token_auction_start_time,
-tokens.auction_deadline as token_auction_deadline,
-tokens.created_at as token_created_at,
-tokens.last_market_timestamp as token_last_market_timestamp,
-tokens.last_buy_price_nominal as token_last_buy_price_nominal,
-tokens.price_nominal as token_price_nominal,
-accounts.address as owner_address,
-accounts.name as owner_name,
-collections.name as collection_name,
-collections.token_id as collection_token_id,
-collections.name as collection_name
-`
+	//	selectQuery := `
+	//tokens.token_id as token_id,
+	//tokens.status as token_status,
+	//tokens.token_name as token_name,
+	//tokens.image_link as token_image,
+	//tokens.auction_start_time as token_auction_start_time,
+	//tokens.auction_deadline as token_auction_deadline,
+	//tokens.created_at as token_created_at,
+	//tokens.last_market_timestamp as token_last_market_timestamp,
+	//tokens.last_buy_price_nominal as token_last_buy_price_nominal,
+	//tokens.price_nominal as token_price_nominal,
+	//accounts.address as owner_address,
+	//accounts.name as owner_name,
+	//collections.name as collection_name,
+	//collections.token_id as collection_token_id,
+	//collections.name as collection_name
+	//`
 
-	txRead := database.Table("tokens").Select(selectQuery).
+	txRead := database.Table("tokens").
+		Preload("Owner").
 		Joins("inner join collections on collections.id=tokens.collection_id ").
-		Joins("inner join accounts on accounts.id=tokens.owner_id ").
+		Preload("Collection").
 		Order(order).
 		Where(query, filter.Values...)
+
+	//txRead := database.Table("tokens").Select(selectQuery).
+	//	Joins("inner join collections on collections.id=tokens.collection_id ").
+	//	Joins("inner join accounts on accounts.id=tokens.owner_id ").
+	//	Order(order).
+	//	Where(query, filter.Values...)
 
 	for _, item := range attributes {
 		txRead.Where(fmt.Sprintf(`attributes @> '[{"trait_type":"%s","value":"%s"}]'`, item[0], item[1]))
@@ -571,7 +578,7 @@ collections.name as collection_name
 	txRead.
 		Offset(offset).
 		Limit(pageSize).
-		Scan(&tokens)
+		Find(&tokens)
 
 	if txRead.Error != nil {
 		return nil, txRead.Error
