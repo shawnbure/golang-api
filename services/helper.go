@@ -8,9 +8,11 @@ import (
 	"math/big"
 	"math/rand"
 	"net/http"
+	urlp "net/url"
 	"strings"
 	"time"
 
+	"github.com/ENFT-DAO/youbei-api/proxier"
 	"github.com/btcsuite/btcutil/bech32"
 	"github.com/rs/xid"
 )
@@ -121,6 +123,7 @@ func ConvertSortToQuery(tableName string, sort string) (string, []interface{}, e
 }
 
 func ConvertAttributeFilterToQuery(filter string) ([][]string, error) { //Field|(asc/desc);...
+
 	defer func() {
 		if r := recover(); r != nil {
 			fmt.Printf("recovered in %v", r)
@@ -152,8 +155,19 @@ func GetResponse(url string) ([]byte, error) {
 		time.Sleep(time.Millisecond * 100)
 	}
 	timeElapsed = int(time.Now().UnixMilli())
+	ipStr := proxier.GetCurrentIP()
 	var client http.Client
 	client.Timeout = time.Second * 10
+	if ipStr != "" {
+		proxyUrl, err := urlp.Parse(ipStr)
+		if err != nil {
+			return nil, err
+		}
+		transport := &http.Transport{
+			Proxy: http.ProxyURL(proxyUrl),
+		}
+		client.Transport = transport
+	}
 	req, err := http.
 		NewRequest("GET", url,
 			nil)
@@ -179,6 +193,9 @@ func GetResponse(url string) ([]byte, error) {
 	}
 	resp.Body.Close()
 	if resp.Status != "200 OK" {
+		if strings.Contains(resp.Status, "429") {
+			proxier.ChangeIP()
+		}
 		return nil, fmt.Errorf("status %s %s", resp.Status, req.URL.RawPath)
 	}
 	return body, nil
