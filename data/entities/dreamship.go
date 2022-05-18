@@ -15,6 +15,42 @@ type DreamshipItems struct {
 	ItemVariants		[]ItemVariants	`json:"item_variants"`
 }
 
+type DreamshipOrderItems struct {
+	ReferenceId		string		`json:"reference_id"`
+	TestOrder		bool		`json:"test_order"`
+	ShippingMethod	string		`json:"shipping_method"`
+	LineItems		[]LineItem	`json:"line_items"`
+	Address			Address	`json:"address"`
+}
+
+type Address struct {
+	FirstName				string	`json:"first_name"`
+	LastName				string	`json:"last_name"`
+	Company					string	`json:"company"`
+	Phone					string	`json:"phone"`
+	Street1					string	`json:"street1"`
+	Street2					string	`json:"street2"`			
+	City					string	`json:"city"`
+	State					string	`json:"state"`
+	Country					string	`json:"country"`
+	Zip						string	`json:"zip"`
+	ForceVerifiedDelivery	bool	`json:"force_verified_delivery"`
+}
+
+type LineItem struct {
+	PrintAreas		[]PrintArea	`json:"print_areas"`
+	ReferenceId		string		`json:"reference_id"`
+	Quantity		int64		`json:"quantity"`
+	ItemVariant		int64		`json:"item_variant"`
+}
+
+type PrintArea struct {
+	Key			string	`json:"key"`
+	Url			string	`json:"url"`
+	Position	string	`json:"position"`
+	Resize		string	`json:"resize"`
+}
+
 type ItemVariants struct {
 	Id				int64			`json:"id"`
 	Name			string			`json:"name"`
