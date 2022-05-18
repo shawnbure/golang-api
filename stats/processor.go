@@ -2,6 +2,7 @@ package stats
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/ENFT-DAO/youbei-api/data/dtos"
 	"github.com/ENFT-DAO/youbei-api/storage"
@@ -43,6 +44,11 @@ func ComputeStatisticsForCollection(collectionId uint64) (*dtos.CollectionStatis
 }
 
 func ComputeCollectionMetadata(collectionId uint64) (*CollectionMetadata, error) {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("Recovered in f", r)
+		}
+	}()
 	offset := 0
 	limit := 1_000
 	numItems := 0
