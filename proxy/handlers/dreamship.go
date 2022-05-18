@@ -6,6 +6,7 @@ import (
 
 	"github.com/ENFT-DAO/youbei-api/config"
 	"github.com/ENFT-DAO/youbei-api/data/dtos"
+	"github.com/ENFT-DAO/youbei-api/data/entities"
 	"github.com/ENFT-DAO/youbei-api/services"
 	"github.com/gin-gonic/gin"
 )
@@ -13,8 +14,8 @@ import (
 const (
 	baseDreamshipUrl	=	"/print"
 	availableItemsUrl	=	"/available_items"
-	itemsVariantsUrl	=	"/item_variants"
 	shippingStatusUrl	=	"/shipping_status/:us_or_inter/:item_id"
+	orderUrl			=	"/order"
 )
 
 type dreamshipHandler struct {
@@ -27,6 +28,7 @@ func NewDreamshipHandler(groupHandler *groupHandler, cfg config.ExternalCredenti
 	endpoints := []EndpointHandler{
 		{Method: http.MethodGet, Path: shippingStatusUrl, HandlerFunc: handler.getShippingStatus},
 		{Method: http.MethodGet, Path: availableItemsUrl, HandlerFunc: handler.getAvailableItems},
+		{Method: http.MethodPost, Path: orderUrl, HandlerFunc: handler.setOrder},
 	}
 
 	endpointGroupHandler := EndpointGroupHandler {
@@ -37,6 +39,19 @@ func NewDreamshipHandler(groupHandler *groupHandler, cfg config.ExternalCredenti
 
 	groupHandler.AddEndpointGroupHandler(endpointGroupHandler)
 }
+
+func (handler *dreamshipHandler) setOrder(c *gin.Context) {
+	var request = entities.DreamshipOrderItems{}
+	err := c.BindJSON(&request)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, "", err.Error())
+	}
+	
+	// Service Layer Should be added here.
+
+	dtos.JsonResponse(c, http.StatusCreated, request, "")
+}
+
 
 func (handler *dreamshipHandler) getAvailableItems(c *gin.Context) {
 	data, err := services.GetAvailableVariantsHandler(handler.cfg)
