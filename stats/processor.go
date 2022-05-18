@@ -54,7 +54,6 @@ func ComputeCollectionMetadata(collectionId uint64) (*CollectionMetadata, error)
 	numItems := 0
 	ownersIDs := make(map[uint64]bool)
 	var globalAttrs []dtos.AttributeStat
-
 	for {
 		tokens, innerErr := storage.GetListedTokensByCollectionIdWithOffsetLimit(collectionId, offset, limit)
 		if innerErr != nil {
@@ -78,18 +77,39 @@ func ComputeCollectionMetadata(collectionId uint64) (*CollectionMetadata, error)
 			for _, obj := range tokenAttrs {
 				attributeFound := false
 				for index, globalAttr := range globalAttrs {
-					if globalAttr.TraitType == obj["trait_type"] && globalAttr.Value == obj["value"] {
-						attributeFound = true
-						globalAttrs[index].Total++
+
+					if _, ok := obj["trait_type"]; !ok {
+						for k, v := range obj {
+							if globalAttr.TraitType == k && globalAttr.Value == v {
+								attributeFound = true
+								globalAttrs[index].Total++
+							}
+						}
+					} else {
+						if globalAttr.TraitType == obj["trait_type"] && globalAttr.Value == obj["value"] {
+							attributeFound = true
+							globalAttrs[index].Total++
+						}
 					}
 				}
 
 				if !attributeFound {
-					globalAttrs = append(globalAttrs, dtos.AttributeStat{
-						TraitType: obj["trait_type"].(string),
-						Value:     obj["value"],
-						Total:     1,
-					})
+					if _, ok := obj["trait_type"]; !ok {
+						for k, v := range obj {
+							globalAttrs = append(globalAttrs, dtos.AttributeStat{
+								TraitType: k,
+								Value:     v,
+								Total:     1,
+							})
+						}
+					} else {
+						globalAttrs = append(globalAttrs, dtos.AttributeStat{
+							TraitType: obj["trait_type"].(string),
+							Value:     obj["value"],
+							Total:     1,
+						})
+
+					}
 				}
 			}
 		}
