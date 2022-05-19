@@ -1,6 +1,7 @@
 package services
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -14,6 +15,7 @@ import (
 
 const (
 	itemsBaseUrl						=	"https://api.dreamship.com/v1/items"
+	orderUrl							= 	"https://api.dreamship.com/v1/orders/"
 	availableItemsUrl					=	"%s/%d/"
 	shippingUrl							=	"%s/%d/%s/"
 	usShippingUrl						=	"us-shipping-methods"
@@ -27,6 +29,37 @@ const (
 // 19 is item id of canvas in dreamship
 // To add more item, just add its id, can be find here https://api.dreamship.com/v1/items/
 var availableItem = [1]int64{19}
+
+func SetOrderHandler(cfg config.ExternalCredentialConfig, order entities.DreamshipOrderItems) (interface{}, error) {
+	// Call setOrder
+	response, err := SetOrder(cfg, order)
+	// manage error
+	// Save setOrder with ID to user.
+	return response, err
+}
+
+func SetOrder(cfg config.ExternalCredentialConfig, order entities.DreamshipOrderItems) (interface{}, error) {
+	orderJson, err := json.Marshal(order)
+	var response interface{}
+	if err != nil {
+		return response, err
+	}
+	req, _ := http.NewRequest("POST", orderUrl, bytes.NewBuffer(orderJson))
+	req.Header.Add("Accept", "application/json")
+	req.Header.Add("Content-Type", "application/json")
+	bearer := fmt.Sprintf("Bearer %s", cfg.DreamshipAPIKey)
+	req.Header.Add("Authorization", bearer)
+
+	res, _ := http.DefaultClient.Do(req)
+	defer res.Body.Close()
+	body, _ := ioutil.ReadAll(res.Body)
+
+	err = json.Unmarshal(body, &response)
+	if err != nil {
+		return response, nil
+	}
+	return response, nil
+}
 
 func GetAvailableVariantsHandler(cfg config.ExternalCredentialConfig) ([]entities.DreamshipItems, error) {
 	localCacher := cache.GetLocalCacher()
