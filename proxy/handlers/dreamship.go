@@ -48,8 +48,12 @@ func (handler *dreamshipHandler) setOrder(c *gin.Context) {
 	}
 	
 	// Service Layer Should be added here.
+	data, err := services.SetOrder(handler.cfg, request)
+	if err != nil{
+		dtos.JsonResponse(c, http.StatusBadRequest, "", err.Error())
+	}
 
-	dtos.JsonResponse(c, http.StatusCreated, request, "")
+	dtos.JsonResponse(c, http.StatusCreated, data, "")
 }
 
 
