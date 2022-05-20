@@ -297,7 +297,7 @@ func (ci *CollectionIndexer) StartWorker() {
 				for _, token := range tokens {
 				tokenLoop:
 					imageURI, attributeURI := services.GetTokenUris(token)
-					nonce10Str := strconv.FormatUint(token.Nonce, 10)
+					// nonce10Str := strconv.FormatUint(token.Nonce, 10)
 					nonceStr := strconv.FormatUint(token.Nonce, 16)
 					if len(nonceStr)%2 != 0 {
 						nonceStr = "0" + nonceStr
@@ -319,13 +319,13 @@ func (ci *CollectionIndexer) StartWorker() {
 							youbeiMeta = youbeiMeta[:len(youbeiMeta)-1]
 						}
 					}
-					var url string
-					if strings.Contains(youbeiMeta, ".json") {
-						url = youbeiMeta
+					var url string = youbeiMeta
+					// if strings.Contains(youbeiMeta, ".json") {
+					// 	url = youbeiMeta
 
-					} else {
-						url = fmt.Sprintf("%s/%s.json", youbeiMeta, nonce10Str)
-					}
+					// } else {
+					// 	url = fmt.Sprintf("%s/%s.json", youbeiMeta, nonce10Str)
+					// }
 					var attrbs []byte
 					metadataJSON := make(map[string]interface{})
 
