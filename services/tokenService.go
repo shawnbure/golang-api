@@ -202,7 +202,7 @@ func GetTokenUris(tokenData entities.TokenBC) (string, string) {
 		if err != nil {
 			continue
 		}
-		if strings.Contains(string(attributeUrlByte), ".json") {
+		if strings.Contains(string(attributeUrlByte), "json") {
 			attributeUrl = string(attributeUrlByte)
 		} else {
 			attributeUrl = string(attributeUrlByte)

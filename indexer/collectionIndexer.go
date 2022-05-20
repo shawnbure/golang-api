@@ -314,11 +314,11 @@ func (ci *CollectionIndexer) StartWorker() {
 					youbeiMeta = strings.Replace(youbeiMeta, "https://ipfs.io/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
 					youbeiMeta = strings.Replace(youbeiMeta, "https://ipfs.io/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
 					youbeiMeta = strings.Replace(youbeiMeta, "ipfs://", "https://media.elrond.com/nfts/asset/", 1)
-					if youbeiMeta != "" {
-						if string(youbeiMeta[len(youbeiMeta)-1]) == "/" {
-							youbeiMeta = youbeiMeta[:len(youbeiMeta)-1]
-						}
-					}
+					// if youbeiMeta != "" {
+					// 	if string(youbeiMeta[len(youbeiMeta)-1]) == "/" {
+					// 		youbeiMeta = youbeiMeta[:len(youbeiMeta)-1]
+					// 	}
+					// }
 					var url string = youbeiMeta
 					// if strings.Contains(youbeiMeta, ".json") {
 					// 	url = youbeiMeta
@@ -332,7 +332,7 @@ func (ci *CollectionIndexer) StartWorker() {
 					if token.Attributes == "" {
 						attrbs, err = services.GetResponse(url)
 						if err != nil {
-							logErr.Println(err.Error(), string(url), token.Collection, token.Attributes, token.Identifier, token.Media, token.Metadata)
+							logErr.Println(err.Error(), string(url), token.URIs, token.Collection, token.Attributes, token.Identifier, token.Media, token.Metadata)
 						}
 						err = json.Unmarshal(attrbs, &metadataJSON)
 						if err != nil {
