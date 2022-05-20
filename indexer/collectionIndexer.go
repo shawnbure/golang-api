@@ -229,7 +229,7 @@ func (ci *CollectionIndexer) StartWorker() {
 					continue
 				}
 			}
-			collectionIndexer, err := storage.GetCollectionIndexer(colObj.ContractAddress)
+			collectionIndexer, err := storage.GetCollectionIndexer("erd1qqqqqqqqqqqqqpgqmt3w6j7uvph85me4y5sczth2fc6n3fmjcfqsnr0cxn")
 			if err != nil {
 				if err == gorm.ErrRecordNotFound { //indexer not found
 					collectionIndexer, err = storage.CreateCollectionStat(entities.CollectionIndexer{
@@ -257,9 +257,9 @@ func (ci *CollectionIndexer) StartWorker() {
 			json.Unmarshal(countNftRes, &count)
 			lastIndex := 0
 			done := false
-			if count <= collectionIndexer.CountIndexed {
-				continue
-			}
+			// if count <= collectionIndexer.CountIndexed {
+			// 	continue
+			// }
 			for !done {
 				if lastIndex > 9999 {
 					done = true
