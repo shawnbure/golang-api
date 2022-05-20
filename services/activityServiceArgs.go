@@ -9,4 +9,5 @@ type GetAllActivityArgs struct {
 	NextPage         int
 	Filter           *entities.QueryFilter
 	CollectionFilter *entities.QueryFilter
+	IsVerified       bool
 }

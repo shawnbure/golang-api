@@ -60,6 +60,7 @@ func (handler *activityHandler) getActivityListWithPagination(c *gin.Context) {
 	currentPageStr := c.Param("currentPage")
 	nextPageStr := c.Param("nextPage")
 
+	isVerifiedStr := c.Request.URL.Query().Get("verified")
 	filter := c.Request.URL.Query().Get("filter")
 	colFilter := c.Request.URL.Query().Get("collectionFilter")
 	querySQL, queryValues, _ := services.ConvertFilterToQuery("transactions", filter)
@@ -89,6 +90,11 @@ func (handler *activityHandler) getActivityListWithPagination(c *gin.Context) {
 		limitInt = ActivityPageSize
 	}
 
+	isVerified, err := strconv.ParseBool(isVerifiedStr)
+	if err != nil {
+		isVerified = false
+	}
+
 	transactions, totalCount, err := services.GetAllActivities(services.GetAllActivityArgs{
 		LastTimestamp:    ts,
 		Limit:            limitInt,
@@ -96,6 +102,7 @@ func (handler *activityHandler) getActivityListWithPagination(c *gin.Context) {
 		CollectionFilter: &collectionSqlFilter,
 		CurrentPage:      currentPage,
 		NextPage:         nextPage,
+		IsVerified:       isVerified,
 	})
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
