@@ -38,6 +38,11 @@ func SetOrderHandler(cfg config.ExternalCredentialConfig, order entities.Dreamsh
 	return response, err
 }
 
+func DreamshipWebHook(order entities.ItemWebhook) error{
+	// Update user order
+	return nil
+}
+
 func SetOrder(cfg config.ExternalCredentialConfig, order entities.DreamshipOrderItems) (interface{}, error) {
 	orderJson, err := json.Marshal(order)
 	var response interface{}

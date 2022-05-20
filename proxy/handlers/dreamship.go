@@ -16,6 +16,7 @@ const (
 	availableItemsUrl	=	"/available_items"
 	shippingStatusUrl	=	"/shipping_status/:us_or_inter/:item_id"
 	orderUrl			=	"/order"
+	orderHookUrl		=	"/order/hook"
 )
 
 type dreamshipHandler struct {
@@ -29,6 +30,7 @@ func NewDreamshipHandler(groupHandler *groupHandler, cfg config.ExternalCredenti
 		{Method: http.MethodGet, Path: shippingStatusUrl, HandlerFunc: handler.getShippingStatus},
 		{Method: http.MethodGet, Path: availableItemsUrl, HandlerFunc: handler.getAvailableItems},
 		{Method: http.MethodPost, Path: orderUrl, HandlerFunc: handler.setOrder},
+		{Method: http.MethodPost, Path: orderHookUrl, HandlerFunc: handler.setOrderHook},
 	}
 
 	endpointGroupHandler := EndpointGroupHandler {
@@ -38,6 +40,15 @@ func NewDreamshipHandler(groupHandler *groupHandler, cfg config.ExternalCredenti
 	}
 
 	groupHandler.AddEndpointGroupHandler(endpointGroupHandler)
+}
+
+func (handler *dreamshipHandler) setOrderHook(c *gin.Context) {
+	var request = entities.ItemWebhook{}
+	err := c.BindJSON(&request)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, "", err.Error())
+	}
+	services.DreamshipWebHook(request)
 }
 
 func (handler *dreamshipHandler) setOrder(c *gin.Context) {

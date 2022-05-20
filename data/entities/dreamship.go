@@ -1,5 +1,34 @@
 package entities
 
+
+type UserOrders struct {
+	UserAddress	string					`json:"user_address"`
+	Order		[]DreamshipOrderItems	`json:"order" gorm:"foreignKey:ReferenceId"`
+	OrderStatus	string					`json:"order_status"`
+	Payment		Transaction				`json:"payment"`
+}
+
+type ItemWebhook struct {
+	Id			string	`json:"id"`
+    Status 		string	`json:"status"`
+    ReferenceId	string	`json:"reference_id"`
+    Cost		string	`json:"cost"`
+    TestOrder	bool	`json:"test_order"`
+}
+
+type Fulfillments struct{
+	Id			string	`json:"id"`
+	LineItems	[]LineItem	`json:"line_items"`
+	Trackings	[]Tracking	`json:"trackings"`
+}
+
+type Tracking struct {
+	TrackingNumber 	string	`json:"tracking_number"`
+	Carrier			string	`json:"carrier"`
+	CarrierUrl		string	`json:"carrier_url"`
+	Status			string	`json:"status"`
+}
+
 type DreamshipItems struct {
 	Id					int64			`json:"id"`
 	Name				string			`json:"name"`
