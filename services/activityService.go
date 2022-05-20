@@ -15,12 +15,12 @@ const (
 )
 
 func GetAllActivities(args GetAllActivityArgs) ([]entities.Activity, int64, error) {
-	total, err := storage.GetTransactionsCountWithCriteria(args.CollectionFilter, args.IsVerified)
+	total, err := storage.GetTransactionsCountWithCriteria(args.CollectionFilter, args.CollectionFilter)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	transactions, err := storage.GetAllActivitiesWithPagination(args.LastTimestamp, args.CurrentPage, args.NextPage, args.Limit, args.Filter, args.CollectionFilter, args.IsVerified)
+	transactions, err := storage.GetAllActivitiesWithPagination(args.LastTimestamp, args.CurrentPage, args.NextPage, args.Limit, args.Filter, args.CollectionFilter)
 	if err != nil {
 		return nil, 0, err
 	}

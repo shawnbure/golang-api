@@ -466,7 +466,7 @@ func GetTotalTradedVolumeByDate(dateStr string) (*big.Float, error) {
 	return big.NewFloat(0), errors.New("Null String ...")
 }
 
-func GetTransactionsCountWithCriteria(filter *entities.QueryFilter, isVerified bool) (int64, error) {
+func GetTransactionsCountWithCriteria(filter *entities.QueryFilter, collectionFilter *entities.QueryFilter) (int64, error) {
 	database, err := GetDBOrError()
 	if err != nil {
 		return 0, err
@@ -474,14 +474,15 @@ func GetTransactionsCountWithCriteria(filter *entities.QueryFilter, isVerified b
 
 	var total int64
 
-	if isVerified {
-		filter.Query += " and collections.is_verified=? "
-		filter.Values = append(filter.Values, true)
-	}
+	//if isVerified {
+	//	filter.Query += " and collections.is_verified=? "
+	//	filter.Values = append(filter.Values, true)
+	//}
 
 	txRead := database.Table("transactions").
 		Joins("inner join collections on collections.id=transactions.collection_id ").
 		Where(filter.Query, filter.Values...).
+		Where(collectionFilter.Query, collectionFilter.Values...).
 		Count(&total)
 
 	if txRead.Error != nil {
@@ -591,8 +592,7 @@ func GetAllActivitiesWithPagination(lastTimestamp int64,
 	requestedPage,
 	pageSize int,
 	filter *entities.QueryFilter,
-	collectionFilter *entities.QueryFilter,
-	isVerified bool) ([]entities.Activity, error) {
+	collectionFilter *entities.QueryFilter) ([]entities.Activity, error) {
 
 	database, err := GetDBOrError()
 	if err != nil {
@@ -633,11 +633,6 @@ func GetAllActivitiesWithPagination(lastTimestamp int64,
 		// }
 		filter.Values = append(filter.Values, lastTimestamp)
 		// collectionFilter.Values = append(collectionFilter.Values, true)
-	}
-
-	if isVerified {
-		query += " and collections.is_verified=? "
-		filter.Values = append(filter.Values, true)
 	}
 
 	txRead := database.Table(`transactions`).
