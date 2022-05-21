@@ -61,7 +61,7 @@ func GetManager() *manager {
 
 func (m *manager) Start() {
 	// Start hourly aggregator
-	//	go m.aggregatedVolumePerHourRunner()
+	go m.aggregatedVolumePerHourRunner()
 	go m.aggregatedVolumePerCollectionPerHourRunner()
 }
 
