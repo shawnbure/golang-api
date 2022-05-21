@@ -8,7 +8,7 @@ import (
 )
 
 func GetAllTransactionsWithPagination(args GetAllTransactionsWithPaginationArgs) ([]entities.TransactionDetail, int64, error) {
-	total, err := storage.GetTransactionsCountWithCriteria(args.Filter)
+	total, err := storage.GetTransactionsCountWithCriteria(args.Filter, &entities.QueryFilter{})
 	if err != nil {
 		return nil, 0, err
 	}

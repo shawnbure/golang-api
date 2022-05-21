@@ -47,9 +47,3 @@ type Activity struct {
 	Collection   Collection  `json:"collection"  `
 	CollectionID uint64      `json:"collectionId"`
 }
-
-//type AggregatedTradeVolume struct {
-//	BuyVolume      float64 `json:"buy_volume"`
-//	WithdrawVolume float64 `json:"withdraw_volume"`
-//	ListVolume     float64 `json:"list_volume"`
-//}
