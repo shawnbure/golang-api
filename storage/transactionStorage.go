@@ -466,7 +466,7 @@ func GetTotalTradedVolumeByDate(dateStr string) (*big.Float, error) {
 	return big.NewFloat(0), errors.New("Null String ...")
 }
 
-func GetTransactionsCountWithCriteria(filter *entities.QueryFilter) (int64, error) {
+func GetTransactionsCountWithCriteria(filter *entities.QueryFilter, collectionFilter *entities.QueryFilter) (int64, error) {
 	database, err := GetDBOrError()
 	if err != nil {
 		return 0, err
@@ -474,9 +474,15 @@ func GetTransactionsCountWithCriteria(filter *entities.QueryFilter) (int64, erro
 
 	var total int64
 
+	//if isVerified {
+	//	filter.Query += " and collections.is_verified=? "
+	//	filter.Values = append(filter.Values, true)
+	//}
+
 	txRead := database.Table("transactions").
 		Joins("inner join collections on collections.id=transactions.collection_id ").
 		Where(filter.Query, filter.Values...).
+		Where(collectionFilter.Query, collectionFilter.Values...).
 		Count(&total)
 
 	if txRead.Error != nil {
@@ -760,28 +766,4 @@ func GetLast24HoursVerifiedListingTransactions(fromDateTimestamp string, toDateT
 	}
 
 	return records, nil
-}
-
-func GetAggregatedTradedVolumeHourly(fromDate, toDate string, _type entities.TxType) (float64, error) {
-	database, err := GetDBOrError()
-	if err != nil {
-		return 0, err
-	}
-
-	nullFloat := sql.NullFloat64{}
-
-	txRead := database.Table("transactions").
-		Select("sum(transactions.price_nominal)").
-		Where("date_trunc('hour', to_timestamp(transactions.timestamp))>=? and date_trunc('hour', to_timestamp(transactions.timestamp))<? and transactions.type=?", fromDate, toDate, _type).
-		Scan(&nullFloat)
-
-	if txRead.Error != nil {
-		return 0, txRead.Error
-	}
-
-	if !nullFloat.Valid {
-		return 0, nil
-	}
-
-	return nullFloat.Float64, nil
 }

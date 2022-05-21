@@ -15,7 +15,7 @@ const (
 )
 
 func GetAllActivities(args GetAllActivityArgs) ([]entities.Activity, int64, error) {
-	total, err := storage.GetTransactionsCountWithCriteria(args.CollectionFilter)
+	total, err := storage.GetTransactionsCountWithCriteria(args.CollectionFilter, args.CollectionFilter)
 	if err != nil {
 		return nil, 0, err
 	}
