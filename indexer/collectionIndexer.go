@@ -229,7 +229,7 @@ func (ci *CollectionIndexer) StartWorker() {
 					continue
 				}
 			}
-			collectionIndexer, err := storage.GetCollectionIndexer("erd1qqqqqqqqqqqqqpgqmt3w6j7uvph85me4y5sczth2fc6n3fmjcfqsnr0cxn")
+			collectionIndexer, err := storage.GetCollectionIndexer(colObj.ContractAddress)
 			if err != nil {
 				if err == gorm.ErrRecordNotFound { //indexer not found
 					collectionIndexer, err = storage.CreateCollectionStat(entities.CollectionIndexer{
