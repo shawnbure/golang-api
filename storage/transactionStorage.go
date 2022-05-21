@@ -767,27 +767,3 @@ func GetLast24HoursVerifiedListingTransactions(fromDateTimestamp string, toDateT
 
 	return records, nil
 }
-
-func GetAggregatedTradedVolumeHourly(fromDate, toDate string, _type entities.TxType) (float64, error) {
-	database, err := GetDBOrError()
-	if err != nil {
-		return 0, err
-	}
-
-	nullFloat := sql.NullFloat64{}
-
-	txRead := database.Table("transactions").
-		Select("sum(transactions.price_nominal)").
-		Where("date_trunc('hour', to_timestamp(transactions.timestamp))>=? and date_trunc('hour', to_timestamp(transactions.timestamp))<? and transactions.type=?", fromDate, toDate, _type).
-		Scan(&nullFloat)
-
-	if txRead.Error != nil {
-		return 0, txRead.Error
-	}
-
-	if !nullFloat.Valid {
-		return 0, nil
-	}
-
-	return nullFloat.Float64, nil
-}
