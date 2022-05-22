@@ -151,7 +151,7 @@ func ConvertAttributeFilterToQuery(filter string) ([][]string, error) { //Field|
 var timeElapsed = 0
 
 func GetResponse(url string) ([]byte, error) {
-	for int(time.Now().UnixMilli())-timeElapsed < 3000 && rand.Int63n(10000) < 7000 {
+	for int(time.Now().UnixMilli())-timeElapsed < 1000 && rand.Int63n(10000) < 7000 {
 		time.Sleep(time.Millisecond * 100)
 	}
 	timeElapsed = int(time.Now().UnixMilli())
