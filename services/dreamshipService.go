@@ -6,16 +6,20 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/ENFT-DAO/youbei-api/cache"
 	"github.com/ENFT-DAO/youbei-api/config"
 	"github.com/ENFT-DAO/youbei-api/data/entities"
+	"github.com/ENFT-DAO/youbei-api/storage"
+	"github.com/hashicorp/go-uuid"
 )
 
 const (
 	itemsBaseUrl						=	"https://api.dreamship.com/v1/items"
 	orderUrl							= 	"https://api.dreamship.com/v1/orders/"
+	orderStatusUrl						=	"https://api.dreamship.com/v1/orders/?reference_id=%s"
 	availableItemsUrl					=	"%s/%d/"
 	shippingUrl							=	"%s/%d/%s/"
 	usShippingUrl						=	"us-shipping-methods"
@@ -23,6 +27,9 @@ const (
 
 	dreamshipItemsCacheKey				=	"dreamshipItems"
 	dreamshipShippingBaseCacheKey		=	"dreamshipShipping-%s"
+	dreamshipSubmitedOrderBaseCacheKey	=	"submitedOrder-%s"
+
+	dreamshipSubmitedOrderPeriod		=	48 * time.Hour
 	dreamshipItemsInfoExpirePeriod		=	6 * time.Hour
 )
 
@@ -30,22 +37,101 @@ const (
 // To add more item, just add its id, can be find here https://api.dreamship.com/v1/items/
 var availableItem = [1]int64{19}
 
-func SetOrderHandler(cfg config.ExternalCredentialConfig, order entities.DreamshipOrderItems) (interface{}, error) {
-	// Call setOrder
+func SetOrderHandler(cfg config.ExternalCredentialConfig, order entities.DreamshipOrderItems, walletAddress string) (entities.ItemWebhook, error) {
+	
 	response, err := SetOrder(cfg, order)
-	// manage error
-	// Save setOrder with ID to user.
+	if err != nil {
+		return entities.ItemWebhook{}, err
+	}
+	amount, err := strconv.ParseFloat(response.Cost, 64)
+	if err != nil {
+		return entities.ItemWebhook{}, err
+	}
+	userOrder := entities.UserOrders {
+		UserAddress: walletAddress,
+		OrderStatus: "Submited",
+		Amount: amount,
+		CheckoutStatus: "Pending",
+		PaymentMethod: "EGLD",
+		OrderId: response.ReferenceId,
+	}
+	err = storage.AddOrUpdateOrderItem(userOrder)
+	if err != nil {
+		fmt.Println("Error raised!")
+	}
 	return response, err
+}
+
+func GetSubmitedOrdersStatusHandler(referenceId string, cfg config.ExternalCredentialConfig) (entities.ItemWebhook, error){
+	localCacher := cache.GetLocalCacher()
+	dreamshipSubmitedOrderCacheKey := fmt.Sprintf(dreamshipSubmitedOrderBaseCacheKey, referenceId)
+
+	orderValue, errRead := localCacher.Get(dreamshipSubmitedOrderCacheKey)
+	if errRead == nil {
+		return orderValue.(entities.ItemWebhook), nil
+	}
+	order, err := GetSubmitedOrdersStatus(referenceId, cfg)
+	if err != nil {
+		return entities.ItemWebhook{}, err
+	}
+	errSet := localCacher.SetWithTTLSync(dreamshipSubmitedOrderCacheKey, order, dreamshipSubmitedOrderPeriod)
+	if errSet != nil {
+		log.Debug("could not cache result", errSet)
+	}
+	return order, nil
+}
+
+func GetSubmitedOrdersStatus(referenceId string, cfg config.ExternalCredentialConfig) (entities.ItemWebhook, error) {
+	
+	url := fmt.Sprintf(orderStatusUrl, referenceId)
+	req, _ := http.NewRequest("GET", url, nil)
+	req.Header.Add("Accept", "application/json")
+	bearer := fmt.Sprintf("Bearer %s", cfg.DreamshipAPIKey)
+	req.Header.Add("Authorization", bearer)
+
+	res, _ := http.DefaultClient.Do(req)
+	defer res.Body.Close()
+	body, _ := ioutil.ReadAll(res.Body)
+	var response entities.ItemWebhook
+	err := json.Unmarshal(body, &response)
+	if err != nil {
+		return response, nil
+	}
+	return response, nil
 }
 
 func DreamshipWebHook(order entities.ItemWebhook) error{
 	// Update user order
+	localCacher := cache.GetLocalCacher()
+	amount, err := strconv.ParseFloat(order.Cost, 64)
+	if err != nil {
+		return err
+	}
+	// Save reference id in postgresql
+	userOrder := entities.UserOrders {
+		Amount: amount,
+		OrderStatus: order.Status,
+		CheckoutStatus: "Successful",
+		PaymentMethod: "Crypto",
+		OrderId: order.ReferenceId,
+	}
+	storage.AddOrUpdateOrderItem(userOrder)
+
+	// cache order result in Redis
+	dreamshipSubmitedOrderCacheKey := fmt.Sprintf(dreamshipSubmitedOrderBaseCacheKey, order.ReferenceId)
+	localCacher.Del(dreamshipSubmitedOrderCacheKey)
+	errSet := localCacher.SetWithTTLSync(dreamshipSubmitedOrderCacheKey, order, dreamshipSubmitedOrderPeriod)
+	if errSet != nil {
+		log.Debug("could not cache result", errSet)
+	}
 	return nil
 }
 
-func SetOrder(cfg config.ExternalCredentialConfig, order entities.DreamshipOrderItems) (interface{}, error) {
+func SetOrder(cfg config.ExternalCredentialConfig, order entities.DreamshipOrderItems) (entities.ItemWebhook, error) {
+	referenceId, err := uuid.GenerateUUID()
+	order.ReferenceId = referenceId
 	orderJson, err := json.Marshal(order)
-	var response interface{}
+	var response entities.ItemWebhook
 	if err != nil {
 		return response, err
 	}
