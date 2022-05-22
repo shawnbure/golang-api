@@ -116,6 +116,10 @@ func TryMigrate() error {
 		return err
 	}
 
+	err = db.AutoMigrate(&entities.UserOrders{})
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
