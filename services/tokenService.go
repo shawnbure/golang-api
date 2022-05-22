@@ -198,6 +198,9 @@ func GetTokenBaseURIs(tokenData entities.TokenBC) (string, string) {
 func GetTokenUris(tokenData entities.TokenBC) (string, string) {
 	var attributeUrl string
 	for _, uri := range tokenData.URIs {
+		if attributeUrl != "" {
+			continue // pick first found json! or non png
+		}
 		attributeUrlByte, err := base64.StdEncoding.DecodeString(uri)
 		if err != nil {
 			continue
