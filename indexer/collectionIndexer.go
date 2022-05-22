@@ -257,9 +257,9 @@ func (ci *CollectionIndexer) StartWorker() {
 			json.Unmarshal(countNftRes, &count)
 			lastIndex := 0
 			done := false
-			// if count <= collectionIndexer.CountIndexed {
-			// 	continue
-			// }
+			if count <= collectionIndexer.CountIndexed {
+				continue
+			}
 			for !done {
 				if lastIndex > 9999 {
 					done = true
