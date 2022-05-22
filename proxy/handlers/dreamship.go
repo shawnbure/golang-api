@@ -6,15 +6,19 @@ import (
 
 	"github.com/ENFT-DAO/youbei-api/config"
 	"github.com/ENFT-DAO/youbei-api/data/dtos"
+	"github.com/ENFT-DAO/youbei-api/data/entities"
 	"github.com/ENFT-DAO/youbei-api/services"
+	"github.com/ENFT-DAO/youbei-api/storage"
 	"github.com/gin-gonic/gin"
 )
 
 const (
 	baseDreamshipUrl	=	"/print"
 	availableItemsUrl	=	"/available_items"
-	itemsVariantsUrl	=	"/item_variants"
 	shippingStatusUrl	=	"/shipping_status/:us_or_inter/:item_id"
+	orderUrl			=	"/order/:walletAddress"
+	orderByUserUrl		=	"/order/:walletAddress/:orderId"
+	orderHookUrl		=	"/order/hook"
 )
 
 type dreamshipHandler struct {
@@ -27,6 +31,10 @@ func NewDreamshipHandler(groupHandler *groupHandler, cfg config.ExternalCredenti
 	endpoints := []EndpointHandler{
 		{Method: http.MethodGet, Path: shippingStatusUrl, HandlerFunc: handler.getShippingStatus},
 		{Method: http.MethodGet, Path: availableItemsUrl, HandlerFunc: handler.getAvailableItems},
+		{Method: http.MethodPost, Path: orderUrl, HandlerFunc: handler.setOrder},
+		{Method: http.MethodPost, Path: orderHookUrl, HandlerFunc: handler.setOrderHook},
+		{Method: http.MethodGet, Path: orderUrl, HandlerFunc: handler.getOrdersList},
+		{Method: http.MethodGet, Path: orderByUserUrl, HandlerFunc: handler.GetOrderByUser},
 	}
 
 	endpointGroupHandler := EndpointGroupHandler {
@@ -37,6 +45,57 @@ func NewDreamshipHandler(groupHandler *groupHandler, cfg config.ExternalCredenti
 
 	groupHandler.AddEndpointGroupHandler(endpointGroupHandler)
 }
+
+func (handler *dreamshipHandler) setOrderHook(c *gin.Context) {
+	var request = entities.ItemWebhook{}
+	err := c.BindJSON(&request)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, "", err.Error())
+	}
+	err = services.DreamshipWebHook(request)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusInternalServerError, "", err.Error())
+	}
+}
+
+func (handler *dreamshipHandler) GetOrderByUser(c *gin.Context) {
+	walletAddress := c.Param("walletAddress")
+	orderId := c.Param("orderId")
+	data, err := storage.RetrievesAnOrders(walletAddress, orderId)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusInternalServerError, "", err.Error())
+		return
+	}
+	dtos.JsonResponse(c, http.StatusAccepted, data, "")
+}
+
+func (handler *dreamshipHandler) getOrdersList(c *gin.Context) {
+	walletAddress := c.Param("walletAddress")
+	data, err := storage.RetrievesUserOrders(walletAddress)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusInternalServerError, "", err.Error())
+		return
+	}
+	dtos.JsonResponse(c, http.StatusAccepted, data, "")
+}
+
+func (handler *dreamshipHandler) setOrder(c *gin.Context) {
+	var request = entities.DreamshipOrderItems{}
+	walletAddress := c.Param("walletAddress")
+	err := c.BindJSON(&request)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, "", err.Error())
+	}
+	
+	// Service Layer Should be added here.
+	data, err := services.SetOrderHandler(handler.cfg, request, walletAddress)
+	if err != nil{
+		dtos.JsonResponse(c, http.StatusBadRequest, "", err.Error())
+	}
+
+	dtos.JsonResponse(c, http.StatusCreated, data, "")
+}
+
 
 func (handler *dreamshipHandler) getAvailableItems(c *gin.Context) {
 	data, err := services.GetAvailableVariantsHandler(handler.cfg)
