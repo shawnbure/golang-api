@@ -346,7 +346,9 @@ func (ci *CollectionIndexer) StartWorker() {
 							attributesStr, err := base64.StdEncoding.DecodeString(token.Attributes)
 							if strings.Contains(string(attributesStr), ".json") {
 								if strings.Contains(string(attributesStr), "metadata:") {
-									attributesStr = []byte(strings.Replace(string(attributesStr), "metadata:", "", 1))
+									metaIdx := strings.Index(string(attributesStr), "metadata:")
+									attributesStr = attributesStr[metaIdx+9:]
+									// attributesStr = []byte(strings.Replace(string(attributesStr), "metadata:", "", 1))
 									url = (`https://media.elrond.com/nfts/asset/` + string(attributesStr))
 									attrbs, err := services.GetResponse(url)
 									if err != nil {
