@@ -14,6 +14,8 @@ type Transaction struct {
 	Token        Token      `json:"token"`
 	CollectionID uint64     `json:"collectionId"`
 	Collection   Collection `json:"collection"`
+	CreatedAt    int64      `json:"created_at" gorm:"autoCreateTime:milli"` // Use unix seconds as creating time
+	UpdatedAt    int64      `json:"updatedAt" gorm:"autoUpdateTime:milli"`  // Set to current unix seconds on updaing or if it is zero on creating
 }
 
 type TxType string

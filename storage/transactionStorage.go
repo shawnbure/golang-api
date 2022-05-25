@@ -605,12 +605,7 @@ func GetAllActivitiesWithPagination(lastTimestamp int64,
 	order := "transactions.timestamp desc "
 	offset := 0
 	if lastTimestamp == 0 {
-		// query = "collections.is_verified=?"
-		// if collectionFilter.Query != "" {
-		// 	query = fmt.Sprintf("(%s) and %s", collectionFilter.Query, query)
-		// }
 
-		// collectionFilter.Values = append(collectionFilter.Values, true)
 		query = filter.Query
 	} else {
 		query = "transactions.timestamp<? "
@@ -628,11 +623,7 @@ func GetAllActivitiesWithPagination(lastTimestamp int64,
 		if filter.Query != "" {
 			query = fmt.Sprintf("(%s) and %s", filter.Query, query)
 		}
-		// if collectionFilter.Query != "" {
-		// 	colQuery = fmt.Sprintf("(%s) and %s", collectionFilter.Query, colQuery)
-		// }
 		filter.Values = append(filter.Values, lastTimestamp)
-		// collectionFilter.Values = append(collectionFilter.Values, true)
 	}
 
 	txRead := database.Table(`transactions`).
