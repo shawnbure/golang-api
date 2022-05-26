@@ -23,5 +23,5 @@ type ReportTopVolumeByAddressTransactionsList struct {
 }
 
 type ReportLast24HoursVerifiedListingTransactionsList struct {
-	Transactions []entities.VerifiedListingTransaction `json:"transactions"`
+	Transactions []entities.Transaction `json:"transactions"`
 }
