@@ -1,5 +1,40 @@
 package entities
 
+
+type UserOrders struct {
+	UserAddress		string		`json:"user_address"`
+	OrderId			string		`json:"order_id"`
+	OrderStatus		string		`json:"order_status"`
+	Amount			float64		`json:"amount"`
+	CheckoutStatus	string		`json:"checkout_status"`
+	PaymentMethod	string		`json:"payment_method"`
+}
+
+type ItemWebhook struct {
+	Id				uint64	`json:"id"`
+    Status 			string	`json:"status"`
+	RejectedStatus	string	`json:"rejected_status"`
+    ReferenceId		string	`json:"reference_id"`
+    Cost			string	`json:"cost"`
+    TestOrder		bool	`json:"test_order"`
+	LineItem		[]LineItem		`json:"line_items"`
+	Address			Address			`json:"address"`
+	Fulfillments	[]Fulfillments	`json:"fulfillments"`
+}
+
+type Fulfillments struct{
+	Id			uint64		`json:"id"`
+	LineItems	[]LineItem	`json:"line_items"`
+	Trackings	[]Tracking	`json:"trackings"`
+}
+
+type Tracking struct {
+	TrackingNumber 	string	`json:"tracking_number"`
+	Carrier			string	`json:"carrier"`
+	CarrierUrl		string	`json:"carrier_url"`
+	Status			string	`json:"status"`
+}
+
 type DreamshipItems struct {
 	Id					int64			`json:"id"`
 	Name				string			`json:"name"`
@@ -13,6 +48,42 @@ type DreamshipItems struct {
 	PrintAreas			[]interface{}	`json:"print_areas"`
 	ShipZones			[]interface{}	`json:"ship_zones"`
 	ItemVariants		[]ItemVariants	`json:"item_variants"`
+}
+
+type DreamshipOrderItems struct {
+	ReferenceId		string		`json:"reference_id"`
+	TestOrder		bool		`json:"test_order"`
+	ShippingMethod	string		`json:"shipping_method"`
+	LineItems		[]LineItem	`json:"line_items"`
+	Address			Address	`json:"address"`
+}
+
+type Address struct {
+	FirstName				string	`json:"first_name"`
+	LastName				string	`json:"last_name"`
+	Company					string	`json:"company"`
+	Phone					string	`json:"phone"`
+	Street1					string	`json:"street1"`
+	Street2					string	`json:"street2"`			
+	City					string	`json:"city"`
+	State					string	`json:"state"`
+	Country					string	`json:"country"`
+	Zip						string	`json:"zip"`
+	ForceVerifiedDelivery	bool	`json:"force_verified_delivery"`
+}
+
+type LineItem struct {
+	PrintAreas		[]PrintArea	`json:"print_areas"`
+	ReferenceId		string		`json:"reference_id"`
+	Quantity		int64		`json:"quantity"`
+	ItemVariant		int64		`json:"item_variant"`
+}
+
+type PrintArea struct {
+	Key			string	`json:"key"`
+	Url			string	`json:"url"`
+	Position	string	`json:"position"`
+	Resize		string	`json:"resize"`
 }
 
 type ItemVariants struct {

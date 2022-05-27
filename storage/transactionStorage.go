@@ -758,3 +758,28 @@ func GetLast24HoursVerifiedListingTransactions(fromDateTimestamp string, toDateT
 
 	return records, nil
 }
+
+func GetListingTransactionsPerSpecificDay(date string, isVerified bool) ([]entities.Transaction, error) {
+	database, err := GetDBOrError()
+	if err != nil {
+		return nil, err
+	}
+
+	records := []entities.Transaction{}
+	txRead := database.Table("transactions").
+		Preload("Collection").Preload("Token").Preload("Seller").
+		Joins("inner join collections on collections.id=transactions.collection_id").
+		Where("date_trunc('day', to_timestamp(transactions.timestamp))=? and transactions.type=?", date, entities.ListToken)
+
+	if isVerified {
+		txRead.Where("collections.is_verified=?", isVerified)
+	}
+
+	txRead.Find(&records)
+
+	if txRead.Error != nil {
+		return nil, txRead.Error
+	}
+
+	return records, nil
+}

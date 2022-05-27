@@ -424,12 +424,12 @@ func Test_DailyReportOfListingTransactions(t *testing.T) {
 	connectToTestDb()
 
 	//first clean all transactions
-	err := cleanTransactionTable()
-	require.Nil(t, err)
-
-	//insert some records
-	err = insertBulkTransactions()
-	require.Nil(t, err)
+	//err := cleanTransactionTable()
+	//require.Nil(t, err)
+	//
+	////insert some records
+	//err = insertBulkTransactions()
+	//require.Nil(t, err)
 
 	t.Run("Daily Report of Verified Transactions of Type=List", func(t *testing.T) {
 		fromTime := "2020-04-23 12:00:00"
@@ -439,6 +439,15 @@ func Test_DailyReportOfListingTransactions(t *testing.T) {
 		require.Nil(t, err)
 
 		require.Equal(t, len(records), 1, "The returned result is empty")
+	})
+
+	t.Run("Daily Report of Verified Transaction 2", func(t *testing.T) {
+		date := "2020-04-23"
+
+		records, err := GetListingTransactionsPerSpecificDay(date, false)
+
+		require.Nil(t, err)
+		require.Equal(t, len(records), 2, "The returned result is empty")
 	})
 }
 
