@@ -19,6 +19,7 @@ const (
 	ReportSalesLastWeekTopSellerOverallEndpoint          = "/sales/weekly/top/overall"
 	ReportSalesLastWeekTopSellerTransactionsEndpoint     = "/sales/weekly/top/transactions"
 	ReportListingLast24HoursVerifiedTransactionsEndpoint = "/listing/daily/transactions/verified"
+	ReportListingLast24HoursAllTransactionsEndpoint      = "/listing/daily/transactions/all"
 	ReportBuyLastWeekTopSellerOverallEndpoint            = "/buy/weekly/top/overall"
 	ReportBuyLastWeekTopSellerTransactionsEndpoint       = "/buy/weekly/top/transactions"
 )
@@ -41,6 +42,7 @@ func NewReportHandler(groupHandler *groupHandler) {
 		{Method: http.MethodGet, Path: ReportBuyLastWeekTopSellerOverallEndpoint, HandlerFunc: handler.getLastWeekTopBuyerOverall},
 		{Method: http.MethodGet, Path: ReportBuyLastWeekTopSellerTransactionsEndpoint, HandlerFunc: handler.getLastWeekTopBuyerTransactions},
 		{Method: http.MethodGet, Path: ReportListingLast24HoursVerifiedTransactionsEndpoint, HandlerFunc: handler.getLast24HoursVerifiedListingTransactions},
+		{Method: http.MethodGet, Path: ReportListingLast24HoursAllTransactionsEndpoint, HandlerFunc: handler.getLast24HoursListingTransactions},
 	}
 
 	endpointGroupHandler := EndpointGroupHandler{
@@ -589,10 +591,10 @@ func (handler *reportHandler) getLast24HoursVerifiedListingTransactions(c *gin.C
 	currentTime := time.Now().UTC()
 	oneDayBefore := currentTime.Add(-24 * time.Hour)
 
-	currentTimeStr := fmt.Sprintf("%4d-%02d-%02d %02d:00:00", currentTime.Year(), currentTime.Month(), currentTime.Day(), currentTime.Hour())
-	oneDayBeforeStr := fmt.Sprintf("%4d-%02d-%02d %02d:00:00", oneDayBefore.Year(), oneDayBefore.Month(), oneDayBefore.Day(), oneDayBefore.Hour())
+	//currentTimeStr := fmt.Sprintf("%4d-%02d-%02d %02d:00:00", currentTime.Year(), currentTime.Month(), currentTime.Day(), currentTime.Hour())
+	oneDayBeforeStr := fmt.Sprintf("%4d-%02d-%02d", oneDayBefore.Year(), oneDayBefore.Month(), oneDayBefore.Day())
 
-	transactions, err := storage.GetLast24HoursVerifiedListingTransactions(oneDayBeforeStr, currentTimeStr)
+	transactions, err := storage.GetListingTransactionsPerSpecificDay(oneDayBeforeStr, true)
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
 		return
@@ -620,17 +622,107 @@ func (handler *reportHandler) getLast24HoursVerifiedListingTransactions(c *gin.C
 		})
 		for _, item := range transactions {
 			d := []string{
-				fmt.Sprintf("%d", item.TxId),
-				item.TxHash,
-				item.TxType,
-				fmt.Sprintf("%f", item.TxPriceNominal),
-				time.Unix(item.TxTimestamp, 0).String(),
-				item.Address,
-				item.TokenId,
-				item.TokenName,
-				item.TokenImageLink,
-				item.CollectionTokenId,
-				item.CollectionName,
+				fmt.Sprintf("%d", item.ID),
+				item.Hash,
+				string(item.Type),
+				fmt.Sprintf("%f", item.PriceNominal),
+				time.Unix(int64(item.Timestamp), 0).String(),
+				item.Seller.Address,
+				item.Token.TokenID,
+				item.Token.TokenName,
+				item.Token.ImageLink,
+				item.Collection.TokenID,
+				item.Collection.Name,
+			}
+			result = append(result, d)
+		}
+
+		err = csvWrapper2.WriteBulkRecord(result)
+		if err != nil {
+			dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+			return
+		}
+
+		if q == "csv" {
+			buff2 := csvWrapper2.GetBuffer()
+			dtos.ContentAsFileResponse(c, "data.csv", buff2)
+		} else {
+			finalResult := csvWrapper2.GetData()
+			dtos.StringResponse(c, finalResult)
+		}
+	} else if q == "json" {
+		result := dtos.ReportLast24HoursVerifiedListingTransactionsList{Transactions: transactions}
+		dtos.JsonResponse(c, http.StatusOK, result, "")
+	} else {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+	}
+}
+
+// @Summary Gets Last 24 Hours Listing Transactions
+// @Description Gets Last 24 Hours Listing Transactions
+// @Tags reports
+// @Accept json
+// @Param format query string false  "format of the output"
+// @Produce application/csv
+// @Success 200 {file} file
+// @Failure 400 {object} dtos.ApiResponse
+// @Failure 404 {object} dtos.ApiResponse
+// @Failure 500 {object} dtos.ApiResponse
+// @Router /listing/daily/transactions/all [get]
+func (handler *reportHandler) getLast24HoursListingTransactions(c *gin.Context) {
+	q := c.Request.URL.Query().Get("format")
+	if strings.TrimSpace(q) == "" {
+		q = "csv"
+	} else {
+		q = strings.TrimSpace(q)
+	}
+
+	currentTime := time.Now().UTC()
+	oneDayBefore := currentTime.Add(-24 * time.Hour)
+
+	//currentTimeStr := fmt.Sprintf("%4d-%02d-%02d %02d:00:00", currentTime.Year(), currentTime.Month(), currentTime.Day(), currentTime.Hour())
+	oneDayBeforeStr := fmt.Sprintf("%4d-%02d-%02d", oneDayBefore.Year(), oneDayBefore.Month(), oneDayBefore.Day())
+
+	transactions, err := storage.GetListingTransactionsPerSpecificDay(oneDayBeforeStr, false)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		return
+	}
+
+	if q == "csv" || q == "raw" {
+		csvWrapper, err := utils.NewCsvWrapper()
+		if err != nil {
+			dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+			return
+		}
+		defer csvWrapper.Close()
+
+		// Create csv wrapper and return the result
+		csvWrapper2, err := utils.NewCsvWrapper()
+		if err != nil {
+			dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+			return
+		}
+		defer csvWrapper2.Close()
+
+		result := [][]string{}
+		result = append(result, []string{
+			"Tx Id", "Tx Hash", "Tx Type", "Tx Price", "Tx Timestamp", "Address", "Token Id", "Token Name", "Token Image Link", "Collection Token Id", "Collection Name", "Collection Verified",
+		})
+		for _, item := range transactions {
+			d := []string{
+				fmt.Sprintf("%d", item.ID),
+				item.Hash,
+				string(item.Type),
+				fmt.Sprintf("%f", item.PriceNominal),
+				time.Unix(int64(item.Timestamp), 0).String(),
+				item.Seller.Address,
+				item.Token.TokenID,
+				item.Token.TokenName,
+				item.Token.ImageLink,
+				item.Collection.TokenID,
+				item.Collection.Name,
+				fmt.Sprintf("%v", item.Collection.IsVerified),
 			}
 			result = append(result, d)
 		}

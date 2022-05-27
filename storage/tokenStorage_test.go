@@ -212,10 +212,11 @@ func Test_GetAllTokens(t *testing.T) {
 		currentPage := 1
 		nextPage := 1
 		filter := entities.QueryFilter{}
+		collectionFilter := entities.QueryFilter{}
 		sortOption := entities.SortOptions{}
 		howMuchRows := 2
 
-		tokens, err := GetAllTokens(lastTimeStamp, currentPage, nextPage, howMuchRows, &filter, &sortOption, false, [][]string{})
+		tokens, err := GetAllTokens(lastTimeStamp, currentPage, nextPage, howMuchRows, &filter, &sortOption, &collectionFilter, [][]string{})
 		require.Nil(t, err)
 
 		require.Equal(t, len(tokens), int64(2), "Tokens list length is not correct")
@@ -225,8 +226,9 @@ func Test_GetAllTokens(t *testing.T) {
 		connectToTestDb()
 
 		filter := entities.QueryFilter{}
+		collectionFilter := entities.QueryFilter{}
 
-		total, err := GetTokensCountWithCriteria(&filter, false, [][]string{})
+		total, err := GetTokensCountWithCriteria(&filter, &collectionFilter, [][]string{})
 		require.Nil(t, err)
 
 		require.Equal(t, int64(3), total, "The total counts of tokens does not match")
@@ -236,7 +238,9 @@ func Test_GetAllTokens(t *testing.T) {
 		connectToTestDb()
 
 		filter := entities.QueryFilter{}
-		min, max, err := GetTokensPriceBoundary(&filter, [][]string{})
+		collectionFilter := entities.QueryFilter{}
+
+		min, max, err := GetTokensPriceBoundary(&filter, &collectionFilter, [][]string{})
 		require.Nil(t, err)
 
 		v, _ := new(big.Float).SetString("2000000000000000000000")
@@ -250,7 +254,9 @@ func Test_GetAllTokens(t *testing.T) {
 		connectToTestDb()
 
 		filter := entities.QueryFilter{}
-		min, max, err := GetVerifiedTokensPriceBoundary(&filter, [][]string{})
+		collectionFilter := entities.QueryFilter{}
+
+		min, max, err := GetTokensPriceBoundary(&filter, &collectionFilter, [][]string{})
 		require.Nil(t, err)
 
 		v, _ := new(big.Float).SetString("2000000000000000000000")
