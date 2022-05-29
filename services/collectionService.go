@@ -47,6 +47,9 @@ const (
 
 	CollectionTrendingCacheKeyFormat = "CollectionTrendingCacheKey"
 	CollectionTrendingExpirePeriod   = 5 * time.Minute
+
+	CollectionVerifiedByAddressCacheKeyFormat = "CollectionVerifiedCacheKey:%s"
+	CollectionVerifiedByAddressExpirePeriod   = 5 * time.Minute
 )
 
 type MintInfo struct {
@@ -583,6 +586,33 @@ func GetCollectionsVerified(limit int) ([]entities.Collection, error) {
 	byteArray, err = json.Marshal(collectionArray)
 	if err == nil {
 		err = cache.GetCacher().Set(cacheKey, byteArray, CollectionVerifiedExpirePeriod)
+		if err != nil {
+			log.Debug("could not set cache", "err", err)
+		}
+	}
+
+	return collectionArray, nil
+}
+
+func GetCollectionsVerifiedByAddress(address string, limit int) ([]entities.Collection, error) {
+	var byteArray []byte
+	var collectionArray []entities.Collection
+
+	cacheKey := fmt.Sprintf(CollectionVerifiedByAddressCacheKeyFormat, address)
+	err := cache.GetCacher().Get(cacheKey, &byteArray)
+	if err == nil {
+		err = json.Unmarshal(byteArray, &collectionArray)
+		return collectionArray, err
+	}
+
+	collectionArray, err = storage.GetCollectionsVerifiedByAddress(address, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	byteArray, err = json.Marshal(collectionArray)
+	if err == nil {
+		err = cache.GetCacher().Set(cacheKey, byteArray, CollectionVerifiedByAddressExpirePeriod)
 		if err != nil {
 			log.Debug("could not set cache", "err", err)
 		}
