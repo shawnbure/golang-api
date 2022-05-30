@@ -209,7 +209,7 @@ func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) 
 	collection := &entities.Collection{
 		ID:                       0,
 		Name:                     request.Name,
-		TokenID:                  request.TokenId,
+		CollectionTokenID:        request.TokenId,
 		Description:              request.Description,
 		Website:                  request.Website,
 		DiscordLink:              request.DiscordLink,
@@ -233,7 +233,7 @@ func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) 
 		return nil, err
 	}
 
-	_, err = collstats.AddCollectionToCache(collection.ID, collection.Name, collection.Flags, collection.TokenID)
+	_, err = collstats.AddCollectionToCache(collection.ID, collection.Name, collection.Flags, collection.CollectionTokenID)
 	if err != nil {
 		log.Debug("could not add to coll stats")
 	}
@@ -295,10 +295,10 @@ func CreateCollectionFromToken(token entities.TokenBC, blockchainApi string) (*e
 
 	// ========== STEP: AUTO CREATE COLLECTION ==========
 	collection = &entities.Collection{
-		Name:      token.Collection,
-		TokenID:   token.Collection,
-		CreatorID: uint64(creatorID), //set the creator id
-		CreatedAt: uint64(time.Now().Unix()),
+		Name:              token.Collection,
+		CollectionTokenID: token.Collection,
+		CreatorID:         uint64(creatorID), //set the creator id
+		CreatedAt:         uint64(time.Now().Unix()),
 	}
 
 	// ========== GET COLLECTION DETAIL FROM BC ========
@@ -327,7 +327,7 @@ func CreateCollectionFromToken(token entities.TokenBC, blockchainApi string) (*e
 		return nil, errCollection
 	}
 
-	_, err = collstats.AddCollectionToCache(collection.ID, collection.Name, nil, collection.TokenID)
+	_, err = collstats.AddCollectionToCache(collection.ID, collection.Name, nil, collection.CollectionTokenID)
 	if err != nil {
 		log.Debug("could not add to coll stats")
 	}
@@ -403,10 +403,10 @@ func AutoCreateCollection(request *AutoCreateCollectionRequest, blockchainApi st
 
 	// ========== STEP: AUTO CREATE COLLECTION ==========
 	collection = &entities.Collection{
-		Name:      request.Name,
-		TokenID:   request.TokenId,
-		CreatorID: uint64(creatorID), //set the creator id
-		CreatedAt: uint64(time.Now().Unix()),
+		Name:              request.Name,
+		CollectionTokenID: request.TokenId,
+		CreatorID:         uint64(creatorID), //set the creator id
+		CreatedAt:         uint64(time.Now().Unix()),
 	}
 
 	// ========== GET COLLECTION DETAIL FROM BC ========
@@ -435,7 +435,7 @@ func AutoCreateCollection(request *AutoCreateCollectionRequest, blockchainApi st
 		return nil, errCollection
 	}
 
-	_, err = collstats.AddCollectionToCache(collection.ID, collection.Name, nil, collection.TokenID)
+	_, err = collstats.AddCollectionToCache(collection.ID, collection.Name, nil, collection.CollectionTokenID)
 	if err != nil {
 		log.Debug("could not add to coll stats")
 	}

@@ -194,7 +194,7 @@ func GetCollectionByTokenId(tokenId string) (*entities.Collection, error) {
 		return nil, err
 	}
 
-	txRead := database.Find(&collection, "token_id = ?", tokenId)
+	txRead := database.Find(&collection, "collection_token_id = ?", tokenId)
 	if txRead.Error != nil {
 		return nil, txRead.Error
 	}

@@ -205,7 +205,7 @@ func (handler *collectionsHandler) getCollectionVerified(c *gin.Context) {
 // @Failure 400 {object} dtos.ApiResponse
 // @Failure 404 {object} dtos.ApiResponse
 // @Failure 500 {object} dtos.ApiResponse
-// @Router /collections/{collectionId} [get]
+// @Router /collections/by_address/{limit} [get]
 func (handler *collectionsHandler) getCollectionVerifiedByAddress(c *gin.Context) {
 	limitStr := c.Param("limit")
 	limit, err := strconv.ParseUint(limitStr, 10, 0)

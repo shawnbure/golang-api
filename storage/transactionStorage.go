@@ -754,7 +754,7 @@ func GetLast24HoursVerifiedListingTransactions(fromDateTimestamp string, toDateT
 
 	records := []entities.VerifiedListingTransaction{}
 	txRead := database.Table("transactions").
-		Select("transactions.hash as tx_hash, transactions.id as tx_id, transactions.price_nominal as tx_price_nominal, transactions.timestamp as tx_timestamp, tokens.token_name as token_name, tokens.image_link as token_image_link, seller_account.address as address, collections.name as collection_name, collections.token_id as collection_token_id").
+		Select("transactions.hash as tx_hash, transactions.id as tx_id, transactions.price_nominal as tx_price_nominal, transactions.timestamp as tx_timestamp, tokens.token_name as token_name, tokens.image_link as token_image_link, seller_account.address as address, collections.name as collection_name, collections.collection_token_id as collection_token_id").
 		Joins("inner join tokens on tokens.id=transactions.token_id ").
 		Joins("inner join accounts as seller_account on seller_account.id=transactions.seller_id ").
 		Joins("inner join collections on collections.id=transactions.collection_id").
