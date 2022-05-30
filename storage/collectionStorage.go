@@ -194,7 +194,7 @@ func GetCollectionByTokenId(tokenId string) (*entities.Collection, error) {
 		return nil, err
 	}
 
-	txRead := database.Find(&collection, "token_id = ?", tokenId)
+	txRead := database.Find(&collection, "collection_token_id = ?", tokenId)
 	if txRead.Error != nil {
 		return nil, txRead.Error
 	}
@@ -317,6 +317,28 @@ func GetCollectionsVerified(limit int) ([]entities.Collection, error) {
 
 	//is_verifed and create_at in desc in order (most recent first)
 	txRead := database.Limit(limit).Order("created_at desc").Find(&collections, "is_verified = true AND profile_image_link <> ''")
+	if txRead.Error != nil {
+		return nil, txRead.Error
+	}
+
+	return collections, nil
+}
+
+func GetCollectionsVerifiedByAddress(address string, limit int) ([]entities.Collection, error) {
+	var collections []entities.Collection
+
+	database, err := GetDBOrError()
+	if err != nil {
+		return nil, err
+	}
+
+	//is_verifed and create_at in desc in order (most recent first)
+	txRead := database.
+		Limit(limit).
+		Joins("inner join accounts on accounts.id=collections.creator_id").
+		Order("collections.created_at desc").
+		Where("collections.is_verified = true AND collections.profile_image_link <> '' AND accounts.address=?", address).
+		Find(&collections)
 	if txRead.Error != nil {
 		return nil, txRead.Error
 	}

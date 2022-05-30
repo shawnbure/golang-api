@@ -631,7 +631,7 @@ func (handler *reportHandler) getLast24HoursVerifiedListingTransactions(c *gin.C
 				item.Token.TokenID,
 				item.Token.TokenName,
 				item.Token.ImageLink,
-				item.Collection.TokenID,
+				item.Collection.CollectionTokenID,
 				item.Collection.Name,
 			}
 			result = append(result, d)
@@ -720,7 +720,7 @@ func (handler *reportHandler) getLast24HoursListingTransactions(c *gin.Context) 
 				item.Token.TokenID,
 				item.Token.TokenName,
 				item.Token.ImageLink,
-				item.Collection.TokenID,
+				item.Collection.CollectionTokenID,
 				item.Collection.Name,
 				fmt.Sprintf("%v", item.Collection.IsVerified),
 			}

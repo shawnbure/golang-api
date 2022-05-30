@@ -648,7 +648,7 @@ func (handler *txTemplateHandler) getMintNftTxTemplate(c *gin.Context) {
 		collection.ContractAddress,
 		collection.MintPricePerTokenNominal,
 		numberOfTokens,
-		collection.TokenID,
+		collection.CollectionTokenID,
 		[]byte(""),
 	)
 	if err != nil {

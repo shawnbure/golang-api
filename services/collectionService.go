@@ -47,6 +47,9 @@ const (
 
 	CollectionTrendingCacheKeyFormat = "CollectionTrendingCacheKey"
 	CollectionTrendingExpirePeriod   = 5 * time.Minute
+
+	CollectionVerifiedByAddressCacheKeyFormat = "CollectionVerifiedCacheKey:%s"
+	CollectionVerifiedByAddressExpirePeriod   = 5 * time.Minute
 )
 
 type MintInfo struct {
@@ -206,7 +209,7 @@ func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) 
 	collection := &entities.Collection{
 		ID:                       0,
 		Name:                     request.Name,
-		TokenID:                  request.TokenId,
+		CollectionTokenID:        request.TokenId,
 		Description:              request.Description,
 		Website:                  request.Website,
 		DiscordLink:              request.DiscordLink,
@@ -230,7 +233,7 @@ func CreateCollection(request *CreateCollectionRequest, blockchainProxy string) 
 		return nil, err
 	}
 
-	_, err = collstats.AddCollectionToCache(collection.ID, collection.Name, collection.Flags, collection.TokenID)
+	_, err = collstats.AddCollectionToCache(collection.ID, collection.Name, collection.Flags, collection.CollectionTokenID)
 	if err != nil {
 		log.Debug("could not add to coll stats")
 	}
@@ -292,10 +295,10 @@ func CreateCollectionFromToken(token entities.TokenBC, blockchainApi string) (*e
 
 	// ========== STEP: AUTO CREATE COLLECTION ==========
 	collection = &entities.Collection{
-		Name:      token.Collection,
-		TokenID:   token.Collection,
-		CreatorID: uint64(creatorID), //set the creator id
-		CreatedAt: uint64(time.Now().Unix()),
+		Name:              token.Collection,
+		CollectionTokenID: token.Collection,
+		CreatorID:         uint64(creatorID), //set the creator id
+		CreatedAt:         uint64(time.Now().Unix()),
 	}
 
 	// ========== GET COLLECTION DETAIL FROM BC ========
@@ -324,7 +327,7 @@ func CreateCollectionFromToken(token entities.TokenBC, blockchainApi string) (*e
 		return nil, errCollection
 	}
 
-	_, err = collstats.AddCollectionToCache(collection.ID, collection.Name, nil, collection.TokenID)
+	_, err = collstats.AddCollectionToCache(collection.ID, collection.Name, nil, collection.CollectionTokenID)
 	if err != nil {
 		log.Debug("could not add to coll stats")
 	}
@@ -400,10 +403,10 @@ func AutoCreateCollection(request *AutoCreateCollectionRequest, blockchainApi st
 
 	// ========== STEP: AUTO CREATE COLLECTION ==========
 	collection = &entities.Collection{
-		Name:      request.Name,
-		TokenID:   request.TokenId,
-		CreatorID: uint64(creatorID), //set the creator id
-		CreatedAt: uint64(time.Now().Unix()),
+		Name:              request.Name,
+		CollectionTokenID: request.TokenId,
+		CreatorID:         uint64(creatorID), //set the creator id
+		CreatedAt:         uint64(time.Now().Unix()),
 	}
 
 	// ========== GET COLLECTION DETAIL FROM BC ========
@@ -432,7 +435,7 @@ func AutoCreateCollection(request *AutoCreateCollectionRequest, blockchainApi st
 		return nil, errCollection
 	}
 
-	_, err = collstats.AddCollectionToCache(collection.ID, collection.Name, nil, collection.TokenID)
+	_, err = collstats.AddCollectionToCache(collection.ID, collection.Name, nil, collection.CollectionTokenID)
 	if err != nil {
 		log.Debug("could not add to coll stats")
 	}
@@ -583,6 +586,33 @@ func GetCollectionsVerified(limit int) ([]entities.Collection, error) {
 	byteArray, err = json.Marshal(collectionArray)
 	if err == nil {
 		err = cache.GetCacher().Set(cacheKey, byteArray, CollectionVerifiedExpirePeriod)
+		if err != nil {
+			log.Debug("could not set cache", "err", err)
+		}
+	}
+
+	return collectionArray, nil
+}
+
+func GetCollectionsVerifiedByAddress(address string, limit int) ([]entities.Collection, error) {
+	var byteArray []byte
+	var collectionArray []entities.Collection
+
+	cacheKey := fmt.Sprintf(CollectionVerifiedByAddressCacheKeyFormat, address)
+	err := cache.GetCacher().Get(cacheKey, &byteArray)
+	if err == nil {
+		err = json.Unmarshal(byteArray, &collectionArray)
+		return collectionArray, err
+	}
+
+	collectionArray, err = storage.GetCollectionsVerifiedByAddress(address, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	byteArray, err = json.Marshal(collectionArray)
+	if err == nil {
+		err = cache.GetCacher().Set(cacheKey, byteArray, CollectionVerifiedByAddressExpirePeriod)
 		if err != nil {
 			log.Debug("could not set cache", "err", err)
 		}

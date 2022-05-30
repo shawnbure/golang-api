@@ -18,6 +18,7 @@ type GeneralConfig struct {
 	CDN                CDNConfig
 	ExternalCredential ExternalCredentialConfig
 	Proxy              ProxyConfig
+	CarbonSetting      CarbonSettingConfig
 }
 
 type ConnectorApiConfig struct {
@@ -126,6 +127,10 @@ type ProxyConfig struct {
 }
 type ExternalCredentialConfig struct {
 	DreamshipAPIKey string
+}
+
+type CarbonSettingConfig struct {
+	StaticAddress string
 }
 
 func (d DatabaseConfig) Url() string {
