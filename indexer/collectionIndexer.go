@@ -23,7 +23,7 @@ import (
 )
 
 var getCollectionNFTSAPI string = "%s/collections/%s/nfts?from=%d&withOwner=true"
-var getCollectionNFTSCountsAPI string = "%s/collections/%s/nfts/count?withOwner=true"
+var getCollectionNFTSCountsAPI string = "%s/collections/%s/nfts/count"
 
 type CollectionIndexer struct {
 	DeployerAddr string `json:"deployerAddr"`
@@ -78,7 +78,7 @@ func (ci *CollectionIndexer) StartWorker() {
 	if ci.ElrondAPISec != "" {
 		api = ci.ElrondAPISec
 		getCollectionNFTSAPI = "%s/nftsFromCollection?collection=%s&from=%d&withOwner=true"
-		getCollectionNFTSCountsAPI = "%s/nfts/count?collection=%s&withOwner=true"
+		getCollectionNFTSCountsAPI = "%s/nfts/count?collection=%s"
 	}
 	for {
 	deployLoop:
@@ -252,7 +252,7 @@ func (ci *CollectionIndexer) StartWorker() {
 					continue
 				}
 			}
-			countNftRes, _ := services.GetResponse(fmt.Sprintf(getCollectionNFTSCountsAPI, api, collectionIndexer.CollectionName))
+			countNftRes, err := services.GetResponse(fmt.Sprintf(getCollectionNFTSCountsAPI, api, collectionIndexer.CollectionName))
 			var count uint64
 			json.Unmarshal(countNftRes, &count)
 			lastIndex := 0
