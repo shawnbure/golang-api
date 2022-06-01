@@ -701,3 +701,23 @@ func GetTokensPriceBoundary(filter *entities.QueryFilter, collectionFilter *enti
 //
 //	return 0, 0, errors.New("Cannot get values from database")
 //}
+
+func GetOldTokenWithZeroRarity() (entities.Token, error) {
+	var tokenInstance entities.Token
+
+	database, err := GetDBOrError()
+	if err != nil {
+		return tokenInstance, err
+	}
+
+	txRead := database.
+		Where("is_rarity_inserted=?", false).
+		Order("rarity_last_updated ASC").
+		First(&tokenInstance)
+	if txRead.Error != nil {
+		return tokenInstance, txRead.Error
+	}
+
+	return tokenInstance, nil
+
+}

@@ -240,6 +240,8 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					metadataJSON := make(map[string]interface{})
 					err = json.Unmarshal(attrbs, &metadataJSON)
 					var attributes datatypes.JSON
+					var rarity entities.TokenRarity
+
 					if err != nil {
 						lerr.Println(err.Error(), string(metadataLink))
 					} else {
@@ -250,6 +252,19 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 						err = json.Unmarshal(attributesBytes, &attributes)
 						if err != nil {
 							lerr.Println(err.Error())
+						}
+
+						// Get Rarity data if exist
+						if _, ok := metadataJSON["rarity"]; ok {
+							rarityBody, err := json.Marshal(metadataJSON["rarity"].(map[string]interface{}))
+							if err != nil {
+								lerr.Println(err.Error())
+							} else {
+								if err := json.Unmarshal(rarityBody, &rarity); err != nil {
+									lerr.Println(err.Error())
+								}
+							}
+
 						}
 					}
 					token = &entities.Token{
@@ -265,6 +280,14 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 						Attributes:   attributes,
 						OnSale:       false,
 					}
+
+					if rarity.RarityScore != 0 {
+						token.RarityScore = rarity.RarityScore
+						token.RarityScoreNorm = rarity.RarityScoreNormed
+						token.RarityUsedTraitCount = uint(rarity.UsedTraitsCount)
+						token.IsRarityInserted = true
+					}
+
 					err = storage.AddToken(token)
 					if err != nil {
 						if err == gorm.ErrRecordNotFound {
