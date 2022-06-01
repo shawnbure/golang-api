@@ -3,34 +3,39 @@ package entities
 import "gorm.io/datatypes"
 
 type Token struct {
-	ID                  uint64         `gorm:"primaryKey" json:"id"`
-	TokenID             string         `json:"tokenId" gorm:"index:token_nonces,unique;not null"`
-	Nonce               uint64         `json:"nonce" gorm:"index:token_nonces,unique;not null"`
-	NonceStr            string         `json:"nonceStr" gorm:"index:token_nonces,unique;not null"`
-	PriceString         string         `json:"priceString"`
-	PriceNominal        float64        `json:"priceNominal"`
-	RoyaltiesPercent    float64        `json:"royaltiesPercent"`
-	MetadataLink        string         `json:"metadataLink"`
-	CreatedAt           uint64         `json:"createdAt"`
-	Status              TxType         `json:"state"`
-	Attributes          datatypes.JSON `json:"attributes"`
-	TokenName           string         `json:"tokenName"`
-	ImageLink           string         `json:"imageLink"`
-	Hash                string         `json:"hash"`
-	MintTxHash          string         `json:"mintTxHash"`
-	LastBuyPriceNominal float64        `json:"lastBuyPriceNominal"`
-	AuctionStartTime    uint64         `json:"auctionStartTime"`
-	AuctionDeadline     uint64         `json:"auctionDeadline"`
-	OnSale              bool           `json:"onSale"`
-	OwnerID             uint64         `json:"ownerId"`
-	CollectionID        uint64         `json:"collectionId"`
-	Collection          Collection     `json:"collection"`
-	LastMarketTimestamp uint64         `json:"lastMarketTimestamp"`
-	Owner               Account        `json:"owner"`
-	TxConfirmed         bool           `json:"txConfirmed"`
-	OnStake             bool           `json:"onStake" gorm:"default:false"`
-	StakeDate           uint64         `json:"stakeDate"`
-	StakeType           string         `json:"stakeType"`
+	ID                   uint64         `gorm:"primaryKey" json:"id"`
+	TokenID              string         `json:"tokenId" gorm:"index:token_nonces,unique;not null"`
+	Nonce                uint64         `json:"nonce" gorm:"index:token_nonces,unique;not null"`
+	NonceStr             string         `json:"nonceStr" gorm:"index:token_nonces,unique;not null"`
+	PriceString          string         `json:"priceString"`
+	PriceNominal         float64        `json:"priceNominal"`
+	RoyaltiesPercent     float64        `json:"royaltiesPercent"`
+	MetadataLink         string         `json:"metadataLink"`
+	CreatedAt            uint64         `json:"createdAt"`
+	Status               TxType         `json:"state"`
+	Attributes           datatypes.JSON `json:"attributes"`
+	TokenName            string         `json:"tokenName"`
+	ImageLink            string         `json:"imageLink"`
+	Hash                 string         `json:"hash"`
+	MintTxHash           string         `json:"mintTxHash"`
+	LastBuyPriceNominal  float64        `json:"lastBuyPriceNominal"`
+	AuctionStartTime     uint64         `json:"auctionStartTime"`
+	AuctionDeadline      uint64         `json:"auctionDeadline"`
+	OnSale               bool           `json:"onSale"`
+	OwnerID              uint64         `json:"ownerId"`
+	CollectionID         uint64         `json:"collectionId"`
+	Collection           Collection     `json:"collection"`
+	LastMarketTimestamp  uint64         `json:"lastMarketTimestamp"`
+	Owner                Account        `json:"owner"`
+	TxConfirmed          bool           `json:"txConfirmed"`
+	OnStake              bool           `json:"onStake" gorm:"default:false"`
+	StakeDate            uint64         `json:"stakeDate"`
+	StakeType            string         `json:"stakeType"`
+	RarityUsedTraitCount uint           `json:"rarityUsedTraitCount" gorm:"default:0"`
+	RarityScore          float64        `json:"rarityScore" gorm:"default:0.0"`
+	RarityScoreNorm      float64        `json:"rarityScoreNorm" gorm:"default:0.0"`
+	IsRarityInserted     bool           `json:"isRarityInserted" gorm:"default:false"`
+	RarityLastUpdated    uint64         `json:"rarityLastUpdated" gorm:"autoUpdateTime:milli;default:0"`
 }
 
 type TokenBC struct {
