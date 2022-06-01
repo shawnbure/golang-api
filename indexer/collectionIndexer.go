@@ -342,32 +342,35 @@ func (ci *CollectionIndexer) StartWorker() {
 					var attributes datatypes.JSON
 					if token.Attributes != "" {
 						if _, ok := metadataJSON["attributes"]; !ok {
-							token.Attributes = strings.ReplaceAll(token.Attributes, ",", "")
 							attributesStr, err := base64.StdEncoding.DecodeString(token.Attributes)
 							if strings.Contains(string(attributesStr), ".json") {
 								if strings.Contains(string(attributesStr), "metadata:") {
-									metaIdx := strings.Index(string(attributesStr), "metadata:")
-									attributesStr = attributesStr[metaIdx+9:]
-									// attributesStr = []byte(strings.Replace(string(attributesStr), "metadata:", "", 1))
-									url = (`https://media.elrond.com/nfts/asset/` + string(attributesStr))
-									attrbs, err := services.GetResponse(url)
-									if err != nil {
-										logErr.Println(err.Error(), string(url), token.Collection, token.Attributes, token.Identifier, token.Media, token.Metadata)
-									}
+									attributeParts := strings.Split(string(attributesStr), ";")
+									for _, part := range attributeParts {
+										if strings.Contains("metadata:", part) {
+											part = part[9:]
+											// attributesStr = []byte(strings.Replace(string(attributesStr), "metadata:", "", 1))
+											url = (`https://media.elrond.com/nfts/asset/` + string(part))
+											attrbs, err := services.GetResponse(url)
+											if err != nil {
+												logErr.Println(err.Error(), string(url), token.Collection, token.Attributes, token.Identifier, token.Media, token.Metadata)
+											}
 
-									metadataJSON = make(map[string]interface{})
-									err = json.Unmarshal(attrbs, &metadataJSON)
-									if err != nil {
-										logErr.Println(err.Error(), string(url), token.Collection, token.Attributes, token.Identifier, token.Media, token.Metadata)
-									}
-									attributesBytes, err := json.Marshal(metadataJSON["attributes"])
-									if err != nil {
-										logErr.Println(err.Error())
-										attributesBytes = []byte{}
-									}
-									err = json.Unmarshal(attributesBytes, &attributes)
-									if err != nil {
-										logErr.Println(err.Error())
+											metadataJSON = make(map[string]interface{})
+											err = json.Unmarshal(attrbs, &metadataJSON)
+											if err != nil {
+												logErr.Println(err.Error(), string(url), token.Collection, token.Attributes, token.Identifier, token.Media, token.Metadata)
+											}
+											attributesBytes, err := json.Marshal(metadataJSON["attributes"])
+											if err != nil {
+												logErr.Println(err.Error())
+												attributesBytes = []byte{}
+											}
+											err = json.Unmarshal(attributesBytes, &attributes)
+											if err != nil {
+												logErr.Println(err.Error())
+											}
+										}
 									}
 
 								}
