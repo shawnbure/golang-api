@@ -42,3 +42,5 @@ main
 ./pics
 .DS_Store
 __debug_bin
+
+docs/requirements.md

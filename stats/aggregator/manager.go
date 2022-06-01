@@ -72,7 +72,7 @@ func (m *manager) Stop() {
 }
 
 func (m *manager) aggregatedVolumePerHourRunner() {
-	m.getAggregatedVolumePerHour()
+	//m.getAggregatedVolumePerHour()
 
 	ticker := time.NewTicker(5 * time.Minute)
 	for {
@@ -167,7 +167,7 @@ func (m *manager) getAggregatedVolumePerHour() {
 }
 
 func (m *manager) aggregatedVolumePerCollectionPerHourRunner() {
-	m.getAggregatedVolumePerCollectionPerHour()
+	//m.getAggregatedVolumePerCollectionPerHour()
 
 	ticker := time.NewTicker(5 * time.Minute)
 	for {
@@ -186,7 +186,7 @@ func (m *manager) getAggregatedVolumePerCollectionPerHour() {
 	subtractIndex := 0
 
 	// Get all collectionIds from db
-	collections, err := storage.GetVerifiedCollections()
+	collections, err := storage.GetAllCollections()
 	if err != nil {
 		return
 	}

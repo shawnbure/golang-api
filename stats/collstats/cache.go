@@ -182,7 +182,7 @@ func GetOrAddCollectionCacheInfo(tokenId string) (*dtos.CollectionCacheInfo, err
 			return nil, innerErr
 		}
 
-		cacheInfo, innerErr = AddCollectionToCache(coll.ID, coll.Name, coll.Flags, coll.TokenID)
+		cacheInfo, innerErr = AddCollectionToCache(coll.ID, coll.Name, coll.Flags, coll.CollectionTokenID)
 		if innerErr != nil {
 			return nil, innerErr
 		}

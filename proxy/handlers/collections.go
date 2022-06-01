@@ -22,24 +22,25 @@ import (
 type RankingEntry = collstats.LeaderboardEntry
 
 const (
-	baseCollectionsEndpoint               = "/collections"
-	collectionByNameEndpoint              = "/:collectionId"
-	collectionListEndpoint                = "/list/:offset/:limit"
-	collectionCreateEndpoint              = "/create"
-	collectionTokensEndpoint              = "/:collectionId/tokens/:offset/:limit"
-	collectionProfileEndpoint             = "/:collectionId/profile"
-	collectionCoverEndpoint               = "/:collectionId/cover"
-	collectionMintInfoEndpoint            = "/:collectionId/mintInfo"
-	collectionRankingEndpoint             = "/rankings/:offset/:limit"
-	collectionAllEndpoint                 = "/all"
-	collectionVerifiedEndpoint            = "/verified/:limit"
-	collectionNoteworthyEndpoint          = "/noteworthy/:limit"
-	collectionTrendingEndpoint            = "/trending/:limit"
-	collectionByTokenIDEndpoint           = "/tokenId/:tokenId"
-	collectionUpdateMintStartDateEndpoint = "/:collectionId/mintStartDate"
-	collectionUpdateAdminSectionEndpoint  = "/:collectionId/adminSection"
-	collectionUpdateStakingOn             = "/:collectionId/stake"
-	collectionUpdateStakingOff            = "/:collectionId/unstake"
+	baseCollectionsEndpoint                   = "/collections"
+	collectionByNameEndpoint                  = "/:collectionId"
+	collectionListEndpoint                    = "/list/:offset/:limit"
+	collectionCreateEndpoint                  = "/create"
+	collectionTokensEndpoint                  = "/:collectionId/tokens/:offset/:limit"
+	collectionProfileEndpoint                 = "/:collectionId/profile"
+	collectionCoverEndpoint                   = "/:collectionId/cover"
+	collectionMintInfoEndpoint                = "/:collectionId/mintInfo"
+	collectionRankingEndpoint                 = "/rankings/:offset/:limit"
+	collectionAllEndpoint                     = "/all"
+	collectionVerifiedEndpoint                = "/verified/:limit"
+	collectionVerifiedByStaticAddressEndpoint = "/verified/by_address/:limit"
+	collectionNoteworthyEndpoint              = "/noteworthy/:limit"
+	collectionTrendingEndpoint                = "/trending/:limit"
+	collectionByTokenIDEndpoint               = "/tokenId/:tokenId"
+	collectionUpdateMintStartDateEndpoint     = "/:collectionId/mintStartDate"
+	collectionUpdateAdminSectionEndpoint      = "/:collectionId/adminSection"
+	collectionUpdateStakingOn                 = "/:collectionId/stake"
+	collectionUpdateStakingOff                = "/:collectionId/unstake"
 )
 
 type CollectionTokensQueryBody struct {
@@ -59,11 +60,15 @@ type CollectionListQueryBody struct {
 }
 
 type collectionsHandler struct {
-	blockchainCfg config.BlockchainConfig
+	blockchainCfg    config.BlockchainConfig
+	carbonSettingCfg config.CarbonSettingConfig
 }
 
-func NewCollectionsHandler(groupHandler *groupHandler, authCfg config.AuthConfig, blockchainCfg config.BlockchainConfig) {
-	handler := &collectionsHandler{blockchainCfg: blockchainCfg}
+func NewCollectionsHandler(groupHandler *groupHandler, authCfg config.AuthConfig, blockchainCfg config.BlockchainConfig, carbonSettingCfg config.CarbonSettingConfig) {
+	handler := &collectionsHandler{
+		blockchainCfg:    blockchainCfg,
+		carbonSettingCfg: carbonSettingCfg,
+	}
 
 	endpoints := []EndpointHandler{
 		{Method: http.MethodPost, Path: collectionByNameEndpoint, HandlerFunc: handler.set},
@@ -90,6 +95,7 @@ func NewCollectionsHandler(groupHandler *groupHandler, authCfg config.AuthConfig
 		{Method: http.MethodPost, Path: collectionRankingEndpoint, HandlerFunc: handler.getCollectionRankings},
 		{Method: http.MethodPost, Path: collectionAllEndpoint, HandlerFunc: handler.getAll},
 		{Method: http.MethodGet, Path: collectionVerifiedEndpoint, HandlerFunc: handler.getCollectionVerified},
+		{Method: http.MethodGet, Path: collectionVerifiedByStaticAddressEndpoint, HandlerFunc: handler.getCollectionVerifiedByAddress},
 		{Method: http.MethodGet, Path: collectionNoteworthyEndpoint, HandlerFunc: handler.getCollectionNoteworthy},
 		{Method: http.MethodGet, Path: collectionTrendingEndpoint, HandlerFunc: handler.getCollectionTrending},
 		{Method: http.MethodGet, Path: collectionByTokenIDEndpoint, HandlerFunc: handler.getCollectionByTokenID},
@@ -181,6 +187,37 @@ func (handler *collectionsHandler) getCollectionVerified(c *gin.Context) {
 	}
 
 	collections, err := services.GetCollectionsVerified(int(limit))
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
+		return
+	}
+
+	dtos.JsonResponse(c, http.StatusOK, collections, "")
+}
+
+// @Summary Gets collections list for specific address.
+// @Description Retrieves a collections list for specific Address with limit parameter.
+// @Tags collections
+// @Accept json
+// @Produce json
+// @Param limit path int true "limit the size returned array"
+// @Success 200 {object} dtos.ExtendedCollectionDto
+// @Failure 400 {object} dtos.ApiResponse
+// @Failure 404 {object} dtos.ApiResponse
+// @Failure 500 {object} dtos.ApiResponse
+// @Router /collections/by_address/{limit} [get]
+func (handler *collectionsHandler) getCollectionVerifiedByAddress(c *gin.Context) {
+	limitStr := c.Param("limit")
+	limit, err := strconv.ParseUint(limitStr, 10, 0)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	// Get address from config
+	address := handler.carbonSettingCfg.StaticAddress
+
+	collections, err := services.GetCollectionsVerifiedByAddress(address, int(limit))
 	if err != nil {
 		dtos.JsonResponse(c, http.StatusNotFound, nil, err.Error())
 		return

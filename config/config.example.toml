@@ -96,3 +96,6 @@
 
 [ExternalCredential]
     DreamshipAPIKey = "APIGoesHere"
+
+[CarbonSetting]
+    StaticAddress = "specific address goes here"

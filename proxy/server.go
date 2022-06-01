@@ -97,7 +97,7 @@ func NewWebServer(cfg *config.GeneralConfig) (*webServer, error) {
 
 	handlers.NewAuthHandler(groupHandler, *authService)
 	handlers.NewTokensHandler(groupHandler, cfg.Auth, cfg.Blockchain)
-	handlers.NewCollectionsHandler(groupHandler, cfg.Auth, cfg.Blockchain)
+	handlers.NewCollectionsHandler(groupHandler, cfg.Auth, cfg.Blockchain, cfg.CarbonSetting)
 
 	handlers.NewSessionStatesHandler(groupHandler, cfg.Auth, cfg.Blockchain)
 

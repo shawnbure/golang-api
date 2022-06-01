@@ -44,7 +44,7 @@ func NewCollectionIndexer(deployerAddr string, elrondAPI string, elrondAPISec st
 }
 func (ci *CollectionIndexer) CorrectIfAddressIsEmpty(colObj *entities.Collection, blockchainApi string) error {
 	if colObj.ContractAddress == "" {
-		colDetail, err := services.GetCollectionDetailBC(colObj.TokenID, blockchainApi)
+		colDetail, err := services.GetCollectionDetailBC(colObj.CollectionTokenID, blockchainApi)
 		if err != nil {
 			return err
 		}
@@ -234,7 +234,7 @@ func (ci *CollectionIndexer) StartWorker() {
 				if err == gorm.ErrRecordNotFound { //indexer not found
 					collectionIndexer, err = storage.CreateCollectionStat(entities.CollectionIndexer{
 						CollectionAddr: colObj.ContractAddress,
-						CollectionName: colObj.TokenID,
+						CollectionName: colObj.CollectionTokenID,
 					})
 					if err != nil { // bad error
 						zlog.Error("error create colleciton indexer", zap.Error(err))
@@ -246,7 +246,7 @@ func (ci *CollectionIndexer) StartWorker() {
 				}
 			}
 			if collectionIndexer.CollectionName == "" { //update collection name inside collection indexer
-				err := storage.UpdateCollectionIndexerWhere(&collectionIndexer, map[string]interface{}{"collection_name": colObj.TokenID}, "id=?", collectionIndexer.ID)
+				err := storage.UpdateCollectionIndexerWhere(&collectionIndexer, map[string]interface{}{"collection_name": colObj.CollectionTokenID}, "id=?", collectionIndexer.ID)
 				if err != nil {
 					zlog.Error("error UpdateCollectionndexerWhere collection indexer", zap.Error(err))
 					continue
