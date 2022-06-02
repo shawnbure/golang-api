@@ -462,7 +462,20 @@ func (ci *CollectionIndexer) StartWorker() {
 						}
 					}
 					if dbToken == nil {
-						dbToken = &entities.Token{}
+						dbToken = &entities.Token{
+							TokenID:      token.Collection,
+							MintTxHash:   "",
+							CollectionID: colObj.ID,
+							Nonce:        token.Nonce,
+							NonceStr:     nonceStr,
+							MetadataLink: string(youbeiMeta),
+							ImageLink:    string(imageURI),
+							TokenName:    token.Name,
+							Attributes:   attributes,
+							OwnerID:      acc.ID,
+							PriceString:  "0",
+							PriceNominal: 0,
+						}
 					}
 					err = storage.AddOrUpdateToken(&entities.Token{
 						TokenID:      token.Collection,
@@ -474,7 +487,7 @@ func (ci *CollectionIndexer) StartWorker() {
 						ImageLink:    string(imageURI),
 						TokenName:    token.Name,
 						Attributes:   attributes,
-						OwnerID:      acc.ID,
+						OwnerID:      dbToken.OwnerID,
 						PriceString:  dbToken.PriceString,
 						PriceNominal: dbToken.PriceNominal,
 					})
