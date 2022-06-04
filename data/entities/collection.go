@@ -8,7 +8,7 @@ import (
 type Collection struct {
 	ID                       uint64         `gorm:"primaryKey" json:"id"`
 	Name                     string         `json:"name"`
-	CollectionTokenID        string         `json:"tokenId" gorm:"index:,unique"`
+	CollectionTokenID        string         `json:"tokenId" gorm:"index:,unique;column:token_id"`
 	Description              string         `json:"description"`
 	Website                  string         `json:"website"`
 	DiscordLink              string         `json:"discordLink"`
