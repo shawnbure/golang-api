@@ -243,7 +243,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					var rarity entities.TokenRarity
 
 					if err != nil {
-						lerr.Println(err.Error(), string(metadataLink))
+						lerr.Println(err.Error(), string(metadataLink), token.TokenID, token.NonceStr, token.Attributes, token.Collection.MetaDataBaseURI)
 					} else {
 						attributesBytes, err := json.Marshal(metadataJSON["attributes"])
 						if err != nil {
