@@ -244,7 +244,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					var rarity entities.TokenRarity
 
 					if err != nil {
-						lerr.Println(err.Error(), string(metadataLink), token.TokenID, token.NonceStr, token.Attributes, token.Collection.MetaDataBaseURI)
+						lerr.Println(err.Error(), string(metadataLink), tokenDetailObj.Attributes, tokenDetailObj.URIs)
 					} else {
 						attributesBytes, err := json.Marshal(metadataJSON["attributes"])
 						if err != nil {
@@ -268,7 +268,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 
 						}
 					}
-					if !utf8.Valid([]byte(token.MetadataLink)) {
+					if !utf8.Valid([]byte(metadataLink)) {
 						token.MetadataLink = ""
 					}
 					token = &entities.Token{
