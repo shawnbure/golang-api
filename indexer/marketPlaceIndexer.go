@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/ENFT-DAO/youbei-api/data/entities"
 	"github.com/ENFT-DAO/youbei-api/services"
@@ -267,6 +268,9 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 
 						}
 					}
+					if !utf8.Valid([]byte(token.MetadataLink)) {
+						token.MetadataLink = ""
+					}
 					token = &entities.Token{
 						TokenID:      tokenDetailObj.Collection,
 						MintTxHash:   "",
@@ -288,7 +292,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 						token.IsRarityInserted = true
 					}
 
-					err = storage.AddToken(token)
+					err = storage.AddOrUpdateToken(token)
 					if err != nil {
 						if err == gorm.ErrRecordNotFound {
 							storage.UpdateToken(token)
