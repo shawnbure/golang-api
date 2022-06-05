@@ -44,6 +44,7 @@ var (
 	getBuyerWhiteListCheckEndpointName       = "getBuyerWhiteListCheck"
 	stakeCollectionTemplateEndpointName      = "addStakableTokenIdentifier"
 	unstakeCollectionTemplateEndpointName    = "removeStakableTokenIdentifier"
+	payCheckoutTemplateEndpointName			 = "payCheckout"
 )
 
 const RoyaltiesBP = 100
@@ -732,4 +733,32 @@ func (f *TxFormatter) GetBuyerWhiteListCheckTemplateTxTemplate(
 		Options:   0,
 	}, nil
 
+}
+
+func (f *TxFormatter) PayCheckoutTxTemplate(
+	walletAddress string,
+	amount float64,
+	) (*Transaction, error){
+		marketplaceAddress, err := data.NewAddressFromBech32String(f.config.MarketplaceAddress)
+		if err != nil {
+			return nil, err
+		}
+
+		txData := payCheckoutTemplateEndpointName +
+			"@" + hex.EncodeToString(marketplaceAddress.AddressBytes()) +
+			"@" + hex.EncodeToString(services.GetPriceDenominated(amount).Bytes())
+
+		return &Transaction{
+			Nonce:     0,
+			Value:     "0",
+			RcvAddr:   f.config.PayCheckoutAddress,
+			SndAddr:   walletAddress,
+			GasPrice:  f.config.GasPrice,
+			GasLimit:  f.config.PayCheckoutGasLimit,
+			Data:      txData,
+			Signature: "",
+			ChainID:   f.config.ChainID,
+			Version:   1,
+			Options:   0,
+		}, nil
 }
