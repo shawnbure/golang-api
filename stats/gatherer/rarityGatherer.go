@@ -3,27 +3,33 @@ package gatherer
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/ENFT-DAO/youbei-api/data/entities"
 	"github.com/ENFT-DAO/youbei-api/storage"
+	"github.com/ENFT-DAO/youbei-api/utils"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 )
 
 const (
-	RarityUpdaterDurationMilli = 300
+	RarityUpdaterDurationMilli                = 300
+	RarityUpdaterAllCollectionDurationMinutes = 30
+	RarityUpdaterTokenDurationMilli           = 50
 )
 
 func syncRarityRunner(cha chan bool) {
-	ticker := time.NewTicker(60 * time.Minute)
+	ticker := time.NewTicker(RarityUpdaterAllCollectionDurationMinutes * time.Minute)
 	for {
 		select {
 		case <-cha:
 			ticker.Stop()
 			return
 		case <-ticker.C:
-			getMissedRarity()
+			//getMissedRarity()
+			computeRarityScorePreCollection()
 		}
 	}
 }
@@ -92,4 +98,84 @@ func OnePage(link string) (string, error) {
 	}
 
 	return "", errors.New(res.Status)
+}
+
+func computeRarityScorePreCollection() {
+	// Get all collections from database
+	collections, err := storage.GetAllCollections()
+	if err == nil {
+		for _, col := range collections {
+			// get tokens associated with collection
+			tokens, err := storage.GetTokensByCollectionId(col.ID)
+			if err == nil {
+				traits := make(map[string]map[string]int)
+				traitsInTokens := make(map[string][]string)
+				traitsRank := make(map[string]map[string]float64)
+
+				totalTokens := len(tokens)
+
+				for _, token := range tokens {
+					traitsInToken := []string{}
+
+					v := []map[string]interface{}{}
+					bytes, _ := token.Attributes.MarshalJSON()
+					err1 := json.Unmarshal(bytes, &v)
+					if err1 == nil {
+						for _, item := range v {
+							key1 := item["trait_type"].(string)
+							key2 := item["value"].(string)
+							if val, ok := traits[key1]; ok {
+								if val2, ok2 := val[key2]; ok2 {
+									traits[key1][key2] = val2 + 1
+								} else {
+									traits[key1][key2] = 1
+								}
+							} else {
+								traits[key1] = map[string]int{}
+								traits[key1][key2] = 1
+							}
+
+							key := fmt.Sprintf("%v$$$$$%v", item["trait_type"], item["value"])
+							traitsInToken = append(traitsInToken, key)
+						}
+
+						traitsInTokens[token.TokenID] = traitsInToken
+					}
+				}
+
+				for key, val := range traits {
+					traitsRank[key] = make(map[string]float64)
+					for key2, val2 := range val {
+						traitsRank[key][key2] = float64(val2 / totalTokens)
+					}
+				}
+
+				for _, token := range tokens {
+					localTraits := traitsInTokens[token.TokenID]
+
+					totalRank := float64(0)
+					for key, _ := range traits {
+						index := utils.IndexInArray(localTraits, key)
+						if index >= 0 {
+							splittedKeys := strings.Split(localTraits[index], "$$$$$")
+							key2 := splittedKeys[1]
+
+							totalRank += 1 / traitsRank[key][key2]
+						}
+					}
+
+					token.RarityScoreNorm = 0
+					token.RarityUsedTraitCount = uint(len(traitsInTokens[token.TokenID]))
+					token.RarityScore = totalRank
+					token.IsRarityInserted = true
+
+					err3 := storage.UpdateToken(&token)
+					if err3 != nil {
+						logInstance.Error("Cannot update token info ", err3)
+					}
+					time.Sleep(RarityUpdaterTokenDurationMilli * time.Millisecond)
+				}
+			}
+		}
+	}
 }
