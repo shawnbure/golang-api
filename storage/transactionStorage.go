@@ -605,12 +605,7 @@ func GetAllActivitiesWithPagination(lastTimestamp int64,
 	order := "transactions.timestamp desc "
 	offset := 0
 	if lastTimestamp == 0 {
-		// query = "collections.is_verified=?"
-		// if collectionFilter.Query != "" {
-		// 	query = fmt.Sprintf("(%s) and %s", collectionFilter.Query, query)
-		// }
 
-		// collectionFilter.Values = append(collectionFilter.Values, true)
 		query = filter.Query
 	} else {
 		query = "transactions.timestamp<? "
@@ -628,11 +623,7 @@ func GetAllActivitiesWithPagination(lastTimestamp int64,
 		if filter.Query != "" {
 			query = fmt.Sprintf("(%s) and %s", filter.Query, query)
 		}
-		// if collectionFilter.Query != "" {
-		// 	colQuery = fmt.Sprintf("(%s) and %s", collectionFilter.Query, colQuery)
-		// }
 		filter.Values = append(filter.Values, lastTimestamp)
-		// collectionFilter.Values = append(collectionFilter.Values, true)
 	}
 
 	txRead := database.Table(`transactions`).
@@ -754,7 +745,7 @@ func GetLast24HoursVerifiedListingTransactions(fromDateTimestamp string, toDateT
 
 	records := []entities.VerifiedListingTransaction{}
 	txRead := database.Table("transactions").
-		Select("transactions.hash as tx_hash, transactions.id as tx_id, transactions.price_nominal as tx_price_nominal, transactions.timestamp as tx_timestamp, tokens.token_name as token_name, tokens.image_link as token_image_link, seller_account.address as address, collections.name as collection_name, collections.collection_token_id as collection_token_id").
+		Select("transactions.hash as tx_hash, transactions.id as tx_id, transactions.price_nominal as tx_price_nominal, transactions.timestamp as tx_timestamp, tokens.token_name as token_name, tokens.image_link as token_image_link, seller_account.address as address, collections.name as collection_name, collections.token_id as collection_token_id").
 		Joins("inner join tokens on tokens.id=transactions.token_id ").
 		Joins("inner join accounts as seller_account on seller_account.id=transactions.seller_id ").
 		Joins("inner join collections on collections.id=transactions.collection_id").

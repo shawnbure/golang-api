@@ -198,21 +198,26 @@ func GetTokenBaseURIs(tokenData entities.TokenBC) (string, string) {
 func GetTokenUris(tokenData entities.TokenBC) (string, string) {
 	var attributeUrl string
 	for _, uri := range tokenData.URIs {
+		if attributeUrl != "" {
+			continue // pick first found json! or non png
+		}
 		attributeUrlByte, err := base64.StdEncoding.DecodeString(uri)
 		if err != nil {
 			continue
 		}
-		if strings.Contains(string(attributeUrlByte), "json") {
+		medias := tokenData.Media.([]interface{})
+		if string(attributeUrlByte) != (medias[0].(map[string]interface{})["originalUrl"].(string)) {
 			attributeUrl = string(attributeUrlByte)
-		} else {
-			attributeUrl = string(attributeUrlByte)
-			urlParts := strings.Split(attributeUrl, "/")
-			lastPart := urlParts[len(urlParts)-1]
-			attributeUrl = strings.Replace(attributeUrl, lastPart, "", 1)
-			stringNonce := fmt.Sprintf("%02d", tokenData.Nonce)
-			attributeUrl = attributeUrl + stringNonce + ".json"
-			break
 		}
+		// else {
+		// 	attributeUrl = string(attributeUrlByte)
+		// 	urlParts := strings.Split(attributeUrl, "/")
+		// 	lastPart := urlParts[len(urlParts)-1]
+		// 	attributeUrl = strings.Replace(attributeUrl, lastPart, "", 1)
+		// 	stringNonce := fmt.Sprintf("%02d", tokenData.Nonce)
+		// 	attributeUrl = attributeUrl + stringNonce + ".json"
+		// 	break
+		// }
 	}
 	if attributeUrl == "" {
 		if tokenData.Attributes != "" {

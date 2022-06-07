@@ -23,7 +23,7 @@ import (
 )
 
 var getCollectionNFTSAPI string = "%s/collections/%s/nfts?from=%d&withOwner=true"
-var getCollectionNFTSCountsAPI string = "%s/collections/%s/nfts/count?withOwner=true"
+var getCollectionNFTSCountsAPI string = "%s/collections/%s/nfts/count"
 
 type CollectionIndexer struct {
 	DeployerAddr string `json:"deployerAddr"`
@@ -78,7 +78,7 @@ func (ci *CollectionIndexer) StartWorker() {
 	if ci.ElrondAPISec != "" {
 		api = ci.ElrondAPISec
 		getCollectionNFTSAPI = "%s/nftsFromCollection?collection=%s&from=%d&withOwner=true"
-		getCollectionNFTSCountsAPI = "%s/nfts/count?collection=%s&withOwner=true"
+		getCollectionNFTSCountsAPI = "%s/nfts/count?collection=%s"
 	}
 	for {
 	deployLoop:
@@ -252,7 +252,7 @@ func (ci *CollectionIndexer) StartWorker() {
 					continue
 				}
 			}
-			countNftRes, _ := services.GetResponse(fmt.Sprintf(getCollectionNFTSCountsAPI, api, collectionIndexer.CollectionName))
+			countNftRes, err := services.GetResponse(fmt.Sprintf(getCollectionNFTSCountsAPI, api, collectionIndexer.CollectionName))
 			var count uint64
 			json.Unmarshal(countNftRes, &count)
 			lastIndex := 0
@@ -342,30 +342,35 @@ func (ci *CollectionIndexer) StartWorker() {
 					var attributes datatypes.JSON
 					if token.Attributes != "" {
 						if _, ok := metadataJSON["attributes"]; !ok {
-							token.Attributes = strings.ReplaceAll(token.Attributes, ",", "")
 							attributesStr, err := base64.StdEncoding.DecodeString(token.Attributes)
 							if strings.Contains(string(attributesStr), ".json") {
 								if strings.Contains(string(attributesStr), "metadata:") {
-									attributesStr = []byte(strings.Replace(string(attributesStr), "metadata:", "", 1))
-									url = (`https://media.elrond.com/nfts/asset/` + string(attributesStr))
-									attrbs, err := services.GetResponse(url)
-									if err != nil {
-										logErr.Println(err.Error(), string(url), token.Collection, token.Attributes, token.Identifier, token.Media, token.Metadata)
-									}
+									attributeParts := strings.Split(string(attributesStr), ";")
+									for _, part := range attributeParts {
+										if strings.Contains("metadata:", part) {
+											part = part[9:]
+											// attributesStr = []byte(strings.Replace(string(attributesStr), "metadata:", "", 1))
+											url = (`https://media.elrond.com/nfts/asset/` + string(part))
+											attrbs, err := services.GetResponse(url)
+											if err != nil {
+												logErr.Println(err.Error(), string(url), token.Collection, token.Attributes, token.Identifier, token.Media, token.Metadata)
+											}
 
-									metadataJSON = make(map[string]interface{})
-									err = json.Unmarshal(attrbs, &metadataJSON)
-									if err != nil {
-										logErr.Println(err.Error(), string(url), token.Collection, token.Attributes, token.Identifier, token.Media, token.Metadata)
-									}
-									attributesBytes, err := json.Marshal(metadataJSON["attributes"])
-									if err != nil {
-										logErr.Println(err.Error())
-										attributesBytes = []byte{}
-									}
-									err = json.Unmarshal(attributesBytes, &attributes)
-									if err != nil {
-										logErr.Println(err.Error())
+											metadataJSON = make(map[string]interface{})
+											err = json.Unmarshal(attrbs, &metadataJSON)
+											if err != nil {
+												logErr.Println(err.Error(), string(url), token.Collection, token.Attributes, token.Identifier, token.Media, token.Metadata)
+											}
+											attributesBytes, err := json.Marshal(metadataJSON["attributes"])
+											if err != nil {
+												logErr.Println(err.Error())
+												attributesBytes = []byte{}
+											}
+											err = json.Unmarshal(attributesBytes, &attributes)
+											if err != nil {
+												logErr.Println(err.Error())
+											}
+										}
 									}
 
 								}
@@ -457,7 +462,20 @@ func (ci *CollectionIndexer) StartWorker() {
 						}
 					}
 					if dbToken == nil {
-						dbToken = &entities.Token{}
+						dbToken = &entities.Token{
+							TokenID:      token.Collection,
+							MintTxHash:   "",
+							CollectionID: colObj.ID,
+							Nonce:        token.Nonce,
+							NonceStr:     nonceStr,
+							MetadataLink: string(youbeiMeta),
+							ImageLink:    string(imageURI),
+							TokenName:    token.Name,
+							Attributes:   attributes,
+							OwnerID:      acc.ID,
+							PriceString:  "0",
+							PriceNominal: 0,
+						}
 					}
 					err = storage.AddOrUpdateToken(&entities.Token{
 						TokenID:      token.Collection,
@@ -469,7 +487,7 @@ func (ci *CollectionIndexer) StartWorker() {
 						ImageLink:    string(imageURI),
 						TokenName:    token.Name,
 						Attributes:   attributes,
-						OwnerID:      acc.ID,
+						OwnerID:      dbToken.OwnerID,
 						PriceString:  dbToken.PriceString,
 						PriceNominal: dbToken.PriceNominal,
 					})

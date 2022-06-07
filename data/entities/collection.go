@@ -8,7 +8,7 @@ import (
 type Collection struct {
 	ID                       uint64         `gorm:"primaryKey" json:"id"`
 	Name                     string         `json:"name"`
-	CollectionTokenID        string         `json:"tokenId" gorm:"index:,unique"`
+	CollectionTokenID        string         `json:"tokenId" gorm:"index:,unique;column:collection_token_id"`
 	Description              string         `json:"description"`
 	Website                  string         `json:"website"`
 	DiscordLink              string         `json:"discordLink"`
@@ -32,7 +32,6 @@ type Collection struct {
 	MintStartDate            uint64         `json:"mintStartDate"`
 	MintEndDate              uint64         `json:"mintEndDate"`
 	CreatorID                uint64         `json:"creatorId"`
-
 	//`gorm:"type:bool;default:false"`
 
 	//AccountName              string `json:"accountName"`
