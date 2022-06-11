@@ -32,6 +32,7 @@ type Token struct {
 	StakeDate            uint64         `json:"stakeDate"`
 	StakeType            string         `json:"stakeType"`
 	RarityUsedTraitCount uint           `json:"rarityUsedTraitCount" gorm:"default:0"`
+	Rank                 uint           `json:"rank" gorm:"default:0.0"`
 	RarityScore          float64        `json:"rarityScore" gorm:"default:0.0"`
 	RarityScoreNorm      float64        `json:"rarityScoreNorm" gorm:"default:0.0"`
 	IsRarityInserted     bool           `json:"isRarityInserted" gorm:"default:false"`

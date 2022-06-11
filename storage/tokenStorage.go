@@ -241,7 +241,21 @@ func GetTokensByCollectionId(collectionId uint64) ([]entities.Token, error) {
 
 	return tokens, nil
 }
+func GetTokensByCollectionIdOrderedByRarityScore(collectionId uint64, direction string) ([]entities.Token, error) {
+	var tokens []entities.Token
 
+	database, err := GetDBOrError()
+	if err != nil {
+		return nil, err
+	}
+
+	txRead := database.Order(fmt.Sprintf("rarity_score %s", direction)).Find(&tokens, "collection_id = ?", collectionId)
+	if txRead.Error != nil {
+		return nil, txRead.Error
+	}
+
+	return tokens, nil
+}
 func GetLastNonceTokenByCollectionId(collectionId uint64) (entities.Token, error) {
 	var token entities.Token
 

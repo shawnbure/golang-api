@@ -256,6 +256,23 @@ func GetAllCollections() ([]entities.Collection, error) {
 	return collections, nil
 }
 
+func GetAllNotRankedCollections() ([]entities.Collection, error) {
+	var collections []entities.Collection
+
+	database, err := GetDBOrError()
+	if err != nil {
+		return nil, err
+	}
+
+	txRead := database.Where("is_ranked ?", false).Order("created_at desc").Find(&collections)
+	if txRead.Error != nil {
+		return nil, txRead.Error
+	}
+
+	return collections, nil
+
+}
+
 /*
 func GetAllCollectionAccounts() ([]entities.CollectionAccount, error) {
 

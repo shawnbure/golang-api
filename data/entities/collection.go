@@ -32,6 +32,7 @@ type Collection struct {
 	MintStartDate            uint64         `json:"mintStartDate"`
 	MintEndDate              uint64         `json:"mintEndDate"`
 	CreatorID                uint64         `json:"creatorId"`
+	IsRanked                 bool           `json:"isRanked" `
 	//`gorm:"type:bool;default:false"`
 
 	//AccountName              string `json:"accountName"`

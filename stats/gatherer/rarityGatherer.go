@@ -4,14 +4,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/ENFT-DAO/youbei-api/data/entities"
-	"github.com/ENFT-DAO/youbei-api/storage"
-	"github.com/ENFT-DAO/youbei-api/utils"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/ENFT-DAO/youbei-api/data/entities"
+	"github.com/ENFT-DAO/youbei-api/interaction"
+	"github.com/ENFT-DAO/youbei-api/storage"
+	"github.com/ENFT-DAO/youbei-api/utils"
 )
 
 const (
@@ -122,8 +124,16 @@ func computeRarityScorePreCollection() {
 					err1 := json.Unmarshal(bytes, &v)
 					if err1 == nil {
 						for _, item := range v {
-							key1 := item["trait_type"].(string)
-							key2 := item["value"].(string)
+							var key1, key2 string
+							if _, ok := item["trait_type"]; !ok {
+								for k, v := range item {
+									key1 = k
+									key2 = v.(string)
+								}
+							} else {
+								key1 = item["trait_type"].(string)
+								key2 = item["value"].(string)
+							}
 							if val, ok := traits[key1]; ok {
 								if val2, ok2 := val[key2]; ok2 {
 									traits[key1][key2] = val2 + 1
@@ -135,7 +145,7 @@ func computeRarityScorePreCollection() {
 								traits[key1][key2] = 1
 							}
 
-							key := fmt.Sprintf("%v$$$$$%v", item["trait_type"], item["value"])
+							key := fmt.Sprintf("%v$$$$$%v", key1, key2)
 							traitsInToken = append(traitsInToken, key)
 						}
 
@@ -175,6 +185,30 @@ func computeRarityScorePreCollection() {
 					}
 					time.Sleep(RarityUpdaterTokenDurationMilli * time.Millisecond)
 				}
+			}
+		}
+	}
+}
+
+func computeRanks() {
+	// Get all collections from database
+	collections, err := storage.GetAllNotRankedCollections()
+	if err == nil {
+		for _, col := range collections {
+			// get tokens associated with collection
+			tokens, err := storage.GetTokensByCollectionIdOrderedByRarityScore(col.ID, "DESC")
+			lastToken := tokens[0]
+			if err == nil {
+				for i, token := range tokens {
+					if token.RarityScore < lastToken.RarityScore {
+						token.Rank = uint(i)
+					} else {
+						token.Rank = lastToken.Rank
+					}
+				}
+				bc:=interaction.GetBlockchainInteractor()
+				bc.DoVmQuery(col.ContractAddress,)
+				if len(tokens) == interaction.GetBlockchainInteractor().c()
 			}
 		}
 	}
