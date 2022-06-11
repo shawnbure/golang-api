@@ -241,6 +241,22 @@ func GetTokensByCollectionId(collectionId uint64) ([]entities.Token, error) {
 
 	return tokens, nil
 }
+func GetTokensWithNoRankCount(collectionID uint64) (int64, error) {
+
+	database, err := GetDBOrError()
+	if err != nil {
+		return 0, err
+	}
+	var count int64
+	txRead := database.
+		Where("rank == ?", 0).
+		Count(&count)
+	if txRead.Error != nil {
+		return 0, txRead.Error
+	}
+
+	return count, nil
+}
 func GetTokensByCollectionIdOrderedByRarityScore(collectionId uint64, direction string) ([]entities.Token, error) {
 	var tokens []entities.Token
 
@@ -249,13 +265,36 @@ func GetTokensByCollectionIdOrderedByRarityScore(collectionId uint64, direction 
 		return nil, err
 	}
 
-	txRead := database.Order(fmt.Sprintf("rarity_score %s", direction)).Find(&tokens, "collection_id = ?", collectionId)
+	txRead := database.
+		Where("rarity_score != ?", 0).
+		Order(fmt.Sprintf("rarity_score %s", direction)).
+		Find(&tokens, "collection_id = ?", collectionId)
 	if txRead.Error != nil {
 		return nil, txRead.Error
 	}
 
 	return tokens, nil
 }
+
+func GetTokensByCollectionIdNotRanked(collectionId uint64) ([]entities.Token, error) {
+	var tokens []entities.Token
+
+	database, err := GetDBOrError()
+	if err != nil {
+		return nil, err
+	}
+
+	txRead := database.
+		Where("rarity_score == ? AND ", 0).
+		Order("updated_at desc").
+		Find(&tokens, "collection_id = ?", collectionId)
+	if txRead.Error != nil {
+		return nil, txRead.Error
+	}
+
+	return tokens, nil
+}
+
 func GetLastNonceTokenByCollectionId(collectionId uint64) (entities.Token, error) {
 	var token entities.Token
 

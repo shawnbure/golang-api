@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"github.com/ENFT-DAO/youbei-api/data/entities"
-	"github.com/ENFT-DAO/youbei-api/interaction"
 	"github.com/ENFT-DAO/youbei-api/storage"
 	"github.com/ENFT-DAO/youbei-api/utils"
+	"go.uber.org/zap"
 )
 
 const (
@@ -32,6 +32,7 @@ func syncRarityRunner(cha chan bool) {
 		case <-ticker.C:
 			//getMissedRarity()
 			computeRarityScorePreCollection()
+			computeRanks()
 		}
 	}
 }
@@ -108,7 +109,7 @@ func computeRarityScorePreCollection() {
 	if err == nil {
 		for _, col := range collections {
 			// get tokens associated with collection
-			tokens, err := storage.GetTokensByCollectionId(col.ID)
+			tokens, err := storage.GetTokensByCollectionIdNotRanked(col.ID)
 			if err == nil {
 				traits := make(map[string]map[string]int)
 				traitsInTokens := make(map[string][]string)
@@ -192,10 +193,17 @@ func computeRarityScorePreCollection() {
 
 func computeRanks() {
 	// Get all collections from database
-	collections, err := storage.GetAllNotRankedCollections()
+	collections, err := storage.GetAllCollections()
 	if err == nil {
 		for _, col := range collections {
 			// get tokens associated with collection
+			count, err := storage.GetTokensWithNoRankCount(col.ID)
+			if err != nil {
+				zlog.Error("critical", zap.Error(err))
+			}
+			if count == 0 {
+				continue
+			}
 			tokens, err := storage.GetTokensByCollectionIdOrderedByRarityScore(col.ID, "DESC")
 			lastToken := tokens[0]
 			if err == nil {
@@ -205,10 +213,8 @@ func computeRanks() {
 					} else {
 						token.Rank = lastToken.Rank
 					}
+					storage.UpdateToken(&token)
 				}
-				bc:=interaction.GetBlockchainInteractor()
-				bc.DoVmQuery(col.ContractAddress,)
-				if len(tokens) == interaction.GetBlockchainInteractor().c()
 			}
 		}
 	}
