@@ -237,14 +237,31 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					idParts := strings.Split(tokenDetailObj.Identifier, "-")
 					nonceStr := idParts[len(idParts)-1]
 					imageURI, metadataLink := services.GetTokenUris(tokenDetailObj)
-					attrbs, err := services.GetResponse(metadataLink)
+
+					if strings.Contains(api, "devnet") {
+						imageURI = strings.Replace(imageURI, "https://gateway.pinata.cloud/ipfs/", "https://devnet-media.elrond.com/nfts/asset/", 1)
+					} else {
+						imageURI = strings.Replace(imageURI, "https://gateway.pinata.cloud/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
+						imageURI = strings.Replace(imageURI, "https://ipfs.io/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
+						imageURI = strings.Replace(imageURI, "ipfs://", "https://media.elrond.com/nfts/asset/", 1)
+					}
+
+					youbeiMeta := strings.Replace(metadataLink, "https://gateway.pinata.cloud/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
+					youbeiMeta = strings.Replace(youbeiMeta, "https://ipfs.io/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
+					youbeiMeta = strings.Replace(youbeiMeta, "https://ipfs.io/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
+					youbeiMeta = strings.Replace(youbeiMeta, "ipfs://", "https://media.elrond.com/nfts/asset/", 1)
+
+					attrbs, err := services.GetResponse(youbeiMeta)
+					if err != nil {
+						lerr.Println(err.Error(), string(youbeiMeta), tokenDetailObj.Attributes, tokenDetailObj.URIs)
+					}
 					metadataJSON := make(map[string]interface{})
 					err = json.Unmarshal(attrbs, &metadataJSON)
 					var attributes datatypes.JSON
 					var rarity entities.TokenRarity
 
 					if err != nil {
-						lerr.Println(err.Error(), string(metadataLink), tokenDetailObj.Attributes, tokenDetailObj.URIs)
+						lerr.Println(err.Error(), string(youbeiMeta), tokenDetailObj.Attributes, tokenDetailObj.URIs)
 					} else {
 						attributesBytes, err := json.Marshal(metadataJSON["attributes"])
 						if err != nil {
@@ -268,7 +285,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 
 						}
 					}
-					if !utf8.Valid([]byte(metadataLink)) {
+					if !utf8.Valid([]byte(youbeiMeta)) {
 						token.MetadataLink = ""
 					}
 					token = &entities.Token{
@@ -278,7 +295,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 						CollectionID: col.ID,
 						Nonce:        tokenDetailObj.Nonce,
 						NonceStr:     nonceStr,
-						MetadataLink: metadataLink,
+						MetadataLink: youbeiMeta,
 						ImageLink:    imageURI,
 						TokenName:    tokenDetailObj.Name,
 						Attributes:   attributes,
