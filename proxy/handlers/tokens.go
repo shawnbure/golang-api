@@ -33,6 +33,7 @@ const (
 	tokensListMetadataEndpoint       = "/list/:offset/:limit"
 	whitelistBuyCountLimitEndpoint   = "/whitelist/buycountlimit"
 	buyerWhiteListCheckEndpoint      = "/buyer-whitelist-check"
+	changeTokenOwner                 = "/token-owner-change"
 )
 
 type TokenListQueryBody struct {
@@ -70,7 +71,7 @@ func NewTokensHandler(groupHandler *groupHandler, authCfg config.AuthConfig, cfg
 		{Method: http.MethodPost, Path: refreshTokenMetadataEndpoint, HandlerFunc: handler.refresh},
 		{Method: http.MethodPost, Path: tokensListMetadataEndpoint, HandlerFunc: handler.getList},
 		{Method: http.MethodPost, Path: whitelistBuyCountLimitEndpoint, HandlerFunc: handler.getWhitelistBuyCountLimit},
-
+		{Method: http.MethodPost, Path: changeTokenOwner, HandlerFunc: handler.changeTokenOwner},
 		{Method: http.MethodPost, Path: buyerWhiteListCheckEndpoint, HandlerFunc: handler.getBuyerWhiteListCheck},
 	}
 
@@ -573,4 +574,21 @@ func (handler *tokensHandler) getBuyerWhiteListCheck(c *gin.Context) {
 	}
 
 	dtos.JsonResponse(c, http.StatusOK, strBuyerWhiteListCheck, "")
+}
+
+func (handler *tokensHandler) changeTokenOwner(c *gin.Context) {
+	var queries services.ChangeTokenOwnerRequest
+	err := c.BindJSON(&queries)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	err = services.ChangeTokenOwner(queries.TokenId, queries.NonceHexStr, queries.NewOwner, handler.blockchainConfig.ApiUrl)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		return
+	}
+
+	dtos.JsonResponse(c, http.StatusOK, gin.H{"message": "Ok"}, "")
 }

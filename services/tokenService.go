@@ -120,6 +120,12 @@ type WhitelistBuyLimitCountRequest struct {
 	UserAddress     string `json:"userAddress"`
 }
 
+type ChangeTokenOwnerRequest struct {
+	TokenId     string `json:"tokenId"`
+	NonceHexStr string `json:"nonceHexStr"`
+	NewOwner    string `json:"newOwner"`
+}
+
 const (
 	minPriceUnit               = 1000
 	minPercentUnit             = 1000
@@ -1610,4 +1616,36 @@ func DoGetWhitelistBuyCountLimitVmQuery(contractAddress string, userAddress stri
 
 	strBuyCountLimit := strBuyCount + "," + strBuyLimit
 	return strBuyCountLimit, nil
+}
+
+func ChangeTokenOwner(tokenIdentifier string, nonceStr string, newOwner string, blockchainAPI string) error {
+	token, err := storage.GetTokenByTokenIdAndNonceStr(tokenIdentifier, nonceStr)
+	if err != nil {
+		return err
+	}
+	if token.Owner.Address == newOwner {
+		return nil
+	}
+	reqURL := fmt.Sprintf("%s/nfts/%s", blockchainAPI, tokenIdentifier+"-"+nonceStr)
+	resByte, err := GetResponse(reqURL)
+	if err != nil {
+		return err
+	}
+	var tokenBC entities.TokenBC
+	err = json.Unmarshal(resByte, &tokenBC)
+	if err != nil {
+		return err
+	}
+	if tokenBC.Owner == newOwner {
+		acc, err := GetOrCreateAccount(tokenBC.Owner)
+		if err != nil {
+			return err
+		}
+		token.OwnerID = acc.ID
+		err = storage.UpdateToken(token)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
