@@ -249,7 +249,8 @@ func GetTokensWithNoRankCount(collectionID uint64) (int64, error) {
 	}
 	var count int64
 	txRead := database.
-		Where("rank == ?", 0).
+		Model(&entities.Token{}).
+		Where("rank = ?", 0).
 		Count(&count)
 	if txRead.Error != nil {
 		return 0, txRead.Error
@@ -285,9 +286,8 @@ func GetTokensByCollectionIdNotRanked(collectionId uint64) ([]entities.Token, er
 	}
 
 	txRead := database.
-		Where("rarity_score == ? AND ", 0).
-		Order("updated_at desc").
-		Find(&tokens, "collection_id = ?", collectionId)
+		Where("rarity_score = ? AND collection_id = ?", 0, collectionId).
+		Find(&tokens)
 	if txRead.Error != nil {
 		return nil, txRead.Error
 	}

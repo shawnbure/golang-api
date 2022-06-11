@@ -23,7 +23,7 @@ const (
 )
 
 func syncRarityRunner(cha chan bool) {
-	ticker := time.NewTicker(RarityUpdaterAllCollectionDurationMinutes * time.Minute)
+	ticker := time.NewTicker(1 * time.Second)
 	for {
 		select {
 		case <-cha:
@@ -205,14 +205,22 @@ func computeRanks() {
 				continue
 			}
 			tokens, err := storage.GetTokensByCollectionIdOrderedByRarityScore(col.ID, "DESC")
-			lastToken := tokens[0]
+			if len(tokens) == 0 {
+				continue
+			}
 			if err == nil {
+				lastToken := tokens[0]
 				for i, token := range tokens {
 					if token.RarityScore < lastToken.RarityScore {
-						token.Rank = uint(i)
+						token.Rank = uint(i + 1)
 					} else {
-						token.Rank = lastToken.Rank
+						if lastToken.Rank == 0 {
+							token.Rank = uint(i + 1)
+						} else {
+							token.Rank = lastToken.Rank
+						}
 					}
+					lastToken = token
 					storage.UpdateToken(&token)
 				}
 			}

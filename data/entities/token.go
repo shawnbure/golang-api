@@ -12,6 +12,7 @@ type Token struct {
 	RoyaltiesPercent     float64        `json:"royaltiesPercent"`
 	MetadataLink         string         `json:"metadataLink"`
 	CreatedAt            uint64         `json:"createdAt"`
+	UpdatedAt            int64          `json:"updatedAt" gorm:"autoUpdateTime:milli"` // Set to current unix seconds on updaing or if it is zero on creating
 	Status               TxType         `json:"state"`
 	Attributes           datatypes.JSON `json:"attributes"`
 	TokenName            string         `json:"tokenName"`
@@ -32,7 +33,7 @@ type Token struct {
 	StakeDate            uint64         `json:"stakeDate"`
 	StakeType            string         `json:"stakeType"`
 	RarityUsedTraitCount uint           `json:"rarityUsedTraitCount" gorm:"default:0"`
-	Rank                 uint           `json:"rank" gorm:"default:0.0"`
+	Rank                 uint           `json:"rank" gorm:"default:0"`
 	RarityScore          float64        `json:"rarityScore" gorm:"default:0.0"`
 	RarityScoreNorm      float64        `json:"rarityScoreNorm" gorm:"default:0.0"`
 	IsRarityInserted     bool           `json:"isRarityInserted" gorm:"default:false"`
