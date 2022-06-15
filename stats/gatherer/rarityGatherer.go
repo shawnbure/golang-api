@@ -105,10 +105,7 @@ func OnePage(link string) (string, error) {
 
 func computeRarityScorePreCollection() {
 	// Get all collections from database
-	col, err := storage.GetCollectionByTokenId("DRIFTERS-efd96c")
-	// collections, err := storage.GetAllCollections()
-	var collections []*entities.Collection
-	collections = append(collections, col)
+	collections, err := storage.GetAllCollections()
 	if err == nil {
 		for _, col := range collections {
 			// get tokens associated with collection
@@ -197,11 +194,7 @@ func computeRarityScorePreCollection() {
 
 func computeRanks() {
 	// Get all collections from database
-	// collections, err := storage.GetAllCollections()
-	col, err := storage.GetCollectionByTokenId("DRIFTERS-efd96c")
-	// collections, err := storage.GetAllCollections()
-	var collections []*entities.Collection
-	collections = append(collections, col)
+	collections, err := storage.GetAllCollections()
 	if err == nil {
 		for _, col := range collections {
 			// get tokens associated with collection
