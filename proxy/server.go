@@ -8,7 +8,9 @@ import (
 	"github.com/ENFT-DAO/youbei-api/alerts/tg"
 	"github.com/ENFT-DAO/youbei-api/config"
 	_ "github.com/ENFT-DAO/youbei-api/docs"
+	"github.com/ENFT-DAO/youbei-api/indexer"
 	"github.com/ENFT-DAO/youbei-api/process"
+	"github.com/ENFT-DAO/youbei-api/proxier"
 	"github.com/ENFT-DAO/youbei-api/proxy/handlers"
 	"github.com/ENFT-DAO/youbei-api/services"
 	"github.com/gin-contrib/cors"
@@ -54,17 +56,17 @@ func NewWebServer(cfg *config.GeneralConfig) (*webServer, error) {
 	if err != nil {
 		return nil, err
 	}
-	// marketPlaceIndexer, err := indexer.NewMarketPlaceIndexer(cfg.Blockchain.MarketplaceAddress, cfg.Blockchain.ApiUrl, cfg.Blockchain.ApiUrlSec, cfg.Blockchain.CollectionAPIDelay)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// proxier.SetIPs(cfg.Proxy.List)
-	// collectionIndexer, err := indexer.NewCollectionIndexer(cfg.Blockchain.DeployerAddress, cfg.Blockchain.ApiUrl, cfg.Blockchain.ApiUrlSec, cfg.Blockchain.CollectionAPIDelay)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// go collectionIndexer.StartWorker()
-	// go marketPlaceIndexer.StartWorker()
+	marketPlaceIndexer, err := indexer.NewMarketPlaceIndexer(cfg.Blockchain.MarketplaceAddress, cfg.Blockchain.ApiUrl, cfg.Blockchain.ApiUrlSec, cfg.Blockchain.CollectionAPIDelay)
+	if err != nil {
+		return nil, err
+	}
+	proxier.SetIPs(cfg.Proxy.List)
+	collectionIndexer, err := indexer.NewCollectionIndexer(cfg.Blockchain.DeployerAddress, cfg.Blockchain.ApiUrl, cfg.Blockchain.ApiUrlSec, cfg.Blockchain.CollectionAPIDelay)
+	if err != nil {
+		return nil, err
+	}
+	go collectionIndexer.StartWorker()
+	go marketPlaceIndexer.StartWorker()
 	observerMonitor := process.NewObserverMonitor(
 		bot,
 		ctx,
