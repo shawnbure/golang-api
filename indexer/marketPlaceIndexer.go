@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math"
 	"math/big"
 	"os"
 	"strconv"
@@ -302,7 +303,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 						OnSale:       false,
 					}
 
-					if rarity.RarityScore != 0 {
+					if rarity.RarityScore != 0 && !math.IsInf(rarity.RarityScore, 0) {
 						token.RarityScore = rarity.RarityScore
 						token.RarityScoreNorm = rarity.RarityScoreNormed
 						token.RarityUsedTraitCount = uint(rarity.UsedTraitsCount)

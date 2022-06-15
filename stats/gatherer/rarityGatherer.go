@@ -31,7 +31,7 @@ func syncRarityRunner(cha chan bool) {
 			return
 		case <-ticker.C:
 			//getMissedRarity()
-			computeRarityScorePreCollection()
+			// computeRarityScorePreCollection()
 			computeRanks()
 		}
 	}
@@ -105,14 +105,17 @@ func OnePage(link string) (string, error) {
 
 func computeRarityScorePreCollection() {
 	// Get all collections from database
-	collections, err := storage.GetAllCollections()
+	col, err := storage.GetCollectionByTokenId("DRIFTERS-efd96c")
+	// collections, err := storage.GetAllCollections()
+	var collections []*entities.Collection
+	collections = append(collections, col)
 	if err == nil {
 		for _, col := range collections {
 			// get tokens associated with collection
 			tokens, err := storage.GetTokensByCollectionIdNotRanked(col.ID)
 			if err == nil {
 				traits := make(map[string]map[string]int)
-				traitsInTokens := make(map[string][]string)
+				traitsInTokens := make(map[uint64][]string)
 				traitsRank := make(map[string]map[string]float64)
 
 				totalTokens := len(tokens)
@@ -149,20 +152,21 @@ func computeRarityScorePreCollection() {
 							key := fmt.Sprintf("%v$$$$$%v", key1, key2)
 							traitsInToken = append(traitsInToken, key)
 						}
-
-						traitsInTokens[token.TokenID] = traitsInToken
+						if len(traitsInTokens[token.ID]) == 0 {
+							traitsInTokens[token.ID] = traitsInToken
+						}
 					}
 				}
 
 				for key, val := range traits {
 					traitsRank[key] = make(map[string]float64)
 					for key2, val2 := range val {
-						traitsRank[key][key2] = float64(val2 / totalTokens)
+						traitsRank[key][key2] = float64(float64(val2) / float64(totalTokens))
 					}
 				}
 
 				for _, token := range tokens {
-					localTraits := traitsInTokens[token.TokenID]
+					localTraits := traitsInTokens[token.ID]
 
 					totalRank := float64(0)
 					for key, _ := range traits {
@@ -176,7 +180,7 @@ func computeRarityScorePreCollection() {
 					}
 
 					token.RarityScoreNorm = 0
-					token.RarityUsedTraitCount = uint(len(traitsInTokens[token.TokenID]))
+					token.RarityUsedTraitCount = uint(len(traitsInTokens[token.ID]))
 					token.RarityScore = totalRank
 					token.IsRarityInserted = true
 
@@ -193,7 +197,11 @@ func computeRarityScorePreCollection() {
 
 func computeRanks() {
 	// Get all collections from database
-	collections, err := storage.GetAllCollections()
+	// collections, err := storage.GetAllCollections()
+	col, err := storage.GetCollectionByTokenId("DRIFTERS-efd96c")
+	// collections, err := storage.GetAllCollections()
+	var collections []*entities.Collection
+	collections = append(collections, col)
 	if err == nil {
 		for _, col := range collections {
 			// get tokens associated with collection
