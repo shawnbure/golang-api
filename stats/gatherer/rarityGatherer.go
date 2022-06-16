@@ -31,8 +31,8 @@ func syncRarityRunner(cha chan bool) {
 			return
 		case <-ticker.C:
 			//getMissedRarity()
-			// computeRarityScorePreCollection()
-			// computeRanks()
+			computeRarityScorePreCollection()
+			computeRanks()
 		}
 	}
 }
