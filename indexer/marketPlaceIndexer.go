@@ -80,7 +80,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			continue
 		}
 		if marketStat.LastTimestamp >= txs[len(txs)-1].Timestamp {
-			// goto mainLoop
+			goto mainLoop
 		}
 		foundTxs += uint64(len(txs))
 
@@ -105,7 +105,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			// 	goto txloop
 			// }
 			if marketStat.LastTimestamp >= tx.Timestamp {
-				// goto mainLoop
+				goto mainLoop
 			}
 			var orgTx entities.TransactionBC = tx
 			// entities.TransactionBC
