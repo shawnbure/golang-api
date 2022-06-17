@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math"
 	"net/http"
 	"strings"
 	"time"
@@ -68,7 +69,7 @@ func getMissedRarity() {
 					}
 				}
 			} else {
-				logInstance.Error("Cannot get metadata from link ", err)
+				zlog.Error("Cannot get metadata from link ", zap.Error(err))
 			}
 
 			if !success {
@@ -77,7 +78,7 @@ func getMissedRarity() {
 
 			err3 := storage.UpdateToken(&tokenInstance)
 			if err3 != nil {
-				logInstance.Error("Cannot update token info ", err3)
+				zlog.Error("Cannot update token info ", zap.Error(err))
 			}
 		}
 
@@ -171,8 +172,13 @@ func computeRarityScorePreCollection() {
 						if index >= 0 {
 							splittedKeys := strings.Split(localTraits[index], "$$$$$")
 							key2 := splittedKeys[1]
-
-							totalRank += 1 / traitsRank[key][key2]
+							val := traitsRank[key][key2]
+							if val != 0 {
+								totalRank += 1 / val
+								if math.IsInf(totalRank, 0) {
+									zlog.Error("its inf", zap.Any("traitsRank", traitsRank))
+								}
+							}
 						}
 					}
 
@@ -183,7 +189,7 @@ func computeRarityScorePreCollection() {
 
 					err3 := storage.UpdateToken(&token)
 					if err3 != nil {
-						logInstance.Error("Cannot update token info ", err3)
+						zlog.Error("Cannot update token info ", zap.Error(err3))
 					}
 					time.Sleep(RarityUpdaterTokenDurationMilli * time.Millisecond)
 				}

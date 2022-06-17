@@ -1,7 +1,6 @@
 package gatherer
 
 import (
-	logger "github.com/ElrondNetwork/elrond-go-logger"
 	"sync"
 )
 
@@ -20,10 +19,6 @@ type manager struct {
 // MARK: Module variables
 var managerInstance *manager = nil
 var once sync.Once
-
-var (
-	logInstance = logger.GetOrCreate("gatherer-manager")
-)
 
 // Manager Constructor - It initializes the db configuration params
 func (m *manager) init() {
