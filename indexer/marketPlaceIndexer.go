@@ -686,6 +686,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			}
 
 		}
+		lastIndex += len(txs)
 		storage.UpdateMarketPlaceIndexerTimestamp(txs[len(txs)-1].Timestamp)
 	}
 }
