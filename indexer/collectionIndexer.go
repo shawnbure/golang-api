@@ -213,7 +213,7 @@ func (ci *CollectionIndexer) StartWorker() {
 			logErr.Println("error something went wrong updating last index of deployer  ")
 			continue
 		}
-		cols, err := storage.GetVerifiedCollections()
+		cols, err := storage.GetAllCollections()
 		if err != nil {
 			logErr.Println(err.Error())
 			continue
