@@ -52,6 +52,7 @@ type TransactionBC struct {
 	Data           string `json:"data"`
 	Status         string `json:"status"`
 	PendingResults bool   `json:"pendingResults"`
+	Function       string `json:"function"`
 	Value          string `json:"value"`
 	Timestamp      uint64 `json:"timestamp"`
 	Action         struct {

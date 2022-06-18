@@ -145,7 +145,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				if strings.Contains(orgDataHexParts[0], "upgradeContract") {
 					continue
 				}
-				actions["isWithdrawn"] = strings.Contains(string(orgData), "withdrawNft")
+				actions["isWithdrawn"] = strings.EqualFold(orgTx.Function, "withdrawNft")
 				actions["isOnSale"] = strings.Contains(string(orgData), "putNftForSale")
 				actions["isOnAuction"] = strings.Contains(string(orgData), "startAuction")
 				actions["isBuyNft"] = strings.Contains(string(orgData), "buyNft")
