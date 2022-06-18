@@ -79,8 +79,9 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			lerr.Println("error unmarshal nfts marketplace", err.Error())
 			continue
 		}
+
 		if marketStat.LastTimestamp > txs[len(txs)-1].Timestamp {
-			if marketStat.LastTimestamp != txs[len(txs)-1].Timestamp {
+			if marketStat.LastTimestamp == txs[len(txs)-1].Timestamp {
 				lastIndex += len(txs)
 			}
 			goto mainLoop
@@ -108,7 +109,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			// 	goto txloop
 			// }
 			if marketStat.LastTimestamp > tx.Timestamp {
-				if marketStat.LastTimestamp != txs[len(txs)-1].Timestamp {
+				if marketStat.LastTimestamp == txs[len(txs)-1].Timestamp {
 					lastIndex += len(txs)
 				}
 				goto mainLoop
