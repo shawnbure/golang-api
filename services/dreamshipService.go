@@ -37,6 +37,28 @@ const (
 // To add more item, just add its id, can be find here https://api.dreamship.com/v1/items/
 var availableItem = [1]int64{19}
 
+func ValidateAndSaveUserTxHash(walletAddress string, txHash string) (error, string) {
+	status, err := ValidateTxHash(walletAddress, txHash)
+	if err != nil{
+		return err, "Not Accepted Transaction!"
+	}
+	userPayment := entities.UserPayments{
+		UserAddress: walletAddress,
+		TxHash: txHash,
+		Status: status,
+	}
+	err = storage.AddOrUpdateUserPayment(userPayment)
+	if err != nil{
+		return nil, "Internal"
+	}
+	return nil, "transaction accepted"
+}
+
+func ValidateTxHash(walletAddress string, txHash string) (string, error) {
+	// TODO
+	return "Successful", nil
+}
+
 func SetOrderHandler(cfg config.ExternalCredentialConfig, order entities.DreamshipOrderItems, walletAddress string) (entities.ItemWebhook, error) {
 	
 	response, err := SetOrder(cfg, order)
