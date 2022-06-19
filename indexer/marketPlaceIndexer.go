@@ -19,6 +19,7 @@ import (
 	"github.com/ENFT-DAO/youbei-api/storage"
 	"github.com/ElrondNetwork/elrond-go/data/transaction"
 	"github.com/emurmotol/ethconv"
+	"go.uber.org/zap"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
@@ -49,6 +50,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 	if mpi.ElrondAPISec != "" {
 		api = mpi.ElrondAPISec
 	}
+	var lastProcessed entities.TransactionBC
 
 	for {
 	mainLoop:
@@ -684,11 +686,15 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 						goto mainLoop
 					}
 				}
+				lastProcessed = tx
+				lastIndex++
 			}
 
 		}
-		lastIndex += len(txs)
-		storage.UpdateMarketPlaceIndexerTimestamp(txs[len(txs)-1].Timestamp)
+		if lastIndex != len(txs) {
+			zlog.Info("CRITICAL lastIndex offset is not equal to len(txs)", zap.Int("lastIndex", lastIndex), zap.Int("len(txs)", len(txs)))
+		}
+		storage.UpdateMarketPlaceIndexerTimestamp(lastProcessed.Timestamp)
 	}
 }
 func (mpi *MarketPlaceIndexer) DeleteFailedTX(orgTx entities.TransactionBC) bool {
