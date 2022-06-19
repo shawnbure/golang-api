@@ -19,7 +19,6 @@ import (
 	"github.com/ENFT-DAO/youbei-api/storage"
 	"github.com/ElrondNetwork/elrond-go/data/transaction"
 	"github.com/emurmotol/ethconv"
-	"go.uber.org/zap"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
@@ -44,7 +43,6 @@ func NewMarketPlaceIndexer(marketPlaceAddr string, elrondAPI string, elrondAPISe
 
 func (mpi *MarketPlaceIndexer) StartWorker() {
 	lerr := mpi.Logger
-	lastIndex := 0
 
 	api := mpi.ElrondAPI
 	if mpi.ElrondAPISec != "" {
@@ -66,10 +64,10 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				}
 			}
 		}
-		reqUrl := fmt.Sprintf("%s/accounts/%s/transactions?from=%d&size=50&order=asc&withScResults=true&withLogs=true",
+		reqUrl := fmt.Sprintf("%s/accounts/%s/transactions?after=%d&size=50&order=desc&withScResults=true&withLogs=true",
 			api,
 			mpi.MarketPlaceAddr,
-			lastIndex)
+			marketStat.LastTimestamp)
 		body, err := services.GetResponse(reqUrl)
 		if err != nil {
 			lerr.Println(err.Error())
@@ -84,8 +82,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 		if len(txs) == 0 {
 			goto mainLoop
 		}
-		if marketStat.LastTimestamp >= txs[len(txs)-1].Timestamp {
-			lastIndex += len(txs) // 50 at max
+		if marketStat.LastTimestamp == txs[len(txs)-1].Timestamp {
 			goto mainLoop
 		}
 		foundTxs += uint64(len(txs))
@@ -96,27 +93,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			}
 			// txCounter := 0
 		txloop:
-			// orgtxByte, err := services.GetResponse(fmt.Sprintf("%s/transactions/%s", api, tx.TxHash))
-			// if err != nil {
-			// 	lerr.Println(err.Error())
-			// 	if strings.Contains(err.Error(), "429") || strings.Contains(err.Error(), "deadline") || strings.Contains(err.Error(), "404") {
-			// 		time.Sleep(time.Second * 10)
-			// 		continue
-			// 	}
-			// 	txCounter++
-			// 	if txCounter > 3 {
-			// 		txCounter = 0
-			// 		continue
-			// 	}
-			// 	goto txloop
-			// }
 			var orgTx entities.TransactionBC = tx
-			// entities.TransactionBC
-			// err = json.Unmarshal(orgtxByte, &orgTx)
-			// if err != nil {
-			// 	lerr.Println(err.Error())
-			// 	continue
-			// }
 			if orgTx.Status == string(transaction.TxStatusPending) {
 				lerr.Println("REPEAT", "no final state of tx")
 				goto txloop
@@ -687,13 +664,10 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 					}
 				}
 				lastProcessed = tx
-				lastIndex++
 			}
 
 		}
-		if lastIndex != len(txs) {
-			zlog.Info("CRITICAL lastIndex offset is not equal to len(txs)", zap.Int("lastIndex", lastIndex), zap.Int("len(txs)", len(txs)))
-		}
+
 		storage.UpdateMarketPlaceIndexerTimestamp(lastProcessed.Timestamp)
 	}
 }
