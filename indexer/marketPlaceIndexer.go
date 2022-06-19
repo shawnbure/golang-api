@@ -79,7 +79,9 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 			lerr.Println("error unmarshal nfts marketplace", err.Error())
 			continue
 		}
-
+		if len(txs) == 0 {
+			goto mainLoop
+		}
 		if marketStat.LastTimestamp >= txs[len(txs)-1].Timestamp {
 			lastIndex += len(txs) // 50 at max
 			goto mainLoop
