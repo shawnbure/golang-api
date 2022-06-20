@@ -82,7 +82,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 		if len(txs) == 0 {
 			goto mainLoop
 		}
-		if marketStat.LastTimestamp == txs[len(txs)-1].Timestamp {
+		if marketStat.LastTimestamp == txs[0].Timestamp {
 			goto mainLoop
 		}
 		foundTxs += uint64(len(txs))
