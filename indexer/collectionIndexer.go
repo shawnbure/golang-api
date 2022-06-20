@@ -252,7 +252,7 @@ func (ci *CollectionIndexer) StartWorker() {
 					continue
 				}
 			}
-			countNftRes, err := services.GetResponse(fmt.Sprintf(getCollectionNFTSCountsAPI, api, "PANDA-eda5d0" /*collectionIndexer.CollectionName*/))
+			countNftRes, err := services.GetResponse(fmt.Sprintf(getCollectionNFTSCountsAPI, api, collectionIndexer.CollectionName))
 			var count uint64
 			json.Unmarshal(countNftRes, &count)
 			lastIndex := 0
