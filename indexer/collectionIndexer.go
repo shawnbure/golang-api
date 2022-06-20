@@ -229,7 +229,7 @@ func (ci *CollectionIndexer) StartWorker() {
 					continue
 				}
 			}
-			collectionIndexer, err := storage.GetCollectionIndexer(colObj.ContractAddress)
+			collectionIndexer, err := storage.GetCollectionIndexer("erd1jv0u8ul2nr04mtn02hpdpgkm0hjfr80mxxk4cqqejafzhmzakjcsplhm58")
 			if err != nil {
 				if err == gorm.ErrRecordNotFound { //indexer not found
 					collectionIndexer, err = storage.CreateCollectionStat(entities.CollectionIndexer{
@@ -252,7 +252,7 @@ func (ci *CollectionIndexer) StartWorker() {
 					continue
 				}
 			}
-			countNftRes, err := services.GetResponse(fmt.Sprintf(getCollectionNFTSCountsAPI, api, collectionIndexer.CollectionName))
+			countNftRes, err := services.GetResponse(fmt.Sprintf(getCollectionNFTSCountsAPI, api, "PANDA-eda5d0" /*collectionIndexer.CollectionName*/))
 			var count uint64
 			json.Unmarshal(countNftRes, &count)
 			lastIndex := 0
@@ -460,6 +460,10 @@ func (ci *CollectionIndexer) StartWorker() {
 						} else {
 
 						}
+					}
+					var js interface{}
+					if json.Unmarshal(attributes, &js) != nil {
+						attributes = []byte("{}")
 					}
 					if dbToken == nil {
 						dbToken = &entities.Token{
