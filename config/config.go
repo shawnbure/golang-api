@@ -40,6 +40,7 @@ type BlockchainConfig struct {
 	PemPath                              string
 	MarketplaceAddress                   string
 	DeployerAddress                      string
+	PayCheckoutAddress					 string
 	SystemSCAddress                      string
 	StakingAddress                       string
 	ListNftGasLimit                      uint64
@@ -56,6 +57,7 @@ type BlockchainConfig struct {
 	DepositGasLimit                      uint64
 	WithdrawGasLimit                     uint64
 	WithdrawCreatorRoyaltiesGasLimit     uint64
+	PayCheckoutGasLimit				 	 uint64
 	IssueNFTGasLimit                     uint64
 	DeployNFTTemplateGasLimit            uint64
 	StakeNFTTemplateGasLimit             uint64

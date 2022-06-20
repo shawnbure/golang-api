@@ -6,9 +6,24 @@ import (
 	"github.com/ENFT-DAO/youbei-api/data/entities"
 )
 
+func AddOrUpdateUserPayment(userPayment entities.UserPayments) error{
+	db, err := GetDBOrError()
+	if err != nil {
+		return err
+	}
+	result := db.Model(&entities.UserPayments{}).
+				Where("tx_hash = ?", userPayment.TxHash).
+				Updates(entities.UserPayments {
+					Status: userPayment.Status,
+				})
+	if result.RowsAffected == 0{
+		db.Create(&userPayment)
+	}
+	return nil
+}
+
 func AddOrUpdateOrderItem(orderItem entities.UserOrders) error{
 	db, err := GetDBOrError()
-	fmt.Println("Database Connected!")
 	if err != nil {
 		return err
 	}
