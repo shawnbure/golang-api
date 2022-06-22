@@ -1623,6 +1623,9 @@ func ChangeTokenOwner(tokenIdentifier string, nonceStr string, newOwner string, 
 	if err != nil {
 		return err
 	}
+	if token.OnSale == true {
+		return nil
+	}
 	if token.Owner.Address == newOwner {
 		return nil
 	}
@@ -1641,6 +1644,7 @@ func ChangeTokenOwner(tokenIdentifier string, nonceStr string, newOwner string, 
 		if err != nil {
 			return err
 		}
+
 		token.OwnerID = acc.ID
 		err = storage.UpdateToken(token)
 		if err != nil {
