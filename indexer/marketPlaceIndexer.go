@@ -64,10 +64,10 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				}
 			}
 		}
-		reqUrl := fmt.Sprintf("%s/accounts/%s/transactions?after=%d&size=50&order=desc&withScResults=true&withLogs=true",
+		reqUrl := fmt.Sprintf("%s/accounts/%s/transactions?after=%d&size=50&order=asc&withScResults=true&withLogs=true",
 			api,
 			mpi.MarketPlaceAddr,
-			marketStat.LastTimestamp)
+			marketStat.LastTimestamp) //TODO
 		body, err := services.GetResponse(reqUrl)
 		if err != nil {
 			lerr.Println(err.Error())
@@ -82,7 +82,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 		if len(txs) == 0 {
 			goto mainLoop
 		}
-		if marketStat.LastTimestamp == txs[0].Timestamp {
+		if marketStat.LastTimestamp == txs[len(txs)-1].Timestamp {
 			goto mainLoop
 		}
 		foundTxs += uint64(len(txs))
