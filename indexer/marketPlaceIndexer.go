@@ -19,6 +19,7 @@ import (
 	"github.com/ENFT-DAO/youbei-api/storage"
 	"github.com/ElrondNetwork/elrond-go/data/transaction"
 	"github.com/emurmotol/ethconv"
+	"go.uber.org/zap"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
@@ -95,7 +96,12 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 		txloop:
 			var orgTx entities.TransactionBC = tx
 			if orgTx.Status == string(transaction.TxStatusPending) {
-				lerr.Println("REPEAT", "no final state of tx")
+				zlog.Error("REPEAT  no final state of tx", zap.String("tx_hash", orgTx.TxHash))
+				tx, err = services.GetTransactionBC(api, orgTx.TxHash)
+				if err != nil {
+					zlog.Error("CRITICAL error reading tx from bc", zap.String("tx_hash", orgTx.TxHash))
+
+				}
 				goto txloop
 			}
 			if (orgTx.Status == string(transaction.TxStatusSuccess) ||

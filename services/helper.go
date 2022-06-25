@@ -2,6 +2,7 @@ package services
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -12,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ENFT-DAO/youbei-api/data/entities"
 	"github.com/ENFT-DAO/youbei-api/proxier"
 	"github.com/btcsuite/btcutil/bech32"
 	"github.com/rs/xid"
@@ -199,6 +201,20 @@ func GetResponse(url string) ([]byte, error) {
 		return nil, fmt.Errorf("status %s %s", resp.Status, req.URL.RawPath)
 	}
 	return body, nil
+}
+
+func GetTransactionBC(hash string, api string) (entities.TransactionBC, error) {
+
+	reqUrl := fmt.Sprintf("%s/transactions/%s",
+		hash,
+		api)
+	body, err := GetResponse(reqUrl)
+	if err != nil {
+		zlog.Error(err.Error())
+	}
+	var tx entities.TransactionBC
+	err = json.Unmarshal(body, &tx)
+	return tx, err
 }
 
 // ConvertAttributeFilterToJsonQuery converts a querystring conversion attribute filter to a sql jsonb where clause
