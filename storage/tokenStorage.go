@@ -286,7 +286,7 @@ func GetTokensByCollectionIdNotRanked(collectionId uint64) ([]entities.Token, er
 	}
 
 	txRead := database.
-		Where("rarity_score = ? AND collection_id = ?", 0, collectionId).
+		Where("collection_id = ?", 0, collectionId).
 		Find(&tokens)
 	if txRead.Error != nil {
 		return nil, txRead.Error
