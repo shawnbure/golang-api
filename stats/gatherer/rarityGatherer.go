@@ -33,7 +33,7 @@ func syncRarityRunner(cha chan bool) {
 		case <-ticker.C:
 			//getMissedRarity()
 			computeRarityScorePreCollection()
-			computeRanks()
+			// computeRanks()
 		}
 	}
 }
@@ -107,6 +107,9 @@ func OnePage(link string) (string, error) {
 func computeRarityScorePreCollection() {
 	// Get all collections from database
 	collections, err := storage.GetAllCollections()
+	// col, _ := storage.GetCollectionByTokenId("GNOGONS-73222b")
+	// collections = []entities.Collection{}
+	// collections = append(collections, *col)
 	if err == nil {
 		for _, col := range collections {
 			// get tokens associated with collection
