@@ -13,6 +13,7 @@ import (
 	urlp "net/url"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/ENFT-DAO/youbei-api/data/entities"
 	"github.com/ENFT-DAO/youbei-api/proxier"
@@ -389,7 +390,6 @@ tokenLoop:
 	youbeiMeta = strings.Replace(youbeiMeta, "ipfs://", "https://media.elrond.com/nfts/asset/", 1)
 
 	var url string = youbeiMeta
-
 	var attrbs []byte
 	metadataJSON := make(map[string]interface{})
 
@@ -402,6 +402,9 @@ tokenLoop:
 		if err != nil {
 			zlog.Error(err.Error(), zap.String("url", string(url)), zap.Strings("URIS", token.URIs), zap.String("collection", token.Collection), zap.String("attributes", token.Attributes), zap.String("identifier", token.Identifier), zap.Any("media", token.Media), zap.Any("Metadata", token.Metadata))
 		}
+	}
+	if !strings.Contains(youbeiMeta, "http") {
+		youbeiMeta = ""
 	}
 	var attributes datatypes.JSON
 	if token.Attributes != "" {
@@ -526,6 +529,9 @@ tokenLoop:
 	if json.Unmarshal(attributes, &js) != nil {
 		attributes = []byte("{}")
 	}
+	if !utf8.ValidString(youbeiMeta) {
+		youbeiMeta = ""
+	}
 	if dbToken == nil {
 		dbToken = &entities.Token{
 			TokenID:      token.Collection,
@@ -533,8 +539,8 @@ tokenLoop:
 			CollectionID: colObj.ID,
 			Nonce:        token.Nonce,
 			NonceStr:     nonceStr,
-			MetadataLink: string(youbeiMeta),
-			ImageLink:    string(imageURI),
+			MetadataLink: strings.ToValidUTF8(youbeiMeta, " "),
+			ImageLink:    imageURI,
 			TokenName:    token.Name,
 			Attributes:   attributes,
 			OwnerID:      acc.ID,
@@ -548,8 +554,8 @@ tokenLoop:
 		CollectionID: colObj.ID,
 		Nonce:        token.Nonce,
 		NonceStr:     nonceStr,
-		MetadataLink: string(youbeiMeta),
-		ImageLink:    string(imageURI),
+		MetadataLink: strings.ToValidUTF8(youbeiMeta, " "),
+		ImageLink:    imageURI,
 		TokenName:    token.Name,
 		Attributes:   attributes,
 		OwnerID:      dbToken.OwnerID,
