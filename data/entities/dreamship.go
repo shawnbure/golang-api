@@ -1,5 +1,10 @@
 package entities
 
+type UserPayments struct{
+	UserAddress		string	`json:"user_address"`
+	TxHash			string	`json:"tx_hash"`
+	Status			string	`json:"status"`
+}
 
 type UserOrders struct {
 	UserAddress		string		`json:"user_address"`
@@ -55,7 +60,7 @@ type DreamshipOrderItems struct {
 	TestOrder		bool		`json:"test_order"`
 	ShippingMethod	string		`json:"shipping_method"`
 	LineItems		[]LineItem	`json:"line_items"`
-	Address			Address	`json:"address"`
+	Address			Address		`json:"address"`
 }
 
 type Address struct {

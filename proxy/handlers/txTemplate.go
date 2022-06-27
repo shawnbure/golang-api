@@ -46,6 +46,7 @@ const (
 	updateSaleStartFormatEndpoint              = "/update-sale-start/:userAddress/:contractAddress/:saleStart"
 	updateBuyerWhiteListCheckFormatEndpoint    = "/update-buyer-whitelist-check/:userAddress/:contractAddress/:whiteListCheck"
 	getBuyerWhiteListCheckFormatEndpoint       = "/get-buyer-whitelist-check/:userAddress/:contractAddress"
+	payCheckoutFromDepositFormatEndpoint	   = "/pay-checkout/:userAddress/:amount"
 )
 
 type txTemplateHandler struct {
@@ -88,6 +89,7 @@ func NewTxTemplateHandler(groupHandler *groupHandler, blockchainConfig config.Bl
 		{Method: http.MethodGet, Path: updateSaleStartFormatEndpoint, HandlerFunc: handler.updateSaleStart},
 		{Method: http.MethodGet, Path: updateBuyerWhiteListCheckFormatEndpoint, HandlerFunc: handler.updateBuyerWhiteListCheck},
 		{Method: http.MethodGet, Path: getBuyerWhiteListCheckFormatEndpoint, HandlerFunc: handler.getBuyerWhiteListCheck},
+		{Method: http.MethodGet, Path: payCheckoutFromDepositFormatEndpoint, HandlerFunc: handler.payCheckoutFromDeposit},
 	}
 
 	endpointGroupHandler := EndpointGroupHandler{
@@ -1005,5 +1007,23 @@ func (handler *txTemplateHandler) getBuyerWhiteListCheck(c *gin.Context) {
 		return
 	}
 
+	dtos.JsonResponse(c, http.StatusOK, template, "")
+}
+
+func (handler *txTemplateHandler) payCheckoutFromDeposit(c *gin.Context) {
+	userAddress := c.Param("userAddress")
+	amountStr := c.Param("amount")
+
+	amount, err := strconv.ParseFloat(amountStr, 64)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, nil, err.Error())
+		return
+	}
+
+	template, err := handler.txFormatter.PayCheckoutTxTemplate(userAddress, amount)
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusInternalServerError, nil, err.Error())
+		return
+	}
 	dtos.JsonResponse(c, http.StatusOK, template, "")
 }

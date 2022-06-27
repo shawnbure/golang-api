@@ -18,6 +18,7 @@ const (
 	shippingStatusUrl	=	"/shipping_status/:us_or_inter/:item_id"
 	orderUrl			=	"/order/:walletAddress"
 	orderByUserUrl		=	"/order/:walletAddress/:orderId"
+	submitOrderTxHash	=	"/order/submit_tx/:walletAddress/:txHash"
 	orderHookUrl		=	"/order/hook"
 )
 
@@ -33,6 +34,7 @@ func NewDreamshipHandler(groupHandler *groupHandler, cfg config.ExternalCredenti
 		{Method: http.MethodGet, Path: availableItemsUrl, HandlerFunc: handler.getAvailableItems},
 		{Method: http.MethodPost, Path: orderUrl, HandlerFunc: handler.setOrder},
 		{Method: http.MethodPost, Path: orderHookUrl, HandlerFunc: handler.setOrderHook},
+		{Method: http.MethodPost, Path: submitOrderTxHash, HandlerFunc: handler.setOrderTxHash},
 		{Method: http.MethodGet, Path: orderUrl, HandlerFunc: handler.getOrdersList},
 		{Method: http.MethodGet, Path: orderByUserUrl, HandlerFunc: handler.GetOrderByUser},
 	}
@@ -77,6 +79,22 @@ func (handler *dreamshipHandler) getOrdersList(c *gin.Context) {
 		return
 	}
 	dtos.JsonResponse(c, http.StatusAccepted, data, "")
+}
+
+func (handler *dreamshipHandler) setOrderTxHash(c *gin.Context) {
+	walletAddress := c.Param("walletAddress")
+	txHash := c.Param("txHash")
+
+	err, message := services.ValidateAndSaveUserTxHash(walletAddress, txHash)
+	if err != nil && message == "Internal" {
+		dtos.JsonResponse(c, http.StatusInternalServerError, "", err.Error())
+	}
+
+	if err != nil {
+		dtos.JsonResponse(c, http.StatusBadRequest, "", message)
+	}
+
+	dtos.JsonResponse(c, http.StatusCreated, "Transaction Accepted", "")
 }
 
 func (handler *dreamshipHandler) setOrder(c *gin.Context) {
