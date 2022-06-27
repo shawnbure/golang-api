@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/ENFT-DAO/youbei-api/data/entities"
+	"github.com/ENFT-DAO/youbei-api/services"
 	"github.com/ENFT-DAO/youbei-api/storage"
 	"github.com/ENFT-DAO/youbei-api/utils"
 	"go.uber.org/zap"
@@ -23,7 +24,7 @@ const (
 	RarityUpdaterTokenDurationMilli           = 50
 )
 
-func syncRarityRunner(cha chan bool) {
+func syncRarityRunner(cha chan bool, blockchainAPI string) {
 	ticker := time.NewTicker(1 * time.Second)
 	for {
 		select {
@@ -32,7 +33,7 @@ func syncRarityRunner(cha chan bool) {
 			return
 		case <-ticker.C:
 			//getMissedRarity()
-			computeRarityScorePreCollection()
+			computeRarityScorePreCollection(blockchainAPI)
 			// computeRanks()
 		}
 	}
@@ -104,16 +105,14 @@ func OnePage(link string) (string, error) {
 	return "", errors.New(res.Status)
 }
 
-func computeRarityScorePreCollection() {
+func computeRarityScorePreCollection(api string) {
 	// Get all collections from database
 	collections, err := storage.GetAllCollections()
-	// col, _ := storage.GetCollectionByTokenId("GNOGONS-73222b")
-	// collections = []entities.Collection{}
-	// collections = append(collections, *col)
 	if err == nil {
 		for _, col := range collections {
 			// get tokens associated with collection
 			tokens, err := storage.GetTokensByCollectionIdNotRanked(col.ID)
+
 			if err == nil {
 				traits := make(map[string]map[string]int)
 				traitsInTokens := make(map[uint64][]string)
@@ -125,6 +124,18 @@ func computeRarityScorePreCollection() {
 					traitsInToken := []string{}
 
 					v := []map[string]interface{}{}
+					if token.Attributes == nil {
+						_, err := services.IndexTokenAttribute(token.TokenID, token.NonceStr, api)
+						if err != nil {
+							zlog.Error("indexing failed", zap.String("tokenId", token.TokenID), zap.String("nonceStr", token.NonceStr))
+						}
+						tokenR, err := storage.GetTokenByTokenIdAndNonceStr(token.TokenID, token.NonceStr)
+						if err != nil {
+							zlog.Error("failed_to_get_token", zap.String("tokenId", token.TokenID), zap.String("nonceStr", token.NonceStr))
+						} else {
+							token = *tokenR
+						}
+					}
 					bytes, _ := token.Attributes.MarshalJSON()
 					err1 := json.Unmarshal(bytes, &v)
 					if err1 == nil {
@@ -166,6 +177,10 @@ func computeRarityScorePreCollection() {
 					}
 				}
 
+				tokens, err = storage.GetTokensByCollectionIdNotRanked(col.ID)
+				if err != nil {
+					zlog.Error("CRITICAL cant get tokens", zap.Uint64("colId", col.ID))
+				}
 				for _, token := range tokens {
 					localTraits := traitsInTokens[token.ID]
 
@@ -184,7 +199,6 @@ func computeRarityScorePreCollection() {
 							}
 						}
 					}
-
 					token.RarityScoreNorm = 0
 					token.RarityUsedTraitCount = uint(len(traitsInTokens[token.ID]))
 					token.RarityScore = totalRank

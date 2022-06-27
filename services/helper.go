@@ -1,6 +1,7 @@
 package services
 
 import (
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -15,8 +16,12 @@ import (
 
 	"github.com/ENFT-DAO/youbei-api/data/entities"
 	"github.com/ENFT-DAO/youbei-api/proxier"
+	"github.com/ENFT-DAO/youbei-api/storage"
 	"github.com/btcsuite/btcutil/bech32"
 	"github.com/rs/xid"
+	"go.uber.org/zap"
+	"gorm.io/datatypes"
+	"gorm.io/gorm"
 )
 
 // ConvertFilterToQuery converts a querystring conversion filter to a sql where clause
@@ -352,4 +357,212 @@ func ConvertHexToBehc32(addrHex string) (string, error) {
 		return "", err
 	}
 	return bech32Addr, nil
+}
+
+func IndexTokenAttribute(tokenIdentifier string, nonceStr string, api string) (*entities.TokenBC, error) {
+tokenLoop:
+	token, err := getTokenBC(tokenIdentifier, nonceStr, api)
+	if err != nil {
+		return nil, err
+	}
+	colObj, err := storage.GetCollectionByTokenId(token.Collection)
+	if err != nil {
+		return nil, err
+	}
+	imageURI, attributeURI := GetTokenUris(token)
+	// nonce10Str := strconv.FormatUint(token.Nonce, 10)
+	// nonceStr := strconv.FormatUint(token.Nonce, 16)
+	// if len(nonceStr)%2 != 0 {
+	// 	nonceStr = "0" + nonceStr
+	// }
+	// Convert URI to elrond url for faster retreive
+	if strings.Contains(api, "devnet") {
+		imageURI = strings.Replace(imageURI, "https://gateway.pinata.cloud/ipfs/", "https://devnet-media.elrond.com/nfts/asset/", 1)
+	} else {
+		imageURI = strings.Replace(imageURI, "https://gateway.pinata.cloud/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
+		imageURI = strings.Replace(imageURI, "https://ipfs.io/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
+		imageURI = strings.Replace(imageURI, "ipfs://", "https://media.elrond.com/nfts/asset/", 1)
+	}
+	youbeiMeta := strings.Replace(attributeURI, "https://gateway.pinata.cloud/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
+	youbeiMeta = strings.Replace(youbeiMeta, "https://ipfs.io/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
+	youbeiMeta = strings.Replace(youbeiMeta, "https://ipfs.io/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
+	youbeiMeta = strings.Replace(youbeiMeta, "ipfs://", "https://media.elrond.com/nfts/asset/", 1)
+
+	var url string = youbeiMeta
+
+	var attrbs []byte
+	metadataJSON := make(map[string]interface{})
+
+	if token.Attributes == "" {
+		attrbs, err = GetResponse(url)
+		if err != nil {
+			zlog.Error(err.Error(), zap.String("url", string(url)), zap.Strings("URIS", token.URIs), zap.String("collection", token.Collection), zap.String("attributes", token.Attributes), zap.String("identifier", token.Identifier), zap.Any("media", token.Media), zap.Any("Metadata", token.Metadata))
+		}
+		err = json.Unmarshal(attrbs, &metadataJSON)
+		if err != nil {
+			zlog.Error(err.Error(), zap.String("url", string(url)), zap.Strings("URIS", token.URIs), zap.String("collection", token.Collection), zap.String("attributes", token.Attributes), zap.String("identifier", token.Identifier), zap.Any("media", token.Media), zap.Any("Metadata", token.Metadata))
+		}
+	}
+	var attributes datatypes.JSON
+	if token.Attributes != "" {
+		if _, ok := metadataJSON["attributes"]; !ok {
+			attributesStr, err := base64.StdEncoding.DecodeString(token.Attributes)
+			if strings.Contains(string(attributesStr), ".json") {
+				if strings.Contains(string(attributesStr), "metadata:") {
+					attributeParts := strings.Split(string(attributesStr), ";")
+					for _, part := range attributeParts {
+						if strings.Contains("metadata:", part) {
+							part = part[9:]
+							// attributesStr = []byte(strings.Replace(string(attributesStr), "metadata:", "", 1))
+							url = (`https://media.elrond.com/nfts/asset/` + string(part))
+							attrbs, err := GetResponse(url)
+							if err != nil {
+								zlog.Error(err.Error(), zap.String("url", string(url)), zap.Strings("URIS", token.URIs), zap.String("collection", token.Collection), zap.String("attributes", token.Attributes), zap.String("identifier", token.Identifier), zap.Any("media", token.Media), zap.Any("Metadata", token.Metadata))
+							}
+
+							metadataJSON = make(map[string]interface{})
+							err = json.Unmarshal(attrbs, &metadataJSON)
+							if err != nil {
+								zlog.Error(err.Error(), zap.String("url", string(url)), zap.Strings("URIS", token.URIs), zap.String("collection", token.Collection), zap.String("attributes", token.Attributes), zap.String("identifier", token.Identifier), zap.Any("media", token.Media), zap.Any("Metadata", token.Metadata))
+							}
+							attributesBytes, err := json.Marshal(metadataJSON["attributes"])
+							if err != nil {
+								zlog.Error(err.Error())
+								attributesBytes = []byte{}
+							}
+							err = json.Unmarshal(attributesBytes, &attributes)
+							if err != nil {
+								zlog.Error(err.Error())
+							}
+						}
+					}
+
+				}
+			}
+			if attributes.String() == "" {
+				resultStr := `[`
+				if err != nil {
+					zlog.Error("attribute decoding failed", zap.Error(err), zap.String("attribute", token.Attributes))
+				} else {
+					attrbutesParts := strings.Split(string(attributesStr), ";")
+					var prefix string = ""
+					for i, ap := range attrbutesParts {
+						if i != 0 {
+							prefix = ","
+						}
+						traitKeyValue := strings.Split(ap, ":")
+						if len(traitKeyValue) < 2 {
+							continue
+						}
+						resultStr = resultStr + prefix + `{"` + traitKeyValue[0] + `":"` + traitKeyValue[1] + `"}`
+					}
+					resultStr = resultStr + "]"
+				}
+				attributes = datatypes.JSON(resultStr)
+			}
+		}
+
+	} else {
+		attributesBytes, err := json.Marshal(metadataJSON["attributes"])
+		if err != nil {
+			zlog.Error(err.Error())
+			attributesBytes = []byte{}
+		}
+		err = json.Unmarshal(attributesBytes, &attributes)
+		if err != nil {
+			zlog.Error(err.Error())
+		}
+	}
+
+	//get owner of token from database TODO
+	if token.Owner == "" {
+		tokenRes, err := GetResponse(fmt.Sprintf("%s/nfts/%s", api, token.Identifier))
+		if err != nil {
+			zlog.Error("CRITICAL can't get nft data", zap.Error(err))
+			if strings.Contains(err.Error(), "deadline") {
+				goto tokenLoop
+			}
+		}
+		json.Unmarshal(tokenRes, &token)
+	}
+	if token.Owner == "" {
+		token.Owner = token.Creator
+	}
+	acc, err := storage.GetAccountByAddress(token.Owner)
+	if err != nil {
+		if err != gorm.ErrRecordNotFound {
+			return nil, err
+		} else {
+			name := RandomName()
+			acc = &entities.Account{
+				Address: token.Owner,
+				Name:    name,
+			}
+			err := storage.AddAccount(acc)
+			if err != nil {
+				if !strings.Contains(err.Error(), "duplicate") {
+					zlog.Error("CRITICAL can't create user", zap.Error(err))
+
+				} else {
+					acc, err = storage.GetAccountByAddress(token.Owner)
+					if err != nil {
+						zlog.Error("CRITICAL can't get user", zap.Error(err))
+
+					}
+				}
+			}
+		}
+	}
+	//try get token from database TODO
+	dbToken, err := storage.GetTokenByTokenIdAndNonce(token.Collection, token.Nonce)
+	if err != nil {
+		if err != gorm.ErrRecordNotFound {
+			zlog.Error("getTokenByTokenIdAndNonce_error", zap.Error(err))
+		} else {
+
+		}
+	}
+	var js interface{}
+	if json.Unmarshal(attributes, &js) != nil {
+		attributes = []byte("{}")
+	}
+	if dbToken == nil {
+		dbToken = &entities.Token{
+			TokenID:      token.Collection,
+			MintTxHash:   "",
+			CollectionID: colObj.ID,
+			Nonce:        token.Nonce,
+			NonceStr:     nonceStr,
+			MetadataLink: string(youbeiMeta),
+			ImageLink:    string(imageURI),
+			TokenName:    token.Name,
+			Attributes:   attributes,
+			OwnerID:      acc.ID,
+			PriceString:  "0",
+			PriceNominal: 0,
+		}
+	}
+	err = storage.AddOrUpdateToken(&entities.Token{
+		TokenID:      token.Collection,
+		MintTxHash:   dbToken.MintTxHash,
+		CollectionID: colObj.ID,
+		Nonce:        token.Nonce,
+		NonceStr:     nonceStr,
+		MetadataLink: string(youbeiMeta),
+		ImageLink:    string(imageURI),
+		TokenName:    token.Name,
+		Attributes:   attributes,
+		OwnerID:      dbToken.OwnerID,
+		PriceString:  dbToken.PriceString,
+		PriceNominal: dbToken.PriceNominal,
+	})
+	if err != nil {
+		zlog.Error("BADERR", zap.Error(err), zap.Any("token", token))
+		if err == gorm.ErrRegistered {
+			return nil, err
+		}
+	} else {
+		return nil, err
+	}
+	return &token, nil
 }

@@ -44,9 +44,9 @@ func GetManager() *manager {
 	return managerInstance
 }
 
-func (m *manager) Start() {
+func (m *manager) Start(blockchainAPI string) {
 	// Start hourly aggregator
-	go syncRarityRunner(m.controlChannels[0])
+	go syncRarityRunner(m.controlChannels[0], blockchainAPI)
 }
 
 func (m *manager) Stop() {

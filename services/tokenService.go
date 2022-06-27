@@ -677,6 +677,25 @@ func StakeToken(args StakeTokenArgs, blockchainProxy string, marketplaceAddress 
 	// AddTransaction(&transaction)
 }
 
+func getTokenBC(tokenName string, tokenHexNonce string, blockchainApi string) (entities.TokenBC, error) {
+	//var resp ProxyTokenResponse
+	var token entities.TokenBC
+
+	url := fmt.Sprintf(GetNFTBaseFormat, blockchainApi, tokenName, tokenHexNonce)
+	//err := HttpGet(url, &resp)
+	response, err := GetResponse(url)
+	if err != nil {
+		return token, err
+	}
+
+	err = json.Unmarshal([]byte(response), &token)
+	if err != nil {
+		return token, err
+	}
+
+	return token, nil
+
+}
 func getTokenByNonce(tokenName string, tokenNonce string, blockchainApi string) (NonFungibleToken, error) {
 	//var resp ProxyTokenResponse
 	var token NonFungibleToken

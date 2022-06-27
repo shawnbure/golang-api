@@ -3,12 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/ENFT-DAO/youbei-api/stats/aggregator"
-	"github.com/ENFT-DAO/youbei-api/stats/gatherer"
 	"net/http"
 	"os"
 	"os/signal"
 	"time"
+
+	"github.com/ENFT-DAO/youbei-api/stats/aggregator"
+	"github.com/ENFT-DAO/youbei-api/stats/gatherer"
 
 	"github.com/ENFT-DAO/youbei-api/cache"
 	"github.com/ENFT-DAO/youbei-api/cdn"
@@ -135,7 +136,7 @@ func startProxy(ctx *cli.Context) error {
 	// data gatherer engine
 	g := gatherer.GetManager()
 	if g != nil {
-		g.Start()
+		g.Start(cfg.Blockchain.ApiUrl)
 	}
 
 	waitForGracefulShutdown(server)
