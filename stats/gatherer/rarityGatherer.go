@@ -34,7 +34,7 @@ func syncRarityRunner(cha chan bool, blockchainAPI string) {
 		case <-ticker.C:
 			//getMissedRarity()
 			computeRarityScorePreCollection(blockchainAPI)
-			// computeRanks()
+			computeRanks()
 		}
 	}
 }
