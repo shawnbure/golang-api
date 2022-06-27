@@ -465,6 +465,9 @@ func (ci *CollectionIndexer) StartWorker() {
 					if json.Unmarshal(attributes, &js) != nil {
 						attributes = []byte("{}")
 					}
+					if attributes == nil {
+						attributes = []byte("{}")
+					}
 					if dbToken == nil {
 						dbToken = &entities.Token{
 							TokenID:      token.Collection,
