@@ -8,7 +8,6 @@ import (
 	"log"
 	"math/rand"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 
@@ -18,7 +17,6 @@ import (
 	"github.com/ENFT-DAO/youbei-api/storage"
 	"github.com/btcsuite/btcutil/bech32"
 	"go.uber.org/zap"
-	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
@@ -295,216 +293,13 @@ func (ci *CollectionIndexer) StartWorker() {
 				}
 				tokenCountSuc := 0
 				for _, token := range tokens {
-				tokenLoop:
-					imageURI, attributeURI := services.GetTokenUris(token)
-					// nonce10Str := strconv.FormatUint(token.Nonce, 10)
-					nonceStr := strconv.FormatUint(token.Nonce, 16)
-					if len(nonceStr)%2 != 0 {
-						nonceStr = "0" + nonceStr
+					nonceHex := fmt.Sprintf("%x", token.Nonce)
+					if len(nonceHex)%2 != 0 {
+						nonceHex = "0" + nonceHex
 					}
-					// Convert URI to elrond url for faster retreive
-					if strings.Contains(api, "devnet") {
-						imageURI = strings.Replace(imageURI, "https://gateway.pinata.cloud/ipfs/", "https://devnet-media.elrond.com/nfts/asset/", 1)
-					} else {
-						imageURI = strings.Replace(imageURI, "https://gateway.pinata.cloud/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
-						imageURI = strings.Replace(imageURI, "https://ipfs.io/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
-						imageURI = strings.Replace(imageURI, "ipfs://", "https://media.elrond.com/nfts/asset/", 1)
-					}
-					youbeiMeta := strings.Replace(attributeURI, "https://gateway.pinata.cloud/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
-					youbeiMeta = strings.Replace(youbeiMeta, "https://ipfs.io/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
-					youbeiMeta = strings.Replace(youbeiMeta, "https://ipfs.io/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
-					youbeiMeta = strings.Replace(youbeiMeta, "ipfs://", "https://media.elrond.com/nfts/asset/", 1)
-					// if youbeiMeta != "" {
-					// 	if string(youbeiMeta[len(youbeiMeta)-1]) == "/" {
-					// 		youbeiMeta = youbeiMeta[:len(youbeiMeta)-1]
-					// 	}
-					// }
-					var url string = youbeiMeta
-					// if strings.Contains(youbeiMeta, ".json") {
-					// 	url = youbeiMeta
-
-					// } else {
-					// 	url = fmt.Sprintf("%s/%s.json", youbeiMeta, nonce10Str)
-					// }
-					var attrbs []byte
-					metadataJSON := make(map[string]interface{})
-
-					if token.Attributes == "" {
-						attrbs, err = services.GetResponse(url)
-						if err != nil {
-							logErr.Println(err.Error(), string(url), token.URIs, token.Collection, token.Attributes, token.Identifier, token.Media, token.Metadata)
-						}
-						err = json.Unmarshal(attrbs, &metadataJSON)
-						if err != nil {
-							logErr.Println(err.Error(), string(url), token.Collection, token.Attributes, token.Identifier, token.Media, token.Metadata)
-						}
-					}
-					var attributes datatypes.JSON
-					if token.Attributes != "" {
-						if _, ok := metadataJSON["attributes"]; !ok {
-							attributesStr, err := base64.StdEncoding.DecodeString(token.Attributes)
-							if strings.Contains(string(attributesStr), ".json") {
-								if strings.Contains(string(attributesStr), "metadata:") {
-									attributeParts := strings.Split(string(attributesStr), ";")
-									for _, part := range attributeParts {
-										if strings.Contains("metadata:", part) {
-											part = part[9:]
-											// attributesStr = []byte(strings.Replace(string(attributesStr), "metadata:", "", 1))
-											url = (`https://media.elrond.com/nfts/asset/` + string(part))
-											attrbs, err := services.GetResponse(url)
-											if err != nil {
-												logErr.Println(err.Error(), string(url), token.Collection, token.Attributes, token.Identifier, token.Media, token.Metadata)
-											}
-
-											metadataJSON = make(map[string]interface{})
-											err = json.Unmarshal(attrbs, &metadataJSON)
-											if err != nil {
-												logErr.Println(err.Error(), string(url), token.Collection, token.Attributes, token.Identifier, token.Media, token.Metadata)
-											}
-											attributesBytes, err := json.Marshal(metadataJSON["attributes"])
-											if err != nil {
-												logErr.Println(err.Error())
-												attributesBytes = []byte{}
-											}
-											err = json.Unmarshal(attributesBytes, &attributes)
-											if err != nil {
-												logErr.Println(err.Error())
-											}
-										}
-									}
-
-								}
-							}
-							if attributes.String() == "" {
-								resultStr := `[`
-								if err != nil {
-									zlog.Error("attribute decoding failed", zap.Error(err), zap.String("attribute", token.Attributes))
-									break
-								} else {
-									attrbutesParts := strings.Split(string(attributesStr), ";")
-									var prefix string = ""
-									for i, ap := range attrbutesParts {
-										if i != 0 {
-											prefix = ","
-										}
-										traitKeyValue := strings.Split(ap, ":")
-										if len(traitKeyValue) < 2 {
-											continue
-										}
-										resultStr = resultStr + prefix + `{"` + traitKeyValue[0] + `":"` + traitKeyValue[1] + `"}`
-									}
-									resultStr = resultStr + "]"
-								}
-								attributes = datatypes.JSON(resultStr)
-							}
-						}
-
-					} else {
-						attributesBytes, err := json.Marshal(metadataJSON["attributes"])
-						if err != nil {
-							logErr.Println(err.Error())
-							attributesBytes = []byte{}
-						}
-						err = json.Unmarshal(attributesBytes, &attributes)
-						if err != nil {
-							logErr.Println(err.Error())
-						}
-					}
-
-					//get owner of token from database TODO
-					if token.Owner == "" {
-						tokenRes, err := services.GetResponse(fmt.Sprintf("%s/nfts/%s", api, token.Identifier))
-						if err != nil {
-							logErr.Println("CRITICAL can't get nft data", err.Error())
-							if strings.Contains(err.Error(), "deadline") {
-								goto tokenLoop
-							}
-							continue
-						}
-						json.Unmarshal(tokenRes, &token)
-					}
-					if token.Owner == "" {
-						token.Owner = token.Creator
-					}
-					acc, err := storage.GetAccountByAddress(token.Owner)
+					_, err := services.IndexTokenAttribute(token.Collection, nonceHex, api)
 					if err != nil {
-						if err != gorm.ErrRecordNotFound {
-							continue
-						} else {
-							name := services.RandomName()
-							acc = &entities.Account{
-								Address: token.Owner,
-								Name:    name,
-							}
-							err := storage.AddAccount(acc)
-							if err != nil {
-								if !strings.Contains(err.Error(), "duplicate") {
-									logErr.Println("CRITICAL can't create user", err.Error())
-									continue
-								} else {
-									acc, err = storage.GetAccountByAddress(token.Owner)
-									if err != nil {
-										logErr.Println("CRITICAL can't get user", err.Error())
-										continue
-									}
-								}
-							}
-						}
-					}
-					//try get token from database TODO
-					dbToken, err := storage.GetTokenByTokenIdAndNonce(token.Collection, token.Nonce)
-					if err != nil {
-						if err != gorm.ErrRecordNotFound {
-							logErr.Println(err.Error(), "getTokenByTokenIdAndNonce_error")
-							continue
-						} else {
-
-						}
-					}
-					var js interface{}
-					if json.Unmarshal(attributes, &js) != nil {
-						attributes = []byte("{}")
-					}
-					if attributes == nil {
-						attributes = []byte("{}")
-					}
-					if dbToken == nil {
-						dbToken = &entities.Token{
-							TokenID:      token.Collection,
-							MintTxHash:   "",
-							CollectionID: colObj.ID,
-							Nonce:        token.Nonce,
-							NonceStr:     nonceStr,
-							MetadataLink: string(youbeiMeta),
-							ImageLink:    string(imageURI),
-							TokenName:    token.Name,
-							Attributes:   attributes,
-							OwnerID:      acc.ID,
-							PriceString:  "0",
-							PriceNominal: 0,
-						}
-					}
-					err = storage.AddOrUpdateToken(&entities.Token{
-						TokenID:      token.Collection,
-						MintTxHash:   dbToken.MintTxHash,
-						CollectionID: colObj.ID,
-						Nonce:        token.Nonce,
-						NonceStr:     nonceStr,
-						MetadataLink: string(youbeiMeta),
-						ImageLink:    string(imageURI),
-						TokenName:    token.Name,
-						Attributes:   attributes,
-						OwnerID:      dbToken.OwnerID,
-						PriceString:  dbToken.PriceString,
-						PriceNominal: dbToken.PriceNominal,
-					})
-					if err != nil {
-						logErr.Println("BADERR", err.Error(), token)
-						if err == gorm.ErrRegistered {
-							tokenCountSuc++
-						}
-					} else {
-						tokenCountSuc++
+						zlog.Error("error_index_attribute", zap.Error(err))
 					}
 				}
 				lastIndex += tokenCountSuc

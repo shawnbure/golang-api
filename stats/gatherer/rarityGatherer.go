@@ -107,7 +107,6 @@ func OnePage(link string) (string, error) {
 
 func computeRarityScorePreCollection(api string) {
 	// Get all collections from database
-	services.IndexTokenAttribute("ELFRING-72298a", "01a8", api)
 	collections, err := storage.GetAllCollections()
 	if err == nil {
 		for _, col := range collections {
