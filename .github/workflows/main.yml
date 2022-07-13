@@ -8,7 +8,7 @@ env:
   IMAGE: youbei-api
   SERVICE: youbei-api
   PROJECT_ID: asvsfs
-  REGISTRY_HOSTNAME: https://ghcr.io
+  REGISTRY_HOSTNAME: ghcr.io
   HTTP_PORT: 5050
   HTTP_PORT_EXPOSE: 5070
   GOPRIVATE: "https://github.com/ENFT-DAO"
