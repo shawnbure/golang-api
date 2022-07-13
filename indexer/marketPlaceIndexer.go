@@ -196,9 +196,6 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 				}
 				err = nil
 				token, err := storage.GetTokenByTokenIdAndNonceStr(string(tokenId), hexNonce)
-				if token.OwnerID == 1684 {
-					zlog.Info("this")
-				}
 				if err != nil {
 					if err != gorm.ErrRecordNotFound {
 						lerr.Println("REPEAT", err.Error())
