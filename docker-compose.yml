@@ -1,4 +1,7 @@
 version: "3.8"
+networks:
+  prod_net:
+    name: prod_net
 services:
   redis:
     container_name: redis
@@ -9,6 +12,9 @@ services:
       - "6379"
     volumes:
       - redis-data:/data
+    
+    networks:
+      - prod_net
   timescaledb:
       image: "timescale/timescaledb:2.0.0-pg12"
       container_name: timescaledb
@@ -23,6 +29,8 @@ services:
         POSTGRES_HOST_AUTH_METHOD: trust
       volumes:
         - timescale_data:/var/lib/postgresql
+      networks:
+        - prod_net
 volumes:
   redis-data:
   timescale_data:
