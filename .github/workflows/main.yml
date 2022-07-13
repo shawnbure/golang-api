@@ -32,6 +32,7 @@ jobs:
           export HOME=/home/amir
           echo $PAT_TOKEN | docker login ghcr.io -u asvsfs --password-stdin
           export TAG=`echo $GITHUB_REF | awk -F/ '{print $NF}'`
+          docker system prune -f
           docker build -t "$PROJECT_ID"/"$IMAGE":"$TAG"  \
             --build-arg GITHUB_SHA="$GITHUB_SHA" \
             --build-arg GITHUB_TOKEN="$GITHUB_TOKEN" \
