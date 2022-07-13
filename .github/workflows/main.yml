@@ -30,9 +30,10 @@ jobs:
       - name: Build
         run: |
           export HOME=/home/amir
+          echo $PAT_TOKEN | docker login ghcr.io -u asvsfs --password-stdin
           export TAG=`echo $GITHUB_REF | awk -F/ '{print $NF}'`
           docker system prune -f
-          docker build -t "$REGISTRY_HOSTNAME"/"$PROJECT_ID"/"$IMAGE":"$TAG"  \
+          docker build -t "$IMAGE":"$TAG"  \
             --build-arg GITHUB_SHA="$GITHUB_SHA" \
             --build-arg GITHUB_TOKEN="$GITHUB_TOKEN" \
             --build-arg GITHUB_REF="$GITHUB_REF" .
@@ -40,7 +41,7 @@ jobs:
       # Push the Docker image to Google Container Registry
       - name: Publish
         run: |
-          echo $CR_PAT | docker login ghcr.io -u asvsfs --password-stdin
+          echo $PAT_TOKEN | docker login ghcr.io -u asvsfs --password-stdin
           export TAG=`echo $GITHUB_REF | awk -F/ '{print $NF}'`
           docker push "$REGISTRY_HOSTNAME"/"$PROJECT_ID"/"$IMAGE":"$TAG"
           docker rmi -f $IMAGE:latest
