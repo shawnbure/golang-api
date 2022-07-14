@@ -204,7 +204,10 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 						}
 					}
 				}
-
+				token, err = storage.GetTokenByTokenIdAndNonceStr(string(tokenId), hexNonce)
+				if err != nil {
+					continue
+				}
 				failedTx := mpi.DeleteFailedTX(orgTx)
 				if failedTx {
 					_, err := storage.GetLastTokenTransaction(token.ID)
