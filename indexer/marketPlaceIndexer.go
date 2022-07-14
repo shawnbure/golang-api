@@ -204,6 +204,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 						}
 					}
 				}
+
 				failedTx := mpi.DeleteFailedTX(orgTx)
 				if failedTx {
 					_, err := storage.GetLastTokenTransaction(token.ID)

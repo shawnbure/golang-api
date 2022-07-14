@@ -368,7 +368,7 @@ tokenLoop:
 	}
 	colObj, err := storage.GetCollectionByTokenId(token.Collection)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetCollectionByTokenId %s", err.Error())
 	}
 	imageURI, attributeURI := GetTokenUris(token)
 	// nonce10Str := strconv.FormatUint(token.Nonce, 10)
