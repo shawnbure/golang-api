@@ -6,13 +6,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"math"
 	"math/big"
 	"os"
 	"strconv"
 	"strings"
 	"time"
-	"unicode/utf8"
 
 	"github.com/ENFT-DAO/youbei-api/data/entities"
 	"github.com/ENFT-DAO/youbei-api/services"
@@ -20,7 +18,6 @@ import (
 	"github.com/ElrondNetwork/elrond-go/data/transaction"
 	"github.com/emurmotol/ethconv"
 	"go.uber.org/zap"
-	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
@@ -201,118 +198,9 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 						lerr.Println("REPEAT", err.Error())
 						goto txloop
 					} else {
-						lerr.Println("no token found", string(tokenId), hexNonce)
-						tokenDetail, err := services.GetResponse(fmt.Sprintf(`%s/nfts/%s`, api, string(tokenId)+"-"+hexNonce))
+						_, err := services.IndexTokenAttribute(token.TokenID, hexNonce, api)
 						if err != nil {
-							if strings.Contains(err.Error(), "404") {
-								lerr.Println("BADERR", err.Error())
-								continue
-							}
-							lerr.Println("REPEAT", err.Error())
-							goto txloop
-						}
-						var tokenDetailObj entities.TokenBC
-						err = json.Unmarshal(tokenDetail, &tokenDetailObj)
-						if err != nil {
-							lerr.Println("REPEAT", err.Error())
-							goto txloop
-						}
-						col, err := storage.GetCollectionByTokenId(tokenDetailObj.Collection)
-						if err != nil {
-							if err == gorm.ErrRecordNotFound {
-								lerr.Println("collection not found for this token!!", tokenDetailObj.Collection)
-								col, err = services.CreateCollectionFromToken(tokenDetailObj, api)
-								if err != nil {
-									lerr.Println("CONTINUE", err.Error(), "create collection failed on market indexer", tokenDetailObj.Collection)
-									continue
-								}
-							}
-						}
-						idParts := strings.Split(tokenDetailObj.Identifier, "-")
-						nonceStr := idParts[len(idParts)-1]
-						imageURI, metadataLink := services.GetTokenUris(tokenDetailObj)
-
-						if strings.Contains(api, "devnet") {
-							imageURI = strings.Replace(imageURI, "https://gateway.pinata.cloud/ipfs/", "https://devnet-media.elrond.com/nfts/asset/", 1)
-						} else {
-							imageURI = strings.Replace(imageURI, "https://gateway.pinata.cloud/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
-							imageURI = strings.Replace(imageURI, "https://ipfs.io/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
-							imageURI = strings.Replace(imageURI, "ipfs://", "https://media.elrond.com/nfts/asset/", 1)
-						}
-
-						youbeiMeta := strings.Replace(metadataLink, "https://gateway.pinata.cloud/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
-						youbeiMeta = strings.Replace(youbeiMeta, "https://ipfs.io/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
-						youbeiMeta = strings.Replace(youbeiMeta, "https://ipfs.io/ipfs/", "https://media.elrond.com/nfts/asset/", 1)
-						youbeiMeta = strings.Replace(youbeiMeta, "ipfs://", "https://media.elrond.com/nfts/asset/", 1)
-
-						attrbs, err := services.GetResponse(youbeiMeta)
-						if err != nil {
-							lerr.Println(err.Error(), string(youbeiMeta), tokenDetailObj.Attributes, tokenDetailObj.URIs)
-						}
-						metadataJSON := make(map[string]interface{})
-						err = json.Unmarshal(attrbs, &metadataJSON)
-						var attributes datatypes.JSON
-						var rarity entities.TokenRarity
-
-						if err != nil {
-							lerr.Println(err.Error(), string(youbeiMeta), tokenDetailObj.Attributes, tokenDetailObj.URIs)
-						} else {
-							attributesBytes, err := json.Marshal(metadataJSON["attributes"])
-							if err != nil {
-								lerr.Println(err.Error())
-							}
-							err = json.Unmarshal(attributesBytes, &attributes)
-							if err != nil {
-								lerr.Println(err.Error())
-							}
-
-							// Get Rarity data if exist
-							if _, ok := metadataJSON["rarity"]; ok {
-								rarityBody, err := json.Marshal(metadataJSON["rarity"].(map[string]interface{}))
-								if err != nil {
-									lerr.Println(err.Error())
-								} else {
-									if err := json.Unmarshal(rarityBody, &rarity); err != nil {
-										lerr.Println(err.Error())
-									}
-								}
-
-							}
-						}
-						if !utf8.Valid([]byte(youbeiMeta)) {
-							token.MetadataLink = ""
-						}
-						token = &entities.Token{
-							TokenID:      tokenDetailObj.Collection,
-							MintTxHash:   "",
-							OwnerID:      sender.ID,
-							CollectionID: col.ID,
-							Nonce:        tokenDetailObj.Nonce,
-							NonceStr:     nonceStr,
-							MetadataLink: youbeiMeta,
-							ImageLink:    imageURI,
-							TokenName:    tokenDetailObj.Name,
-							Attributes:   attributes,
-							OnSale:       false,
-						}
-
-						if rarity.RarityScore != 0 && !math.IsInf(rarity.RarityScore, 0) {
-							token.RarityScore = rarity.RarityScore
-							token.RarityScoreNorm = rarity.RarityScoreNormed
-							token.RarityUsedTraitCount = uint(rarity.UsedTraitsCount)
-							token.IsRarityInserted = true
-						}
-
-						err = storage.AddOrUpdateToken(token)
-						if err != nil {
-							if err == gorm.ErrRecordNotFound {
-								storage.UpdateToken(token)
-								lerr.Println("BADERR", err.Error())
-								continue
-							} else {
-								lerr.Println("REPEAT", err.Error())
-								goto txloop
-							}
+							zlog.Error("error_index_attribute", zap.Error(err))
 						}
 					}
 				}
