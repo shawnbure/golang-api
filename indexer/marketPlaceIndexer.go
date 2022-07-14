@@ -198,7 +198,7 @@ func (mpi *MarketPlaceIndexer) StartWorker() {
 						lerr.Println("REPEAT", err.Error())
 						goto txloop
 					} else {
-						_, err := services.IndexTokenAttribute(token.TokenID, hexNonce, api)
+						_, err := services.IndexTokenAttribute(string(tokenId), hexNonce, api)
 						if err != nil {
 							zlog.Error("error_index_attribute", zap.Error(err))
 						}
