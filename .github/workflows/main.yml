@@ -50,6 +50,6 @@ jobs:
       - name: Deploy
         run: |
           export TAG=`echo $GITHUB_REF | awk -F/ '{print $NF}'`
-          docker run -d -p 5000:5000 --name youbei-api --network prod_net -v /srv/configs/youbei/prod-youbei-api-config.toml:/config/prod-youbei-api-config.toml "$REGISTRY_HOSTNAME"/"$PROJECT_ID"/"$IMAGE":"$TAG" ./youbei-api --general-config /config/prod-youbei-api-config.toml
+          docker run -d -p 5000:5000 --name youbei-api --network prod_net -v /srv/youbei/cache:/tmp -v /srv/configs/youbei/prod-youbei-api-config.toml:/config/prod-youbei-api-config.toml "$REGISTRY_HOSTNAME"/"$PROJECT_ID"/"$IMAGE":"$TAG" ./youbei-api --general-config /config/prod-youbei-api-config.toml
   
       

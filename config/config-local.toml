@@ -94,8 +94,8 @@
     UploadPath = "images/"
     # ApiKey = "299768791129295"
     # ApiSecret = "fIFsn9UK3_BMSe4qOIAzqQ3eoZY"
-    Selector = "cloudy"
-    # Selector = "local"
+    # Selector = "cloudy"
+    Selector = "local"
     BaseUrl = "https://dev-api.youbei.io/image/"
     RootDir = "/home/amir/pics"
 
